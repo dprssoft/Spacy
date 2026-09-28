@@ -61,9 +61,9 @@ A Figma-like start page: a header, a sidebar with views, a prominent "New board"
 - `tests/e2e/home.spec.ts`: the empty state is visible on first load → click "New board" → URL matches `/board/[\w-]+` → go back → a card titled "Untitled board" is visible with "Edited just now".
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] The layout matches the design in light and dark themes; responsive at 375px, 768px and 1440px (manual check; note it in PROGRESS)
-- [ ] Views switch through the URL and the back button works
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] The layout matches the design in light and dark themes; responsive at 375px, 768px and 1440px (manual check; note it in PROGRESS)
+- [x] Views switch through the URL and the back button works
 
 ## Out of scope
 Card actions, search, sort and layout toggle (step 07); templates (step 28); import (step 27); settings (step 29); real thumbnails (step 26).
