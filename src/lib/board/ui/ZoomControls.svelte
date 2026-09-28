@@ -1,0 +1,79 @@
+<script lang="ts">
+	import { DropdownMenu } from 'bits-ui';
+	import Minus from '@lucide/svelte/icons/minus';
+	import Plus from '@lucide/svelte/icons/plus';
+	import { nextZoomStep, zoomAt } from '../engine/viewport';
+	import type { ViewportState } from '../viewport.svelte';
+	import type { Rect } from '$lib/model/types';
+
+	let {
+		viewport,
+		contentBounds
+	}: {
+		viewport: ViewportState;
+		/** Bounds of everything on the board, for "Zoom to fit" (null = empty board). */
+		contentBounds: () => Rect | null;
+	} = $props();
+
+	const percent = $derived(Math.round(viewport.zoom * 100));
+
+	function zoomTo(z: number) {
+		viewport.animateTo(zoomAt(viewport.vp, viewport.center, z));
+	}
+
+	const button =
+		'inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-40';
+	const item =
+		'flex h-8 cursor-default items-center justify-between gap-6 rounded-md px-2 text-sm outline-none select-none data-[highlighted]:bg-surface-2';
+</script>
+
+<div
+	class="absolute right-3 bottom-3 z-20 flex items-center gap-0.5 rounded-lg border border-border bg-surface p-0.5 shadow-md"
+	data-interactive
+>
+	<button
+		type="button"
+		class={button}
+		aria-label="Zoom out"
+		disabled={viewport.zoom <= 0.1}
+		onclick={() => zoomTo(nextZoomStep(viewport.zoom, -1))}
+	>
+		<Minus class="size-4" aria-hidden="true" />
+	</button>
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger
+			aria-label="Zoom options, current zoom {percent}%"
+			class="h-8 min-w-14 rounded-md px-1.5 text-xs font-medium tabular-nums hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+		>
+			<span data-testid="zoom-level">{percent}%</span>
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Portal>
+			<DropdownMenu.Content
+				side="top"
+				align="end"
+				sideOffset={6}
+				class="z-50 min-w-48 rounded-lg border border-border bg-surface p-1 shadow-lg"
+			>
+				<DropdownMenu.Item class={item} onSelect={() => viewport.fit(contentBounds())}>
+					Zoom to fit <kbd class="text-xs text-muted">⇧1</kbd>
+				</DropdownMenu.Item>
+				<DropdownMenu.Separator class="my-1 h-px bg-border" />
+				{#each [0.5, 1, 2] as z (z)}
+					<DropdownMenu.Item class={item} onSelect={() => zoomTo(z)}>
+						Zoom to {z * 100}%
+						{#if z === 1}<kbd class="text-xs text-muted">⇧0</kbd>{/if}
+					</DropdownMenu.Item>
+				{/each}
+			</DropdownMenu.Content>
+		</DropdownMenu.Portal>
+	</DropdownMenu.Root>
+	<button
+		type="button"
+		class={button}
+		aria-label="Zoom in"
+		disabled={viewport.zoom >= 4}
+		onclick={() => zoomTo(nextZoomStep(viewport.zoom, 1))}
+	>
+		<Plus class="size-4" aria-hidden="true" />
+	</button>
+</div>

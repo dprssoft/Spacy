@@ -172,3 +172,19 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (154 unit tests, incl. `BoardTitle` local/remote/destroy) · pnpm test:e2e ✅ (21 tests: rename persists + reflects on home + `document.title`, cross-tab rename < 1 s, Escape cancels, not found, trashed → restore) · **leak check:** temporary log in `close()`, home→board→home ×3 = 3 opens / 3 closes (log removed) · **M1 reached.**
+
+## Step 09 — Viewport: pan and zoom — 2026-09-28
+**Summary:**
+- Pure math `board/engine/viewport.ts` (screen↔world, clamp, zoomAt, panBy, visibleWorldRect, fitRect, nextZoomStep, centeredOrigin) + `engine/geometry.ts` rect helpers; `ViewportState` runes class (set/zoomAt/zoomBy/panBy/fit/reset100/animateTo with ease-out, geometric zoom and a straight path of the centered world point; instant under prefers-reduced-motion). Added to the board context.
+- `Canvas.svelte`: world layer (single CSS transform) + screen-space overlay snippet, dot grid scaled with zoom (coarser below 8 px, `grid` pref), ResizeObserver size, viewport restored per board (or origin centered) and saved debounced 500 ms.
+- `viewportInput` attachment: wheel pans, ctrl/⌘+wheel & trackpad pinch zoom at cursor (delta clamped so mouse notches ≈30 %, pinch stays smooth), Shift+wheel horizontal, Space+drag and middle-drag pan (capture phase, stops propagation so tools won't see it), two-finger touch pinch/pan. Shortcuts Shift+1/Shift+0/Mod+=/Mod+-/Mod+0 (browser zoom prevented). `ZoomControls` pill (−, % menu, +).
+
+**Deviations:**
+- Temporary origin marker kept (`data-testid="origin"`) — removed in step 10 as planned.
+- `role="application"` canvas with `tabindex=0` needs a `svelte-ignore a11y_no_noninteractive_tabindex` (Svelte classifies the role as non-interactive; it must receive keys).
+
+**Dependencies added:** none.
+
+**Follow-ups:** **Needs a human:** trackpad pinch / two-finger pan feel in Chrome and Firefox (acceptance item left unchecked — no physical trackpad available to the agent; ctrl+wheel path is covered by e2e).
+
+**Verification:** pnpm verify ✅ (169 unit tests; viewport math incl. zoom-anchor invariance) · pnpm test:e2e ✅ (24; new: ctrl+wheel zoom + restore after reload + page never scrolls/zooms, wheel pan, zoom buttons, Mod+= / Shift+0, Space+drag pans by exact delta)
