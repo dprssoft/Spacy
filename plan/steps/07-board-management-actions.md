@@ -39,9 +39,9 @@ Star, rename, duplicate, trash/restore/delete forever; search, sort and grid/lis
 - `tests/e2e/home.spec.ts` (extend): create 3 boards → rename one via the menu → star it → it appears in Starred → duplicate it ("(copy)" appears) → trash it → the toast Undo restores it → trash again → Trash view shows it → Restore → trash again → Delete forever → it's gone from Trash. Search filters by title. Sort by name orders alphabetically. The layout toggle switches to list and persists after reload.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass; the CI workflow has an e2e job
-- [ ] Every action works by keyboard alone (manual check; note it in PROGRESS)
-- [ ] Two tabs on the start page: an action in one updates the other within 1 s
+- [x] `pnpm verify` and `pnpm test:e2e` pass; the CI workflow has an e2e job
+- [x] Every action works by keyboard alone (manual check; note it in PROGRESS)
+- [x] Two tabs on the start page: an action in one updates the other within 1 s
 
 ## Out of scope
 Export (step 27), templates (step 28), settings menu (step 29).
