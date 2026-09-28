@@ -213,3 +213,24 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 - The "≥ 55 fps with 3,000 elements" criterion is **left unchecked**: met at normal zoom, not when all 3,000 are visible at once in headless software rendering. Needs (a) a measurement in a real GPU browser by a human, and (b) likely a level-of-detail render at low zoom (hide text/shadows, simple boxes below ~30%) — scheduled for step 30 (performance pass), which already plans low-zoom previews.
 
 **Verification:** pnpm verify ✅ (184 unit tests: geometry, spatial index, BoardStore create/update/delete/remote/identity/order/version/destroy) · pnpm test:e2e ✅ (27: render + persist, culling < 600 of 3,000 in DOM, Shift+1 fit, live cross-tab render, space-drag now measured on a real element)
+
+## Step 11 — Tool framework and toolbar — 2026-09-28
+**Summary:**
+- Tool types (`CanvasPointerEvent`, `Tool`, `HandleId`), `ToolManager` (lazy tool instances, `register()` for later steps, `isAvailable`, `setTool` cancels the previous tool, `returnToSelect` honouring the lock, `shapeKind`), hand tool (drag pans) and minimal select tool (click selects, Shift toggles, empty clears).
+- `pointerRouter` attachment: normalizes pointer/dblclick events (screen/world, mod, pressure), hit info = handle (screen-space `HandleRegistry`) else topmost element (`hitElement`, 6 px tolerance), pointer capture, hover → `selection.hoverId`, ignores `[data-interactive]` UI and events already consumed by panning.
+- `hitTest.ts`: topmost-by-paint-order (frames beneath) with precise per-type tests; `hitElementsInRect` (intersect/contain).
+- `SelectionState` (ids, editingId, hoverId, `prune` on store changes). Shortcut registry (`matchesKeys`: Mod = Cmd/Ctrl, letters by key or code, Shift+digit by code, punctuation ignores Shift; `isTypingTarget`). Tool + view shortcuts moved into the registry; one window keydown handler (tool first, then shortcuts; ignores typing targets and menus/dialogs). Escape: cancel → deselect → select tool.
+- Toolbar: left vertical pill (bottom horizontal < 640 px), `role=toolbar`, `aria-pressed`, tooltips "Label — key", shapes flyout (rect/ellipse/diamond), lock toggle; tools not built yet are `aria-disabled` with "coming soon" tooltips (still hoverable, unlike `disabled`).
+
+**Deviations:**
+- `CanvasPointerEvent` gained `dragging: boolean` (hover moves are forwarded to tools with `dragging: false`); `BoardContext` gained `handles` and `shortcuts` (registries) besides `selection` and `tools`.
+- `viewportInput` now uses `stopImmediatePropagation` (+ `preventDefault`) for pan gestures — `stopPropagation` doesn't stop other listeners on the same node, and the router checks `defaultPrevented` as well.
+- `isTypingTarget` also matches `[contenteditable]` ancestors (robust for rich-text editor children; jsdom lacks `isContentEditable`).
+- Canvas: default focus outline replaced by an inset accent ring on keyboard focus only (the black outline around the whole board looked broken).
+- e2e: added `clickElement()` helper — element wrappers are `pointer-events:none` by design (D6), so Playwright's `locator.click()` refuses them; tests click by coordinates like a user.
+
+**Dependencies added:** none.
+
+**Follow-ups:** Toolbar arrow-key roving focus is scheduled for step 31 (a11y); Tab + Enter/Space work now.
+
+**Verification:** pnpm verify ✅ (195 unit tests: shortcut matching mac/non-mac/Caps Lock/Alt/Shift+digit/punctuation/named keys, typing targets, hit testing incl. rotation/tolerance/frames-beneath, marquee modes) · pnpm test:e2e ✅ (33: key→tool + Escape, disabled tools ignore shortcuts, toolbar click + hand panning by exact delta, click/Shift-click/empty selection, no shortcuts while typing, keyboard-operable toolbar) · visual check of the toolbar.

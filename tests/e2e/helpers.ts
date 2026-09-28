@@ -69,3 +69,19 @@ export const el = {
 		...extra
 	})
 };
+
+/**
+ * Clicks the center of a canvas element. Element wrappers have `pointer-events: none` (hit-testing
+ * happens in code), so Playwright's locator.click() won't target them — click by position instead.
+ */
+export async function clickElement(
+	page: Page,
+	id: string,
+	modifiers: ('Shift' | 'Alt' | 'ControlOrMeta')[] = []
+): Promise<void> {
+	const box = await page.locator(`[data-element-id="${id}"]`).boundingBox();
+	if (!box) throw new Error(`element ${id} is not rendered`);
+	for (const m of modifiers) await page.keyboard.down(m);
+	await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+	for (const m of modifiers) await page.keyboard.up(m);
+}

@@ -6,7 +6,8 @@
 	import { getPref } from '$lib/shared/localPrefs';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
 	import { getBoard } from '../context';
-	import { centeredOrigin, nextZoomStep, zoomAt } from '../engine/viewport';
+	import { centeredOrigin } from '../engine/viewport';
+	import { pointerRouter } from '../tools/pointerRouter';
 	import ZoomControls from '../ui/ZoomControls.svelte';
 	import { viewportInput } from './viewportInput';
 
@@ -22,7 +23,8 @@
 		contentBounds?: () => Rect | null;
 	} = $props();
 
-	const { id, viewport } = getBoard();
+	const ctx = getBoard();
+	const { id, viewport } = ctx;
 
 	let container = $state<HTMLDivElement>();
 	let panning = $state(false);
@@ -57,41 +59,10 @@
 	});
 	$effect(() => () => saveViewport.flush());
 
-	function isTyping(t: EventTarget | null): boolean {
-		return (
-			t instanceof HTMLElement &&
-			(t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))
-		);
-	}
-
-	// View shortcuts. Step 11 moves these into the shortcut registry.
-	function onKeydown(e: KeyboardEvent) {
-		if (isTyping(e.target)) return;
-		const mod = e.ctrlKey || e.metaKey;
-		if (e.shiftKey && !mod && e.code === 'Digit1') {
-			e.preventDefault();
-			viewport.fit(contentBounds());
-		} else if (e.shiftKey && !mod && e.code === 'Digit0') {
-			e.preventDefault();
-			viewport.reset100();
-		} else if (mod && (e.key === '=' || e.key === '+')) {
-			e.preventDefault();
-			viewport.animateTo(zoomAt(viewport.vp, viewport.center, nextZoomStep(viewport.zoom, 1)));
-		} else if (mod && e.key === '-') {
-			e.preventDefault();
-			viewport.animateTo(zoomAt(viewport.vp, viewport.center, nextZoomStep(viewport.zoom, -1)));
-		} else if (mod && e.key === '0') {
-			e.preventDefault(); // browser zoom reset
-			viewport.reset100();
-		}
-	}
-
 	const gridSize = $derived(
 		GRID_SIZE * viewport.zoom < 8 ? GRID_SIZE * 4 * viewport.zoom : GRID_SIZE * viewport.zoom
 	);
 </script>
-
-<svelte:window onkeydown={onKeydown} />
 
 <!-- The canvas is a focusable application region: it must receive keyboard shortcuts. -->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -103,9 +74,9 @@
 			spaceHeld = s;
 		}
 	})}
-	class="relative h-full w-full touch-none overflow-hidden overscroll-none select-none"
-	class:cursor-grab={spaceHeld && !panning}
-	class:cursor-grabbing={panning}
+	class="relative h-full w-full touch-none overflow-hidden overscroll-none outline-none select-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-inset"
+	{@attach pointerRouter(ctx)}
+	style:cursor={panning ? 'grabbing' : spaceHeld ? 'grab' : ctx.tools.tool.cursor}
 	style:background-image={showGrid
 		? 'radial-gradient(var(--canvas-dot) 1px, transparent 1px)'
 		: undefined}

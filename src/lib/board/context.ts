@@ -1,6 +1,10 @@
 import { getContext, setContext } from 'svelte';
 import type * as Y from 'yjs';
 import type { BoardStore } from './boardStore.svelte';
+import type { SelectionState } from './selection.svelte';
+import type { HandleRegistry } from './tools/handles';
+import type { ShortcutRegistry } from './tools/shortcuts';
+import type { ToolManager } from './tools/toolManager.svelte';
 import type { ViewportState } from './viewport.svelte';
 
 /** Everything a board's components share. Later steps add the store, viewport, tools, … */
@@ -10,6 +14,10 @@ export interface BoardContext {
 	undo: Y.UndoManager;
 	viewport: ViewportState;
 	store: BoardStore;
+	selection: SelectionState;
+	tools: ToolManager;
+	handles: HandleRegistry;
+	shortcuts: ShortcutRegistry;
 }
 
 const KEY = Symbol('board');

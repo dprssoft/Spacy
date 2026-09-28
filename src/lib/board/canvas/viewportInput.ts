@@ -89,7 +89,7 @@ export function viewportInput(viewport: ViewportState, opts: ViewportInputOption
 			}
 			if (e.button === 1 || (e.button === 0 && spaceHeld)) {
 				e.preventDefault();
-				e.stopPropagation(); // tools must not see panning gestures
+				e.stopImmediatePropagation(); // tools (same node) must not see panning gestures
 				panPointer = e.pointerId;
 				last = local(e);
 				node.setPointerCapture(e.pointerId);
