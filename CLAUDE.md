@@ -61,6 +61,7 @@ pnpm verify         # check + lint + test + build — must pass before every com
 - Shared reactive state lives in classes in `*.svelte.ts` files using `$state` fields. Do **not** use `svelte/store` (`writable`, `readable`) except where a library requires it.
 - Reactive collections: `SvelteMap` / `SvelteSet` from `svelte/reactivity`.
 - Page state: `import { page } from '$app/state'` — never `$app/stores`.
+- Internal links and navigation go through `resolve()` from `$app/paths`: `href={resolve('/board/[id]', { id })}`, `goto(resolve('/'))` (enforced by the `svelte/no-navigation-without-resolve` lint rule).
 - Mount components imperatively (TipTap popups) with `mount()` / `unmount()` from `svelte`.
 - `$effect` is for side effects that touch the outside world (DOM, listeners, Yjs subscriptions) and must return cleanup when it subscribes. Don't use it to derive state — use `$derived`.
 - Actions → prefer `{@attach ...}` attachments if available in the installed Svelte version, otherwise `use:action`.

@@ -39,3 +39,20 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 - CI e2e job is added in step 07 as planned.
 
 **Verification:** pnpm verify ✅ · pnpm test:e2e ✅ (1 test) · `build/index.html` exists · dev server responds 200 on :5173 · no Svelte 4 syntax in `src/`
+
+## Step 02 — App shell, routing, theme — 2026-09-28
+**Summary:**
+- Routes: `/` (placeholder home with theme toggle), `/board/[id]` (placeholder), `+error.svelte` (status, message, "Back to boards").
+- Theme tokens as CSS variables (light + `[data-theme=dark]`) exposed to Tailwind via `@theme inline` (`bg-surface`, `text-muted`, `border-border`, `bg-accent`, …), `dark:` custom variant, `color-scheme` per theme.
+- `localPrefs` (prefixed, try/catch), `ThemeState` runes class (light/dark/system, live OS tracking), no-flash inline script in `app.html`, `ThemeToggle` with bits-ui tooltip; `Tooltip.Provider` in the root layout.
+
+**Deviations:**
+- eslint-plugin-svelte enforces `svelte/no-navigation-without-resolve`: internal links use `resolve()` from `$app/paths`. Added this rule to `CLAUDE.md` so later steps follow it (applies to all `href`/`goto`).
+- Tailwind color for muted text is named `muted` (class `text-muted`), so token `--color-muted` maps to `--text-muted`; the canvas background token is `--color-canvas` (`bg-canvas`).
+- Added an extra e2e test asserting computed colors of `bg-surface` / `border-border` / `text-muted` in both themes (verifies the acceptance criterion instead of a manual check).
+
+**Dependencies added:** bits-ui 2.19.3, @lucide/svelte 1.48.0 — per plan. Icons are imported per-file (`@lucide/svelte/icons/sun`) to keep bundles small.
+
+**Follow-ups:** none
+
+**Verification:** pnpm verify ✅ (6 unit tests) · pnpm test:e2e ✅ (7 tests: smoke, routing ×2, theme ×4 incl. no-flash with app bundle blocked and live OS preference)

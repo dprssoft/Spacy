@@ -56,10 +56,10 @@ Routes for the start page and board page, an error page, theme tokens with light
 - `tests/e2e/routing.spec.ts`: `/board/abc` shows "abc"; `/does-not-exist` shows the error page with a link home.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Theme persists across reloads with no flash of the wrong theme
-- [ ] System mode follows the OS setting live
-- [ ] Tailwind classes `bg-surface`, `text-muted`, `border-border` work in both themes
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Theme persists across reloads with no flash of the wrong theme
+- [x] System mode follows the OS setting live
+- [x] Tailwind classes `bg-surface`, `text-muted`, `border-border` work in both themes
 
 ## Out of scope
 Start page UI (step 06), board UI (step 08).
