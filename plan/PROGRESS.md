@@ -56,3 +56,23 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none
 
 **Verification:** pnpm verify ✅ (6 unit tests) · pnpm test:e2e ✅ (7 tests: smoke, routing ×2, theme ×4 incl. no-flash with app bundle blocked and live OS preference)
+
+## Step 03 — Domain model — 2026-09-28
+**Summary:**
+- `src/lib/model/`: types (verbatim from architecture §5), Zod 4 schemas with a compile-time guard that schema output ≡ hand-written `Element` type, defaults (palette, sizes, fonts, per-type base styles), ids, fractional z keys, transaction origins, Y.Doc accessors, write ops, cloning, migrations.
+- Ops validate the **merged** element with Zod on every create/update and throw `InvalidElementError` (nothing is written on failure); updates write only changed keys (structural compare), so no-op patches emit no Yjs update.
+- Extension points for later steps: `beforeDeleteHooks` (may add ids to the delete set — frames, connectors) and `cloneHooks` (connector remapping).
+
+**Deviations:**
+- Added helper types to `types.ts` beyond §5 (not stored data): `ElementOf<T>`, `DistributiveOmit`, `NewElement` (element without `z`), `ElementPatch` (partial of any element type).
+- `newElementBase(type, id, at, style?)` takes the id explicitly (the step listed `(type, at, style?)`) so callers control ids (needed for clone/paste/templates).
+- Added `zManyBelow`, `jsonEqual` (`equal.ts`), `DOC_CARD_HEADER_H`, `CONNECTOR_STUB`, `STICKY_TEXT_COLOR` constants.
+- `cloneHooks` receive `NewElement` (clones have no `z`) instead of `Element`.
+- Test fixtures live in `src/lib/model/testFixtures.ts` (one valid sample per type); step 19's `elements/fixtures.ts` can build on it.
+- Added `pnpm test:coverage` script + coverage config (src/lib, excluding tests/fixtures); listed in `CLAUDE.md`.
+
+**Dependencies added:** yjs 13.6.33, zod 4.6.5, nanoid 6.0.1, fractional-indexing 4.0.0 (per plan); @vitest/coverage-v8 (dev, for the coverage criterion).
+
+**Follow-ups:** parseElement runs on every update — fine now; revisit in step 30 if drag profiling shows it hot.
+
+**Verification:** pnpm verify ✅ (85 unit tests) · model coverage 98.5% statements / 99.4% lines · no Svelte imports in src/lib/model · e2e n.a. (no UI change)

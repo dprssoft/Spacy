@@ -47,6 +47,7 @@ pnpm lint           # prettier --check + eslint
 pnpm format         # prettier --write
 pnpm test           # vitest run (unit + component)
 pnpm test:watch     # vitest watch
+pnpm test:coverage  # vitest with v8 coverage of src/lib
 pnpm test:e2e       # playwright (builds + previews the app)
 pnpm build          # production build into ./build
 pnpm verify         # check + lint + test + build — must pass before every commit
