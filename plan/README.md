@@ -21,7 +21,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | ✓ | # | Step | Phase | Depends on | Est. |
 |---|---|---|---|---|---|
 | [x] | 01 | [Scaffold the project](./steps/01-scaffold.md) | A. Foundation | — | 0.5d |
-| [ ] | 02 | [App shell, routing, theme](./steps/02-app-shell-routing-theme.md) | A | 01 | 0.5d |
+| [x] | 02 | [App shell, routing, theme](./steps/02-app-shell-routing-theme.md) | A | 01 | 0.5d |
 | [ ] | 03 | [Domain model](./steps/03-domain-model.md) | A | 01 | 1.5d |
 | [ ] | 04 | [Metadata and asset storage](./steps/04-metadata-storage.md) | A | 03 | 1.5d |
 | [ ] | 05 | [Board document lifecycle](./steps/05-board-document-lifecycle.md) | B. Start page | 04 | 1d |
