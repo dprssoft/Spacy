@@ -49,9 +49,9 @@ A framework-agnostic model layer: types, Zod schemas, defaults, ids, z-order key
 - `migrations.test.ts`: a fresh doc gets `schemaVersion = 1`; a newer version throws.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` passes, and coverage of `src/lib/model` is at least 90% lines (`pnpm vitest run --coverage src/lib/model`; install `@vitest/coverage-v8` if needed)
-- [ ] `src/lib/model` imports nothing from `svelte` or `.svelte` files
-- [ ] The types in `types.ts` match `00-architecture.md` §5 exactly
+- [x] `pnpm verify` passes, and coverage of `src/lib/model` is at least 90% lines (`pnpm vitest run --coverage src/lib/model`; install `@vitest/coverage-v8` if needed)
+- [x] `src/lib/model` imports nothing from `svelte` or `.svelte` files
+- [x] The types in `types.ts` match `00-architecture.md` §5 exactly
 
 ## Out of scope
 Persistence (step 04/05), connector-specific logic (step 20).
