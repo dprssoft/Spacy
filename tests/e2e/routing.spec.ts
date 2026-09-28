@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('board route shows the board id', async ({ page }) => {
-	await page.goto('/board/abc');
-	await expect(page.getByText('abc')).toBeVisible();
+test('an unknown board id shows "Board not found" with a link home', async ({ page }) => {
+	await page.goto('/board/nope');
+	await expect(page.getByRole('heading', { name: 'Board not found' })).toBeVisible();
 	await page.getByRole('link', { name: 'Back to boards' }).click();
 	await expect(page).toHaveURL('/');
 });
