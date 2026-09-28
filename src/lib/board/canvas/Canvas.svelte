@@ -116,8 +116,10 @@
 	tabindex="0"
 	data-testid="canvas"
 >
+	<!-- No will-change: a promoted layer this large, scaled down, is re-rastered on every pan
+	     (measured: 1,038 → 75 ms/frame with 3,000 visible elements; no cost at 100% zoom). -->
 	<div
-		class="absolute top-0 left-0 origin-top-left will-change-transform"
+		class="absolute top-0 left-0 origin-top-left"
 		style:transform="translate({viewport.x}px, {viewport.y}px) scale({viewport.zoom})"
 		data-testid="world"
 	>

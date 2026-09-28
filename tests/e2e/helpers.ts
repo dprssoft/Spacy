@@ -29,3 +29,43 @@ export async function createBoard(page: Page): Promise<string> {
 	await page.waitForURL(/\/board\/[\w-]+$/);
 	return new URL(page.url()).pathname.split('/').pop() ?? '';
 }
+
+/** Exposes `window.__smthng` in the production build used by e2e (see src/lib/dev/testHooks.ts). */
+export async function enableTestHooks(page: Page): Promise<void> {
+	await page.addInitScript(() => localStorage.setItem('smthng:testHooks', 'true'));
+}
+
+/** Waits until the board's test hooks are installed. */
+export async function waitForHooks(page: Page): Promise<void> {
+	await page.waitForFunction(() => !!window.__smthng);
+}
+
+/** Shape/sticky/text element inputs (without z) for creating elements through the test hooks. */
+export const el = {
+	shape: (id: string, x: number, y: number, extra: Record<string, unknown> = {}) => ({
+		id,
+		type: 'shape',
+		kind: 'rect',
+		text: '',
+		x,
+		y,
+		w: 160,
+		h: 100,
+		rotation: 0,
+		parentId: null,
+		groupId: null,
+		locked: false,
+		style: {
+			fill: '#ffffff',
+			fillStyle: 'solid',
+			stroke: '#1e1e1e',
+			strokeWidth: 2,
+			dash: 'solid',
+			radius: 'sm',
+			shadow: false,
+			opacity: 1,
+			font: { size: 'm', bold: false, italic: false, color: '#1e1e1e', align: 'c', valign: 'm' }
+		},
+		...extra
+	})
+};

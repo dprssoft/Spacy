@@ -188,3 +188,28 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** **Needs a human:** trackpad pinch / two-finger pan feel in Chrome and Firefox (acceptance item left unchecked — no physical trackpad available to the agent; ctrl+wheel path is covered by e2e).
 
 **Verification:** pnpm verify ✅ (169 unit tests; viewport math incl. zoom-anchor invariance) · pnpm test:e2e ✅ (24; new: ctrl+wheel zoom + restore after reload + page never scrolls/zooms, wheel pan, zoom buttons, Mod+= / Shift+0, Space+drag pans by exact delta)
+
+## Step 10 — Element registry, board store, rendering — 2026-09-28
+**Summary:**
+- `BoardStore` (Yjs → Svelte bridge): immutable snapshots in a `SvelteMap` (per-key reactivity), `order`/`frameOrder` recomputed only on add/remove/z change, incremental `SpatialIndex` (rbush; bulk load, search/near/bounds), `version` signal, `contentBounds()`. Added to the board context.
+- Element registry + definitions: real views for shape (rect/ellipse/diamond paths with stroke inset, radius, dash, fill style, text), sticky, text; placeholders for image/stroke/frame/doccard/connector. Shared style helpers (`common.ts`). Geometry: rotate, rotated AABB, rotated hit test, segment distance, point-in-polygon.
+- `ElementView` (one absolutely positioned, `pointer-events:none` wrapper per element) and `ElementsLayer` with viewport culling (visible rect +50 %, recomputed ≤ once per frame, frames first). Shift+1 fits content. Origin marker removed.
+- Test hooks (`window.__smthng` in dev or when `smthng:testHooks` is true — e2e) incl. `perf(n)`; deterministic `generatePerfElements`; dev-only `?debug=perf` button.
+
+**Deviations / findings:**
+- **Removed `will-change: transform` from the world layer** (step 09 had it). Measured in headless Chromium: panning with all 3,000 elements visible took **1,038 ms/frame with it vs 75 ms/frame without**; a plain-HTML control page showed the same pathology (597 ms/frame), so it's the browser's layer raster, not app code. No cost at 100% zoom (both ≈60 fps). Script/layout/style time during pans was ≈0.1 s total — rendering, not JS, dominates.
+- Connector placeholder AABB uses its endpoints' positions (free or last known) until step 20.
+- `BoardStore` reads changed keys via `event.changes.keys` (generic `YEvent`) rather than `keysChanged`.
+
+**Dependencies added:** rbush 4.0.1, @types/rbush 4.0.0 (per plan).
+
+**Performance (headless Chromium, software rendering, 1440×900, 3,000 mixed elements):**
+| Scenario | DOM elements | Result |
+|---|---|---|
+| Pan at 100% zoom | 167 (culled) | **60 fps** (p95 16.7 ms) ✅ |
+| Pan zoomed out to fit everything (10%) | 3,000 | **≈13 fps** (75 ms/frame) ❌ target 55 |
+
+**Follow-ups:**
+- The "≥ 55 fps with 3,000 elements" criterion is **left unchecked**: met at normal zoom, not when all 3,000 are visible at once in headless software rendering. Needs (a) a measurement in a real GPU browser by a human, and (b) likely a level-of-detail render at low zoom (hide text/shadows, simple boxes below ~30%) — scheduled for step 30 (performance pass), which already plans low-zoom previews.
+
+**Verification:** pnpm verify ✅ (184 unit tests: geometry, spatial index, BoardStore create/update/delete/remote/identity/order/version/destroy) · pnpm test:e2e ✅ (27: render + persist, culling < 600 of 3,000 in DOM, Shift+1 fit, live cross-tab render, space-drag now measured on a real element)

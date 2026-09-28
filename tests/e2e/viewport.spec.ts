@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createBoard } from './helpers';
+import { createBoard, el, enableTestHooks, waitForHooks } from './helpers';
 
 test('ctrl+wheel zooms, the zoom is restored after reload, and the page never scrolls', async ({
 	page
@@ -50,9 +50,16 @@ test('wheel pans; zoom buttons and shortcuts step the zoom', async ({ page }) =>
 });
 
 test('space + drag pans the canvas', async ({ page }) => {
+	await enableTestHooks(page);
 	await createBoard(page);
-	const origin = page.getByTestId('origin');
-	const before = (await origin.boundingBox())!;
+	await waitForHooks(page);
+	await page.evaluate(
+		(e) => window.__smthng!.createElements([e as never]),
+		el.shape('probe', 0, 0)
+	);
+	const probe = page.locator('[data-element-id="probe"]');
+	await expect(probe).toBeVisible();
+	const before = (await probe.boundingBox())!;
 	const box = (await page.getByTestId('canvas').boundingBox())!;
 	await page.getByTestId('canvas').focus();
 	await page.keyboard.down('Space');
@@ -61,7 +68,7 @@ test('space + drag pans the canvas', async ({ page }) => {
 	await page.mouse.move(box.x + 400, box.y + 350, { steps: 5 });
 	await page.mouse.up();
 	await page.keyboard.up('Space');
-	const after = (await origin.boundingBox())!;
+	const after = (await probe.boundingBox())!;
 	expect(after.x - before.x).toBeCloseTo(100, 0);
 	expect(after.y - before.y).toBeCloseTo(50, 0);
 });
