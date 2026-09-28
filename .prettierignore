@@ -1,0 +1,19 @@
+# Package Managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+
+# Miscellaneous
+/static/
+
+# Build & reports
+/build/
+/.svelte-kit/
+test-results/
+playwright-report/
+blob-report/
+
+# Plan docs (hand-written)
+/plan/
