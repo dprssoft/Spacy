@@ -61,9 +61,9 @@ Open, close, duplicate and delete board documents (Y.Doc + y-indexeddb), with li
 - `tabSync.test.ts`: two Y.Docs with `createTabSync` on the same channel name (Node's `BroadcastChannel` delivers between instances in the same process) converge after an edit on either; the `hello` handshake syncs a doc that joins later. Use `await new Promise(r => setTimeout(r, 20))` to let messages arrive.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` passes
-- [ ] `openBoard` is the only place that constructs `IndexeddbPersistence` for live editing
-- [ ] Undo scope is `elements` only, tracking only `LOCAL`
+- [x] `pnpm verify` passes
+- [x] `openBoard` is the only place that constructs `IndexeddbPersistence` for live editing
+- [x] Undo scope is `elements` only, tracking only `LOCAL`
 
 ## Out of scope
 UI. Asset garbage collection (step 15).

@@ -53,6 +53,7 @@
 		"fractional-indexing": "^4.0.0",
 		"idb": "^8.0.3",
 		"nanoid": "^6.0.1",
+		"y-indexeddb": "^9.0.12",
 		"yjs": "^13.6.33",
 		"zod": "^4.6.5"
 	}

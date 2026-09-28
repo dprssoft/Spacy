@@ -24,7 +24,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 02 | [App shell, routing, theme](./steps/02-app-shell-routing-theme.md) | A | 01 | 0.5d |
 | [x] | 03 | [Domain model](./steps/03-domain-model.md) | A | 01 | 1.5d |
 | [x] | 04 | [Metadata and asset storage](./steps/04-metadata-storage.md) | A | 03 | 1.5d |
-| [ ] | 05 | [Board document lifecycle](./steps/05-board-document-lifecycle.md) | B. Start page | 04 | 1d |
+| [x] | 05 | [Board document lifecycle](./steps/05-board-document-lifecycle.md) | B. Start page | 04 | 1d |
 | [ ] | 06 | [Start page layout](./steps/06-start-page-layout.md) | B | 02, 05 | 1d |
 | [ ] | 07 | [Board management actions](./steps/07-board-management-actions.md) | B | 06 | 1.5d |
 | [ ] | 08 | [Board page and top bar](./steps/08-board-page-top-bar.md) | B | 07 | 0.5d |
