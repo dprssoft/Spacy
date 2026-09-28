@@ -1,11 +1,13 @@
 import { getContext, setContext } from 'svelte';
 import type * as Y from 'yjs';
+import type { ViewportState } from './viewport.svelte';
 
 /** Everything a board's components share. Later steps add the store, viewport, tools, … */
 export interface BoardContext {
 	id: string;
 	doc: Y.Doc;
 	undo: Y.UndoManager;
+	viewport: ViewportState;
 }
 
 const KEY = Symbol('board');

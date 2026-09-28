@@ -60,9 +60,9 @@ An infinite canvas with smooth pan and zoom (mouse, trackpad, keyboard, touch pi
 - `tests/e2e/viewport.spec.ts`: Ctrl+wheel changes the zoom label; reload restores the same zoom label.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `pnpm verify` and `pnpm test:e2e` pass
 - [ ] Trackpad pinch and two-finger pan feel native in Chrome and Firefox (manual; note it in PROGRESS)
-- [ ] The page itself never scrolls or browser-zooms while on the board
+- [x] The page itself never scrolls or browser-zooms while on the board
 
 ## Out of scope
 Elements (step 10), tools (step 11).
