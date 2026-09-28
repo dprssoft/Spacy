@@ -155,3 +155,20 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (150 unit tests) · pnpm test:e2e ✅ (17 tests; home suite repeated 3× → 30/30) — full lifecycle, trash-not-openable, empty trash, search/sort/layout persistence, keyboard nav/F2/Delete, `/` focus, cross-tab updates · visual check of grid (star + open menu) and list layouts.
+
+## Step 08 — Board page and top bar — 2026-09-28
+**Summary:**
+- `BoardPage`: loading (spinner only after 150 ms), not found, trashed (Restore → opens), error (incl. newer-schema message) states; opens via `openBoard`, `touchOpened`, closes on destroy (also if destroyed mid-open). Route keys `BoardPage` by id.
+- `BoardWorkspace` sets the board context (`context.ts`: `setBoard`/`getBoard`); `TopBar` with home link, click-to-rename title, `SaveIndicator` ("Saving…" → "Saved locally" 600 ms after the last local update, tooltip about local storage), disabled Export menu, theme toggle.
+- `BoardTitle` (`title.svelte.ts`): `meta.title` is the source of truth; local renames write doc + board list; renames from other tabs are mirrored to the board list; `document.title` follows.
+
+**Deviations:**
+- The route no longer sets a static `<svelte:head>` title (it fought the live `document.title`).
+- Title is a button ("Rename board: …") that swaps to `InlineEditable` — keeps the accessible name stable for tests/screen readers.
+- Updated earlier e2e expectations that targeted the step 06 placeholder page (`/board/abc` now shows "Board not found").
+
+**Dependencies added:** none.
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (154 unit tests, incl. `BoardTitle` local/remote/destroy) · pnpm test:e2e ✅ (21 tests: rename persists + reflects on home + `document.title`, cross-tab rename < 1 s, Escape cancels, not found, trashed → restore) · **leak check:** temporary log in `close()`, home→board→home ×3 = 3 opens / 3 closes (log removed) · **M1 reached.**

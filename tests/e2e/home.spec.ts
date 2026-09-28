@@ -35,7 +35,7 @@ test('first visit shows the empty state and the New board card', async ({ page }
 test('New board creates a board, opens it, and it appears in Recent', async ({ page }) => {
 	const id = await createBoard(page);
 	expect(id).toMatch(/^[\w-]{12}$/);
-	await expect(page.getByRole('heading', { name: 'Untitled board' })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Rename board: Untitled board' })).toBeVisible();
 
 	await page.goBack();
 	await expect(page).toHaveURL('/');

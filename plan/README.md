@@ -27,7 +27,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 05 | [Board document lifecycle](./steps/05-board-document-lifecycle.md) | B. Start page | 04 | 1d |
 | [x] | 06 | [Start page layout](./steps/06-start-page-layout.md) | B | 02, 05 | 1d |
 | [x] | 07 | [Board management actions](./steps/07-board-management-actions.md) | B | 06 | 1.5d |
-| [ ] | 08 | [Board page and top bar](./steps/08-board-page-top-bar.md) | B | 07 | 0.5d |
+| [x] | 08 | [Board page and top bar](./steps/08-board-page-top-bar.md) | B | 07 | 0.5d |
 | [ ] | 09 | [Viewport: pan and zoom](./steps/09-viewport.md) | C. Canvas | 08 | 1.5d |
 | [ ] | 10 | [Element registry, store, rendering](./steps/10-element-registry-rendering.md) | C | 09 | 2d |
 | [ ] | 11 | [Tool framework and toolbar](./steps/11-tool-framework-toolbar.md) | C | 10 | 1d |

@@ -43,9 +43,9 @@ The board route opens the board document, shows loading, not-found and trashed s
   - A trashed board shows the trashed state; Restore opens it.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Navigating home → board → home → board leaks no Y.Docs (close is called; verify with a console log in dev, then remove it)
-- [ ] **M1 demo:** the start page and board shell work end to end
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Navigating home → board → home → board leaks no Y.Docs (close is called; verify with a console log in dev, then remove it)
+- [x] **M1 demo:** the start page and board shell work end to end
 
 ## Out of scope
 Canvas (step 09+), export (steps 26–27).
