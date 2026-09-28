@@ -1,6 +1,10 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
+	interface Window {
+		/** Dev/e2e test hooks (see src/lib/dev/testHooks.ts). */
+		__smthng?: import('$lib/dev/testHooks').TestHooks;
+	}
 	namespace App {
 		// interface Error {}
 		// interface Locals {}

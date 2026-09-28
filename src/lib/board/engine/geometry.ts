@@ -33,3 +33,76 @@ export function unionRects(rects: readonly Rect[]): Rect | null {
 export function rectCenter(r: Rect): Point {
 	return { x: r.x + r.w / 2, y: r.y + r.h / 2 };
 }
+
+export function rotatePoint(p: Point, center: Point, angle: number): Point {
+	if (angle === 0) return { x: p.x, y: p.y };
+	const cos = Math.cos(angle);
+	const sin = Math.sin(angle);
+	const dx = p.x - center.x;
+	const dy = p.y - center.y;
+	return { x: center.x + dx * cos - dy * sin, y: center.y + dx * sin + dy * cos };
+}
+
+/** Corners (tl, tr, br, bl) of a rect rotated around its center. */
+export function rectCorners(r: Rect, rotation: number): Point[] {
+	const c = rectCenter(r);
+	return [
+		{ x: r.x, y: r.y },
+		{ x: r.x + r.w, y: r.y },
+		{ x: r.x + r.w, y: r.y + r.h },
+		{ x: r.x, y: r.y + r.h }
+	].map((p) => rotatePoint(p, c, rotation));
+}
+
+/** Axis-aligned bounds of a rect rotated around its center. */
+export function rotatedAABB(r: Rect, rotation: number): Rect {
+	if (rotation === 0) return { x: r.x, y: r.y, w: r.w, h: r.h };
+	const pts = rectCorners(r, rotation);
+	const xs = pts.map((p) => p.x);
+	const ys = pts.map((p) => p.y);
+	const x = Math.min(...xs);
+	const y = Math.min(...ys);
+	return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+}
+
+/** Whether `p` lies inside a rotated rect grown by `tol` on every side. */
+export function pointInRotatedRect(p: Point, r: Rect, rotation: number, tol = 0): boolean {
+	const local = rotatePoint(p, rectCenter(r), -rotation);
+	return (
+		local.x >= r.x - tol &&
+		local.x <= r.x + r.w + tol &&
+		local.y >= r.y - tol &&
+		local.y <= r.y + r.h + tol
+	);
+}
+
+export function distToSegment(p: Point, a: Point, b: Point): number {
+	const dx = b.x - a.x;
+	const dy = b.y - a.y;
+	const len2 = dx * dx + dy * dy;
+	const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+	return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+/** Even-odd point-in-polygon test. */
+export function polygonContains(poly: readonly Point[], p: Point): boolean {
+	let inside = false;
+	for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+		const a = poly[i]!;
+		const b = poly[j]!;
+		if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) {
+			inside = !inside;
+		}
+	}
+	return inside;
+}
+
+/** Normalized rect spanning two corner points. */
+export function rectFromPoints(a: Point, b: Point): Rect {
+	return {
+		x: Math.min(a.x, b.x),
+		y: Math.min(a.y, b.y),
+		w: Math.abs(b.x - a.x),
+		h: Math.abs(b.y - a.y)
+	};
+}

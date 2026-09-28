@@ -46,9 +46,9 @@ The reactive bridge from Yjs to Svelte, a spatial index, an element registry, re
 - `tests/e2e/render.spec.ts`: with test hooks, create a rect, a sticky and a text → three `[data-element-id]` nodes are visible; reload → still three.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `pnpm verify` and `pnpm test:e2e` pass
 - [ ] Perf board: panning with 3,000 elements stays at 55 fps or more in the Chrome performance panel (manual; record fps in PROGRESS)
-- [ ] Culling works: at 100% zoom the DOM has far fewer than 3,000 `[data-element-id]` nodes
+- [x] Culling works: at 100% zoom the DOM has far fewer than 3,000 `[data-element-id]` nodes
 
 ## Out of scope
 Interaction (step 11+), the real image/stroke/frame/doccard/connector views.

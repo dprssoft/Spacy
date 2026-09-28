@@ -1,0 +1,96 @@
+import { SvelteMap } from 'svelte/reactivity';
+import type * as Y from 'yjs';
+import { getElementsMap, readElement, type ElementYMap } from '$lib/model/doc';
+import type { Element, Rect } from '$lib/model/types';
+import { compareZ } from '$lib/model/zorder';
+import { definitionOf } from './elements';
+import { SpatialIndex } from './engine/spatialIndex';
+
+/**
+ * Reactive, read-only view of a board's elements (00-architecture.md §7).
+ * Components get immutable snapshots; writes go through model/ops.
+ */
+export class BoardStore {
+	readonly elements = new SvelteMap<string, Element>();
+	/** Non-frame ids sorted by z. Recomputed only on add/remove/z change. */
+	order = $state<string[]>([]);
+	/** Frame ids sorted by z (frames render beneath everything else). */
+	frameOrder = $state<string[]>([]);
+	/** Increments once per handled change — a cheap "something changed" signal. */
+	version = $state(0);
+	readonly index = new SpatialIndex();
+
+	readonly #map: Y.Map<ElementYMap>;
+	readonly #observer: (events: Y.YEvent<Y.AbstractType<unknown>>[]) => void;
+
+	constructor(doc: Y.Doc) {
+		this.#map = getElementsMap(doc);
+		const entries: [string, Rect][] = [];
+		for (const [id, ymap] of this.#map) {
+			const el = readElement(ymap);
+			if (!el) continue;
+			this.elements.set(id, el);
+			entries.push([id, definitionOf(el).aabb(el)]);
+		}
+		this.index.load(entries);
+		this.#recomputeOrder();
+
+		this.#observer = (events) => {
+			// A throwaway per-transaction set, not reactive state.
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
+			const changed = new Set<string>();
+			for (const e of events) {
+				if (e.target === this.#map) {
+					for (const key of e.changes.keys.keys()) changed.add(key);
+				} else {
+					const id = e.path[0];
+					if (typeof id === 'string') changed.add(id);
+				}
+			}
+			this.#apply(changed);
+		};
+		this.#map.observeDeep(this.#observer);
+	}
+
+	get(id: string): Element | undefined {
+		return this.elements.get(id);
+	}
+
+	/** Union of all element AABBs, or null for an empty board. */
+	contentBounds(): Rect | null {
+		return this.index.bounds();
+	}
+
+	destroy(): void {
+		this.#map.unobserveDeep(this.#observer);
+	}
+
+	#apply(ids: Set<string>): void {
+		let orderDirty = false;
+		for (const id of ids) {
+			const ymap = this.#map.get(id);
+			const next = ymap ? readElement(ymap) : null;
+			const prev = this.elements.get(id);
+			if (next) {
+				this.elements.set(id, next);
+				this.index.upsert(id, definitionOf(next).aabb(next));
+				if (!prev || prev.z !== next.z) orderDirty = true;
+			} else if (prev) {
+				this.elements.delete(id);
+				this.index.remove(id);
+				orderDirty = true;
+			}
+		}
+		if (orderDirty) this.#recomputeOrder();
+		this.version++;
+	}
+
+	#recomputeOrder(): void {
+		const frames: Element[] = [];
+		const rest: Element[] = [];
+		for (const el of this.elements.values()) (el.type === 'frame' ? frames : rest).push(el);
+		const byZ = (a: Element, b: Element) => compareZ(a.z, b.z);
+		this.frameOrder = frames.sort(byZ).map((e) => e.id);
+		this.order = rest.sort(byZ).map((e) => e.id);
+	}
+}
