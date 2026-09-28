@@ -57,9 +57,9 @@ A tool system (state machines receiving normalized pointer events with hit info)
 - `tests/e2e/tools.spec.ts`: pressing R marks Rectangle as `aria-pressed=true`; Escape returns to Select; clicking a test-hook-created sticky selects it (verify through `window.__smthng.ctx.selection`).
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Shortcuts don't fire while typing in the title input
-- [ ] The toolbar is fully operable by keyboard (Tab into it, Enter/Space activate)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Shortcuts don't fire while typing in the title input
+- [x] The toolbar is fully operable by keyboard (Tab into it, Enter/Space activate)
 
 ## Out of scope
 Creation tools (step 12), full selection and transforms (step 13).

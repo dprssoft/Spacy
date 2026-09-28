@@ -30,7 +30,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 08 | [Board page and top bar](./steps/08-board-page-top-bar.md) | B | 07 | 0.5d |
 | [x] | 09 | [Viewport: pan and zoom](./steps/09-viewport.md) | C. Canvas | 08 | 1.5d |
 | [x] | 10 | [Element registry, store, rendering](./steps/10-element-registry-rendering.md) | C | 09 | 2d |
-| [ ] | 11 | [Tool framework and toolbar](./steps/11-tool-framework-toolbar.md) | C | 10 | 1d |
+| [x] | 11 | [Tool framework and toolbar](./steps/11-tool-framework-toolbar.md) | C | 10 | 1d |
 | [ ] | 12 | [Creation tools and text editing](./steps/12-creation-tools-text-editing.md) | C | 11 | 1.5d |
 | [ ] | 13 | [Selection and transforms](./steps/13-selection-transforms.md) | C | 12 | 2d |
 | [ ] | 14 | [Editing commands](./steps/14-editing-commands.md) | C | 13 | 1.5d |
