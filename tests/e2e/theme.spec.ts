@@ -24,7 +24,7 @@ test('theme toggle persists across reloads', async ({ page }) => {
 test('Tailwind theme classes follow the active theme', async ({ page }) => {
 	await page.goto('/');
 	const header = page.locator('header');
-	const muted = page.getByText('Your boards');
+	const muted = page.getByText('Create your first board to get started.');
 	const styles = () =>
 		header.evaluate((el) => {
 			const h = getComputedStyle(el);

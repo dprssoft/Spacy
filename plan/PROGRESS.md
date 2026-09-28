@@ -114,3 +114,22 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (130 unit tests; storage suites stable across 3 runs) — covers persistence across reopen, not-found and newer-schema errors, local-only touchUpdated, local-only undo, meta excluded from undo, snapshots, duplicate independence + asset remap, full destroy (IndexedDB database removed), purge, two open copies syncing · e2e n.a. (no UI change)
+
+## Step 06 — Start page layout — 2026-09-28
+**Summary:**
+- Figma-like start page: header (logo, search placeholder, disabled Import/Settings, theme toggle), sidebar views (Recent/Starred/All/Trash via `?view=`, `aria-current`), "New board" card (double-click guarded → create → open), templates row (empty until step 28), responsive board grid with skeletons, empty states per view.
+- `BoardCard`: link to the board, thumbnail blob → object URL (revoked on change/destroy) or deterministic pastel gradient (`placeholderGradient`, FNV-1a), "Edited …" via `relativeTime` (Intl.RelativeTimeFormat) with a 30 s ticking `now`.
+- Requests persistent storage on mount. Board route placeholder shows the board title.
+
+**Deviations:**
+- Empty states for Recent/All have **no** extra "New board" button: the New board card is always directly above, and a duplicate button would be confusing (and ambiguous for tests/screen readers).
+- `svelte/no-navigation-without-resolve` accepts `resolve('/?view=…')` (SvelteKit's `resolve` supports search strings), so view links are plain `<a href>` — no `goto` needed; back/forward work natively.
+- `TemplateCardData` type lives in `home/views.ts` (exporting types from a component instance script isn't allowed).
+- Added `shared/ui/Logo.svelte`; `tests/e2e/helpers.ts` has `resetStorage` and `createBoard`. Playwright gives each test a fresh context, so storage is already clean per test.
+- Theme e2e test updated to use the empty-state text (the old placeholder "Your boards" text is gone).
+
+**Dependencies added:** none.
+
+**Follow-ups:** On 375 px the view tabs scroll horizontally (Trash is partly off-screen until scrolled) — acceptable; revisit in step 31 (a11y/touch pass).
+
+**Verification:** pnpm verify ✅ (145 unit tests) · pnpm test:e2e ✅ (11 tests: empty state, create→open→listed with "Edited just now", view switching + back button, cross-tab live update, plus earlier suites) · **Manual/visual:** screenshots checked at 1440/768/375 px in light and dark — layout matches the design; dark placeholder gradients raised from 60% to 75% opacity after review (looked muddy).
