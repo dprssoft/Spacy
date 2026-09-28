@@ -133,3 +133,25 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** On 375 px the view tabs scroll horizontally (Trash is partly off-screen until scrolled) — acceptable; revisit in step 31 (a11y/touch pass).
 
 **Verification:** pnpm verify ✅ (145 unit tests) · pnpm test:e2e ✅ (11 tests: empty state, create→open→listed with "Edited just now", view switching + back button, cross-tab live update, plus earlier suites) · **Manual/visual:** screenshots checked at 1440/768/375 px in light and dark — layout matches the design; dark placeholder gradients raised from 60% to 75% opacity after review (looked muddy).
+
+## Step 07 — Board management actions — 2026-09-28
+**Summary:**
+- Card actions: star toggle (always visible when starred), "⋯" menu (Open, Open in new tab, Rename, Duplicate, Export [disabled], Move to trash; in trash: Restore, Delete forever), inline rename, duplicate toast, trash toast with Undo, delete-forever and "Empty trash" confirm dialogs (`shared/ui/ConfirmDialog`), trashed cards don't open (toast).
+- Toolbar: search (header, 150 ms debounce, clear button, Escape clears, `/` focuses), sort Select (hidden in Recent; persisted), grid/list toggle (persisted). "No boards match …" empty state.
+- Keyboard: roving tabindex (grid = one tab stop), arrows/Home/End, Enter opens, F2 renames, Delete trashes (in Trash: asks to delete forever). Purges expired trash on mount. CI gains an `e2e` job.
+- `home/actions.ts` wraps storage calls with toasts; `home/homeUI.svelte.ts` context holds rename/delete-confirm state.
+
+**Deviations:**
+- **Card structure:** one stretched `<a>` (or `<button>` in trash) covers the card; star/menu/rename input sit above it. Consequently **double-click on the title does not rename** (a link's first click would navigate) — rename is via the menu or F2.
+- **List layout reuses `BoardCard`** with `layout="list"` instead of a separate `BoardListRow.svelte` (one component, no duplicated actions logic).
+- Uses Svelte 5 `{@attach}` for input autofocus and function bindings (`bind:editing={get, set}`).
+
+**Bugs found by e2e and fixed:**
+- Rename from the menu cancelled itself: the dropdown returned focus to its trigger on close, blurring the new input. Fixed with `onCloseAutoFocus` → `preventDefault()` when renaming.
+- `ConfirmDialog` closed (resetting bound state) *before* calling `onConfirm`, so "Delete forever" deleted nothing. Now confirms first, then closes.
+
+**Dependencies added:** svelte-sonner 1.2.1 (toasts; the plan named it).
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (150 unit tests) · pnpm test:e2e ✅ (17 tests; home suite repeated 3× → 30/30) — full lifecycle, trash-not-openable, empty trash, search/sort/layout persistence, keyboard nav/F2/Delete, `/` focus, cross-tab updates · visual check of grid (star + open menu) and list layouts.
