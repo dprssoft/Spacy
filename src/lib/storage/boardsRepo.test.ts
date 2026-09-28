@@ -121,18 +121,15 @@ describe('boardsRepo', () => {
 		expect(await assetsRepo.get(kept)).toBeDefined();
 	});
 
-	it('purges only trash older than 30 days', async () => {
+	it('lists trash older than 30 days as expired', async () => {
 		const old = await boardsRepo.create();
 		const recent = await boardsRepo.create();
-		const live = await boardsRepo.create();
+		await boardsRepo.create();
 		await boardsRepo.trash(old.id);
 		vi.setSystemTime(T0 + 20 * DAY);
 		await boardsRepo.trash(recent.id);
-		const purged = await boardsRepo.purgeExpiredTrash(T0 + 31 * DAY);
-		expect(purged).toEqual([old.id]);
-		expect(await boardsRepo.get(old.id)).toBeUndefined();
-		expect(await boardsRepo.get(recent.id)).toBeDefined();
-		expect(await boardsRepo.get(live.id)).toBeDefined();
+		expect(await boardsRepo.expiredTrash(T0 + 31 * DAY)).toEqual([old.id]);
+		expect(await boardsRepo.expiredTrash(T0 + 51 * DAY)).toHaveLength(2);
 	});
 });
 

@@ -87,7 +87,7 @@ export const setThumbnail = (id: string, thumbnail: Blob | null) =>
 export const setViewport = (id: string, viewport: BoardMeta['viewport']) =>
 	patch(id, { viewport }, notifyBoardsChangedSoon);
 
-/** Removes the board's metadata and assets. Board contents are removed by `destroyBoard` (step 05). */
+/** Removes the board's metadata and assets only. Use `destroyBoard` (boardLifecycle) to delete a board. */
 export async function destroy(id: string): Promise<void> {
 	const tx = (await getDB()).transaction(['boards', 'assets'], 'readwrite');
 	const assets = tx.objectStore('assets');
@@ -106,11 +106,4 @@ export async function expiredTrash(now = Date.now(), days = 30): Promise<string[
 	return boards
 		.filter((b) => b.deletedAt !== null && now - b.deletedAt > days * DAY)
 		.map((b) => b.id);
-}
-
-/** Destroys trashed boards older than `days`. Returns the destroyed ids. */
-export async function purgeExpiredTrash(now = Date.now(), days = 30): Promise<string[]> {
-	const ids = await expiredTrash(now, days);
-	for (const id of ids) await destroy(id);
-	return ids;
 }

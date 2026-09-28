@@ -95,3 +95,22 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (108 unit tests; storage suite stable across 3 repeated runs) · boardsRepo/assetsRepo 100% covered; storage overall 97% lines (uncovered: cross-tab `blocking` handler, one persist fallback) · no Svelte imports in src/lib/storage · e2e n.a. (no UI change)
+
+## Step 05 — Board document lifecycle — 2026-09-28
+**Summary:**
+- `openBoard(id)`: Y.Doc + y-indexeddb, migrate, title backfill, tab sync, canvas `UndoManager` (elements map only, `LOCAL` only, 500 ms capture), debounced (2 s) `touchUpdated` on local edits; idempotent `close()` flushes the pending touch and tears everything down.
+- `tabSync`: BroadcastChannel sync with a two-way hello handshake (a late joiner receives peers' state *and* sends its own offline edits); remote updates applied with `REMOTE_TAB`, never echoed.
+- `loadSnapshot` / `writeSnapshot` / `deleteBoardData` / `duplicateBoard` (content, remapped image assets, thumbnail, independent copy).
+- `boardLifecycle.destroyBoard` (content + meta + assets) and `purgeExpiredTrash` — the only deletion entry points for UI code.
+- `shared/debounce.ts`: `debounce` (flush/cancel/pending) and leading+trailing `throttle`.
+
+**Deviations:**
+- Removed `boardsRepo.purgeExpiredTrash` (added in step 04): it deleted metadata but orphaned board content. Only `boardLifecycle.purgeExpiredTrash` remains; `boardsRepo.expiredTrash()` is the query it uses.
+- Verified against y-indexeddb 9 source: persistence stores the doc's pre-existing state on first sync (so `writeSnapshot` applies the update before attaching), loaded updates carry the persistence as origin (don't trigger `touchUpdated`), and lib0 closes connections on `versionchange` (so `deleteBoardData` can't hang on another open tab).
+- `src/lib/storage/index.ts` re-exports the lifecycle API.
+
+**Dependencies added:** y-indexeddb 9.0.12 (per plan).
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (130 unit tests; storage suites stable across 3 runs) — covers persistence across reopen, not-found and newer-schema errors, local-only touchUpdated, local-only undo, meta excluded from undo, snapshots, duplicate independence + asset remap, full destroy (IndexedDB database removed), purge, two open copies syncing · e2e n.a. (no UI change)
