@@ -76,3 +76,22 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** parseElement runs on every update — fine now; revisit in step 30 if drag profiling shows it hot.
 
 **Verification:** pnpm verify ✅ (85 unit tests) · model coverage 98.5% statements / 99.4% lines · no Svelte imports in src/lib/model · e2e n.a. (no UI change)
+
+## Step 04 — Metadata and asset storage — 2026-09-28
+**Summary:**
+- IndexedDB `smthng` v1 via `idb` (typed `DBSchema`): stores `boards` (indexes openedAt/updatedAt/deletedAt) and `assets` (index boardId); `blocking` handler closes the connection so another tab can upgrade.
+- `boardsRepo` (get/list with filter+sort+query, create, rename, star, touchOpened/Updated, thumbnail, viewport, trash/restore, destroy, purgeExpiredTrash) and `assetsRepo` (put/get/listByBoard/deleteByBoard/deleteMany/copyToBoard). Mutations are read-modify-write in one IDB transaction; missing ids are no-ops.
+- `channels.ts`: board-list change notifications within the tab (EventTarget) and across tabs (one BroadcastChannel per tab, so each listener fires once). Background changes (touchUpdated, thumbnail, viewport) coalesce to ≤ 1 notice/second.
+- `persist.ts` (persistent-storage request once per session, storage estimate; never throw) and `BoardsQuery` runes class (reactive list with stale-response protection).
+
+**Deviations:**
+- **Test environment:** jsdom's `Blob`/`File` don't survive Node's `structuredClone` (used by fake-indexeddb) — they came back as empty objects. `vitest.setup.ts` now swaps in Node's `Blob`/`File` from `node:buffer`. Browsers are unaffected.
+- Added `boardsRepo.expiredTrash()` (pure query) alongside `purgeExpiredTrash()`; step 05's `boardLifecycle.purgeExpiredTrash` should use `expiredTrash()` + `destroyBoard()`.
+- `boardsRepo.create()` also accepts `createdAt` (needed by step 27 import to keep the original creation date).
+- Added `src/lib/storage/index.ts` (namespaced re-exports) and `src/lib/storage/testUtils.ts` (`freshDB()` for tests).
+
+**Dependencies added:** idb 8.0.3 (per plan).
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (108 unit tests; storage suite stable across 3 repeated runs) · boardsRepo/assetsRepo 100% covered; storage overall 97% lines (uncovered: cross-tab `blocking` handler, one persist fallback) · no Svelte imports in src/lib/storage · e2e n.a. (no UI change)

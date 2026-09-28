@@ -69,9 +69,9 @@ Use `fake-indexeddb` (already in the setup). Call `resetDBForTests()` and `index
 - `boards.svelte.test.ts`: `BoardsQuery.refresh` loads items; changing the filter updates items (use `flushSync` / await ticks).
 
 ## Acceptance criteria
-- [ ] `pnpm verify` passes
-- [ ] `src/lib/storage` imports nothing from `svelte` (the rune-based `BoardsQuery` lives in `src/lib/home/`)
-- [ ] All repository functions are covered by tests
+- [x] `pnpm verify` passes
+- [x] `src/lib/storage` imports nothing from `svelte` (the rune-based `BoardsQuery` lives in `src/lib/home/`)
+- [x] All repository functions are covered by tests
 
 ## Out of scope
 Y.Doc persistence (step 05), UI (step 06).
