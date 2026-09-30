@@ -234,3 +234,23 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Toolbar arrow-key roving focus is scheduled for step 31 (a11y); Tab + Enter/Space work now.
 
 **Verification:** pnpm verify ✅ (195 unit tests: shortcut matching mac/non-mac/Caps Lock/Alt/Shift+digit/punctuation/named keys, typing targets, hit testing incl. rotation/tolerance/frames-beneath, marquee modes) · pnpm test:e2e ✅ (33: key→tool + Escape, disabled tools ignore shortcuts, toolbar click + hand panning by exact delta, click/Shift-click/empty selection, no shortcuts while typing, keyboard-operable toolbar) · visual check of the toolbar.
+
+## Step 12 — Creation tools and text editing — 2026-09-30
+**Summary:**
+- Shape tool (R/O/D): drag to draw (Shift = square/circle, Alt = from center, 3 px threshold), click = default 160×100 centered; sticky tool (S) and text tool (T): click to place and type immediately. After creating: new element selected, back to select (unless the toolbar lock is on).
+- `TextEditor.svelte`: textarea overlay inside the element wrapper (so world transforms apply), same font/alignment/padding as the view; writes debounced 150 ms and flushed on exit; Escape / Mod+Enter / click-away exit; auto-width texts measure a hidden mirror and update w/h with the text.
+- `TextEditing` controller (`board/editing.ts`, on the board context): start/end editing; a new text (text tool or double-click on empty canvas) left empty is removed by **undoing its creation and clearing redo**, so no phantom undo step remains (falls back to delete if other edits happened meanwhile).
+- Select tool: double-click an editable element to edit it, double-click empty canvas to write a text there, Enter edits the single selected element. Selected/edited elements are always rendered (culling exempt).
+- Helpers: `createRafWriter` (≤ 1 write per frame), `undoGesture` (one undo step per gesture regardless of pauses — raises `captureTimeout` for the gesture), `dragRect` (pure), `tools/create.ts` factories, `style/styleDefaults.ts`.
+
+**Deviations:**
+- Added `undoGesture` because `stopCapturing()` alone can't keep a slow drag (pauses > 500 ms) as one undo step; e2e covers a drag with a 700 ms pause. Step 13 (move/resize/rotate) should reuse it.
+- `BoardContext` gained `editing: TextEditing` (in addition to `selection.editingId`, which stays the reactive source).
+- The e2e "one undo step" checks use the test hooks' undo manager, since undo shortcuts arrive in step 14.
+- Visual "no jump" check done by screenshotting each type (shape, sticky, text) in view vs edit mode at 2× DPR: identical.
+
+**Dependencies added:** none.
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (210 unit tests: raf batching, dragRect, undoGesture incl. 2 s pauses, TextEditing discard/keep rules) · pnpm test:e2e ✅ (40; new: drag rect size + single undo step despite pause, ellipse click/Shift circle, sticky type + reload, text auto-size + empty discard without undo step, double-click shape edit + Enter re-edit + Mod+Enter, double-click empty canvas, typing doesn't trigger tool shortcuts) · view/edit screenshots identical.

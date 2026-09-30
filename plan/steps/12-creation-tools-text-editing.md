@@ -43,9 +43,9 @@ Create rectangles, ellipses, diamonds, stickies and text by click or drag, and e
   - Double-click a rect → type "Box" → Escape → the rect shows "Box".
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Every creation gesture is exactly one undo step
-- [ ] Text editing looks identical in position and font to the rendered text (no visual jump; manual check)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Every creation gesture is exactly one undo step
+- [x] Text editing looks identical in position and font to the rendered text (no visual jump; manual check)
 
 ## Out of scope
 Move, resize and rotate (step 13), styling UI (step 17).

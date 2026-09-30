@@ -1,6 +1,7 @@
 import { getContext, setContext } from 'svelte';
 import type * as Y from 'yjs';
 import type { BoardStore } from './boardStore.svelte';
+import type { TextEditing } from './editing';
 import type { SelectionState } from './selection.svelte';
 import type { HandleRegistry } from './tools/handles';
 import type { ShortcutRegistry } from './tools/shortcuts';
@@ -18,6 +19,7 @@ export interface BoardContext {
 	tools: ToolManager;
 	handles: HandleRegistry;
 	shortcuts: ShortcutRegistry;
+	editing: TextEditing;
 }
 
 const KEY = Symbol('board');

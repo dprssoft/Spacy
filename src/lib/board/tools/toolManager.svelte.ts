@@ -2,6 +2,9 @@ import type { ShapeKind } from '$lib/model/types';
 import type { BoardContext } from '../context';
 import { createHandTool } from './hand.svelte';
 import { createSelectTool } from './select';
+import { createShapeTool } from './shape';
+import { createStickyTool } from './sticky';
+import { createTextTool } from './text';
 import type { Tool, ToolId } from './types';
 
 export type ToolFactory = (ctx: BoardContext) => Tool;
@@ -25,6 +28,9 @@ export class ToolManager {
 		this.#ctx = ctx;
 		this.register('select', createSelectTool);
 		this.register('hand', createHandTool);
+		this.register('shape', createShapeTool);
+		this.register('sticky', createStickyTool);
+		this.register('text', createTextTool);
 	}
 
 	/** Later steps register their tools here. */

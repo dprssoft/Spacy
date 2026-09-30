@@ -4,9 +4,7 @@
 	import { expandRectRatio } from '../engine/geometry';
 	import { visibleWorldRect } from '../engine/viewport';
 
-	let { alwaysRender = new Set<string>() }: { alwaysRender?: ReadonlySet<string> } = $props();
-
-	const { store, viewport } = getBoard();
+	const { store, viewport, selection } = getBoard();
 
 	// Culling: only elements near the visible area are in the DOM. Recomputed at most once per frame.
 	let visible = $state<ReadonlySet<string>>(new Set());
@@ -25,7 +23,8 @@
 	});
 	$effect(() => () => cancelAnimationFrame(frame));
 
-	const show = (id: string) => visible.has(id) || alwaysRender.has(id);
+	// Selected and edited elements stay mounted even when scrolled out of view.
+	const show = (id: string) => visible.has(id) || selection.has(id) || selection.editingId === id;
 	const frames = $derived(store.frameOrder.filter(show));
 	const others = $derived(store.order.filter(show));
 </script>
