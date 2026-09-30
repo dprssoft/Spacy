@@ -254,3 +254,22 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (210 unit tests: raf batching, dragRect, undoGesture incl. 2 s pauses, TextEditing discard/keep rules) · pnpm test:e2e ✅ (40; new: drag rect size + single undo step despite pause, ellipse click/Shift circle, sticky type + reload, text auto-size + empty discard without undo step, double-click shape edit + Enter re-edit + Mod+Enter, double-click empty canvas, typing doesn't trigger tool shortcuts) · view/edit screenshots identical.
+
+## Step 13 — Selection and transforms — 2026-09-30
+**Summary:**
+- Pure transform math `board/engine/transform.ts`: `selectionBox`, `resizeBox` (works in the box's rotated frame; opposite edge/corner fixed in world space; Shift aspect, Alt from center, min size, no flipping), `sizePatch` (strokes scale their points; auto-width text turns fixed when widened), `scaleElementsToBox`, `rotateElementsAround`, `normalizeAngle`, `snapAngle` (15°), `selectionHandles` / `hitHandle` (screen space), `cursorForHandle` (rotation-aware resize cursors).
+- Select tool state machine (`tools/select.svelte.ts`): pointing → moving (3 px threshold; Shift axis lock; Alt duplicates first, keeping z order), marquee (touching; Shift adds; frames only when fully enclosed; locked excluded; whole groups), resize (single = rotated box, multi = proportional), rotate (single absolute, multi around the shared center; Shift snaps). Each gesture uses `undoGesture` + rAF batching = one undo step; **Escape mid-gesture reverts it** (undo + clear redo, incl. Alt copies). Click on an already-selected element of a multi-selection selects just its group on release.
+- Groups: clicking a member selects the group; double-click enters the group (`selection.enteredGroup`) to select members. Locked: selectable, never transformed, lock badge instead of handles.
+- `SelectionOverlay` (screen space): hover outline, per-element outlines in multi-select, selection box, 8 resize handles + rotate knob (rotated with the box), marquee; registers the handle hit-test with the pointer router (select tool only).
+- Shortcuts: arrows nudge 1 px (Shift 10 px), Mod+A select all (unlocked), Shift+2 zoom to selection.
+
+**Deviations:**
+- `SelectionState` gained `marquee`, `transforming`, `enteredGroup` (UI state shared by tool and overlay); `board/selectionInfo.ts` holds shared helpers (`transformTargets`, `targetsBox`, `handleOptions`, `groupOf`).
+- Select tool file renamed to `select.svelte.ts` (reactive cursor state).
+- Connectors are skipped by transforms (their geometry is derived; free-ended connectors move with the selection in step 20).
+
+**Dependencies added:** none.
+
+**Follow-ups:** Frame children moving with their frame is step 16; snapping/guides step 18.
+
+**Verification:** pnpm verify ✅ (240 unit tests; transform suite 30 incl. all 8 handles at 0° and 30° keeping the opposite point fixed) · pnpm test:e2e ✅ (47; new select suite: marquee + group move as one undo step, SE resize + Shift aspect, rotate + Shift snap to 45°, Alt-drag copy + Escape revert without undo step, groups + enter group, locked not movable/no handles, nudge + Mod+A) · **drag 1 of 3,001 at 100%: 60 fps (p95 16.7 ms)** in headless Chromium · visual check of handles on a rotated sticky.

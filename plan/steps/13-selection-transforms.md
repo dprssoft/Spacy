@@ -57,10 +57,10 @@ Full select-tool behavior: click, Shift and marquee selection, groups-aware sele
 - `tests/e2e/select.spec.ts`: create two rects → marquee both → drag → both moved by the same delta → Mod+Z restores both in one step. Resize with the SE handle changes the size. Alt+drag creates a copy. Shift+click toggles.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Rotated elements resize naturally (the opposite corner stays pinned; manual)
-- [ ] Each gesture is one undo step
-- [ ] Dragging 1 element among 3,000 (perf board) stays at 55 fps or more
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Rotated elements resize naturally (the opposite corner stays pinned; manual)
+- [x] Each gesture is one undo step
+- [x] Dragging 1 element among 3,000 (perf board) stays at 55 fps or more
 
 ## Out of scope
 Grouping commands (step 14), snapping and guides (step 18), frame membership (step 16).

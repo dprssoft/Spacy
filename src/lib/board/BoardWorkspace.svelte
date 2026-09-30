@@ -10,7 +10,9 @@
 	import { setBoard, type BoardContext } from './context';
 	import { TextEditing } from './editing';
 	import { SelectionState } from './selection.svelte';
+	import SelectionOverlay from './canvas/SelectionOverlay.svelte';
 	import { toolShortcuts, viewShortcuts } from './tools/boardShortcuts';
+	import { selectShortcuts } from './tools/selectShortcuts';
 	import { HandleRegistry } from './tools/handles';
 	import { isTypingTarget, ShortcutRegistry } from './tools/shortcuts';
 	import { ToolManager } from './tools/toolManager.svelte';
@@ -35,7 +37,7 @@
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);
-	ctx.shortcuts.register([...toolShortcuts, ...viewShortcuts]);
+	ctx.shortcuts.register([...toolShortcuts, ...viewShortcuts, ...selectShortcuts]);
 	setBoard(ctx);
 	const title = new BoardTitle(ctx.id, ctx.doc);
 
@@ -82,6 +84,9 @@
 		<Canvas contentBounds={() => ctx.store.contentBounds()}>
 			{#snippet world()}
 				<ElementsLayer />
+			{/snippet}
+			{#snippet overlay()}
+				<SelectionOverlay />
 			{/snippet}
 		</Canvas>
 		<Toolbar />
