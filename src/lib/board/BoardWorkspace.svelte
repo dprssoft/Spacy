@@ -8,6 +8,7 @@
 	import ElementsLayer from './canvas/ElementsLayer.svelte';
 	import Canvas from './canvas/Canvas.svelte';
 	import { setBoard, type BoardContext } from './context';
+	import { TextEditing } from './editing';
 	import { SelectionState } from './selection.svelte';
 	import { toolShortcuts, viewShortcuts } from './tools/boardShortcuts';
 	import { HandleRegistry } from './tools/handles';
@@ -33,6 +34,7 @@
 		shortcuts: new ShortcutRegistry()
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
+	ctx.editing = new TextEditing(ctx);
 	ctx.shortcuts.register([...toolShortcuts, ...viewShortcuts]);
 	setBoard(ctx);
 	const title = new BoardTitle(ctx.id, ctx.doc);

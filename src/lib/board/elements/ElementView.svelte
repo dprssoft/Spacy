@@ -2,16 +2,19 @@
 	import { getBoard } from '../context';
 	import { styleToCss } from './common';
 	import { definitionOf } from './registry';
+	import TextEditor from './TextEditor.svelte';
 
 	let { id }: { id: string } = $props();
 
-	const { store } = getBoard();
+	const { store, selection } = getBoard();
 	// SvelteMap tracks reads per key: this view re-renders only when its own element changes.
 	const el = $derived(store.get(id));
+	const editing = $derived(selection.editingId === id);
 </script>
 
 {#if el}
-	{@const View = definitionOf(el).component}
+	{@const def = definitionOf(el)}
+	{@const View = def.component}
 	<div
 		class="pointer-events-none absolute top-0 left-0"
 		style:width="{el.w}px"
@@ -21,6 +24,9 @@
 		data-element-id={id}
 		data-type={el.type}
 	>
-		<View {el} editing={false} />
+		<View {el} {editing} />
+		{#if editing && def.editableText && (el.type === 'shape' || el.type === 'sticky' || el.type === 'text')}
+			<TextEditor {el} />
+		{/if}
 	</div>
 {/if}
