@@ -1,10 +1,17 @@
 import { SvelteSet } from 'svelte/reactivity';
+import type { Rect } from '$lib/model/types';
 
 /** Local (per-tab) selection, text-editing and hover state. Never stored in the document. */
 export class SelectionState {
 	readonly ids = new SvelteSet<string>();
 	editingId = $state<string | null>(null);
 	hoverId = $state<string | null>(null);
+	/** Marquee rectangle (world) while dragging one. */
+	marquee = $state<Rect | null>(null);
+	/** True while elements are being moved/resized/rotated (hides hover feedback). */
+	transforming = $state(false);
+	/** A group the user double-clicked into: clicks then select single members. */
+	enteredGroup = $state<string | null>(null);
 
 	get size(): number {
 		return this.ids.size;
@@ -40,6 +47,7 @@ export class SelectionState {
 	clear(): void {
 		this.ids.clear();
 		this.editingId = null;
+		this.enteredGroup = null;
 	}
 
 	/** Drops ids that no longer exist (e.g. deleted in another tab or by undo). */

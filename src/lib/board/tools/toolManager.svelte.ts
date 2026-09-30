@@ -1,7 +1,7 @@
 import type { ShapeKind } from '$lib/model/types';
 import type { BoardContext } from '../context';
 import { createHandTool } from './hand.svelte';
-import { createSelectTool } from './select';
+import { createSelectTool } from './select.svelte';
 import { createShapeTool } from './shape';
 import { createStickyTool } from './sticky';
 import { createTextTool } from './text';
