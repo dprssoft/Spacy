@@ -11,6 +11,10 @@
 	import { TextEditing } from './editing';
 	import { SelectionState } from './selection.svelte';
 	import SelectionOverlay from './canvas/SelectionOverlay.svelte';
+	import { onCopyEvent, onPasteEvent } from './commands/clipboard';
+	import { editShortcuts } from './commands/editShortcuts';
+	import { HistoryState } from './commands/history.svelte';
+	import CanvasContextMenu from './ui/CanvasContextMenu.svelte';
 	import { toolShortcuts, viewShortcuts } from './tools/boardShortcuts';
 	import { selectShortcuts } from './tools/selectShortcuts';
 	import { HandleRegistry } from './tools/handles';
@@ -33,11 +37,18 @@
 		store: new BoardStore(board.doc),
 		selection: new SelectionState(),
 		handles: new HandleRegistry(),
-		shortcuts: new ShortcutRegistry()
+		shortcuts: new ShortcutRegistry(),
+		history: new HistoryState(board.undo),
+		pointer: null
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);
-	ctx.shortcuts.register([...toolShortcuts, ...viewShortcuts, ...selectShortcuts]);
+	ctx.shortcuts.register([
+		...toolShortcuts,
+		...viewShortcuts,
+		...selectShortcuts,
+		...editShortcuts
+	]);
 	setBoard(ctx);
 	const title = new BoardTitle(ctx.id, ctx.doc);
 
@@ -45,6 +56,7 @@
 		title.destroy();
 		ctx.viewport.destroy();
 		ctx.store.destroy();
+		ctx.history.destroy();
 	});
 	$effect(() => installTestHooks(ctx));
 	// Keep the selection valid when elements disappear (other tab, undo…).
@@ -52,6 +64,23 @@
 		void ctx.store.version;
 		ctx.selection.prune((id) => ctx.store.elements.has(id));
 	});
+
+	/** Clipboard events belong to the board unless focus is in a text field or floating UI. */
+	function boardOwnsClipboard(e: Event): boolean {
+		const t = document.activeElement;
+		if (isTypingTarget(t) || isTypingTarget(e.target)) return false;
+		return !(t instanceof Element && t.closest('[role=menu],[role=dialog],[role=alertdialog]'));
+	}
+
+	function onCopy(e: ClipboardEvent) {
+		if (boardOwnsClipboard(e)) onCopyEvent(ctx, e, false);
+	}
+	function onCut(e: ClipboardEvent) {
+		if (boardOwnsClipboard(e)) onCopyEvent(ctx, e, true);
+	}
+	function onPaste(e: ClipboardEvent) {
+		if (boardOwnsClipboard(e)) onPasteEvent(ctx, e);
+	}
 
 	function onKeydown(e: KeyboardEvent) {
 		if (e.defaultPrevented || isTypingTarget(e.target)) return;
@@ -77,18 +106,21 @@
 </script>
 
 <svelte:window onkeydown={onKeydown} />
+<svelte:document oncopy={onCopy} oncut={onCut} onpaste={onPaste} />
 
 <div class="flex h-dvh flex-col">
 	<TopBar {title} />
 	<main class="relative min-h-0 flex-1 overflow-hidden bg-canvas">
-		<Canvas contentBounds={() => ctx.store.contentBounds()}>
-			{#snippet world()}
-				<ElementsLayer />
-			{/snippet}
-			{#snippet overlay()}
-				<SelectionOverlay />
-			{/snippet}
-		</Canvas>
+		<CanvasContextMenu>
+			<Canvas contentBounds={() => ctx.store.contentBounds()}>
+				{#snippet world()}
+					<ElementsLayer />
+				{/snippet}
+				{#snippet overlay()}
+					<SelectionOverlay />
+				{/snippet}
+			</Canvas>
+		</CanvasContextMenu>
 		<Toolbar />
 		{#if import.meta.env.DEV && page.url.searchParams.get('debug') === 'perf'}
 			<button

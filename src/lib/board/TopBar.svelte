@@ -2,16 +2,23 @@
 	import { DropdownMenu } from 'bits-ui';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Download from '@lucide/svelte/icons/download';
+	import Redo2 from '@lucide/svelte/icons/redo-2';
+	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import { resolve } from '$app/paths';
 	import InlineEditable from '$lib/shared/ui/InlineEditable.svelte';
 	import Logo from '$lib/shared/ui/Logo.svelte';
 	import ThemeToggle from '$lib/shared/ui/ThemeToggle.svelte';
+	import { getBoard } from './context';
 	import SaveIndicator from './SaveIndicator.svelte';
+	import { formatKeys } from './tools/formatKeys';
 	import type { BoardTitle } from './title.svelte';
 
 	let { title }: { title: BoardTitle } = $props();
 
 	let editing = $state(false);
+	const { history } = getBoard();
+	const iconButton =
+		'inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-35 disabled:hover:bg-transparent';
 
 	const item =
 		'flex h-8 cursor-default items-center rounded-md px-2 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-surface-2';
@@ -46,6 +53,29 @@
 				{title.value}
 			</button>
 		{/if}
+	</div>
+
+	<div class="ml-2 flex items-center">
+		<button
+			type="button"
+			class={iconButton}
+			aria-label="Undo"
+			title="Undo ({formatKeys('Mod+Z')})"
+			disabled={!history.canUndo}
+			onclick={() => history.undo()}
+		>
+			<Undo2 class="size-4" aria-hidden="true" />
+		</button>
+		<button
+			type="button"
+			class={iconButton}
+			aria-label="Redo"
+			title="Redo ({formatKeys('Mod+Shift+Z')})"
+			disabled={!history.canRedo}
+			onclick={() => history.redo()}
+		>
+			<Redo2 class="size-4" aria-hidden="true" />
+		</button>
 	</div>
 
 	<div class="ml-auto flex items-center gap-1">
