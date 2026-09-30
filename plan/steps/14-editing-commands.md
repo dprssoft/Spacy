@@ -50,9 +50,9 @@ Undo/redo, delete, duplicate, copy/cut/paste (within and across boards), z-order
 - `tests/e2e/commands.spec.ts`: copy/paste a sticky → 2 stickies; Mod+D → 3; Delete → 2; Mod+Z → 3; group two → clicking one selects both; lock → drag doesn't move it; the context menu "Bring to front" changes the DOM order.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Copy on board A → paste on board B works (a second tab or navigate)
-- [ ] Undo/redo buttons reflect availability
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Copy on board A → paste on board B works (a second tab or navigate)
+- [x] Undo/redo buttons reflect availability
 
 ## Out of scope
 Image paste implementation (step 15), connector remapping (step 20).

@@ -273,3 +273,22 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Frame children moving with their frame is step 16; snapping/guides step 18.
 
 **Verification:** pnpm verify ✅ (240 unit tests; transform suite 30 incl. all 8 handles at 0° and 30° keeping the opposite point fixed) · pnpm test:e2e ✅ (47; new select suite: marquee + group move as one undo step, SE resize + Shift aspect, rotate + Shift snap to 45°, Alt-drag copy + Escape revert without undo step, groups + enter group, locked not movable/no handles, nudge + Mod+A) · **drag 1 of 3,001 at 100%: 60 fps (p95 16.7 ms)** in headless Chromium · visual check of handles on a rotated sticky.
+
+## Step 14 — Editing commands — 2026-09-30
+**Summary:**
+- Commands (`board/commands/edit.ts`, one undo step each): delete (skips locked), duplicate (+16/+16, new ids, z order kept, doc card contents copied), reorder front/back/forward/backward (`reorder.ts`, pure: forward/backward pass the nearest *overlapping* unselected element; frames reorder only among frames), toggle lock, group/ungroup. Shortcuts: Mod+Z, Mod+Shift+Z / Mod+Y, Delete/Backspace, Mod+D, `]` `[` Mod+] Mod+[, Mod+Shift+L, Mod+G, Mod+Shift+G.
+- `HistoryState` (reactive canUndo/canRedo) + Undo/Redo buttons in the top bar.
+- Clipboard (`commands/clipboard.ts`): payload `SMTHNG-CLIPBOARD:{smthng, sourceBoardId, elements, docs(base64 Yjs update of doc card contents)}`; paste validates every element, remaps ids/groups, copies image assets across boards, restores doc card contents; same-board pastes cascade +16 px per repeat, other pastes center on the pointer (or view center). Plain text pastes as a text element. Image files go to an `imagePaste.handler` hook (installed in step 15).
+- Canvas context menu (bits-ui): right-click selects what's under the cursor first; element actions (cut/copy/paste/duplicate/delete, order, group/ungroup, lock) or canvas actions (paste, select all, zoom to fit), with platform-formatted shortcut hints (`tools/formatKeys.ts`). `ctx.pointer` tracks the last world pointer position.
+- `shared/base64.ts` (chunked, 1 MB safe).
+
+**Deviations:**
+- **Copy/cut/paste use the native `copy`/`cut`/`paste` document events** (not keyboard shortcuts): synchronous clipboard access with no permission prompt, and pasted image files arrive with the event. The context menu uses the async Clipboard API and falls back to the last in-tab copy if permission is denied.
+- `BoardContext` gained `history` and `pointer`; `createWithContent()` helper creates elements + doc card contents in one transaction.
+- Added `src/lib/board/testCtx.ts` (lightweight context for unit tests).
+
+**Dependencies added:** none.
+
+**Follow-ups:** The canvas undo scope is the `elements` map only, so undoing a duplicate/paste leaves the copied doc card's fragment orphaned in `docs` (harmless, invisible). Step 23 revisits the undo scope for doc cards.
+
+**Verification:** pnpm verify ✅ (268 unit tests: reorder incl. several items passing one neighbour, commands, clipboard round-trip incl. doc text / group remap / cascade / pointer centering / cross-board assets / plain text) · pnpm test:e2e ✅ (54; commands suite repeated 5× → 35/35: keyboard copy/paste/duplicate/delete/undo/redo + buttons, cut/paste, cross-board paste, plain text paste, group + lock, context menu reorder + copy/paste, `]`/`[`) · visual check of the context menu.

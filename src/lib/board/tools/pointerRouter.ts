@@ -1,5 +1,6 @@
 import type { BoardContext } from '../context';
 import { hitElement } from '../engine/hitTest';
+import { groupOf } from '../selectionInfo';
 import { screenToWorld } from '../engine/viewport';
 import type { CanvasPointerEvent } from './types';
 
@@ -57,6 +58,8 @@ export function pointerRouter(ctx: BoardContext) {
 		};
 
 		const onPointerMove = (e: PointerEvent) => {
+			const r = node.getBoundingClientRect();
+			ctx.pointer = screenToWorld(ctx.viewport.vp, { x: e.clientX - r.left, y: e.clientY - r.top });
 			if (active === null) {
 				if (fromUi(e) || e.buttons !== 0 || e.pointerType === 'touch') return;
 				const ce = toCanvasEvent(e, true);
@@ -85,6 +88,20 @@ export function pointerRouter(ctx: BoardContext) {
 			if (active === null) ctx.selection.hoverId = null;
 		};
 
+		// Right-click acts on what's under the cursor: select it first (the menu opens afterwards).
+		const onContextMenu = (e: MouseEvent) => {
+			if (fromUi(e)) return;
+			const ce = toCanvasEvent(e, true);
+			ctx.pointer = ce.world;
+			const id = ce.hit.elementId;
+			const el = id ? ctx.store.get(id) : undefined;
+			if (el) {
+				if (!ctx.selection.has(el.id)) ctx.selection.set(groupOf(ctx, el));
+			} else if (!ce.hit.handle) {
+				ctx.selection.clear();
+			}
+		};
+
 		const onDoubleClick = (e: MouseEvent) => {
 			if (fromUi(e)) return;
 			ctx.tools.tool.onDoubleClick?.(toCanvasEvent(e, true));
@@ -97,7 +114,9 @@ export function pointerRouter(ctx: BoardContext) {
 		node.addEventListener('lostpointercapture', onPointerCancel);
 		node.addEventListener('pointerleave', onPointerLeave);
 		node.addEventListener('dblclick', onDoubleClick);
+		node.addEventListener('contextmenu', onContextMenu);
 		return () => {
+			node.removeEventListener('contextmenu', onContextMenu);
 			node.removeEventListener('pointerdown', onPointerDown);
 			node.removeEventListener('pointermove', onPointerMove);
 			node.removeEventListener('pointerup', onPointerUp);

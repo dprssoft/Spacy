@@ -1,6 +1,8 @@
 import { getContext, setContext } from 'svelte';
 import type * as Y from 'yjs';
+import type { Point } from '$lib/model/types';
 import type { BoardStore } from './boardStore.svelte';
+import type { HistoryState } from './commands/history.svelte';
 import type { TextEditing } from './editing';
 import type { SelectionState } from './selection.svelte';
 import type { HandleRegistry } from './tools/handles';
@@ -20,6 +22,9 @@ export interface BoardContext {
 	handles: HandleRegistry;
 	shortcuts: ShortcutRegistry;
 	editing: TextEditing;
+	history: HistoryState;
+	/** Last pointer position over the canvas (world); not reactive. */
+	pointer: Point | null;
 }
 
 const KEY = Symbol('board');
