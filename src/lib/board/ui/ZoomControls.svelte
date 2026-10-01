@@ -18,7 +18,7 @@
 	} = $props();
 
 	const percent = $derived(Math.round(viewport.zoom * 100));
-	const { store } = getBoard();
+	const { store, prefs } = getBoard();
 	const frames = $derived(
 		store.frameOrder.flatMap((id) => {
 			const el = store.get(id);
@@ -73,6 +73,25 @@
 						{#if z === 1}<kbd class="text-xs text-muted">⇧0</kbd>{/if}
 					</DropdownMenu.Item>
 				{/each}
+				<DropdownMenu.Separator class="my-1 h-px bg-border" />
+				<DropdownMenu.CheckboxItem
+					class={item}
+					checked={prefs.grid}
+					onCheckedChange={(v) => prefs.setGrid(v)}
+				>
+					{#snippet children({ checked })}
+						Show grid <span class="text-xs text-muted">{checked ? '✓' : ''}</span>
+					{/snippet}
+				</DropdownMenu.CheckboxItem>
+				<DropdownMenu.CheckboxItem
+					class={item}
+					checked={prefs.snapToGrid}
+					onCheckedChange={(v) => prefs.setSnapToGrid(v)}
+				>
+					{#snippet children({ checked })}
+						Snap to grid <span class="text-xs text-muted">{checked ? '✓' : ''}</span>
+					{/snippet}
+				</DropdownMenu.CheckboxItem>
 				{#if frames.length}
 					<DropdownMenu.Separator class="my-1 h-px bg-border" />
 					<DropdownMenu.Group>

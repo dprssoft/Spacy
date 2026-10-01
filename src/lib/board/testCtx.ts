@@ -6,6 +6,8 @@ import { BoardStore } from './boardStore.svelte';
 import { HistoryState } from './commands/history.svelte';
 import type { BoardContext } from './context';
 import { TextEditing } from './editing';
+import { BoardPrefs } from './prefs.svelte';
+import { PreviewState } from './preview.svelte';
 import { SelectionState } from './selection.svelte';
 import { ViewportState } from './viewport.svelte';
 
@@ -23,6 +25,8 @@ export function testCtx(id = 'board-1', doc = new Y.Doc()): BoardContext {
 		selection: new SelectionState(),
 		history: new HistoryState(undo),
 		pointer: null,
+		preview: new PreviewState(),
+		prefs: new BoardPrefs(),
 		tools: { setTool() {}, current: 'select' }
 	} as unknown as BoardContext;
 	ctx.editing = new TextEditing(ctx);

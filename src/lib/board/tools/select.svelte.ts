@@ -1,10 +1,10 @@
 import { cloneElements } from '$lib/model/clone';
 import { createElements, updateElements } from '$lib/model/ops';
-import type { Element, ElementPatch, Point } from '$lib/model/types';
+import type { Element, ElementPatch, Point, Rect } from '$lib/model/types';
 import { compareZ } from '$lib/model/zorder';
 import type { BoardContext } from '../context';
 import { definitionOf } from '../elements';
-import { rectCenter, rectFromPoints } from '../engine/geometry';
+import { rectCenter, rectFromPoints, unionRects } from '../engine/geometry';
 import { hitElementsInRect } from '../engine/hitTest';
 import {
 	cursorForHandle,
@@ -20,6 +20,7 @@ import {
 import { syncFrameMembership, withFrameChildren } from '../frameMembership';
 import { groupOf, targetsBox, transformTargets } from '../selectionInfo';
 import { createText } from './create';
+import { createSnapper, type Snapper } from './snapper';
 import { undoGesture } from './gesture';
 import { createRafWriter } from './rafBatch';
 import type { CanvasPointerEvent, Tool } from './types';
@@ -33,9 +34,9 @@ type State =
 	| { kind: 'idle' }
 	/** Pressed on an element; becomes 'moving' past the drag threshold. */
 	| { kind: 'pointing'; start: Point; startScreen: Point; clickedId: string; wasSelected: boolean }
-	| { kind: 'moving'; start: Point; snapshot: Element[] }
+	| { kind: 'moving'; start: Point; snapshot: Element[]; box: Rect | null; snapper: Snapper }
 	| { kind: 'marquee'; start: Point; base: string[] }
-	| { kind: 'resizing'; handle: ResizeHandle; box: Box; snapshot: Element[] }
+	| { kind: 'resizing'; handle: ResizeHandle; box: Box; snapshot: Element[]; snapper: Snapper }
 	| { kind: 'rotating'; center: Point; startAngle: number; snapshot: Element[] };
 
 /** Click/Shift/marquee selection, move (Alt duplicates, Shift locks axis), resize, rotate. */
@@ -88,16 +89,28 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		// A frame carries its contents along.
 		let targets = withFrameChildren(ctx, transformTargets(ctx));
 		if (e.alt && targets.length > 0) targets = duplicateForDrag(targets);
-		state = { kind: 'moving', start, snapshot: targets };
+		const box = unionRects(targets.flatMap((el) => store.index.get(el.id) ?? []));
+		const snapper = createSnapper(
+			ctx,
+			targets.map((el) => el.id)
+		);
+		state = { kind: 'moving', start, snapshot: targets, box, snapper };
 		ui.cursor = 'move';
 	}
 
 	function move(e: CanvasPointerEvent, s: Extract<State, { kind: 'moving' }>) {
 		let dx = e.world.x - s.start.x;
 		let dy = e.world.y - s.start.y;
+		let lock: 'x' | 'y' | null = null;
 		if (e.shift) {
-			if (Math.abs(dx) > Math.abs(dy)) dy = 0;
+			lock = Math.abs(dx) > Math.abs(dy) ? 'y' : 'x';
+			if (lock === 'y') dy = 0;
 			else dx = 0;
+		}
+		if (s.box) {
+			const c = s.snapper.move({ ...s.box, x: s.box.x + dx, y: s.box.y + dy }, e.mod);
+			if (lock !== 'x') dx += c.dx;
+			if (lock !== 'y') dy += c.dy;
 		}
 		writer.push(s.snapshot.map((el) => ({ id: el.id, patch: { x: el.x + dx, y: el.y + dy } })));
 	}
@@ -121,6 +134,9 @@ export function createSelectTool(ctx: BoardContext): Tool {
 	}
 
 	function resize(e: CanvasPointerEvent, s: Extract<State, { kind: 'resizing' }>) {
+		// Snap the dragged handle (only for unrotated boxes: guides are axis-aligned).
+		const pointer = s.box.rotation === 0 ? s.snapper.point(e.world, e.mod) : e.world;
+		e = { ...e, world: pointer };
 		if (s.snapshot.length === 1) {
 			const el = s.snapshot[0]!;
 			const keepAspect = e.shift !== definitionOf(el).keepAspect;
@@ -156,7 +172,12 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		writer.push(rotateElementsAround(s.snapshot, s.center, delta));
 	}
 
+	function clearGuides() {
+		ctx.preview.guides = [];
+	}
+
 	function cancel() {
+		clearGuides();
 		const transforming =
 			state.kind === 'moving' || state.kind === 'resizing' || state.kind === 'rotating';
 		writer.cancel();
@@ -192,7 +213,11 @@ export function createSelectTool(ctx: BoardContext): Tool {
 					const startAngle = Math.atan2(e.world.y - center.y, e.world.x - center.x);
 					state = { kind: 'rotating', center, startAngle, snapshot: targets };
 				} else if (isResizeHandle(handle)) {
-					state = { kind: 'resizing', handle, box, snapshot: targets };
+					const snapper = createSnapper(
+						ctx,
+						targets.map((el) => el.id)
+					);
+					state = { kind: 'resizing', handle, box, snapshot: targets, snapper };
 				}
 				return;
 			}
@@ -261,6 +286,7 @@ export function createSelectTool(ctx: BoardContext): Tool {
 			const s = state;
 			if (s.kind === 'moving' || s.kind === 'resizing' || s.kind === 'rotating') {
 				endTransform(s.snapshot); // the last move already pushed the final position
+				clearGuides();
 			} else if (s.kind === 'pointing' && s.wasSelected && !e.shift) {
 				// Click (no drag) on an element of a multi-selection: select just its group.
 				const el = store.get(s.clickedId);

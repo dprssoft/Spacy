@@ -350,3 +350,23 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (297 unit tests: option intersection, commonValue/MIXED, font merge, kind/color scoping, one undo step for multi-element and continuous changes) · pnpm test:e2e ✅ (72; new style suite: fill persists after reload, intersection of options for shape+sticky with shared change applied to both, mixed fills show no checked swatch, shape kind keeps text, sticky color, opacity adjustment = one undo step, bold toggle, keyboard on segmented controls, popover never covers the selection and flips below near the top, hidden while dragging/editing) · visual check of the Fill and Text panels; element views audited to honor every option they declare.
+
+## Step 18 — Style productivity, alignment, snapping — 2026-10-01
+**Summary:**
+- Quick styles: 8 presets (Neutral, Blue, Green, Yellow, Red, Violet, Dark, Outline) stored per board in `meta.stylePresets` (defaults when missing/invalid; live across tabs); "Quick styles" panel applies fill, fill style, stroke, dash and text color — only what the target supports; right-click a preset → "Update from selection".
+- Copy/paste style (Mod+Alt+C / Mod+Alt+V, kept in localStorage across boards): each target takes only the fields its type controls (`pickStyle`); one undo step.
+- Defaults: "Set as default for new {type}" / "Reset default" in More (when the selection is one type); `getDefaultStyle` merges the saved default (validated; corrupted values ignored).
+- Arrange panel (2+ unlocked elements): align left/center/right/top/middle/bottom, distribute horizontally/vertically (3+), same width/height; AABB-based; frames carry their contents; one undo step.
+- Snapping (`engine/snapping.ts` pure + `tools/snapper.ts`): smart guides to nearby elements' edges and centers (6 screen px; candidates collected once per gesture, ≤ 300 nearest) for move, resize of unrotated boxes, and shape/frame drawing; grid snapping (24 px) per axis when no guide matched; red guide lines with end marks. View menu: "Show grid" and "Snap to grid" (also Mod+'), persisted (`BoardPrefs`).
+
+**Deviations:**
+- **Ctrl/Cmd disables snapping (not Alt):** Alt already means duplicate (drag) and from-center (draw/resize); using it for snapping would make those gestures unsnappable.
+- Quick styles live in their own popover panel rather than a row in the bar (keeps the bar compact).
+- Resize snapping only for unrotated boxes (guides are axis-aligned).
+- `BoardContext` gained `prefs` (`BoardPrefs`); `PreviewState` gained `guides`.
+
+**Dependencies added:** none.
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (315 unit tests: align/distribute/match, snapMove/snapPoint/grid, presets persistence + patch scoping, pickStyle, defaults incl. corrupted data, copy/paste style one undo step, arrange with frame contents + undo, match size) · pnpm test:e2e ✅ (77; new arrange suite: align left, snap to an edge with guide shown and removed, Ctrl/Cmd disables snapping, snap to grid via Mod+', quick style + copy/paste style + set-as-default used by a new shape) · visual check of guides mid-drag and the Arrange panel · **M3 reached.**

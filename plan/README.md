@@ -37,7 +37,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 15 | [Pen, eraser, images](./steps/15-pen-eraser-images.md) | C | 14 | 1.5d |
 | [x] | 16 | [Frames](./steps/16-frames.md) | C | 15 | 1d |
 | [x] | 17 | [Style popover](./steps/17-style-popover.md) | D. Styling | 16 | 2d |
-| [ ] | 18 | [Style productivity and snapping](./steps/18-style-productivity-snapping.md) | D | 17 | 2d |
+| [x] | 18 | [Style productivity and snapping](./steps/18-style-productivity-snapping.md) | D | 17 | 2d |
 | [ ] | 19 | [Connectable interface](./steps/19-connectable.md) | E. Diagrams | 18 | 1.5d |
 | [ ] | 20 | [Connector tool and endpoints](./steps/20-connector-tool-endpoints.md) | E | 19 | 2d |
 | [ ] | 21 | [Routing, markers, labels](./steps/21-routing-markers-labels.md) | E | 20 | 2d |
