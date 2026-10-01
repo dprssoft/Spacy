@@ -1,5 +1,6 @@
 import type { Component } from 'svelte';
 import type { Element, ElementType, Point, Rect } from '$lib/model/types';
+import type { Connectable } from '../diagram/connectable';
 import type { StyleOption } from '../style/options';
 
 export interface ElementViewProps<E extends Element = Element> {
@@ -15,8 +16,8 @@ export interface ElementDefinition<E extends Element = Element> {
 	aabb(el: E): Rect;
 	/** Precise hit test; `tol` is in world units. */
 	hitTest(el: E, p: Point, tol: number): boolean;
-	/** Typed as `Connectable | null` in step 19; null only for connectors. */
-	connectable: unknown | null;
+	/** How connectors attach; null only for connectors themselves. */
+	connectable: Connectable<E> | null;
 	resizable: boolean;
 	rotatable: boolean;
 	/** Keep the aspect ratio on resize by default (images). */

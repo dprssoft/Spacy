@@ -106,3 +106,54 @@ export function rectFromPoints(a: Point, b: Point): Rect {
 		h: Math.abs(b.y - a.y)
 	};
 }
+
+/** Distance t ≥ 0 along the ray `origin + t·dir` where it crosses segment a–b, or null. */
+export function raySegmentIntersection(
+	origin: Point,
+	dir: Point,
+	a: Point,
+	b: Point
+): number | null {
+	const ex = b.x - a.x;
+	const ey = b.y - a.y;
+	const denom = dir.x * ey - dir.y * ex;
+	if (Math.abs(denom) < 1e-12) return null; // parallel
+	const ax = a.x - origin.x;
+	const ay = a.y - origin.y;
+	const t = (ax * ey - ay * ex) / denom;
+	const s = (ax * dir.y - ay * dir.x) / denom;
+	if (t < 0 || s < -1e-9 || s > 1 + 1e-9) return null;
+	return t;
+}
+
+/** Where a ray from `origin` (inside) finally leaves the polygon: its farthest crossing. */
+export function rayPolygonExit(origin: Point, dir: Point, poly: readonly Point[]): Point | null {
+	let best: number | null = null;
+	for (let i = 0; i < poly.length; i++) {
+		const t = raySegmentIntersection(origin, dir, poly[i]!, poly[(i + 1) % poly.length]!);
+		if (t !== null && (best === null || t > best)) best = t;
+	}
+	return best === null ? null : { x: origin.x + dir.x * best, y: origin.y + dir.y * best };
+}
+
+/** The point on the polygon's boundary closest to `p`. */
+export function nearestPointOnPolygon(poly: readonly Point[], p: Point): Point {
+	let best = poly[0] ?? p;
+	let bestD = Infinity;
+	for (let i = 0; i < poly.length; i++) {
+		const a = poly[i]!;
+		const b = poly[(i + 1) % poly.length]!;
+		const dx = b.x - a.x;
+		const dy = b.y - a.y;
+		const len2 = dx * dx + dy * dy;
+		const t =
+			len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+		const q = { x: a.x + t * dx, y: a.y + t * dy };
+		const d = Math.hypot(q.x - p.x, q.y - p.y);
+		if (d < bestD) {
+			bestD = d;
+			best = q;
+		}
+	}
+	return best;
+}
