@@ -599,3 +599,27 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (572 unit tests; new, per template: every element passes `parseElement`, only `TEMPLATE` transactions, connector ends exist, frame children inside their frame; flowchart 5 shapes + 5 connectors with Yes/No; brainstorm six colors; meeting notes Markdown has the agenda and action items) · pnpm test:e2e ✅ (117; new `templates.spec.ts`: the Flowchart card shows a preview → opens a board with 5 shapes, 5 connectors and Yes/No labels → back home the board card has a thumbnail; Meeting notes opens with "Action items" and 3 checkboxes) · screenshots of the start-page row and the three boards (fit-to-content) reviewed: tidy.
+
+## Step 29 — PWA, settings, backup reminder — 2026-10-01
+**Summary:**
+- Icons: `static/logo.svg` (indigo rounded square, white diamond, node and connector line). `pnpm icons` (`@vite-pwa/assets-generator`, `pwa-assets.config.ts`) generates `favicon.ico`, `pwa-64x64.png`, `pwa-192x192.png`, `pwa-512x512.png`, `maskable-icon-512x512.png` and `apple-touch-icon-180x180.png` (the last two full-bleed indigo). `favicon.svg` is the logo. The Svelte placeholder favicon is gone; icon and manifest links are in `app.html`.
+- PWA (`@vite-pwa/sveltekit`, `registerType: 'prompt'`): manifest with the name, colors, icons and the `.smthng` file handler. Workbox precaches every client file (38 entries, ~1.2 MB) and falls back to `/` for navigation, so every route reloads offline, including lazy chunks.
+- `shared/pwa.svelte.ts`: registers the worker (lazy import of `virtual:pwa-register`) and captures `beforeinstallprompt` (`canInstall`, `install()`). On a waiting update it shows a persistent toast "A new version is available" with "Reload"; it never reloads on its own.
+- File handling: `handleLaunchFiles()` on the start page imports files the installed app was opened with and opens the board when there is exactly one.
+- `SettingsMenu` (start-page ⚙ and board TopBar): theme radio items, Install app (when available), Backup all boards, Restore from backup…, storage usage and persistence with "Request persistent storage", and About (version from `__APP_VERSION__`, the storage note, a placeholder repository link).
+- `BackupReminder`: a banner when there are 3+ boards, no backup in the last 14 days and no dismissal in the last 7 days. "Back up now" / "Later". The rule is the pure `shouldShowBackupReminder`.
+
+**Deviations:**
+- `@vite-pwa/assets-generator` is 1.x (the peer range of `@vite-pwa/sveltekit` 1.1.0), so icon file names follow its `minimal2023` preset rather than the names in the step.
+- The SPA fallback is precached as `/` (`spa.fallbackMapping`) with a per-build revision. The plugin's default (reading `_app/version.json`) failed at build time, and the preview server answers `/index.html` with 404, which made the worker's install fail.
+- `kit.paths.relative: false`: with relative asset URLs the cached `/` page broke when served as the fallback for `/board/<id>` offline.
+- `registerSW({ immediate: true })`: registration is lazy-imported after page load, so it must not wait for the load event.
+- The launch-queue consumer is set on the start page only (the manifest's file handler action is `/`).
+- `requestPersistentStorage(again)` can re-ask on an explicit user request.
+- **Test corrected (not weakened):** `commands.spec` "context menu reorders layers" right-clicked "empty canvas" at (40, 400), which is on the toolbar. It passed only while the previous menu was still closing (the click fell through to the canvas) and failed under load, when the toolbar got the click. It now right-clicks real empty canvas (300, 620). Stress run: 150/150.
+
+**Dependencies added:** `@vite-pwa/sveltekit` 1.1.0, `@vite-pwa/assets-generator` 1.0.4 (dev); `workbox-window` 7.4.1 (the registration module imports it).
+
+**Follow-ups:** Manual checks not done: Chrome DevTools → Application → Manifest installability and the Lighthouse "Installable" audit.
+
+**Verification:** pnpm verify ✅ (578 unit tests; new: backup reminder rule, byte formatting) · pnpm test:e2e ✅ (123; new `offline.spec.ts`: create a board → worker active → offline → the board reloads with its shape, the start page lists the board and renders the template previews; `settings.spec.ts`: storage line, theme switch, About with the version, settings on a board, the reminder with 3 boards and "Later" persisting across reload, the manifest with reachable icons and the file handler) · screenshot of the start page with the reminder and the settings menu reviewed.

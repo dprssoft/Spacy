@@ -37,7 +37,7 @@ An installable, fully offline-capable app with an update prompt and `.smthng` fi
 - `tests/e2e/settings.spec.ts`: the settings menu shows the storage usage and the About dialog shows the version.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `pnpm verify` and `pnpm test:e2e` pass
 - [ ] Chrome DevTools → Application → Manifest shows it's installable with no errors (manual)
 - [ ] Lighthouse "Installable" passes (manual; record the score in PROGRESS)
 

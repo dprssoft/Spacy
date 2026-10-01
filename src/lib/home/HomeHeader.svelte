@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Search from '@lucide/svelte/icons/search';
-	import Settings from '@lucide/svelte/icons/settings';
 	import X from '@lucide/svelte/icons/x';
 	import Logo from '$lib/shared/ui/Logo.svelte';
 	import ThemeToggle from '$lib/shared/ui/ThemeToggle.svelte';
 	import ImportButton from './ImportButton.svelte';
+	import SettingsMenu from './SettingsMenu.svelte';
 
 	let { search = $bindable('') }: { search?: string } = $props();
 
@@ -75,8 +75,6 @@
 	<div class="ml-auto flex items-center gap-1">
 		<ImportButton class={iconButton} />
 		<ThemeToggle />
-		<button type="button" class={iconButton} aria-label="Settings" title="Coming soon" disabled>
-			<Settings class="size-[18px]" aria-hidden="true" />
-		</button>
+		<SettingsMenu class={iconButton} />
 	</div>
 </header>

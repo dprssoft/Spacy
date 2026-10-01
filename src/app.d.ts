@@ -1,9 +1,21 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
+	/** The app version from package.json (vite `define`). */
+	const __APP_VERSION__: string;
+
+	/** File Handling API (installed PWA opened with `.smthng` files; Chromium). */
+	interface LaunchParams {
+		readonly files: readonly { getFile(): Promise<File> }[];
+	}
+	interface LaunchQueue {
+		setConsumer(consumer: (params: LaunchParams) => void): void;
+	}
+
 	interface Window {
 		/** Dev/e2e test hooks (see src/lib/dev/testHooks.ts). */
 		__smthng?: import('$lib/dev/testHooks').TestHooks;
+		launchQueue?: LaunchQueue;
 	}
 	namespace App {
 		// interface Error {}

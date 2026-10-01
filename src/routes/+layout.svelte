@@ -2,15 +2,14 @@
 	import '../app.css';
 	import { Tooltip } from 'bits-ui';
 	import { Toaster } from 'svelte-sonner';
-	import favicon from '$lib/assets/favicon.svg';
+	import { pwa } from '$lib/shared/pwa.svelte';
 	import { theme } from '$lib/shared/theme.svelte';
 
 	let { children } = $props();
 
 	$effect(() => theme.init());
+	$effect(() => pwa.init());
 </script>
-
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <Tooltip.Provider delayDuration={400}>
 	{@render children()}

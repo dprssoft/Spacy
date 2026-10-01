@@ -113,7 +113,8 @@ test('the context menu reorders layers and paste works from it', async ({ page }
 
 	await page.mouse.click(box.x + 10, box.y + 10, { button: 'right' });
 	await page.getByRole('menuitem', { name: /^Copy/ }).click();
-	await page.mouse.click(40, 400, { button: 'right' }); // empty canvas
+	// Empty canvas, clear of the toolbar (x < 60) and the zoom controls (bottom right).
+	await page.mouse.click(300, 620, { button: 'right' });
 	expect(await selected(page)).toEqual([]);
 	await page.getByRole('menuitem', { name: /^Paste/ }).click();
 	await expect.poll(async () => (await list(page)).length).toBe(3);

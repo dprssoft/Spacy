@@ -1,0 +1,106 @@
+<script lang="ts">
+	import { DropdownMenu } from 'bits-ui';
+	import Settings from '@lucide/svelte/icons/settings';
+	import { toast } from 'svelte-sonner';
+	import { pwa } from '$lib/shared/pwa.svelte';
+	import { theme, type ThemeMode } from '$lib/shared/theme.svelte';
+	import { requestPersistentStorage, storageEstimate } from '$lib/storage/persist';
+	import AboutDialog from './AboutDialog.svelte';
+	import { backupAll, importFiles } from './fileActions';
+	import { formatBytes } from './formatBytes';
+
+	let { class: className = '' }: { class?: string } = $props();
+
+	let open = $state(false);
+	let about = $state(false);
+	let input = $state<HTMLInputElement>();
+	let storage = $state<{ usage: number; persisted: boolean } | null>(null);
+
+	const refreshStorage = () => void storageEstimate().then((s) => (storage = s));
+	$effect(() => {
+		if (open) refreshStorage();
+	});
+
+	async function persist() {
+		const ok = await requestPersistentStorage(true);
+		toast(ok ? 'Storage is now persistent' : 'The browser didn’t grant persistent storage');
+		refreshStorage();
+	}
+
+	const MODES: { value: ThemeMode; label: string }[] = [
+		{ value: 'light', label: 'Light' },
+		{ value: 'dark', label: 'Dark' },
+		{ value: 'system', label: 'System' }
+	];
+	const item =
+		'flex h-8 cursor-default items-center gap-2 rounded-md px-2 text-sm outline-none select-none data-[highlighted]:bg-surface-2';
+	const heading = 'px-2 pt-1.5 pb-0.5 text-xs font-medium text-muted';
+	const sep = 'my-1 h-px bg-border';
+</script>
+
+<DropdownMenu.Root bind:open>
+	<DropdownMenu.Trigger class={className} aria-label="Settings">
+		<Settings class="size-[18px]" aria-hidden="true" />
+	</DropdownMenu.Trigger>
+	<DropdownMenu.Portal>
+		<DropdownMenu.Content
+			align="end"
+			sideOffset={4}
+			class="z-50 min-w-60 rounded-lg border border-border bg-surface p-1 shadow-lg"
+		>
+			<DropdownMenu.RadioGroup value={theme.mode} onValueChange={(v) => theme.set(v as ThemeMode)}>
+				<DropdownMenu.GroupHeading class={heading}>Theme</DropdownMenu.GroupHeading>
+				{#each MODES as m (m.value)}
+					<DropdownMenu.RadioItem value={m.value} class={item} closeOnSelect={false}>
+						{#snippet children({ checked })}
+							<span class="w-4 text-accent" aria-hidden="true">{checked ? '●' : ''}</span>{m.label}
+						{/snippet}
+					</DropdownMenu.RadioItem>
+				{/each}
+			</DropdownMenu.RadioGroup>
+			<DropdownMenu.Separator class={sep} />
+			{#if pwa.canInstall}
+				<DropdownMenu.Item class={item} onSelect={() => pwa.install()}
+					>Install app</DropdownMenu.Item
+				>
+			{/if}
+			<DropdownMenu.Item class={item} onSelect={() => backupAll()}
+				>Backup all boards</DropdownMenu.Item
+			>
+			<DropdownMenu.Item class={item} onSelect={() => input?.click()}
+				>Restore from backup…</DropdownMenu.Item
+			>
+			<DropdownMenu.Separator class={sep} />
+			<p class="px-2 py-1.5 text-xs text-muted" data-testid="storage-info">
+				{#if storage}
+					Using {formatBytes(storage.usage)} · Persistent: {storage.persisted ? 'yes' : 'no'}
+				{:else}
+					Storage: unknown
+				{/if}
+			</p>
+			{#if storage && !storage.persisted}
+				<DropdownMenu.Item class={item} closeOnSelect={false} onSelect={persist}
+					>Request persistent storage</DropdownMenu.Item
+				>
+			{/if}
+			<DropdownMenu.Separator class={sep} />
+			<DropdownMenu.Item class={item} onSelect={() => (about = true)}
+				>About SMTHNG</DropdownMenu.Item
+			>
+		</DropdownMenu.Content>
+	</DropdownMenu.Portal>
+</DropdownMenu.Root>
+
+<input
+	bind:this={input}
+	type="file"
+	accept=".smthng,application/json"
+	multiple
+	hidden
+	onchange={async (e) => {
+		const files = [...(e.currentTarget.files ?? [])];
+		e.currentTarget.value = '';
+		await importFiles(files);
+	}}
+/>
+<AboutDialog bind:open={about} />

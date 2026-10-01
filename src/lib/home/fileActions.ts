@@ -14,7 +14,7 @@ import type { BoardMeta } from '$lib/storage/types';
 const MB = 1024 * 1024;
 
 /** Imports `.smthng` files one after another; always creates new boards. */
-export async function importFiles(files: Iterable<File>): Promise<void> {
+export async function importFiles(files: Iterable<File>): Promise<BoardMeta[]> {
 	const imported: BoardMeta[] = [];
 	for (const file of files) {
 		try {
@@ -32,12 +32,29 @@ export async function importFiles(files: Iterable<File>): Promise<void> {
 			toast.error(`Couldn’t import ${file.name}: ${reason}`);
 		}
 	}
-	if (imported.length === 0) return;
+	if (imported.length === 0) return imported;
 	const only = imported.length === 1 ? imported[0] : undefined;
 	toast.success(only ? `Imported “${only.title}”` : `Imported ${imported.length} boards`, {
 		action: only
 			? { label: 'Open', onClick: () => void goto(resolve('/board/[id]', { id: only.id })) }
 			: undefined
+	});
+	return imported;
+}
+
+/**
+ * Files the installed app was opened with (File Handling API): import them, and open the board
+ * when there is exactly one.
+ */
+export function handleLaunchFiles(): void {
+	window.launchQueue?.setConsumer((params) => {
+		if (params.files.length === 0) return;
+		void (async () => {
+			const files = await Promise.all(params.files.map((h) => h.getFile()));
+			const boards = await importFiles(files);
+			const only = boards.length === 1 ? boards[0] : undefined;
+			if (only) await goto(resolve('/board/[id]', { id: only.id }));
+		})();
 	});
 }
 
