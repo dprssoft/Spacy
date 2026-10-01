@@ -2,9 +2,14 @@
 	import { untrack } from 'svelte';
 	import { FONT_SIZE_PX } from '$lib/model/defaults';
 	import { getDocsMap } from '$lib/model/doc';
-	import type { DocCardElement } from '$lib/model/types';
+	import type { DocCardElement, Point } from '$lib/model/types';
 	import { getBoard } from '../../context';
-	import { createDocEditor, type Editor } from '../../doccards/editorFactory';
+	import { createBoardDocEditor, mentionAt, refreshMentions } from '../../doccards/boardEditor';
+	import BubbleMenu from '../../doccards/BubbleMenu.svelte';
+	import type { Editor } from '../../doccards/editorFactory';
+	import { openFocus } from '../../doccards/focus';
+	import { jumpToElement } from '../../doccards/jumpTo';
+	import { isSuggestionKey } from '../../doccards/suggestionPopup.svelte';
 	import '../../doccards/prose.css';
 	import { fillColor, radiusPx } from '../common';
 	import type { ElementViewProps } from '../registry';
@@ -16,32 +21,58 @@
 	// The element's identity is fixed for this view's lifetime.
 	// svelte-ignore state_referenced_locally
 	const id = el.id;
+	let card = $state<HTMLDivElement>();
 	let body = $state<HTMLDivElement>();
+	let menu = $state<HTMLDivElement>();
 	let editor = $state.raw<Editor | null>(null);
 
-	/** What is being edited: the title (double-click on the header, or a collapsed card) or the body. */
-	const part = $derived.by((): 'title' | 'body' | null => {
+	function contains(selector: string, at: Point): boolean {
+		const r = card?.querySelector(selector)?.getBoundingClientRect();
+		return !!r && at.x >= r.left && at.x <= r.right && at.y >= r.top && at.y <= r.bottom;
+	}
+
+	/**
+	 * What editing targets: double-click on the title renames, elsewhere on the header opens focus
+	 * mode, on the body edits it. Without a pointer (Enter): the body, or the title when collapsed.
+	 */
+	const part = $derived.by((): 'title' | 'body' | 'focus' | null => {
 		if (!editing) return null;
-		if (el.collapsed) return 'title';
 		const at = ctx.selection.editingAt;
-		if (at && body && at.y < body.getBoundingClientRect().top) return 'title';
+		if (!at) return el.collapsed ? 'title' : 'body';
+		if (contains('[data-doccard-title]', at)) return 'title';
+		if (el.collapsed || contains('[data-doccard-header]', at)) return 'focus';
 		return 'body';
+	});
+
+	$effect(() => {
+		if (part !== 'focus') return;
+		untrack(() => {
+			ctx.editing.end();
+			openFocus(ctx.id, id);
+		});
 	});
 
 	// The editor always renders the live shared content; it only becomes editable while editing.
 	$effect(() => {
-		if (!body) return;
+		if (!body || !menu) return;
 		const fragment = getDocsMap(ctx.doc).get(id);
 		if (!fragment) return;
 		const node = body;
-		const ed = createDocEditor({ element: node, fragment, editable: false });
+		const ed = createBoardDocEditor(ctx, {
+			element: node,
+			fragment,
+			editable: false,
+			bubbleMenu: menu
+		});
 		editor = ed;
 		// The editor itself is the interactive element (role textbox); listen on its container.
 		node.addEventListener('keydown', onkeydown);
 		node.addEventListener('wheel', onwheel);
+		node.addEventListener('click', onclick);
 		return () => {
 			node.removeEventListener('keydown', onkeydown);
 			node.removeEventListener('wheel', onwheel);
+			node.removeEventListener('click', onclick);
 			editor = null;
 			ed.destroy();
 		};
@@ -62,11 +93,19 @@
 		else ed.commands.focus('end', { scrollIntoView: false });
 	});
 
-	// A pointerdown anywhere outside the card ends body editing (the canvas tool then handles it).
+	// Mention chips of deleted objects are struck through.
+	$effect(() => {
+		void ctx.store.elements.size;
+		if (editor) untrack(() => refreshMentions(editor!));
+	});
+
+	// A pointerdown outside the card body and its popups ends body editing.
 	$effect(() => {
 		if (part !== 'body') return;
 		const onDown = (e: PointerEvent) => {
-			if (body && e.target instanceof Node && body.contains(e.target)) return;
+			const t = e.target;
+			if (t instanceof Node && body?.contains(t)) return;
+			if (t instanceof Element && t.closest('[data-doc-popup]')) return;
 			ctx.editing.end();
 		};
 		document.addEventListener('pointerdown', onDown, true);
@@ -74,10 +113,21 @@
 	});
 
 	function onkeydown(e: KeyboardEvent) {
-		if (e.key !== 'Escape') return;
-		e.preventDefault();
-		e.stopPropagation();
-		ctx.editing.end();
+		if (isSuggestionKey(e)) return; // e.g. Escape closing a slash/mention popup
+		if (e.key === 'Escape') {
+			e.preventDefault();
+			e.stopPropagation();
+			ctx.editing.end();
+		} else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+			ctx.editing.end();
+			openFocus(ctx.id, id);
+		}
+	}
+
+	function onclick(e: MouseEvent) {
+		const target = mentionAt(e.target);
+		if (target) jumpToElement(ctx, target);
 	}
 
 	/** Scroll the body when it can scroll that way; otherwise let the canvas pan. */
@@ -92,6 +142,7 @@
 </script>
 
 <div
+	bind:this={card}
 	class="absolute inset-0 flex flex-col overflow-hidden"
 	style:background={fillColor(el.style)}
 	style:border="{el.style.strokeWidth}px solid {el.style.stroke}"
@@ -99,7 +150,14 @@
 	style:color={el.style.font.color}
 	style:font-size="{FONT_SIZE_PX[el.style.font.size]}px"
 >
-	<DocCardHeader {el} editingTitle={part === 'title'} />
+	<DocCardHeader
+		{el}
+		editingTitle={part === 'title'}
+		onopen={() => {
+			ctx.editing.end();
+			openFocus(ctx.id, id);
+		}}
+	/>
 	<div
 		bind:this={body}
 		class="doc-prose min-h-0 flex-1 overflow-y-auto px-4 py-3"
@@ -109,3 +167,5 @@
 		data-doccard-body
 	></div>
 </div>
+<!-- The editor moves the menu into document.body while it's shown. -->
+<div class="hidden"><BubbleMenu {editor} bind:element={menu} /></div>

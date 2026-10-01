@@ -471,3 +471,26 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** The board route's JS is ~188 KB gzipped including TipTap; lazy-loading `editorFactory` is step 30.
 
 **Verification:** pnpm verify ✅ (507 unit tests; new: editor writes headings/lists into the fragment, a synced second doc renders the same text, task lists + heading limit, safe links only, undo of deletion restores text while typing stays out of canvas undo, undo of creation removes the fragment, collapse/expand undo steps, per-axis resize limits) · pnpm test:e2e ✅ (101; new `doccard.spec.ts`: N + markdown shortcuts → H1 + list persist after reload and appear in a second tab within 1 s; mouse text selection doesn't move the card; collapse → 40 px with the connector still ending at the card, expand restores; copy/paste copies the text; deleting and undoing restores it) · screenshots of an edited card and a collapsed card reviewed.
+
+## Step 24 — Focus mode, formatting menus, mentions — 2026-10-01
+**Summary:**
+- Focus mode (`doccards/FocusMode.svelte`): a full-window dialog with "← Board", the title (click to rename) and close; a 760 px column at 17 px. It has its own editable editor on the same fragment; the canvas card stops editing while it's open. Opened by Mod+Enter (a selected card, or inside a card editor), the header's "Open" button, or a double-click on the header outside the title (a double-click on the title still renames it). The URL drives it (`?doc=<id>`, `doccards/focus.ts`): opening pushes an entry marked with `page.state.focusPushed`; closing goes back if we pushed it, otherwise it replaces the URL (deep links). So back closes, forward reopens, and deep links open after load. An unknown id shows the toast "Doc card not found" and strips the parameter. Escape closes it, Tab is trapped, and focus returns to the canvas.
+- Bubble menu (TipTap bubble-menu, both editors): Bold, Italic, Strike, Code, Link (an inline URL input: Enter applies, empty removes, http(s)/mailto only, a bare domain gets https://), H1–H3. It is positioned by floating-ui (`fixed`, flip + shift), so it stays on screen.
+- Slash commands (`slash.ts`): 9 items with prefix-then-substring filtering over titles and keywords.
+- Mentions (`mentions.ts`): `@` over frames and doc cards (titles) and shapes, stickies and texts (first 40 characters, one line), prefix matches first, max 8. The chip is `@label`. A decoration plugin strikes through chips of deleted objects, refreshed when elements change. Clicking a chip (editing card or focus mode) closes focus mode, animates the viewport to the object, selects it and pulses it (`PulseHighlight.svelte`). A deleted object shows the toast "This object was deleted". Labels are stored at insert time and are not live-updated.
+- Both popups use one `SuggestionList` mounted with `mount()` into `document.body`. It sits below the caret, flips above near the bottom and is clamped horizontally. Keys: arrows, Enter/Tab, Escape.
+- Shortcuts registered in group "Doc": Mod+Enter, plus Mod+B/I/Shift+X/E listed for reference only (`when: () => false`; the editor handles them).
+
+**Deviations:**
+- Double-click on the header: the title renames, the rest of the header opens focus mode (step 23 renamed on any header double-click).
+- ProseMirror prevents the default of every Escape, so "Escape closes the popup only" can't use `defaultPrevented`. The suggestion renderer records the key events it consumes (`isSuggestionKey(e)`), and the card and focus mode check that.
+- **Bug found visually and fixed:** the bubble menu appeared at the window's left edge. Its first position was computed before TipTap set `width: max-content`, so it measured as full width. The menu now has `w-max` from the start.
+- Mention chips are clickable only in an editing card or in focus mode (read-only canvas cards don't take pointer events, like every element).
+- `editorFactory` gained options (`bubbleMenu`, `bubbleMenuParent`, `extra` extensions). `boardEditor.ts` wires slash and mentions to the board. TipTap is imported only by `doccards/` modules.
+- `App.PageState.focusPushed` added in `app.d.ts`; `PreviewState.pulse` added.
+
+**Dependencies added:** `@tiptap/extension-bubble-menu`, `@tiptap/suggestion`, `@tiptap/extension-mention` (3.31.4), `@floating-ui/dom` 1.8.0 (peer of suggestion; also used by bubble-menu).
+
+**Follow-ups:** The board route's JS is ~205 KB gzipped with TipTap. Lazy-loading the doccards modules is step 30.
+
+**Verification:** pnpm verify ✅ (515 unit tests; new: slash filtering, mention ranking/limit/exclusions/labels) · pnpm test:e2e ✅ (106; new `focus-mentions.spec.ts`: Mod+Enter → `?doc=` → type → back closes and the card shows the text → forward reopens → Escape closes; a deep link opens focus mode and close replaces the URL; an unknown id → toast + stripped; `/head` + Enter → H1; bubble menu Heading/Bold keeps editing; `@Log` + Enter → chip → click selects and centers the sticky with a pulse; a deleted target → struck-through chip + toast; the slash popup near the bottom stays inside the window) · screenshots of the mention popup, slash popup, bubble menu (card and focus mode) and focus mode reviewed.

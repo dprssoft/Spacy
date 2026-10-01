@@ -9,7 +9,10 @@ declare global {
 		// interface Error {}
 		// interface Locals {}
 		// interface PageData {}
-		// interface PageState {}
+		interface PageState {
+			/** Set on the history entry pushed when opening a doc card in focus mode. */
+			focusPushed?: boolean;
+		}
 		// interface Platform {}
 	}
 }

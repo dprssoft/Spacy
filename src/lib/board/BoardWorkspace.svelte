@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';
 	import { generatePerfElements } from '$lib/dev/perfBoard';
 	import { installTestHooks } from '$lib/dev/testHooks';
@@ -14,6 +16,10 @@
 	import ConnectOverlay from './canvas/ConnectOverlay.svelte';
 	import QuickCreateButtons from './canvas/QuickCreateButtons.svelte';
 	import { diagramShortcuts } from './diagram/diagramShortcuts';
+	import { docShortcuts } from './doccards/docShortcuts';
+	import { closeFocus, FOCUS_PARAM } from './doccards/focus';
+	import FocusMode from './doccards/FocusMode.svelte';
+	import PulseHighlight from './canvas/PulseHighlight.svelte';
 	import PreviewOverlay from './canvas/PreviewOverlay.svelte';
 	import { installConnectorHooks } from './diagram/ops';
 	import { imagePaste, onCopyEvent, onPasteEvent } from './commands/clipboard';
@@ -64,7 +70,8 @@
 		...viewShortcuts,
 		...selectShortcuts,
 		...editShortcuts,
-		...diagramShortcuts
+		...diagramShortcuts,
+		...docShortcuts
 	]);
 	setBoard(ctx);
 	const title = new BoardTitle(ctx.id, ctx.doc);
@@ -123,6 +130,20 @@
 			shortcut.run(ctx);
 		}
 	}
+	// Focus mode follows the URL (`?doc=`), so back/forward and deep links open and close it.
+	const focusId = $derived(page.url.searchParams.get(FOCUS_PARAM));
+	const focusCard = $derived.by(() => {
+		const el = focusId ? ctx.store.get(focusId) : undefined;
+		return el?.type === 'doccard' ? el : null;
+	});
+	$effect(() => {
+		if (!focusId || focusCard) return;
+		untrack(() => {
+			toast.error('Doc card not found');
+			closeFocus(ctx.id);
+		});
+	});
+
 	$effect(() => {
 		document.title = `${title.value || 'Board'} — SMTHNG`;
 	});
@@ -144,11 +165,17 @@
 					<ConnectOverlay />
 					<SelectionOverlay />
 					<QuickCreateButtons />
+					<PulseHighlight />
 					<StylePopover />
 				{/snippet}
 			</Canvas>
 		</CanvasContextMenu>
 		<Toolbar />
+		{#if focusCard}
+			{#key focusCard.id}
+				<FocusMode card={focusCard} />
+			{/key}
+		{/if}
 		{#if import.meta.env.DEV && page.url.searchParams.get('debug') === 'perf'}
 			<button
 				type="button"

@@ -1,5 +1,6 @@
 // The only module that imports TipTap (with the later doccard modules), so it can be lazy-loaded.
 import { Editor, type Extensions } from '@tiptap/core';
+import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 import Collaboration from '@tiptap/extension-collaboration';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
 import { Placeholder } from '@tiptap/extensions';
@@ -13,10 +14,32 @@ export function isSafeLink(url: string): boolean {
 	return SAFE_PROTOCOL.test(url.trim());
 }
 
-export function docExtensions(
-	fragment: Y.XmlFragment,
-	opts: { placeholder?: string } = {}
-): Extensions {
+export interface DocExtensionOptions {
+	placeholder?: string;
+	/** Root element of the formatting bubble menu (shown on a non-empty selection). */
+	bubbleMenu?: HTMLElement;
+	/** Where the bubble menu is attached (default: document.body). */
+	bubbleMenuParent?: HTMLElement;
+	/** More extensions (slash commands, mentions). */
+	extra?: Extensions;
+}
+
+export function docExtensions(fragment: Y.XmlFragment, opts: DocExtensionOptions = {}): Extensions {
+	const bubble = opts.bubbleMenu
+		? [
+				BubbleMenu.configure({
+					element: opts.bubbleMenu,
+					appendTo: () => opts.bubbleMenuParent ?? document.body,
+					options: {
+						strategy: 'fixed',
+						placement: 'top',
+						offset: 8,
+						flip: true,
+						shift: { padding: 8 }
+					}
+				})
+			]
+		: [];
 	return [
 		StarterKit.configure({
 			heading: { levels: [1, 2, 3] },
@@ -34,15 +57,16 @@ export function docExtensions(
 		TaskList,
 		TaskItem.configure({ nested: true }),
 		Placeholder.configure({ placeholder: opts.placeholder ?? 'Write something…' }),
-		Collaboration.configure({ fragment })
+		Collaboration.configure({ fragment }),
+		...bubble,
+		...(opts.extra ?? [])
 	];
 }
 
-export interface DocEditorOptions {
+export interface DocEditorOptions extends DocExtensionOptions {
 	element: HTMLElement;
 	fragment: Y.XmlFragment;
 	editable: boolean;
-	placeholder?: string;
 	onFocus?(): void;
 	onBlur?(): void;
 }
@@ -51,7 +75,7 @@ export function createDocEditor(opts: DocEditorOptions): Editor {
 	return new Editor({
 		element: opts.element,
 		editable: opts.editable,
-		extensions: docExtensions(opts.fragment, { placeholder: opts.placeholder }),
+		extensions: docExtensions(opts.fragment, opts),
 		onFocus: () => opts.onFocus?.(),
 		onBlur: () => opts.onBlur?.()
 	});
