@@ -17,6 +17,7 @@
 	import { getBoard } from '../context';
 	import { danglingConnectors } from '../diagram/ops';
 	import { connectedComponent } from '../diagram/quickCreate';
+	import { copyMarkdown, downloadMarkdown } from '../doccards/exportMarkdown';
 	import { formatKeys } from '../tools/formatKeys';
 
 	let { children }: { children: Snippet } = $props();
@@ -27,6 +28,10 @@
 	let open = $state(false);
 	const hasSelection = $derived(open && ctx.selection.size > 0);
 	const allLocked = $derived(open && selectedElements(ctx).every((el) => el.locked));
+	const docCard = $derived.by(() => {
+		const id = open ? ctx.selection.single : null;
+		return id && ctx.store.get(id)?.type === 'doccard' ? id : null;
+	});
 
 	const item =
 		'flex h-8 cursor-default items-center justify-between gap-8 rounded-md px-2 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-surface-2';
@@ -82,6 +87,11 @@
 				{@render entry('Select connected', 'Mod+Shift+A', () =>
 					ctx.selection.set(connectedComponent(ctx, ctx.selection.ids))
 				)}
+				{#if docCard}
+					<ContextMenu.Separator class={sep} />
+					{@render entry('Copy as Markdown', null, () => copyMarkdown(ctx, docCard))}
+					{@render entry('Download .md', null, () => downloadMarkdown(ctx, docCard))}
+				{/if}
 			{:else}
 				{@render entry('Paste', 'Mod+V', () => pasteFromClipboard(ctx))}
 				{@render entry('Select all', 'Mod+A', () =>

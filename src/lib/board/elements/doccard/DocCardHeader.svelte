@@ -6,6 +6,7 @@
 	import { updateElement } from '$lib/model/ops';
 	import type { DocCardElement } from '$lib/model/types';
 	import { getBoard } from '../../context';
+	import DocCardMenu from '../../doccards/DocCardMenu.svelte';
 	import { setCollapsed } from './collapse';
 
 	let { el, editingTitle, onopen }: { el: DocCardElement; editingTitle: boolean; onopen(): void } =
@@ -73,6 +74,10 @@
 		<div class="min-w-0 truncate px-1 font-semibold" data-doccard-title>{el.title}</div>
 		<div class="flex-1"></div>
 	{/if}
+	<DocCardMenu
+		cardId={el.id}
+		class="pointer-events-auto inline-flex size-6 shrink-0 items-center justify-center rounded opacity-60 hover:bg-black/5 hover:opacity-100"
+	/>
 	<button
 		type="button"
 		class="pointer-events-auto -mr-1.5 inline-flex size-6 shrink-0 items-center justify-center rounded opacity-60 hover:bg-black/5 hover:opacity-100"

@@ -9,7 +9,9 @@
 	import { getBoard } from '../context';
 	import { createBoardDocEditor, mentionAt, refreshMentions } from './boardEditor';
 	import BubbleMenu from './BubbleMenu.svelte';
+	import DocCardMenu from './DocCardMenu.svelte';
 	import type { Editor } from './editorFactory';
+	import { registerEditor } from './editorRegistry';
 	import { closeFocus } from './focus';
 	import { jumpToElement } from './jumpTo';
 	import './prose.css';
@@ -51,8 +53,10 @@
 			bubbleMenuParent: overlay
 		});
 		editor = ed;
+		const unregister = registerEditor(id, ed);
 		ed.commands.focus('end');
 		return () => {
+			unregister();
 			editor = null;
 			ed.destroy();
 		};
@@ -65,6 +69,8 @@
 
 	function onkeydown(e: KeyboardEvent) {
 		if (isSuggestionKey(e)) return;
+		// Keys in menus (the ⋯ menu) belong to them.
+		if (e.target instanceof Element && e.target.closest('[role=menu]')) return;
 		if (e.key === 'Escape') {
 			e.preventDefault();
 			close();
@@ -138,6 +144,7 @@
 				</button>
 			{/if}
 		</div>
+		<DocCardMenu cardId={id} class={iconButton} />
 		<button type="button" class={iconButton} aria-label="Close focus mode" onclick={close}>
 			<X class="size-4" aria-hidden="true" />
 		</button>

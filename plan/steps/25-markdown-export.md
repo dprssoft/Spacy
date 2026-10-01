@@ -14,7 +14,7 @@ Export any doc card as Markdown (copy to clipboard or download a `.md` file), wi
    export function docToMarkdown(doc: JSONContent, opts?: { title?: string }): string
    ```
    - Title → `# {title}` followed by a blank line (if given).
-   - Nodes: paragraph; heading (levels 1–3 → `#`…`###`); bulletList (`- `); orderedList (`1. ` with `attrs.start`, incrementing); taskList/taskItem (`- [ ] ` / `- [x] `); blockquote (`> ` prefix on every line, including nested blocks); codeBlock (fenced with ```` ``` ```` + `attrs.language`; a longer fence if the content contains ```` ``` ````); horizontalRule (`---`); hardBreak (two trailing spaces + newline); mention (`@label`).
+   - Nodes: paragraph; heading (levels 1–3 → `#`…`###`); bulletList (`- `); orderedList (`1. ` with `attrs.start`, incrementing); taskList/taskItem (`- [x] ` / `- [x] `); blockquote (`> ` prefix on every line, including nested blocks); codeBlock (fenced with ```` ``` ```` + `attrs.language`; a longer fence if the content contains ```` ``` ````); horizontalRule (`---`); hardBreak (two trailing spaces + newline); mention (`@label`).
    - Nested lists: 2-space indent for bullet and task lists, 3-space indent for ordered lists; paragraphs inside list items are joined correctly.
    - Marks: bold `**`, italic `_`, strike `~~`, code `` ` `` (a longer backtick fence if the text contains backticks; no other marks inside code), link `[text](href)`. Apply marks in a stable order and merge adjacent text nodes with identical marks.
    - Escape Markdown-significant characters in plain text: `\ * _ ` [ ] #` at a line start, `>` at a line start, `-`/`+` list markers at a line start, and `1.` at a line start.
@@ -33,9 +33,9 @@ Export any doc card as Markdown (copy to clipboard or download a `.md` file), wi
 - `tests/e2e/markdown.spec.ts`: create a card with an H2 and a checklist → "Download .md" → the downloaded file content matches the expected Markdown.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] The Markdown output renders the same in a standard CommonMark/GFM viewer (manual spot check)
-- [ ] **M5 demo:** a whiteboard with diagrams and doc cards together
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] The Markdown output renders the same in a standard CommonMark/GFM viewer (manual spot check)
+- [x] **M5 demo:** a whiteboard with diagrams and doc cards together
 
 ## Out of scope
 Markdown import (not planned).
