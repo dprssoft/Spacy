@@ -3,7 +3,6 @@
 	import { debounce } from '$lib/shared/debounce';
 	import { getPref, setPref } from '$lib/shared/localPrefs';
 	import ConfirmDialog from '$lib/shared/ui/ConfirmDialog.svelte';
-	import { purgeExpiredTrash } from '$lib/storage/boardLifecycle';
 	import { requestPersistentStorage } from '$lib/storage/persist';
 	import type { BoardSort } from '$lib/storage/types';
 	import * as actions from './actions';
@@ -44,7 +43,10 @@
 	$effect(() => query.start());
 	$effect(() => {
 		void requestPersistentStorage();
-		void purgeExpiredTrash().catch((err) => console.error('Trash purge failed', err));
+		// Housekeeping, off the critical path (it loads the board storage code).
+		void import('$lib/storage/boardLifecycle')
+			.then((m) => m.purgeExpiredTrash())
+			.catch((err) => console.error('Trash purge failed', err));
 	});
 
 	$effect(() => handleLaunchFiles());

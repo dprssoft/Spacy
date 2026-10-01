@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Editor } from './editorFactory';
-	import { isSafeLink } from './editorFactory';
+	import { isSafeLink } from './links';
 
 	let { editor, onclose }: { editor: Editor; onclose(): void } = $props();
 

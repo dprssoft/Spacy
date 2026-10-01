@@ -7,13 +7,12 @@
 	import type { DocCardElement } from '$lib/model/types';
 	import InlineEditable from '$lib/shared/ui/InlineEditable.svelte';
 	import { getBoard } from '../context';
-	import { createBoardDocEditor, mentionAt, refreshMentions } from './boardEditor';
 	import BubbleMenu from './BubbleMenu.svelte';
 	import DocCardMenu from './DocCardMenu.svelte';
 	import type { Editor } from './editorFactory';
-	import { registerEditor } from './editorRegistry';
 	import { closeFocus } from './focus';
-	import { jumpToElement } from './jumpTo';
+	import { jumpToElement, mentionAt } from './jumpTo';
+	import { loadBoardEditor, type BoardEditorModule } from './lazy';
 	import './prose.css';
 	import { isSuggestionKey } from './suggestionPopup.svelte';
 
@@ -26,6 +25,18 @@
 	let body = $state<HTMLDivElement>();
 	let menu = $state<HTMLDivElement>();
 	let editor = $state.raw<Editor | null>(null);
+	let editorModule = $state.raw<BoardEditorModule | null>(null);
+	$effect(() => {
+		let alive = true;
+		void loadBoardEditor()
+			.then((m) => {
+				if (alive) editorModule = m;
+			})
+			.catch((err: unknown) => console.error('Editor failed to load', err));
+		return () => {
+			alive = false;
+		};
+	});
 	let renaming = $state(false);
 
 	const close = () => closeFocus(ctx.id);
@@ -40,10 +51,10 @@
 	});
 
 	$effect(() => {
-		if (!body || !menu || !overlay) return;
+		if (!body || !menu || !overlay || !editorModule) return;
 		const fragment = getDocsMap(ctx.doc).get(id);
 		if (!fragment) return;
-		const ed = createBoardDocEditor(ctx, {
+		const ed = editorModule.createBoardDocEditor(ctx, {
 			element: body,
 			fragment,
 			editable: true,
@@ -53,10 +64,8 @@
 			bubbleMenuParent: overlay
 		});
 		editor = ed;
-		const unregister = registerEditor(id, ed);
 		ed.commands.focus('end');
 		return () => {
-			unregister();
 			editor = null;
 			ed.destroy();
 		};
@@ -64,7 +73,7 @@
 
 	$effect(() => {
 		void ctx.store.elements.size;
-		if (editor) untrack(() => refreshMentions(editor!));
+		if (editor && editorModule) untrack(() => editorModule!.refreshMentions(editor!));
 	});
 
 	function onkeydown(e: KeyboardEvent) {

@@ -6,6 +6,7 @@ import { IMPORT } from '$lib/model/origins';
 import { base64ToBytes, bytesToBase64 } from '$lib/shared/base64';
 import { setPref } from '$lib/shared/localPrefs';
 import * as assetsRepo from './assetsRepo';
+import { LAST_BACKUP_PREF } from './backupPrefs';
 import { getDB } from './db';
 import * as boardsRepo from './boardsRepo';
 import { loadSnapshot, writeSnapshot } from './boardDoc';
@@ -15,7 +16,6 @@ import type { BoardMeta } from './types';
 // `.smthng` files (00-architecture.md §10). Imports always create new boards and asset ids.
 
 export const FILE_VERSION = 1;
-export const LAST_BACKUP_PREF = 'lastBackupAt';
 const MAX_BYTES = 500 * 1024 * 1024;
 const CONFIRM_BYTES = 100 * 1024 * 1024;
 

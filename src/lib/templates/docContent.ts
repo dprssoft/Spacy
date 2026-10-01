@@ -2,7 +2,7 @@
 // of the home page bundle.
 import { getSchema } from '@tiptap/core';
 import type { Schema } from '@tiptap/pm/model';
-import { prosemirrorJSONToYXmlFragment, yXmlFragmentToProsemirrorJSON } from '@tiptap/y-tiptap';
+import { prosemirrorJSONToYXmlFragment } from '@tiptap/y-tiptap';
 import * as Y from 'yjs';
 import { docExtensions } from '$lib/board/doccards/editorFactory';
 import type { DocNode } from '$lib/board/doccards/markdown';
@@ -13,9 +13,4 @@ const docSchema = () => (schema ??= getSchema(docExtensions(new Y.Doc().getXmlFr
 /** Writes editor JSON into a doc card fragment (which must already be in a Y.Doc). */
 export function setDocContent(fragment: Y.XmlFragment, json: DocNode): void {
 	prosemirrorJSONToYXmlFragment(docSchema(), json, fragment);
-}
-
-/** A fragment's content as editor JSON, without creating an editor. */
-export function fragmentToJSON(fragment: Y.XmlFragment): DocNode {
-	return yXmlFragmentToProsemirrorJSON(fragment) as DocNode;
 }

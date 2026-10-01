@@ -1,8 +1,10 @@
 <script lang="ts">
+	import type { Rect } from '$lib/model/types';
 	import { getBoard } from '../context';
 	import ElementView from '../elements/ElementView.svelte';
 	import { expandRectRatio } from '../engine/geometry';
 	import { visibleWorldRect } from '../engine/viewport';
+	import { measureBoardOpen } from '../openTiming';
 
 	const { store, viewport, selection } = getBoard();
 
@@ -10,10 +12,37 @@
 	let visible = $state<ReadonlySet<string>>(new Set());
 	let frame = 0;
 
+	let measured = false;
+	// What the last search covered: while the view stays inside it (same zoom, same content) the
+	// visible set can't have changed, so panning doesn't re-diff the mounted elements.
+	let covered: { rect: Rect; zoom: number; version: number } | null = null;
+
+	const contains = (outer: Rect, inner: Rect) =>
+		inner.x >= outer.x &&
+		inner.y >= outer.y &&
+		inner.x + inner.w <= outer.x + outer.w &&
+		inner.y + inner.h <= outer.y + outer.h;
+
 	function recompute() {
 		frame = 0;
-		const rect = expandRectRatio(visibleWorldRect(viewport.vp, viewport.size), 0.5);
-		visible = new Set(store.index.search(rect));
+		const view = visibleWorldRect(viewport.vp, viewport.size);
+		if (
+			covered &&
+			covered.zoom === viewport.zoom &&
+			covered.version === store.version &&
+			contains(covered.rect, view)
+		)
+			return;
+		const rect = expandRectRatio(view, 0.5);
+		covered = { rect, zoom: viewport.zoom, version: store.version };
+		const ids = store.index.search(rect);
+		// Same ids as before (e.g. everything is visible): keep the set, skip the re-render.
+		if (ids.length !== visible.size || ids.some((id) => !visible.has(id))) visible = new Set(ids);
+		if (!measured && viewport.size.w > 0) {
+			measured = true;
+			// After the frame that paints the first visible elements.
+			requestAnimationFrame(() => requestAnimationFrame(measureBoardOpen));
+		}
 	}
 
 	$effect(() => {

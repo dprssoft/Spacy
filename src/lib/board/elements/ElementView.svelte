@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { countRender } from '$lib/dev/testHooks';
 	import { getBoard } from '../context';
 	import { styleToCss } from './common';
 	import { definitionOf } from './registry';
@@ -10,6 +11,12 @@
 	// SvelteMap tracks reads per key: this view re-renders only when its own element changes.
 	const el = $derived(store.get(id));
 	const editing = $derived(selection.editingId === id);
+
+	// Counts renders of this element for the perf guard (a no-op unless test hooks are enabled).
+	$effect.pre(() => {
+		void el;
+		countRender(id);
+	});
 </script>
 
 {#if el}

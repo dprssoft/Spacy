@@ -1,7 +1,6 @@
 import { toast } from 'svelte-sonner';
 import { downloadBlob } from '$lib/shared/download';
 import { slug } from '$lib/shared/slug';
-import { exportBoardFile } from '$lib/storage/fileFormat';
 
 // The File System Access API (Chromium). Typed locally: not in TypeScript's DOM lib yet.
 interface WritableFile {
@@ -23,6 +22,10 @@ const picker = (): SavePicker | null => {
 };
 
 export const canSaveToFile = (): boolean => picker() !== null;
+
+// Loaded on first use.
+const exportBoardFile = async (id: string) =>
+	(await import('$lib/storage/fileFormat')).exportBoardFile(id);
 
 const fileName = (title: string) => `${slug(title) || 'board'}.smthng`;
 

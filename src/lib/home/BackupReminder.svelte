@@ -3,7 +3,7 @@
 	import { getPref, setPref } from '$lib/shared/localPrefs';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
 	import { onBoardsChanged } from '$lib/storage/channels';
-	import { LAST_BACKUP_PREF } from '$lib/storage/fileFormat';
+	import { LAST_BACKUP_PREF } from '$lib/storage/backupPrefs';
 	import { DISMISSED_PREF, shouldShowBackupReminder } from './backupReminder';
 	import { backupAll } from './fileActions';
 

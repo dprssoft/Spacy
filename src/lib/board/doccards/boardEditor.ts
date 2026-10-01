@@ -69,9 +69,3 @@ export function refreshMentions(editor: Editor): void {
 	if (editor.isDestroyed) return;
 	editor.view.dispatch(editor.state.tr.setMeta(mentionStatusKey, true));
 }
-
-/** The mentioned element id when `target` is (inside) a mention chip. */
-export function mentionAt(target: EventTarget | null): string | null {
-	if (!(target instanceof Element)) return null;
-	return target.closest<HTMLElement>('.mention[data-id]')?.dataset.id ?? null;
-}

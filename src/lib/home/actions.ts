@@ -1,10 +1,9 @@
 import { toast } from 'svelte-sonner';
-import { duplicateBoard } from '$lib/storage/boardDoc';
-import { destroyBoard } from '$lib/storage/boardLifecycle';
 import * as boardsRepo from '$lib/storage/boardsRepo';
 import type { BoardMeta } from '$lib/storage/types';
 
 // Start-page board actions: storage call + user feedback. Errors surface as toasts.
+// Board content code (Yjs, the data model) loads only when an action needs it.
 
 async function attempt(action: () => Promise<void>, failure: string): Promise<void> {
 	try {
@@ -23,6 +22,7 @@ export const rename = (board: BoardMeta, title: string) =>
 
 export const duplicate = (board: BoardMeta) =>
 	attempt(async () => {
+		const { duplicateBoard } = await import('$lib/storage/boardDoc');
 		await duplicateBoard(board.id);
 		toast.success('Board duplicated');
 	}, 'Couldn’t duplicate the board');
@@ -44,6 +44,7 @@ export const restore = (board: BoardMeta, announce = true) =>
 
 export const deleteForever = (boards: BoardMeta[]) =>
 	attempt(async () => {
+		const { destroyBoard } = await import('$lib/storage/boardLifecycle');
 		for (const b of boards) await destroyBoard(b.id);
 		toast.success(boards.length === 1 ? 'Board deleted' : `${boards.length} boards deleted`);
 	}, 'Couldn’t delete the board');

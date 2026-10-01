@@ -6,6 +6,12 @@ import { closeFocus } from './focus';
 
 let pulses = 0;
 
+/** The mentioned element id when `target` is (inside) a mention chip. */
+export function mentionAt(target: EventTarget | null): string | null {
+	if (!(target instanceof Element)) return null;
+	return target.closest<HTMLElement>('.mention[data-id]')?.dataset.id ?? null;
+}
+
 /** Brings a mentioned object into view, selects it and pulses it (closing focus mode first). */
 export function jumpToElement(ctx: BoardContext, id: string): boolean {
 	const el = ctx.store.get(id);

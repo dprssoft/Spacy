@@ -6,13 +6,9 @@ import { TaskItem, TaskList } from '@tiptap/extension-list';
 import { Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import type * as Y from 'yjs';
+import { isSafeLink } from './links';
 
-const SAFE_PROTOCOL = /^(https?:|mailto:)/i;
-
-/** Allows only http(s) and mailto links (relative or `javascript:` URLs are refused). */
-export function isSafeLink(url: string): boolean {
-	return SAFE_PROTOCOL.test(url.trim());
-}
+export { isSafeLink };
 
 export interface DocExtensionOptions {
 	placeholder?: string;

@@ -30,3 +30,6 @@ blob-report
 .scaffold
 stats.html
 coverage
+
+# Bundle analysis (pnpm analyze)
+stats.html

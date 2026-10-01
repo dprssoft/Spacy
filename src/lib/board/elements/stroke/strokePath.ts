@@ -59,3 +59,24 @@ export function strokeSvgPath(points: readonly number[], width: StrokeWidth, sca
 	const y = scaled[1]!;
 	return `M${f(x - r)},${f(y)} a${f(r)},${f(r)} 0 1,0 ${f(r * 2)},0 a${f(r)},${f(r)} 0 1,0 ${f(-r * 2)},0 Z`;
 }
+
+/**
+ * A memoized `strokeSvgPath` for one stroke view: moving a stroke gives it a new snapshot (and a
+ * new `points` array) with the same values, so compare contents before recomputing the outline.
+ */
+export function strokePathMemo(): (points: readonly number[], width: StrokeWidth) => string {
+	let last: { points: readonly number[]; width: StrokeWidth; d: string } | null = null;
+	return (points, width) => {
+		if (last && last.width === width && sameNumbers(last.points, points)) return last.d;
+		const d = strokeSvgPath(points, width);
+		last = { points, width, d };
+		return d;
+	};
+}
+
+function sameNumbers(a: readonly number[], b: readonly number[]): boolean {
+	if (a === b) return true;
+	if (a.length !== b.length) return false;
+	for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+	return true;
+}

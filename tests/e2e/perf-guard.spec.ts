@@ -1,0 +1,88 @@
+import { expect, test } from '@playwright/test';
+import { createBoard, el, enableTestHooks, waitForHooks } from './helpers';
+
+test('dragging one element re-renders only that element', async ({ page }) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	expect(await page.evaluate(() => window.__smthng!.perfMixed(500))).toBeGreaterThan(450);
+	// Created last, so it's on top at the canvas center.
+	await page.evaluate(
+		(e) => window.__smthng!.createElements([e as never]),
+		el.shape('target', -80, -50)
+	);
+	const target = page.locator('[data-element-id="target"]');
+	await expect(target).toBeVisible();
+	await page.waitForTimeout(300); // let image/doc card views settle
+
+	const counts = () => page.evaluate(() => Object.fromEntries(window.__smthng!.renderCounts));
+	const before = await counts();
+	const box = (await target.boundingBox())!;
+	const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	await page.mouse.move(from.x, from.y);
+	await page.mouse.down();
+	await page.mouse.move(from.x + 90, from.y + 60, { steps: 12 });
+	await page.mouse.up();
+	const moved = await page.evaluate(() => window.__smthng!.ctx.store.get('target')!.x);
+	expect(moved).not.toBe(-80);
+
+	const after = await counts();
+	expect(after.target! - before.target!).toBeGreaterThan(1);
+	const others = Object.keys(after).filter(
+		(id) => id !== 'target' && after[id] !== (before[id] ?? 0)
+	);
+	expect(others).toEqual([]);
+});
+
+test('the start page loads no rich-text editor code', async ({ page }) => {
+	await page.goto('/');
+	await expect(page.locator('[data-template] img')).toHaveCount(3); // previews are built too
+	const scripts = await page.evaluate(() =>
+		performance
+			.getEntriesByType('resource')
+			.map((e) => e.name)
+			.filter((n) => n.endsWith('.js'))
+	);
+	expect(scripts.length).toBeGreaterThan(3);
+	expect(scripts.filter((s) => /tiptap|prosemirror/i.test(s))).toEqual([]);
+	// Chunk names are hashes, so look inside the scripts that the page's own code loaded
+	// statically (module preloads), not the ones the template previews fetched on demand.
+	const html = await (await page.request.get('/')).text();
+	const initial = [...html.matchAll(/(?:href|import\()\s*=?\s*["'(]+([^"')]+\.js)/g)].map(
+		(m) => m[1]!
+	);
+	expect(initial.length).toBeGreaterThan(0);
+	for (const src of initial) {
+		const body = await (await page.request.get(src)).text();
+		expect(/prosemirror|tiptap/i.test(body), src).toBe(false);
+	}
+});
+
+test('doc cards show a preview when zoomed far out and an editor when zoomed in', async ({
+	page
+}) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	const box = (await page.getByTestId('canvas').boundingBox())!;
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('n');
+	await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+	await expect(page.locator('[data-doccard-body] .ProseMirror')).toBeFocused();
+	await page.keyboard.type('Readable text');
+	await page.keyboard.press('Escape');
+	await expect(page.locator('[data-doccard-body] .ProseMirror')).toHaveText('Readable text');
+
+	await page.evaluate(() => {
+		const v = window.__smthng!.ctx.viewport;
+		v.set({ ...v.vp, zoom: 0.3 });
+	});
+	await expect(page.locator('[data-doccard-preview]')).toBeVisible();
+	await expect(page.locator('.ProseMirror')).toHaveCount(0);
+
+	await page.evaluate(() => {
+		const v = window.__smthng!.ctx.viewport;
+		v.set({ ...v.vp, zoom: 1 });
+	});
+	await expect(page.locator('[data-doccard-body] .ProseMirror')).toHaveText('Readable text');
+});

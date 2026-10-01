@@ -4,12 +4,11 @@
 	import { getDocsMap } from '$lib/model/doc';
 	import type { DocCardElement, Point } from '$lib/model/types';
 	import { getBoard } from '../../context';
-	import { createBoardDocEditor, mentionAt, refreshMentions } from '../../doccards/boardEditor';
 	import BubbleMenu from '../../doccards/BubbleMenu.svelte';
 	import type { Editor } from '../../doccards/editorFactory';
-	import { registerEditor } from '../../doccards/editorRegistry';
 	import { openFocus } from '../../doccards/focus';
-	import { jumpToElement } from '../../doccards/jumpTo';
+	import { jumpToElement, mentionAt } from '../../doccards/jumpTo';
+	import { loadBoardEditor, type BoardEditorModule } from '../../doccards/lazy';
 	import { isSuggestionKey } from '../../doccards/suggestionPopup.svelte';
 	import '../../doccards/prose.css';
 	import { fillColor, radiusPx } from '../common';
@@ -26,6 +25,25 @@
 	let body = $state<HTMLDivElement>();
 	let menu = $state<HTMLDivElement>();
 	let editor = $state.raw<Editor | null>(null);
+	let editorModule = $state.raw<BoardEditorModule | null>(null);
+
+	// Far zoomed out the text is unreadable: show a light preview instead of a live editor. (Cards
+	// outside the view aren't mounted at all.) An edited card always has its editor.
+	const LOW_ZOOM = 0.4;
+	const wantEditor = $derived(editing || ctx.viewport.zoom >= LOW_ZOOM);
+	const showEditor = $derived(wantEditor && editorModule !== null);
+	$effect(() => {
+		if (!wantEditor || editorModule) return;
+		let alive = true;
+		void loadBoardEditor()
+			.then((m) => {
+				if (alive) editorModule = m;
+			})
+			.catch((err: unknown) => console.error('Editor failed to load', err));
+		return () => {
+			alive = false;
+		};
+	});
 
 	function contains(selector: string, at: Point): boolean {
 		const r = card?.querySelector(selector)?.getBoundingClientRect();
@@ -55,18 +73,17 @@
 
 	// The editor always renders the live shared content; it only becomes editable while editing.
 	$effect(() => {
-		if (!body || !menu) return;
+		if (!body || !menu || !editorModule) return;
 		const fragment = getDocsMap(ctx.doc).get(id);
 		if (!fragment) return;
 		const node = body;
-		const ed = createBoardDocEditor(ctx, {
+		const ed = editorModule.createBoardDocEditor(ctx, {
 			element: node,
 			fragment,
 			editable: false,
 			bubbleMenu: menu
 		});
 		editor = ed;
-		const unregister = registerEditor(id, ed);
 		// The editor itself is the interactive element (role textbox); listen on its container.
 		node.addEventListener('keydown', onkeydown);
 		node.addEventListener('wheel', onwheel);
@@ -75,7 +92,6 @@
 			node.removeEventListener('keydown', onkeydown);
 			node.removeEventListener('wheel', onwheel);
 			node.removeEventListener('click', onclick);
-			unregister();
 			editor = null;
 			ed.destroy();
 		};
@@ -99,7 +115,7 @@
 	// Mention chips of deleted objects are struck through.
 	$effect(() => {
 		void ctx.store.elements.size;
-		if (editor) untrack(() => refreshMentions(editor!));
+		if (editor && editorModule) untrack(() => editorModule!.refreshMentions(editor!));
 	});
 
 	// A pointerdown outside the card body and its popups ends body editing.
@@ -161,14 +177,24 @@
 			openFocus(ctx.id, id);
 		}}
 	/>
-	<div
-		bind:this={body}
-		class="doc-prose min-h-0 flex-1 overflow-y-auto px-4 py-3"
-		class:hidden={el.collapsed}
-		class:pointer-events-auto={part === 'body'}
-		data-interactive={part === 'body' ? '' : undefined}
-		data-doccard-body
-	></div>
+	{#if showEditor}
+		<div
+			bind:this={body}
+			class="doc-prose min-h-0 flex-1 overflow-y-auto px-4 py-3"
+			class:hidden={el.collapsed}
+			class:pointer-events-auto={part === 'body'}
+			data-interactive={part === 'body' ? '' : undefined}
+			data-doccard-body
+		></div>
+	{:else if !el.collapsed}
+		<div class="flex flex-1 flex-col gap-3 px-4 py-4" data-doccard-preview aria-hidden="true">
+			{#each ['70%', '95%', '55%'] as width (width)}
+				<div class="h-2.5 rounded-full bg-current opacity-10" style:width></div>
+			{/each}
+		</div>
+	{/if}
 </div>
-<!-- The editor moves the menu into document.body while it's shown. -->
-<div class="hidden"><BubbleMenu {editor} bind:element={menu} /></div>
+{#if showEditor}
+	<!-- The editor moves the menu into document.body while it's shown. -->
+	<div class="hidden"><BubbleMenu {editor} bind:element={menu} /></div>
+{/if}

@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';
-	import { generatePerfElements } from '$lib/dev/perfBoard';
+	import { createMixedPerfBoard, generatePerfElements } from '$lib/dev/perfBoard';
 	import { installTestHooks } from '$lib/dev/testHooks';
 	import { createElements } from '$lib/model/ops';
 	import type { OpenBoard } from '$lib/storage/boardDoc';
@@ -17,10 +17,11 @@
 	import QuickCreateButtons from './canvas/QuickCreateButtons.svelte';
 	import { diagramShortcuts } from './diagram/diagramShortcuts';
 	import { docShortcuts } from './doccards/docShortcuts';
+	import { loadBoardEditor } from './doccards/lazy';
 	import { closeFocus, FOCUS_PARAM } from './doccards/focus';
 	import FocusMode from './doccards/FocusMode.svelte';
 	import PulseHighlight from './canvas/PulseHighlight.svelte';
-	import { trackThumbnail } from './render/thumbnails';
+	import { trackThumbnail } from './render/trackThumbnail';
 	import PreviewOverlay from './canvas/PreviewOverlay.svelte';
 	import { installConnectorHooks } from './diagram/ops';
 	import { imagePaste, onCopyEvent, onPasteEvent } from './commands/clipboard';
@@ -38,7 +39,7 @@
 	import { HandleRegistry } from './tools/handles';
 	import { isTypingTarget, ShortcutRegistry } from './tools/shortcuts';
 	import { ToolManager } from './tools/toolManager.svelte';
-	import ExportDialog from './ui/ExportDialog.svelte';
+	import { exportDialog } from './ui/exportDialogState.svelte';
 	import Toolbar from './ui/Toolbar.svelte';
 	import { BoardTitle } from './title.svelte';
 	import TopBar from './TopBar.svelte';
@@ -92,6 +93,24 @@
 	});
 	$effect(() => installTestHooks(ctx));
 	$effect(() => trackThumbnail(ctx));
+	// Warm up the rich-text editor once the board is idle, and as soon as the doc card tool is
+	// picked, so the first doc card doesn't wait for it.
+	$effect(() => {
+		const warm = () => void loadBoardEditor().catch(() => {});
+		if (ctx.tools.current === 'doccard') return warm();
+		const idle = window.requestIdleCallback?.(warm, { timeout: 4000 }) ?? null;
+		const timer = idle === null ? setTimeout(warm, 2000) : null;
+		return () => {
+			if (idle !== null) window.cancelIdleCallback?.(idle);
+			if (timer !== null) clearTimeout(timer);
+		};
+	});
+
+	// The export dialog (and the static renderer behind it) loads the first time it's opened.
+	let exportDialogWanted = $state(false);
+	$effect(() => {
+		if (exportDialog.open) exportDialogWanted = true;
+	});
 	// Keep the selection valid when elements disappear (other tab, undo…).
 	$effect(() => {
 		void ctx.store.version;
@@ -123,6 +142,15 @@
 			e.target.closest('[role=menu],[role=dialog],[role=alertdialog]')
 		)
 			return;
+		// While something is being edited, keys belong to its editor, even in the moment before a
+		// lazily loaded editor has taken focus. Escape still leaves editing.
+		if (ctx.selection.editingId) {
+			if (e.key === 'Escape') {
+				e.preventDefault();
+				ctx.editing.end();
+			}
+			return;
+		}
 		if (ctx.tools.tool.onKeyDown?.(e)) {
 			e.preventDefault();
 			return;
@@ -174,21 +202,35 @@
 			</Canvas>
 		</CanvasContextMenu>
 		<Toolbar />
-		<ExportDialog />
+		{#if exportDialogWanted}
+			{#await import('./ui/ExportDialog.svelte') then { default: ExportDialog }}
+				<ExportDialog />
+			{/await}
+		{/if}
 		{#if focusCard}
 			{#key focusCard.id}
 				<FocusMode card={focusCard} />
 			{/key}
 		{/if}
 		{#if import.meta.env.DEV && page.url.searchParams.get('debug') === 'perf'}
-			<button
-				type="button"
-				class="absolute top-3 left-3 z-20 rounded-md bg-accent px-3 py-1.5 text-sm text-accent-contrast shadow"
-				onclick={() =>
-					createElements(ctx.doc, generatePerfElements(3000, Math.floor(Math.random() * 1e6)))}
-			>
-				Generate 3,000 elements
-			</button>
+			<div class="absolute top-3 left-16 z-20 flex gap-2">
+				<button
+					type="button"
+					class="rounded-md bg-accent px-3 py-1.5 text-sm text-accent-contrast shadow"
+					onclick={() =>
+						createElements(ctx.doc, generatePerfElements(3000, Math.floor(Math.random() * 1e6)))}
+				>
+					Generate 3,000 elements
+				</button>
+				<button
+					type="button"
+					class="rounded-md bg-accent px-3 py-1.5 text-sm text-accent-contrast shadow"
+					onclick={() =>
+						createMixedPerfBoard(ctx.doc, ctx.id, 3000, Math.floor(Math.random() * 1e6))}
+				>
+					Generate mixed perf board
+				</button>
+			</div>
 		{/if}
 	</main>
 </div>
