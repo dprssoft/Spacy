@@ -14,8 +14,16 @@
 	import { transformTargets } from '../selectionInfo';
 	import { applyStyle, type AppearancePatch } from './applyStyle';
 	import ArrangePanel from './ArrangePanel.svelte';
+	import ConnectorPanel from './ConnectorPanel.svelte';
+	import Spline from '@lucide/svelte/icons/spline';
 	import QuickStylesPanel from './QuickStylesPanel.svelte';
-	import { hasCustomDefault, resetDefaultStyle, setDefaultStyle } from './styleDefaults';
+	import {
+		hasCustomDefault,
+		resetConnectorDefaults,
+		resetDefaultStyle,
+		setConnectorDefaults,
+		setDefaultStyle
+	} from './styleDefaults';
 	import ColorSwatches from './controls/ColorSwatches.svelte';
 	import PanelButton from './controls/PanelButton.svelte';
 	import Segmented from './controls/Segmented.svelte';
@@ -134,6 +142,13 @@
 			<PanelButton label="Quick styles" testId="style-quick">
 				{#snippet trigger()}<Palette class="size-4" aria-hidden="true" />{/snippet}
 				<QuickStylesPanel els={editable} {opts} />
+			</PanelButton>
+		{/if}
+
+		{#if opts.has('routing')}
+			<PanelButton label="Connector" testId="style-connector">
+				{#snippet trigger()}<Spline class="size-4" aria-hidden="true" />{/snippet}
+				<ConnectorPanel els={editable} {apply} />
 			</PanelButton>
 		{/if}
 
@@ -377,7 +392,15 @@
 							type="button"
 							class="rounded px-1 py-0.5 text-accent hover:underline"
 							onclick={() => {
-								setDefaultStyle(singleType, editable[0]!.style);
+								const first = editable[0]!;
+								setDefaultStyle(singleType, first.style);
+								if (first.type === 'connector') {
+									setConnectorDefaults({
+										routing: first.routing,
+										markerStart: first.markerStart,
+										markerEnd: first.markerEnd
+									});
+								}
 								defaultsVersion++;
 							}}
 						>
@@ -389,6 +412,7 @@
 								class="rounded px-1 py-0.5 text-muted hover:underline"
 								onclick={() => {
 									resetDefaultStyle(singleType);
+									if (singleType === 'connector') resetConnectorDefaults();
 									defaultsVersion++;
 								}}
 							>

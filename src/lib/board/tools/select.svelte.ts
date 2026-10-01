@@ -31,6 +31,8 @@ import { createText } from './create';
 import { createSnapper, type Snapper } from './snapper';
 import { createConnectGesture, createEndpointDrag } from '../diagram/connectGesture';
 import { makeEndpoint } from '../diagram/endpoints';
+import { connectorGeometry } from '../diagram/geometry';
+import { nearestT } from '../diagram/routing';
 import { undoGesture } from './gesture';
 import { createRafWriter } from './rafBatch';
 import type { CanvasPointerEvent, Tool } from './types';
@@ -55,6 +57,7 @@ type State =
 	  }
 	| { kind: 'connecting'; gesture: ReturnType<typeof createConnectGesture> }
 	| { kind: 'endpoint'; drag: ReturnType<typeof createEndpointDrag> }
+	| { kind: 'label'; connector: ConnectorElement }
 	| { kind: 'marquee'; start: Point; base: string[] }
 	| { kind: 'resizing'; handle: ResizeHandle; box: Box; snapshot: Element[]; snapper: Snapper }
 	| { kind: 'rotating'; center: Point; startAngle: number; snapshot: Element[] };
@@ -225,7 +228,10 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		if (state.kind === 'connecting') state.gesture.cancel();
 		if (state.kind === 'endpoint') state.drag.cancel();
 		const transforming =
-			state.kind === 'moving' || state.kind === 'resizing' || state.kind === 'rotating';
+			state.kind === 'moving' ||
+			state.kind === 'resizing' ||
+			state.kind === 'rotating' ||
+			state.kind === 'label';
 		writer.cancel();
 		if (transforming) {
 			gesture.end();
@@ -258,6 +264,14 @@ export function createSelectTool(ctx: BoardContext): Tool {
 					const at = c.ports(el)[port as Port];
 					const from = makeEndpoint(el, c, at, 'auto', 1);
 					state = { kind: 'connecting', gesture: createConnectGesture(ctx, from, e.screen) };
+				}
+				return;
+			}
+			if (handle === 'label') {
+				const c = selection.single ? store.get(selection.single) : undefined;
+				if (c?.type === 'connector') {
+					beginTransform();
+					state = { kind: 'label', connector: c };
 				}
 				return;
 			}
@@ -350,6 +364,12 @@ export function createSelectTool(ctx: BoardContext): Tool {
 					return s.gesture.move(e.world, e.alt);
 				case 'endpoint':
 					return s.drag.move(e.world, e.alt);
+				case 'label': {
+					const current = store.get(s.connector.id);
+					if (current?.type !== 'connector') return;
+					const { t } = nearestT(connectorGeometry(current, store.world).route, e.world);
+					return writer.push([{ id: current.id, patch: { label: { ...current.label, t } } }]);
+				}
 			}
 		},
 
@@ -360,6 +380,8 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				if (id) selection.set([id]);
 			} else if (s.kind === 'endpoint') {
 				s.drag.finish();
+			} else if (s.kind === 'label') {
+				endTransform([]);
 			} else if (s.kind === 'moving' || s.kind === 'resizing' || s.kind === 'rotating') {
 				endTransform(s.snapshot); // the last move already pushed the final position
 				clearGuides();

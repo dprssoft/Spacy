@@ -405,3 +405,24 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Routing, markers and labels are step 21.
 
 **Verification:** pnpm verify ✅ (481 unit tests: endpoint resolution incl. rotation/missing elements, makeEndpoint port/float/fixed, delete→free end + undo, clone remap, no connector writes when a shape moves, bounds follow) · pnpm test:e2e ✅ (88; new connect suite: all 7 connectable types connect to a rectangle and the connector follows its move; delete frees + undo reattaches; port-dot drag; end-handle re-attach and detach; no self-loop; free-to-free connector).
+
+## Step 21 — Routing, markers, labels — 2026-10-01
+**Summary:**
+- `diagram/routing/` (pure): `route(kind, input)` — straight (through waypoints), curve (cubic Bézier along the port directions, k = clamp(0.4·dist, 40, 200); Catmull-Rom through waypoints), elbow (20 px stubs along the port axes; best of HV / VH / HVH / VHV by length + penalties for crossing the attached boxes, turning back into an element, and bends; waypoints routed orthogonally with alternating axes). `pointAt`, `nearestT`, polyline simplification.
+- Markers (`diagram/markers.ts`): none, arrow, open arrow, triangle (hollow), diamond (hollow), circle, bar — scaled with stroke width.
+- `connectorGeometry` now routes (with the attached elements' boxes), computes end angles and the label box, and is cached per connector snapshot + attached element snapshots (view, hit test and bounds share it). Hit test includes the label.
+- `ConnectorView`: routed path, markers at both ends, label at `t` (optional background); double-click or Enter edits the label; dragging the label of a selected connector slides it along the path (one undo step).
+- Style popover "Connector" panel: routing, start/end marker pickers with previews, label background. Defaults: new connectors are **elbow** with an end arrow; "Set as default for new connectors" also saves routing and markers.
+
+**Deviations:**
+- Markers are drawn as transformed paths at the ends instead of SVG `<marker>` elements (same look; reusable by the static SVG export in step 26, no per-connector `<defs>` ids).
+- Elbow corners are sharp (optional rounding skipped).
+- Label drag is available on the selected connector (its label is a handle), which avoids ambiguity with clicking the line.
+- The planned visual-regression screenshot test (`toHaveScreenshot`) is deferred to step 32's visual suite (baselines are created there); a manual screenshot of a fixture with all routings and marker kinds was reviewed instead.
+- **Mistake caught and fixed:** I briefly overwrote the existing `tests/e2e/routing.spec.ts` (URL routing tests) — restored from git; connector tests live in `connector-routing.spec.ts`.
+
+**Dependencies added:** none.
+
+**Follow-ups:** Small vertical offsets between facing ports produce a short jog in elbow routes (inherent to orthogonal routing; same in draw.io).
+
+**Verification:** pnpm verify ✅ (491 unit tests: all routings start/end correctly, elbows orthogonal and outside both boxes, leave along the port, pass through bends, curve ≥ straight, pointAt/nearestT inverse, every marker has a shape) · pnpm test:e2e ✅ (92; new: default elbow + routing switch changes the path, markers at both ends, label edit + drag along the path, connector "set as default") · fixture screenshot reviewed.

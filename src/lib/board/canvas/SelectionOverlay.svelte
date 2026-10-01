@@ -60,6 +60,10 @@
 		return { x: a.x, y: a.y, w: m.w * viewport.zoom, h: m.h * viewport.zoom };
 	});
 
+	const screenRect = (r: { x: number; y: number; w: number; h: number }) => {
+		const a = toScreen({ x: r.x, y: r.y });
+		return { x: a.x, y: a.y, w: r.w * viewport.zoom, h: r.h * viewport.zoom };
+	};
 	const selectedConnectors = $derived(selected.filter((el) => el.type === 'connector'));
 	const connectorLines = $derived.by(() => {
 		void [viewport.x, viewport.y, viewport.zoom];
@@ -73,6 +77,7 @@
 					.join(' '),
 				start: toScreen(g.start),
 				end: toScreen(g.end),
+				label: g.label ? screenRect(g.label) : null,
 				locked: c.locked
 			};
 		});
@@ -95,6 +100,9 @@
 		ctx.handles.register((p) => {
 			for (const h of endHandles)
 				if (Math.hypot(h.x - p.x, h.y - p.y) <= HANDLE_HIT_RADIUS) return h.id;
+			// A selected connector's label can be dragged along the path.
+			const l = endHandles.length ? connectorLines[0]?.label : null;
+			if (l && p.x >= l.x && p.x <= l.x + l.w && p.y >= l.y && p.y <= l.y + l.h) return 'label';
 			return handles.length ? hitHandle(handles, p, HANDLE_HIT_RADIUS) : null;
 		})
 	);
