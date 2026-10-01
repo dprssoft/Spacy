@@ -1,10 +1,12 @@
 import { SvelteSet } from 'svelte/reactivity';
-import type { Rect } from '$lib/model/types';
+import type { Point, Rect } from '$lib/model/types';
 
 /** Local (per-tab) selection, text-editing and hover state. Never stored in the document. */
 export class SelectionState {
 	readonly ids = new SvelteSet<string>();
 	editingId = $state<string | null>(null);
+	/** Where editing was entered (client coordinates of the double-click), if by pointer. */
+	editingAt = $state<Point | null>(null);
 	hoverId = $state<string | null>(null);
 	/** Marquee rectangle (world) while dragging one. */
 	marquee = $state<Rect | null>(null);

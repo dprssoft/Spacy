@@ -446,3 +446,28 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** `commands.spec` "context menu reorders layers" failed once in a full e2e run and passed in 4 reruns (flaky; watch it).
 
 **Verification:** pnpm verify ✅ (499 unit tests; new: placement per direction + collision shift, same-kind/override/type mapping, one undo step, connected component BFS, elbow bends reproduce the dragged polyline) · pnpm test:e2e ✅ (97; new `diagram.spec.ts`: 3× quick-create chain → 4 shapes + 3 connectors, Mod+Shift+A selects 7, Shift+click type picker, elbow segment drag → waypoints → Reset route, mixed diagram all attached, drag-drop from the library) · screenshots of all 11 shapes, the flyout and the "+" buttons reviewed.
+
+## Step 23 — Doc card element — 2026-10-01
+**Summary:**
+- TipTap v3 installed: `@tiptap/core`, `@tiptap/pm`, `@tiptap/starter-kit`, `@tiptap/extension-list` (TaskList/TaskItem), `@tiptap/extensions` (Placeholder), `@tiptap/extension-collaboration` — all 3.31.4 — plus `@tiptap/y-tiptap` 3.0.9 (the v3 Yjs binding, peer of collaboration) and `y-protocols` 1.0.7 (its peer).
+- `doccards/editorFactory.ts` is the only TipTap importer: StarterKit (headings 1–3, `undoRedo: false`, underline off, link with `openOnClick: false`, autolink, http(s)/mailto only), nested task lists, placeholder, Collaboration bound to the card's `Y.XmlFragment`.
+- `DocCardView`: card (fill/border/radius from style, shadow from the wrapper), 40 px header (collapse chevron, title), body with a live read-only editor that becomes editable while editing. `prose.css` (em-based, scales with the font size; colors from `currentColor` and `--accent`, so it works on any card fill and in both themes).
+- Editing: double-click on the body (caret placed at the click via `posAtCoords`) or Enter → body; double-click on the header or any edit of a collapsed card → title input. Escape leaves editing and keeps the card selected; a pointerdown outside the body also leaves it. Wheel inside the body scrolls it when it can, otherwise the canvas pans; Mod+wheel always zooms the canvas.
+- Collapse/expand (header chevron) is one undo step; `h` = 40 while collapsed and `expandedH` restores it; connectors follow automatically.
+- Resize limits: elements may declare `sizeLimits(el)` (new optional definition field; `resizeBox` gained per-axis `limits`). Doc cards: min 240×120; collapsed cards keep a fixed 40 px height.
+- Doc card tool (N): click → a 360×280 card centered on the pointer, editing the body.
+
+**Deviations:**
+- **Undo scope (D10 updated, as the step prescribes):** verified that with an `elements`-only scope, undoing a card deletion restored the element but not its `docs` fragment (empty card). The canvas UndoManager now covers `elements` + `docs` (still `LOCAL` only; editor transactions use the y-prosemirror origin and stay out). `createBoardUndo(doc)` in `storage/boardDoc.ts` is shared by the app and `testCtx`. This also fixes the step 14 follow-up: undoing a duplicate or paste no longer orphans a fragment.
+- `SelectionState.editingAt` (client point of the double-click) and `editing.start(id, { at })` were added so the view can tell header from body and place the caret.
+- Doc cards are not rotatable (a rotated editor breaks caret placement and is hard to use).
+- Task checkboxes toggle only in edit mode (simplest; read-only bodies have `pointer-events: none` like every element).
+- The definition stays in `elements/index.ts` with the other types (no separate `definition.ts`); the placeholder view was deleted (no placeholders left).
+- The "Open" (focus mode) header button is added in step 24 together with focus mode rather than hidden now.
+- `tools.spec` "unbuilt tools are disabled" no longer has a subject (every tool exists): it now asserts that no toolbar button is disabled and that N picks the doc card tool.
+
+**Dependencies added:** the TipTap packages above, `@tiptap/y-tiptap`, `y-protocols`.
+
+**Follow-ups:** The board route's JS is ~188 KB gzipped including TipTap; lazy-loading `editorFactory` is step 30.
+
+**Verification:** pnpm verify ✅ (507 unit tests; new: editor writes headings/lists into the fragment, a synced second doc renders the same text, task lists + heading limit, safe links only, undo of deletion restores text while typing stays out of canvas undo, undo of creation removes the fragment, collapse/expand undo steps, per-axis resize limits) · pnpm test:e2e ✅ (101; new `doccard.spec.ts`: N + markdown shortcuts → H1 + list persist after reload and appear in a second tab within 1 s; mouse text selection doesn't move the card; collapse → 40 px with the connector still ending at the card, expand restores; copy/paste copies the text; deleting and undoing restores it) · screenshots of an edited card and a collapsed card reviewed.

@@ -2,6 +2,7 @@ import type { Component } from 'svelte';
 import type { Element, ElementType, Point, Rect } from '$lib/model/types';
 import type { Connectable } from '../diagram/connectable';
 import type { DiagramWorld } from '../diagram/endpoints';
+import type { SizeLimits } from '../engine/transform';
 import type { StyleOption } from '../style/options';
 
 export interface ElementViewProps<E extends Element = Element> {
@@ -24,6 +25,8 @@ export interface ElementDefinition<E extends Element = Element> {
 	connectable: Connectable<E> | null;
 	resizable: boolean;
 	rotatable: boolean;
+	/** Size limits when resized on its own (default: the select tool's small minimum). */
+	sizeLimits?(el: E): SizeLimits;
 	/** Keep the aspect ratio on resize by default (images). */
 	keepAspect: boolean;
 	/** Double-click edits text. */

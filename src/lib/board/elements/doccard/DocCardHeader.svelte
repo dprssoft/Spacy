@@ -1,0 +1,72 @@
+<script lang="ts">
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import { DOC_CARD_HEADER_H } from '$lib/model/defaults';
+	import { updateElement } from '$lib/model/ops';
+	import type { DocCardElement } from '$lib/model/types';
+	import { getBoard } from '../../context';
+	import { setCollapsed } from './collapse';
+
+	let { el, editingTitle }: { el: DocCardElement; editingTitle: boolean } = $props();
+
+	const ctx = getBoard();
+	let draft = $state('');
+	let cancelled = false;
+
+	function focusTitle(node: HTMLInputElement) {
+		draft = el.title;
+		cancelled = false;
+		node.focus();
+		node.select();
+	}
+
+	function commit() {
+		const title = draft.trim();
+		if (!cancelled && title && title !== el.title) updateElement(ctx.doc, el.id, { title });
+		ctx.editing.end();
+	}
+</script>
+
+<div
+	class="flex shrink-0 items-center gap-1 border-b px-3"
+	style:height="{DOC_CARD_HEADER_H}px"
+	style:border-color={el.collapsed
+		? 'transparent'
+		: 'color-mix(in srgb, currentColor 12%, transparent)'}
+>
+	<button
+		type="button"
+		class="pointer-events-auto -ml-1.5 inline-flex size-6 shrink-0 items-center justify-center rounded opacity-60 hover:bg-black/5 hover:opacity-100"
+		aria-label={el.collapsed ? 'Expand doc card' : 'Collapse doc card'}
+		aria-expanded={!el.collapsed}
+		data-interactive
+		onpointerdown={(e) => e.stopPropagation()}
+		onclick={() => setCollapsed(ctx, el, !el.collapsed)}
+	>
+		{#if el.collapsed}
+			<ChevronRight class="size-4" aria-hidden="true" />
+		{:else}
+			<ChevronDown class="size-4" aria-hidden="true" />
+		{/if}
+	</button>
+	{#if editingTitle}
+		<input
+			{@attach focusTitle}
+			bind:value={draft}
+			aria-label="Doc card title"
+			data-interactive
+			class="pointer-events-auto min-w-0 flex-1 rounded border border-accent bg-transparent px-1 font-semibold outline-none"
+			onblur={commit}
+			onkeydown={(e) => {
+				e.stopPropagation();
+				if (e.key === 'Enter') commit();
+				if (e.key === 'Escape') {
+					cancelled = true;
+					commit();
+				}
+			}}
+		/>
+	{:else}
+		<div class="min-w-0 flex-1 truncate px-1 font-semibold" data-doccard-title>{el.title}</div>
+	{/if}
+</div>

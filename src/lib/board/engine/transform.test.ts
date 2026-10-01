@@ -98,6 +98,28 @@ describe('resizeBox', () => {
 		const west = resizeBox(start, 'w', { x: 500, y: 50 }, opts);
 		expect(west).toMatchObject({ x: 192, w: 8 });
 	});
+
+	it('honours per-axis limits (min size, fixed height)', () => {
+		const start: Box = { x: 0, y: 0, w: 300, h: 200, rotation: 0 };
+		const opts = { keepAspect: false, fromCenter: false, minSize: 8 };
+		const shrunk = resizeBox(
+			start,
+			'se',
+			{ x: 10, y: 10 },
+			{ ...opts, limits: { minW: 240, minH: 120 } }
+		);
+		expect([shrunk.w, shrunk.h]).toEqual([240, 120]);
+		const fixed = resizeBox(
+			{ ...start, h: 40 },
+			'se',
+			{ x: 500, y: 400 },
+			{
+				...opts,
+				limits: { minW: 240, minH: 40, maxH: 40 }
+			}
+		);
+		expect([fixed.w, fixed.h]).toEqual([500, 40]);
+	});
 });
 
 describe('multi-element transforms', () => {

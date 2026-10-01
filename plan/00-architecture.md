@@ -48,7 +48,7 @@ Accounts, server sync, comments, version history, UML/BPMN libraries, auto-layou
 | D7 | **Every element type is connectable** via a `Connectable` implementation (default = rotated bounding box) | "Any object can be part of a diagram" is enforced by architecture |
 | D8 | **Connector geometry is derived at render time**, never stored (except `lastX/lastY` on attachment and conversion to free) | Moving a shape never writes to connectors; no write storms |
 | D9 | **Framework-agnostic core** (`model`, `storage`, `engine`, `diagram`, `render`) has no Svelte imports | Testable, portable |
-| D10 | **Canvas undo ≠ editor undo.** Canvas `Y.UndoManager` scope = `elements` map only; TipTap uses its own collaboration undo inside a focused editor | Avoids cross-talk between text and canvas undo |
+| D10 | **Canvas undo ≠ editor undo.** Canvas `Y.UndoManager` scope = `elements` + `docs` maps, tracking only `LOCAL` transactions; TipTap edits use the y-prosemirror origin, so they stay out of it and use the editor's own collaboration undo inside a focused editor | Avoids cross-talk between text and canvas undo; `docs` is in scope so undoing a card's creation/deletion (same LOCAL transaction) also removes/restores its text (step 23) |
 
 ## 4. Folder structure
 

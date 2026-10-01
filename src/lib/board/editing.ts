@@ -1,4 +1,5 @@
 import { deleteElements } from '$lib/model/ops';
+import type { Point } from '$lib/model/types';
 import type { BoardContext } from './context';
 
 /** Starts and ends in-place text editing (the editing id itself lives in SelectionState). */
@@ -15,12 +16,14 @@ export class TextEditing {
 		return this.#ctx.selection.editingId;
 	}
 
-	start(id: string, opts: { discardIfEmpty?: boolean } = {}): void {
+	/** `at`: client coordinates of the double-click that started editing (places the caret). */
+	start(id: string, opts: { discardIfEmpty?: boolean; at?: Point } = {}): void {
 		const { selection, undo } = this.#ctx;
 		if (selection.editingId && selection.editingId !== id) this.end();
 		selection.set([id]);
 		undo.stopCapturing();
 		this.#discard = opts.discardIfEmpty ? { id, undoDepth: undo.undoStack.length } : null;
+		selection.editingAt = opts.at ?? null;
 		selection.editingId = id;
 	}
 
