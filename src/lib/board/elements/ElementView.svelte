@@ -6,7 +6,7 @@
 
 	let { id }: { id: string } = $props();
 
-	const { store, selection } = getBoard();
+	const { store, selection, preview } = getBoard();
 	// SvelteMap tracks reads per key: this view re-renders only when its own element changes.
 	const el = $derived(store.get(id));
 	const editing = $derived(selection.editingId === id);
@@ -23,6 +23,7 @@
 		style={styleToCss(el.style)}
 		data-element-id={id}
 		data-type={el.type}
+		class:opacity-30={preview.erasing.has(id)}
 	>
 		<View {el} {editing} />
 		{#if editing && def.editableText && (el.type === 'shape' || el.type === 'sticky' || el.type === 'text')}

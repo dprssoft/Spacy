@@ -17,9 +17,13 @@
 	import Type from '@lucide/svelte/icons/type';
 	import type { ShapeKind } from '$lib/model/types';
 	import { getBoard } from '../context';
+	import { openImagePicker } from '../images/importImages';
 	import type { ToolId } from '../tools/types';
 
-	const { tools } = getBoard();
+	const ctx = getBoard();
+	const { tools } = ctx;
+	/** Buttons that run an action instead of selecting a tool. */
+	const actions: Partial<Record<ToolId, () => void>> = { image: () => openImagePicker(ctx) };
 
 	type IconComponent = typeof Square;
 	type Item = { id: ToolId; label: string; keys: string; icon: IconComponent };
@@ -85,7 +89,8 @@
 				class="mx-1.5 my-0.5 h-px bg-border max-sm:mx-0.5 max-sm:my-1.5 max-sm:h-auto max-sm:w-px"
 			></div>{/if}
 		{#each group as item (item.id)}
-			{@const available = tools.isAvailable(item.id)}
+			{@const action = actions[item.id]}
+			{@const available = !!action || tools.isAvailable(item.id)}
 			{#if item.id === 'shape'}
 				<DropdownMenu.Root>
 					<Tooltip.Root>
@@ -145,9 +150,9 @@
 						class={button}
 						aria-label={item.label}
 						aria-keyshortcuts={item.keys}
-						aria-pressed={tools.current === item.id}
+						aria-pressed={action ? undefined : tools.current === item.id}
 						aria-disabled={!available}
-						onclick={() => select(item.id)}
+						onclick={() => (action ? action() : select(item.id))}
 					>
 						<Icon class="size-[18px]" aria-hidden="true" />
 					</Tooltip.Trigger>

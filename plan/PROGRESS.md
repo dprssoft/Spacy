@@ -292,3 +292,23 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** The canvas undo scope is the `elements` map only, so undoing a duplicate/paste leaves the copied doc card's fragment orphaned in `docs` (harmless, invisible). Step 23 revisits the undo scope for doc cards.
 
 **Verification:** pnpm verify ✅ (268 unit tests: reorder incl. several items passing one neighbour, commands, clipboard round-trip incl. doc text / group remap / cascade / pointer centering / cross-board assets / plain text) · pnpm test:e2e ✅ (54; commands suite repeated 5× → 35/35: keyboard copy/paste/duplicate/delete/undo/redo + buttons, cut/paste, cross-board paste, plain text paste, group + lock, context menu reorder + copy/paste, `]`/`[`) · visual check of the context menu.
+
+## Step 15 — Pen, eraser, images — 2026-10-01
+**Summary:**
+- Pen (P): points (incl. coalesced pointer samples and real pen pressure; mouse = 0.5 → simulated pressure) collected locally and previewed in the screen-space overlay; **one document write on release** (RDP-simplified at 0.5 screen px, points stored relative to the bbox). Pen stays active.
+- Stroke element: `perfect-freehand` outline → SVG path (memoized on points/width), dot for a click; hit test = distance to the centre line incl. brush radius and rotation; AABB includes the brush thickness.
+- Eraser (E): samples the swipe every 4 px so fast moves don't skip elements, marks hits (30 % opacity), fading trail, deletes on release (one undo step), Escape cancels; locked elements are skipped.
+- Images: upload (toolbar Image button / Mod+Shift+I → file picker), drag-and-drop at the drop point (dashed drop highlight), paste (the step 14 `imagePaste` hook). PNG/JPEG/GIF/WebP/SVG ≤ 20 MB; raster images > 2048 px downscaled to WebP; sized to fit half the view; several files cascade; one undo step; stored as blobs in IndexedDB; `AssetUrlCache` object URLs revoked on board close; `ImageView` with loading/missing states and optional border; `keepAspect` resize.
+- `gcAssets` on board open deletes unreferenced assets of the board — only if older than 60 s, so an image another tab is just adding is never removed.
+
+**Deviations:**
+- "Image" is a toolbar **action** (opens the picker) rather than a tool; `tool.image` shortcut runs the action.
+- `BoardContext` gained `preview` (`PreviewState`: in-progress stroke, eraser marks/trail) and `assets` (`AssetUrlCache`).
+- 60 s grace period in `gcAssets` (not in the plan) to avoid a cross-tab race.
+- Updated the step 11 e2e that used Pen as its example of an unbuilt tool (now Connector) — same rule tested.
+
+**Dependencies added:** perfect-freehand 1.2.3 (per plan).
+
+**Follow-ups:** **Needs a human:** pressure with a real pen/stylus (optional criterion, unchecked).
+
+**Verification:** pnpm verify ✅ (282 unit tests: RDP, stroke hit/AABB/path, image sizing/validation, gcAssets grace + scoping) · pnpm test:e2e ✅ (59; new: stroke preview → written only on release → persists → eraser deletes, Escape cancels erasing, upload 64×48 PNG + reload, drop at point, image paste) · pen drawing with 3,000 elements: 60 fps (p95 16.7 ms) · visual check of strokes and an image. Fixture `tests/e2e/fixtures/sample.png` generated with Node zlib (no new dependency).

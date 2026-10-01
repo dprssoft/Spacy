@@ -4,6 +4,8 @@ import type { Point } from '$lib/model/types';
 import type { BoardStore } from './boardStore.svelte';
 import type { HistoryState } from './commands/history.svelte';
 import type { TextEditing } from './editing';
+import type { AssetUrlCache } from './images/assetUrls';
+import type { PreviewState } from './preview.svelte';
 import type { SelectionState } from './selection.svelte';
 import type { HandleRegistry } from './tools/handles';
 import type { ShortcutRegistry } from './tools/shortcuts';
@@ -25,6 +27,8 @@ export interface BoardContext {
 	history: HistoryState;
 	/** Last pointer position over the canvas (world); not reactive. */
 	pointer: Point | null;
+	preview: PreviewState;
+	assets: AssetUrlCache;
 }
 
 const KEY = Symbol('board');

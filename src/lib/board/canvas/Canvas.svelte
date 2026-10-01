@@ -6,7 +6,8 @@
 	import { getPref } from '$lib/shared/localPrefs';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
 	import { getBoard } from '../context';
-	import { centeredOrigin } from '../engine/viewport';
+	import { centeredOrigin, screenToWorld } from '../engine/viewport';
+	import { ACCEPTED_TYPES, importImageFiles } from '../images/importImages';
 	import { pointerRouter } from '../tools/pointerRouter';
 	import ZoomControls from '../ui/ZoomControls.svelte';
 	import { viewportInput } from './viewportInput';
@@ -59,6 +60,28 @@
 	});
 	$effect(() => () => saveViewport.flush());
 
+	// Image files dropped onto the canvas land where they were dropped.
+	let dropping = $state(false);
+	const hasFiles = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files');
+
+	function ondragover(e: DragEvent) {
+		if (!hasFiles(e)) return;
+		e.preventDefault();
+		if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+		dropping = true;
+	}
+
+	function ondrop(e: DragEvent) {
+		if (!hasFiles(e) || !container) return;
+		e.preventDefault();
+		dropping = false;
+		const files = [...(e.dataTransfer?.files ?? [])].filter((f) => ACCEPTED_TYPES.includes(f.type));
+		if (files.length === 0) return;
+		const r = container.getBoundingClientRect();
+		const at = screenToWorld(viewport.vp, { x: e.clientX - r.left, y: e.clientY - r.top });
+		void importImageFiles(ctx, files, at);
+	}
+
 	const gridSize = $derived(
 		GRID_SIZE * viewport.zoom < 8 ? GRID_SIZE * 4 * viewport.zoom : GRID_SIZE * viewport.zoom
 	);
@@ -82,6 +105,9 @@
 		: undefined}
 	style:background-size="{gridSize}px {gridSize}px"
 	style:background-position="{viewport.x}px {viewport.y}px"
+	{ondragover}
+	ondragleave={() => (dropping = false)}
+	{ondrop}
 	role="application"
 	aria-label="Board canvas"
 	tabindex="0"
@@ -99,6 +125,12 @@
 	<div class="pointer-events-none absolute inset-0">
 		{@render overlay?.()}
 	</div>
+	{#if dropping}
+		<div
+			class="pointer-events-none absolute inset-2 rounded-xl border-2 border-dashed border-accent bg-accent/5"
+			aria-hidden="true"
+		></div>
+	{/if}
 </div>
 
 <ZoomControls {viewport} {contentBounds} />

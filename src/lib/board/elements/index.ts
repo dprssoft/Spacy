@@ -12,10 +12,13 @@ import type {
 } from '$lib/model/types';
 import { rectFromPoints } from '../engine/geometry';
 import { boxAABB, boxHitTest } from './common';
+import ImageView from './image/ImageView.svelte';
 import PlaceholderView from './placeholder/PlaceholderView.svelte';
 import { registerElement, type ElementDefinition } from './registry';
 import ShapeView from './shape/ShapeView.svelte';
 import StickyView from './sticky/StickyView.svelte';
+import { strokeAABB, strokeHitTest } from './stroke/geometry';
+import StrokeView from './stroke/StrokeView.svelte';
 import TextView from './text/TextView.svelte';
 
 const boxDefaults = {
@@ -48,9 +51,21 @@ registerElement<TextElement>({
 	editableText: true
 });
 
-// Placeholders until their steps: image/stroke (15), frame (16), connector (20), doccard (23).
-registerElement<ImageElement>({ ...boxDefaults, type: 'image', component: PlaceholderView });
-registerElement<StrokeElement>({ ...boxDefaults, type: 'stroke', component: PlaceholderView });
+registerElement<ImageElement>({
+	...boxDefaults,
+	type: 'image',
+	component: ImageView,
+	keepAspect: true
+});
+registerElement<StrokeElement>({
+	...boxDefaults,
+	type: 'stroke',
+	component: StrokeView,
+	aabb: strokeAABB,
+	hitTest: strokeHitTest
+});
+
+// Placeholders until their steps: frame (16), connector (20), doccard (23).
 registerElement<FrameElement>({ ...boxDefaults, type: 'frame', component: PlaceholderView });
 registerElement<DocCardElement>({ ...boxDefaults, type: 'doccard', component: PlaceholderView });
 

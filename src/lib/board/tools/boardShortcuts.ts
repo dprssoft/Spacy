@@ -1,6 +1,7 @@
 import type { ShapeKind } from '$lib/model/types';
 import type { BoardContext } from '../context';
 import { nextZoomStep, zoomAt } from '../engine/viewport';
+import { openImagePicker } from '../images/importImages';
 import type { Shortcut } from './shortcuts';
 import type { ToolId } from './types';
 
@@ -40,7 +41,13 @@ export const toolShortcuts: Shortcut[] = [
 	tool('sticky', 'S', 'Sticky note', 'sticky'),
 	tool('doccard', 'N', 'Doc card', 'doccard'),
 	tool('frame', 'F', 'Frame', 'frame'),
-	tool('image', 'Mod+Shift+I', 'Insert image', 'image'),
+	{
+		id: 'tool.image',
+		keys: ['Mod+Shift+I'],
+		label: 'Insert image',
+		group: 'Tools',
+		run: openImagePicker
+	},
 	{
 		id: 'escape',
 		keys: ['Escape'],

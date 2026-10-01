@@ -11,7 +11,12 @@
 	import { TextEditing } from './editing';
 	import { SelectionState } from './selection.svelte';
 	import SelectionOverlay from './canvas/SelectionOverlay.svelte';
-	import { onCopyEvent, onPasteEvent } from './commands/clipboard';
+	import PreviewOverlay from './canvas/PreviewOverlay.svelte';
+	import { imagePaste, onCopyEvent, onPasteEvent } from './commands/clipboard';
+	import { AssetUrlCache } from './images/assetUrls';
+	import { gcAssets } from './images/gcAssets';
+	import { importImageFiles } from './images/importImages';
+	import { PreviewState } from './preview.svelte';
 	import { editShortcuts } from './commands/editShortcuts';
 	import { HistoryState } from './commands/history.svelte';
 	import CanvasContextMenu from './ui/CanvasContextMenu.svelte';
@@ -39,7 +44,9 @@
 		handles: new HandleRegistry(),
 		shortcuts: new ShortcutRegistry(),
 		history: new HistoryState(board.undo),
-		pointer: null
+		pointer: null,
+		preview: new PreviewState(),
+		assets: new AssetUrlCache()
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);
@@ -57,6 +64,12 @@
 		ctx.viewport.destroy();
 		ctx.store.destroy();
 		ctx.history.destroy();
+		ctx.assets.revokeAll();
+	});
+	$effect(() => {
+		imagePaste.handler = importImageFiles;
+		// Unreferenced images are cleaned up in the background (undo history is empty at open).
+		void gcAssets(ctx.id, ctx.doc).catch((err) => console.error('Asset cleanup failed', err));
 	});
 	$effect(() => installTestHooks(ctx));
 	// Keep the selection valid when elements disappear (other tab, undo…).
@@ -117,6 +130,7 @@
 					<ElementsLayer />
 				{/snippet}
 				{#snippet overlay()}
+					<PreviewOverlay />
 					<SelectionOverlay />
 				{/snippet}
 			</Canvas>
