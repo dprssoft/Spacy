@@ -16,6 +16,7 @@
 	import { AssetUrlCache } from './images/assetUrls';
 	import { gcAssets } from './images/gcAssets';
 	import { importImageFiles } from './images/importImages';
+	import { BoardPrefs } from './prefs.svelte';
 	import { PreviewState } from './preview.svelte';
 	import StylePopover from './style/StylePopover.svelte';
 	import { editShortcuts } from './commands/editShortcuts';
@@ -47,7 +48,8 @@
 		history: new HistoryState(board.undo),
 		pointer: null,
 		preview: new PreviewState(),
-		assets: new AssetUrlCache()
+		assets: new AssetUrlCache(),
+		prefs: new BoardPrefs()
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);

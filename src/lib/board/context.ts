@@ -6,6 +6,7 @@ import type { HistoryState } from './commands/history.svelte';
 import type { TextEditing } from './editing';
 import type { AssetUrlCache } from './images/assetUrls';
 import type { PreviewState } from './preview.svelte';
+import type { BoardPrefs } from './prefs.svelte';
 import type { SelectionState } from './selection.svelte';
 import type { HandleRegistry } from './tools/handles';
 import type { ShortcutRegistry } from './tools/shortcuts';
@@ -29,6 +30,7 @@ export interface BoardContext {
 	pointer: Point | null;
 	preview: PreviewState;
 	assets: AssetUrlCache;
+	prefs: BoardPrefs;
 }
 
 const KEY = Symbol('board');

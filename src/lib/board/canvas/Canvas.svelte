@@ -3,7 +3,6 @@
 	import { GRID_SIZE } from '$lib/model/defaults';
 	import type { Rect } from '$lib/model/types';
 	import { debounce } from '$lib/shared/debounce';
-	import { getPref } from '$lib/shared/localPrefs';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
 	import { getBoard } from '../context';
 	import { centeredOrigin, screenToWorld } from '../engine/viewport';
@@ -31,7 +30,6 @@
 	let panning = $state(false);
 	let spaceHeld = $state(false);
 	let restored = false;
-	const showGrid = getPref('grid', true);
 
 	// Track the container size; on first measure, restore the saved view (or center the origin).
 	$effect(() => {
@@ -100,7 +98,7 @@
 	class="relative h-full w-full touch-none overflow-hidden overscroll-none outline-none select-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-inset"
 	{@attach pointerRouter(ctx)}
 	style:cursor={panning ? 'grabbing' : spaceHeld ? 'grab' : ctx.tools.tool.cursor}
-	style:background-image={showGrid
+	style:background-image={ctx.prefs.grid
 		? 'radial-gradient(var(--canvas-dot) 1px, transparent 1px)'
 		: undefined}
 	style:background-size="{gridSize}px {gridSize}px"

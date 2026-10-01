@@ -8,6 +8,7 @@ import { getDefaultStyle } from '../style/styleDefaults';
 import { dragRect } from './dragRect';
 import { undoGesture } from './gesture';
 import { createRafWriter } from './rafBatch';
+import { createSnapper, type Snapper } from './snapper';
 import type { CanvasPointerEvent, Tool } from './types';
 
 const DRAG_THRESHOLD_PX = 3;
@@ -35,13 +36,20 @@ export function createFrameTool(ctx: BoardContext): Tool {
 	const gesture = undoGesture(ctx.undo);
 	let start: { world: Point; screen: Point } | null = null;
 	let id: string | null = null;
+	let snapper: Snapper | null = null;
 	const writer = createRafWriter<Rect>((rect) => {
 		if (id) updateElement(ctx.doc, id, rect);
 	});
 	const rectFor = (e: CanvasPointerEvent) =>
-		dragRect(start!.world, e.world, { square: e.shift, fromCenter: e.alt, minSize: MIN_FRAME });
+		dragRect(start!.world, snapper ? snapper.point(e.world, e.mod) : e.world, {
+			square: e.shift,
+			fromCenter: e.alt,
+			minSize: MIN_FRAME
+		});
 
 	function reset() {
+		snapper?.clear();
+		snapper = null;
 		writer.cancel();
 		gesture.end();
 		start = null;
@@ -52,7 +60,9 @@ export function createFrameTool(ctx: BoardContext): Tool {
 		id: 'frame',
 		cursor: 'crosshair',
 		onPointerDown(e) {
-			start = { world: e.world, screen: e.screen };
+			snapper = createSnapper(ctx);
+			start = { world: snapper.point(e.world, e.mod), screen: e.screen };
+			snapper.clear();
 			id = null;
 			gesture.begin();
 		},

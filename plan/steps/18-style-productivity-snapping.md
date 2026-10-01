@@ -47,9 +47,9 @@ Quick-style presets, copy/paste style, "set as default", align/distribute/match 
 - `tests/e2e/arrange.spec.ts`: two rects at different x → Align left → equal `x` (via test hooks). Drag a rect near another's left edge → it snaps (final x equals the other's x). Holding Alt → no snap.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Guides appear while dragging and disappear on release
-- [ ] **M3 demo:** everything is styleable, quick styles work, tidying with align/distribute works
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Guides appear while dragging and disappear on release
+- [x] **M3 demo:** everything is styleable, quick styles work, tidying with align/distribute works
 
 ## Out of scope
 Equal-spacing guides, rotation snapping to other elements.

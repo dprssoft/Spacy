@@ -1,3 +1,4 @@
+import { pasteStyle, copyStyle } from '../style/styleClipboard';
 import type { Shortcut } from '../tools/shortcuts';
 import {
 	canGroup,
@@ -75,6 +76,29 @@ export const editShortcuts: Shortcut[] = [
 		group: 'Arrange',
 		when: hasSelection,
 		run: (ctx) => reorderSelection(ctx, 'backward')
+	},
+	{
+		id: 'edit.copyStyle',
+		keys: ['Mod+Alt+C'],
+		label: 'Copy style',
+		group: 'Edit',
+		when: hasSelection,
+		run: (ctx) => void copyStyle(ctx)
+	},
+	{
+		id: 'edit.pasteStyle',
+		keys: ['Mod+Alt+V'],
+		label: 'Paste style',
+		group: 'Edit',
+		when: hasSelection,
+		run: (ctx) => void pasteStyle(ctx)
+	},
+	{
+		id: 'view.snapToGrid',
+		keys: ["Mod+'"],
+		label: 'Snap to grid',
+		group: 'View',
+		run: (ctx) => ctx.prefs.setSnapToGrid(!ctx.prefs.snapToGrid)
 	},
 	{
 		id: 'arrange.lock',

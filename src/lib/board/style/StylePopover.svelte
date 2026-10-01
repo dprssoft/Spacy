@@ -4,12 +4,18 @@
 	import AlignRight from '@lucide/svelte/icons/align-right';
 	import Bold from '@lucide/svelte/icons/bold';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
+	import LayoutPanelLeft from '@lucide/svelte/icons/layout-panel-left';
+	import Palette from '@lucide/svelte/icons/palette';
 	import Italic from '@lucide/svelte/icons/italic';
 	import type { Element, ShapeKind, Style } from '$lib/model/types';
 	import { getBoard } from '../context';
 	import { unionRects } from '../engine/geometry';
 	import { worldToScreen } from '../engine/viewport';
+	import { transformTargets } from '../selectionInfo';
 	import { applyStyle, type AppearancePatch } from './applyStyle';
+	import ArrangePanel from './ArrangePanel.svelte';
+	import QuickStylesPanel from './QuickStylesPanel.svelte';
+	import { hasCustomDefault, resetDefaultStyle, setDefaultStyle } from './styleDefaults';
 	import ColorSwatches from './controls/ColorSwatches.svelte';
 	import PanelButton from './controls/PanelButton.svelte';
 	import Segmented from './controls/Segmented.svelte';
@@ -32,9 +38,14 @@
 	});
 	const editable = $derived(els.filter((e) => !e.locked));
 	const opts = $derived(optionsFor(editable.map((e) => e.type)));
+	const arrangeable = $derived.by(() => {
+		void store.version;
+		void selection.ids.size;
+		return transformTargets(ctx).length;
+	});
 	const visible = $derived(
 		editable.length > 0 &&
-			opts.size > 0 &&
+			(opts.size > 0 || arrangeable >= 2) &&
 			tools.current === 'select' &&
 			!selection.transforming &&
 			!selection.marquee &&
@@ -83,6 +94,28 @@
 	);
 	const hasMore = $derived(opts.has('radius') || opts.has('shadow') || opts.has('opacity'));
 	const kind = $derived(val((el) => (el.type === 'shape' ? el.kind : null)));
+	const hasQuick = $derived(opts.has('fill') || opts.has('stroke') || opts.has('textColor'));
+	// "Set as default" applies when everything selected is one type.
+	const singleType = $derived(
+		editable.length > 0 && editable.every((e) => e.type === editable[0]!.type)
+			? editable[0]!.type
+			: null
+	);
+	const TYPE_LABEL: Record<string, string> = {
+		shape: 'shapes',
+		sticky: 'sticky notes',
+		text: 'texts',
+		image: 'images',
+		stroke: 'drawings',
+		frame: 'frames',
+		doccard: 'doc cards',
+		connector: 'connectors'
+	};
+	let defaultsVersion = $state(0);
+	const customDefault = $derived.by(() => {
+		void defaultsVersion;
+		return singleType ? hasCustomDefault(singleType) : false;
+	});
 </script>
 
 {#if visible && pos}
@@ -97,6 +130,13 @@
 		style:left="{pos.left}px"
 		style:top="{pos.top}px"
 	>
+		{#if hasQuick}
+			<PanelButton label="Quick styles" testId="style-quick">
+				{#snippet trigger()}<Palette class="size-4" aria-hidden="true" />{/snippet}
+				<QuickStylesPanel els={editable} {opts} />
+			</PanelButton>
+		{/if}
+
 		{#if opts.has('shapeKind')}
 			<PanelButton label="Shape" testId="style-shape">
 				{#snippet trigger()}
@@ -286,7 +326,14 @@
 			</PanelButton>
 		{/if}
 
-		{#if hasMore}
+		{#if arrangeable >= 2}
+			<PanelButton label="Arrange" testId="style-arrange">
+				{#snippet trigger()}<LayoutPanelLeft class="size-4" aria-hidden="true" />{/snippet}
+				<ArrangePanel count={arrangeable} />
+			</PanelButton>
+		{/if}
+
+		{#if hasMore || singleType}
 			<PanelButton label="More options" testId="style-more">
 				{#snippet trigger()}<Ellipsis class="size-4" aria-hidden="true" />{/snippet}
 				{#if opts.has('radius')}
@@ -323,6 +370,32 @@
 						onstart={() => ctx.undo.stopCapturing()}
 						oninput={(v) => apply({ style: { opacity: v } }, true)}
 					/>
+				{/if}
+				{#if singleType}
+					<div class="flex flex-col items-start gap-1 border-t border-border pt-2 text-xs">
+						<button
+							type="button"
+							class="rounded px-1 py-0.5 text-accent hover:underline"
+							onclick={() => {
+								setDefaultStyle(singleType, editable[0]!.style);
+								defaultsVersion++;
+							}}
+						>
+							Set as default for new {TYPE_LABEL[singleType]}
+						</button>
+						{#if customDefault}
+							<button
+								type="button"
+								class="rounded px-1 py-0.5 text-muted hover:underline"
+								onclick={() => {
+									resetDefaultStyle(singleType);
+									defaultsVersion++;
+								}}
+							>
+								Reset default
+							</button>
+						{/if}
+					</div>
 				{/if}
 			</PanelButton>
 		{/if}
