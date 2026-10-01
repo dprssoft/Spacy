@@ -3,19 +3,17 @@ import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
 import { downloadBlob } from '$lib/shared/download';
 import { slug } from '$lib/shared/slug';
-import {
-	exportBackup,
-	exportBoardFile,
-	importFile,
-	InvalidFileError
-} from '$lib/storage/fileFormat';
 import type { BoardMeta } from '$lib/storage/types';
+
+// Export/import code loads on first use (it isn't needed to show the start page).
+const fileFormat = () => import('$lib/storage/fileFormat');
 
 const MB = 1024 * 1024;
 
 /** Imports `.smthng` files one after another; always creates new boards. */
 export async function importFiles(files: Iterable<File>): Promise<BoardMeta[]> {
 	const imported: BoardMeta[] = [];
+	const { importFile, InvalidFileError } = await fileFormat();
 	for (const file of files) {
 		try {
 			const result = await importFile(file, {
@@ -60,6 +58,7 @@ export function handleLaunchFiles(): void {
 
 export async function exportBoard(board: Pick<BoardMeta, 'id' | 'title'>): Promise<void> {
 	try {
+		const { exportBoardFile } = await fileFormat();
 		downloadBlob(await exportBoardFile(board.id), `${slug(board.title) || 'board'}.smthng`);
 	} catch (err) {
 		console.error(err);
@@ -70,6 +69,7 @@ export async function exportBoard(board: Pick<BoardMeta, 'id' | 'title'>): Promi
 export async function backupAll(): Promise<void> {
 	try {
 		const date = new Date().toISOString().slice(0, 10);
+		const { exportBackup } = await fileFormat();
 		downloadBlob(await exportBackup(), `smthng-backup-${date}.smthng`);
 		toast.success('Backup downloaded');
 	} catch (err) {

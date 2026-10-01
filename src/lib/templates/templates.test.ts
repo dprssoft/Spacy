@@ -4,7 +4,7 @@ import { getDocsMap, getElementsMap, listElements } from '$lib/model/doc';
 import { parseElement } from '$lib/model/schema';
 import { TEMPLATE } from '$lib/model/origins';
 import { docToMarkdown } from '$lib/board/doccards/markdown';
-import { fragmentToJSON } from './docContent';
+import { fragmentToJSON } from '$lib/board/doccards/fragmentJson';
 import { templates } from './index';
 
 async function built(id: string) {

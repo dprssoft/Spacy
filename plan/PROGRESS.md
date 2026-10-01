@@ -623,3 +623,40 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Manual checks not done: Chrome DevTools → Application → Manifest installability and the Lighthouse "Installable" audit.
 
 **Verification:** pnpm verify ✅ (578 unit tests; new: backup reminder rule, byte formatting) · pnpm test:e2e ✅ (123; new `offline.spec.ts`: create a board → worker active → offline → the board reloads with its shape, the start page lists the board and renders the template previews; `settings.spec.ts`: storage line, theme switch, About with the version, settings on a board, the reminder with 3 boards and "Later" persisting across reload, the manifest with reachable icons and the file handler) · screenshot of the start page with the reminder and the settings menu reviewed.
+
+## Step 30 — Performance pass — 2026-10-02
+**Summary:**
+- **Lazy loading:**
+  - The rich-text editor (TipTap) is a separate chunk (`doccards/lazy.ts` → `boardEditor`), loaded by `DocCardView` and `FocusMode`. It is warmed up when the board is idle or the doc card tool is picked; a skeleton shows meanwhile.
+  - The export dialog with the static renderer, the thumbnail renderer, `fileFormat`, template builders and template creation all load on first use.
+  - The start page no longer loads Yjs or the data model: duplicate, delete, trash purge and template creation import them on demand.
+- **No editor needed to read doc cards:** `doccards/fragmentJson.ts` reads a Yjs fragment straight into editor JSON (a test checks it gives the same Markdown as `editor.getJSON()`). Markdown export, static rendering, thumbnails and template previews use it. `editorRegistry` and the headless editor are gone; `getDocJSON` is synchronous.
+- **Doc cards at low zoom:** below 40 % zoom a card shows its title and three skeleton lines instead of a live editor (an edited card always keeps its editor; culled cards are unmounted).
+- **Culling:** `ElementsLayer` skips work while the view stays inside the rect its last search covered (same zoom and content), and keeps the visible set when the ids didn't change, so panning doesn't re-diff the mounted elements.
+- **Strokes:** `strokePathMemo` reuses the outline when a moved stroke's points are unchanged.
+- **Tooling:** `createMixedPerfBoard` (strokes, doc cards with text, frames, images sharing one asset, connectors in all routings; `__smthng.perfMixed`, dev button), `__smthng.renderCounts`, `performance.measure('board-open')` from route mount to the first painted elements, and `pnpm analyze` (`rollup-plugin-visualizer` → `stats.html`, gitignored).
+- **Hot-path checklist, verified by reading the code:** all pointer-driven writes go through `createRafWriter` (move, resize, rotate, create, bends, label, endpoint drags); `BoardStore` recomputes order only on add/remove/z change and updates the spatial index incrementally; culling runs at most once per frame; `connectorGeometry` is cached by snapshot identity; snapping is capped at 300 candidates from the index.
+
+**Results** (headless Chromium, software rendering, this machine; 3,000 mixed elements unless noted):
+
+| Metric | Target | Result |
+|---|---|---|
+| Pan, 3k mixed, 100 % zoom (135 mounted) | ≥ 55 fps | 58 fps (p95 17 ms) ✅ |
+| Pan, 3k mixed, 50 % zoom (450 mounted) | ≥ 55 fps | 52 fps (p95 17 ms) ⚠ |
+| Pan, 3k mixed, all visible (10 % zoom, 3,001 mounted) | ≥ 55 fps | 33 fps (p95 67 ms) ❌ |
+| Drag 1 of 3k | ≥ 55 fps | 60 fps ✅ |
+| Open 1k mixed (cached) | < 1 s | ~370 ms to first paint (~450 ms since navigation) ✅ |
+| Home JS gz (static imports) | < 150 KB | 109 KB ✅ (was 163 KB before this step) |
+| Board JS gz (excl. TipTap) | < 300 KB | 218 KB ✅ (editor chunk: 137 KB, lazy) |
+
+**Deviations:**
+- **Pan with everything visible misses the target** (33 fps; 27 before the culling change). A CDP profile of 60 pan frames: script 281 ms, style 91 ms, layout 55 ms out of 3,723 ms of main-thread work. The rest is the browser painting ~52,000 DOM nodes; app code is under 5 ms per frame. Removing per-element shadows at low zoom made no measurable difference (tried, reverted), and promoting the world layer makes it much worse (step 10). A real GPU should do better than this software renderer, but that isn't measured. The remaining fix would be a canvas renderer for low zoom, which is out of scope without the human's approval.
+- **Found by the new e2e test and fixed:** with the editor lazy-loaded, the first keystroke after placing a card could arrive before the editor had focus and hit a canvas shortcut. The editor is now warmed up early, and canvas shortcuts are ignored while anything is being edited (Escape still leaves editing).
+- Open time is measured to the first painted elements (two frames after the first culling pass), on a mixed board rather than shapes only.
+- The home-bundle check in e2e reads the content of the page's statically loaded scripts (chunk names are hashes, so name matching alone proves little).
+
+**Dependencies added:** `rollup-plugin-visualizer` 7.1.1 (dev).
+
+**Follow-ups:** Decide whether the all-visible pan case needs a canvas renderer at low zoom; re-measure the fps numbers on real hardware.
+
+**Verification:** pnpm verify ✅ (581 unit tests; new: fragment → JSON equals editor JSON, stroke memo) · pnpm test:e2e ✅ (125; new `perf-guard.spec.ts`: on a 500-element mixed board, dragging one element changes no other element's render count; the start page's static scripts contain no TipTap/ProseMirror; a doc card shows the preview at 30 % zoom and its editor at 100 %).

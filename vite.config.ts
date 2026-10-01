@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import pkg from './package.json' with { type: 'json' };
 
@@ -60,7 +61,11 @@ export default defineConfig({
 				globPatterns: ['client/**/*.{js,css,html,svg,png,ico,webp,woff2,webmanifest}'],
 				navigateFallback: '/'
 			}
-		})
+		}),
+		// `pnpm analyze` writes stats.html (a treemap of the client bundle).
+		...(process.env.ANALYZE
+			? [visualizer({ filename: 'stats.html', gzipSize: true, template: 'treemap' })]
+			: [])
 	],
 	// Svelte resolves its server build under Node unless told otherwise; component tests need the browser build.
 	resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,

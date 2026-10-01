@@ -3,7 +3,7 @@ import { createElements, deleteElements } from '$lib/model/ops';
 import type { Element, NewElement } from '$lib/model/types';
 import { getPref } from '$lib/shared/localPrefs';
 import type { BoardContext } from '$lib/board/context';
-import { generatePerfElements } from './perfBoard';
+import { createMixedPerfBoard, generatePerfElements } from './perfBoard';
 
 export interface TestHooks {
 	ctx: BoardContext;
@@ -12,6 +12,19 @@ export interface TestHooks {
 	clear(): void;
 	/** Adds `n` generated elements (performance testing). */
 	perf(n?: number, seed?: number): number;
+	/** Adds a realistic mix of `n` elements (strokes, doc cards, frames, images, connectors). */
+	perfMixed(n?: number, seed?: number): Promise<number>;
+	/** How often each element's view has rendered (to check that edits re-render only what changed). */
+	renderCounts: Map<string, number>;
+}
+
+// Shared by all ElementViews; only filled while test hooks are enabled.
+export const renderCounts = new Map<string, number>();
+let counting = false;
+
+/** Called by ElementView on every render of an element. A no-op unless hooks are enabled. */
+export function countRender(id: string): void {
+	if (counting) renderCounts.set(id, (renderCounts.get(id) ?? 0) + 1);
 }
 
 export function testHooksEnabled(): boolean {
@@ -29,10 +42,15 @@ export function installTestHooks(ctx: BoardContext): () => void {
 		createElements: (els) => createElements(ctx.doc, els),
 		list: () => listElements(ctx.doc),
 		clear: () => deleteElements(ctx.doc, [...getElementsMap(ctx.doc).keys()]),
-		perf: (n = 3000, seed = 1) => createElements(ctx.doc, generatePerfElements(n, seed)).length
+		perf: (n = 3000, seed = 1) => createElements(ctx.doc, generatePerfElements(n, seed)).length,
+		perfMixed: (n = 3000, seed = 1) => createMixedPerfBoard(ctx.doc, ctx.id, n, seed),
+		renderCounts
 	};
+	counting = true;
 	window.__smthng = hooks;
 	return () => {
+		counting = false;
+		renderCounts.clear();
 		if (window.__smthng === hooks) delete window.__smthng;
 	};
 }

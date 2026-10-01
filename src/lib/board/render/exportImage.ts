@@ -2,7 +2,7 @@ import { toast } from 'svelte-sonner';
 import type { Element } from '$lib/model/types';
 import * as assetsRepo from '$lib/storage/assetsRepo';
 import type { BoardContext } from '../context';
-import { getDocJSONSync } from '../doccards/docJson';
+import { getDocJSON } from '../doccards/docJson';
 import { docLines, type DocLine } from '../doccards/docLines';
 import { pointInRotatedRect } from '../engine/geometry';
 import { renderStaticSvg, type StaticSvg } from './staticSvg';
@@ -52,7 +52,7 @@ export async function renderScope(
 	if (elements.length === 0) return null;
 	const lines = new Map<string, DocLine[]>();
 	for (const el of elements)
-		if (el.type === 'doccard') lines.set(el.id, docLines(getDocJSONSync(ctx, el.id)));
+		if (el.type === 'doccard') lines.set(el.id, docLines(getDocJSON(ctx, el.id)));
 	const byId = new Map([...ctx.store.elements].map(([id, el]) => [id, el]));
 	const measure = createCanvasMeasurer();
 	const assets = new Map<string, Promise<string | null>>();

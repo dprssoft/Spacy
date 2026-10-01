@@ -7,6 +7,7 @@
 	import { BoardNotFoundError, openBoard, type OpenBoard } from '$lib/storage/boardDoc';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
 	import BoardWorkspace from './BoardWorkspace.svelte';
+	import { OPEN_MARK } from './openTiming';
 
 	let { id }: { id: string } = $props();
 
@@ -23,6 +24,7 @@
 	let opened: OpenBoard | null = null;
 
 	async function load() {
+		performance.mark(OPEN_MARK);
 		status = { kind: 'loading' };
 		try {
 			const meta = await boardsRepo.get(id);

@@ -49,7 +49,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 27 | [`.smthng` files, import, backup](./steps/27-file-format-import-export.md) | G | 26 | 1.5d |
 | [x] | 28 | [Templates](./steps/28-templates.md) | G | 27 | 1.5d |
 | [x] | 29 | [PWA, settings, backup reminder](./steps/29-pwa.md) | H. Release | 28 | 1d |
-| [ ] | 30 | [Performance pass](./steps/30-performance.md) | H | 29 | 1d |
+| [x] | 30 | [Performance pass](./steps/30-performance.md) | H | 29 | 1d |
 | [ ] | 31 | [Accessibility, help, onboarding](./steps/31-accessibility-help-onboarding.md) | H | 30 | 1.5d |
 | [ ] | 32 | [Full E2E and deployment](./steps/32-e2e-deploy.md) | H | 31 | 1.5d |
 

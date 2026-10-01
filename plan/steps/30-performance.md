@@ -42,9 +42,9 @@ Measure and meet the performance targets. Lazy-load heavy modules and fix any ho
 - `tests/e2e/perf-guard.spec.ts` (Chromium, with test hooks): generate 500 mixed elements → drag one element → the render count delta for the others is 0; the home page's loaded scripts don't include a chunk whose name contains `tiptap` or `prosemirror` (check `performance.getEntriesByType('resource')`).
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] All targets met, or deviations documented with measurements and reasons in PROGRESS
-- [ ] No functional regressions (the full E2E suite passes)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] All targets met, or deviations documented with measurements and reasons in PROGRESS
+- [x] No functional regressions (the full E2E suite passes)
 
 ## Out of scope
 A Canvas2D renderer rewrite (only if the targets are badly missed; stop and ask the human first).

@@ -8,7 +8,7 @@ import { docToMarkdown } from './markdown';
 export async function cardMarkdown(ctx: BoardContext, id: string): Promise<string | null> {
 	const el = ctx.store.get(id);
 	if (el?.type !== 'doccard') return null;
-	return docToMarkdown(await getDocJSON(ctx, id), { title: el.title });
+	return docToMarkdown(getDocJSON(ctx, id), { title: el.title });
 }
 
 export async function copyMarkdown(ctx: BoardContext, id: string): Promise<void> {

@@ -4,7 +4,7 @@ import { docLines } from '$lib/board/doccards/docLines';
 import { thumbnailFromSvg, THUMB_BG } from '$lib/board/render/thumbnails';
 import { renderStaticSvg, type StaticSvg } from '$lib/board/render/staticSvg';
 import { createCanvasMeasurer } from '$lib/board/render/wrapText';
-import { fragmentToJSON } from './docContent';
+import { fragmentToJSON } from '$lib/board/doccards/fragmentJson';
 import type { Template } from './index';
 
 /** Renders a document's board (frames first, then by z) to SVG, without a board context. */
