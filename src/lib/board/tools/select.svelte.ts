@@ -1,6 +1,14 @@
 import { cloneElements } from '$lib/model/clone';
 import { createElements, updateElements } from '$lib/model/ops';
-import type { Element, ElementPatch, Point, Rect } from '$lib/model/types';
+import type {
+	ConnectorElement,
+	Element,
+	ElementPatch,
+	Endpoint,
+	Point,
+	Port,
+	Rect
+} from '$lib/model/types';
 import { compareZ } from '$lib/model/zorder';
 import type { BoardContext } from '../context';
 import { definitionOf } from '../elements';
@@ -21,6 +29,8 @@ import { syncFrameMembership, withFrameChildren } from '../frameMembership';
 import { groupOf, targetsBox, transformTargets } from '../selectionInfo';
 import { createText } from './create';
 import { createSnapper, type Snapper } from './snapper';
+import { createConnectGesture, createEndpointDrag } from '../diagram/connectGesture';
+import { makeEndpoint } from '../diagram/endpoints';
 import { undoGesture } from './gesture';
 import { createRafWriter } from './rafBatch';
 import type { CanvasPointerEvent, Tool } from './types';
@@ -34,7 +44,17 @@ type State =
 	| { kind: 'idle' }
 	/** Pressed on an element; becomes 'moving' past the drag threshold. */
 	| { kind: 'pointing'; start: Point; startScreen: Point; clickedId: string; wasSelected: boolean }
-	| { kind: 'moving'; start: Point; snapshot: Element[]; box: Rect | null; snapper: Snapper }
+	| {
+			kind: 'moving';
+			start: Point;
+			snapshot: Element[];
+			/** Selected connectors with free ends: those ends move with the selection. */
+			connectors: ConnectorElement[];
+			box: Rect | null;
+			snapper: Snapper;
+	  }
+	| { kind: 'connecting'; gesture: ReturnType<typeof createConnectGesture> }
+	| { kind: 'endpoint'; drag: ReturnType<typeof createEndpointDrag> }
 	| { kind: 'marquee'; start: Point; base: string[] }
 	| { kind: 'resizing'; handle: ResizeHandle; box: Box; snapshot: Element[]; snapper: Snapper }
 	| { kind: 'rotating'; center: Point; startAngle: number; snapshot: Element[] };
@@ -94,7 +114,15 @@ export function createSelectTool(ctx: BoardContext): Tool {
 			ctx,
 			targets.map((el) => el.id)
 		);
-		state = { kind: 'moving', start, snapshot: targets, box, snapper };
+		const connectors = [...selection.ids]
+			.map((id) => store.get(id))
+			.filter(
+				(el): el is ConnectorElement =>
+					el?.type === 'connector' &&
+					!el.locked &&
+					(el.from.kind === 'free' || el.to.kind === 'free')
+			);
+		state = { kind: 'moving', start, snapshot: targets, connectors, box, snapper };
 		ui.cursor = 'move';
 	}
 
@@ -112,7 +140,23 @@ export function createSelectTool(ctx: BoardContext): Tool {
 			if (lock !== 'x') dx += c.dx;
 			if (lock !== 'y') dy += c.dy;
 		}
-		writer.push(s.snapshot.map((el) => ({ id: el.id, patch: { x: el.x + dx, y: el.y + dy } })));
+		const shift = (ep: Endpoint): Endpoint =>
+			ep.kind === 'free' ? { ...ep, x: ep.x + dx, y: ep.y + dy } : ep;
+		writer.push([
+			...s.snapshot.map((el) => ({ id: el.id, patch: { x: el.x + dx, y: el.y + dy } })),
+			...s.connectors.map((c) => ({
+				id: c.id,
+				patch: {
+					from: shift(c.from),
+					to: shift(c.to),
+					// Bends only follow when nothing anchors the connector.
+					waypoints:
+						c.from.kind === 'free' && c.to.kind === 'free'
+							? c.waypoints.map((w) => ({ x: w.x + dx, y: w.y + dy }))
+							: c.waypoints
+				}
+			}))
+		]);
 	}
 
 	function marquee(e: CanvasPointerEvent, s: Extract<State, { kind: 'marquee' }>) {
@@ -178,6 +222,8 @@ export function createSelectTool(ctx: BoardContext): Tool {
 
 	function cancel() {
 		clearGuides();
+		if (state.kind === 'connecting') state.gesture.cancel();
+		if (state.kind === 'endpoint') state.drag.cancel();
 		const transforming =
 			state.kind === 'moving' || state.kind === 'resizing' || state.kind === 'rotating';
 		writer.cancel();
@@ -203,6 +249,27 @@ export function createSelectTool(ctx: BoardContext): Tool {
 
 		onPointerDown(e) {
 			const handle = e.hit.handle;
+			if (handle?.startsWith('port:')) {
+				// Dragging from a hovered element's port dot draws a connector.
+				const [, id, port] = handle.split(':');
+				const el = id ? store.get(id) : undefined;
+				const c = el ? definitionOf(el).connectable : null;
+				if (el && c) {
+					const at = c.ports(el)[port as Port];
+					const from = makeEndpoint(el, c, at, 'auto', 1);
+					state = { kind: 'connecting', gesture: createConnectGesture(ctx, from, e.screen) };
+				}
+				return;
+			}
+			if (handle === 'end:from' || handle === 'end:to') {
+				const id = selection.single;
+				if (id)
+					state = {
+						kind: 'endpoint',
+						drag: createEndpointDrag(ctx, id, handle === 'end:from' ? 'from' : 'to')
+					};
+				return;
+			}
 			if (handle) {
 				const targets = transformTargets(ctx);
 				const box = targetsBox(targets);
@@ -279,12 +346,21 @@ export function createSelectTool(ctx: BoardContext): Tool {
 					return resize(e, s);
 				case 'rotating':
 					return rotate(e, s);
+				case 'connecting':
+					return s.gesture.move(e.world, e.alt);
+				case 'endpoint':
+					return s.drag.move(e.world, e.alt);
 			}
 		},
 
 		onPointerUp(e) {
 			const s = state;
-			if (s.kind === 'moving' || s.kind === 'resizing' || s.kind === 'rotating') {
+			if (s.kind === 'connecting') {
+				const id = s.gesture.finish(e.world, e.screen, e.alt);
+				if (id) selection.set([id]);
+			} else if (s.kind === 'endpoint') {
+				s.drag.finish();
+			} else if (s.kind === 'moving' || s.kind === 'resizing' || s.kind === 'rotating') {
 				endTransform(s.snapshot); // the last move already pushed the final position
 				clearGuides();
 			} else if (s.kind === 'pointing' && s.wasSelected && !e.shift) {

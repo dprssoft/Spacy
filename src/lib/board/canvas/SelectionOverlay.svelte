@@ -5,6 +5,7 @@
 	import { rectCorners } from '../engine/geometry';
 	import { hitHandle, selectionHandles } from '../engine/transform';
 	import { worldToScreen } from '../engine/viewport';
+	import { connectorGeometry } from '../diagram/geometry';
 	import { handleOptions, targetsBox, transformTargets } from '../selectionInfo';
 
 	const ctx = getBoard();
@@ -59,9 +60,43 @@
 		return { x: a.x, y: a.y, w: m.w * viewport.zoom, h: m.h * viewport.zoom };
 	});
 
+	const selectedConnectors = $derived(selected.filter((el) => el.type === 'connector'));
+	const connectorLines = $derived.by(() => {
+		void [viewport.x, viewport.y, viewport.zoom];
+		return selectedConnectors.map((c) => {
+			const g = connectorGeometry(c as Extract<Element, { type: 'connector' }>, store.world);
+			return {
+				id: c.id,
+				points: g.points
+					.map(toScreen)
+					.map((p) => `${p.x},${p.y}`)
+					.join(' '),
+				start: toScreen(g.start),
+				end: toScreen(g.end),
+				locked: c.locked
+			};
+		});
+	});
+	// A single selected connector gets draggable end handles.
+	const endHandles = $derived(
+		tools.current === 'select' &&
+			connectorLines.length === 1 &&
+			selected.length === 1 &&
+			!connectorLines[0]!.locked
+			? [
+					{ id: 'end:from', ...connectorLines[0]!.start },
+					{ id: 'end:to', ...connectorLines[0]!.end }
+				]
+			: []
+	);
+
 	// Handles are hit-tested before elements by the pointer router.
 	$effect(() =>
-		ctx.handles.register((p) => (handles.length ? hitHandle(handles, p, HANDLE_HIT_RADIUS) : null))
+		ctx.handles.register((p) => {
+			for (const h of endHandles)
+				if (Math.hypot(h.x - p.x, h.y - p.y) <= HANDLE_HIT_RADIUS) return h.id;
+			return handles.length ? hitHandle(handles, p, HANDLE_HIT_RADIUS) : null;
+		})
 	);
 
 	const rotationDeg = $derived(box ? (box.rotation * 180) / Math.PI : 0);
@@ -87,6 +122,26 @@
 	{#if box && !selection.editingId}
 		<polygon points={boxPolygon} fill="none" stroke="var(--selection)" stroke-width="1.5" />
 	{/if}
+	{#each connectorLines as line (line.id)}
+		<polyline
+			points={line.points}
+			fill="none"
+			stroke="var(--selection)"
+			stroke-width="1.5"
+			stroke-opacity="0.6"
+		/>
+	{/each}
+	{#each endHandles as h (h.id)}
+		<circle
+			cx={h.x}
+			cy={h.y}
+			r="5"
+			fill="white"
+			stroke="var(--selection)"
+			stroke-width="1.5"
+			data-handle={h.id}
+		/>
+	{/each}
 	{#if marqueeRect}
 		<rect
 			x={marqueeRect.x}

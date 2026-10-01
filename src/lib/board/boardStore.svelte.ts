@@ -3,6 +3,9 @@ import type * as Y from 'yjs';
 import { getElementsMap, readElement, type ElementYMap } from '$lib/model/doc';
 import type { Element, Rect } from '$lib/model/types';
 import { compareZ } from '$lib/model/zorder';
+import type { DiagramWorld } from './diagram/endpoints';
+import { ConnectorIndex } from './diagram/connectorIndex';
+import { boardWorld } from './diagram/world';
 import { definitionOf } from './elements';
 import { SpatialIndex } from './engine/spatialIndex';
 
@@ -19,18 +22,23 @@ export class BoardStore {
 	/** Increments once per handled change — a cheap "something changed" signal. */
 	version = $state(0);
 	readonly index = new SpatialIndex();
+	readonly connectors = new ConnectorIndex();
+	readonly world: DiagramWorld = boardWorld((id) => this.elements.get(id));
 
 	readonly #map: Y.Map<ElementYMap>;
 	readonly #observer: (events: Y.YEvent<Y.AbstractType<unknown>>[]) => void;
 
 	constructor(doc: Y.Doc) {
 		this.#map = getElementsMap(doc);
-		const entries: [string, Rect][] = [];
 		for (const [id, ymap] of this.#map) {
 			const el = readElement(ymap);
-			if (!el) continue;
-			this.elements.set(id, el);
-			entries.push([id, definitionOf(el).aabb(el)]);
+			if (el) this.elements.set(id, el);
+		}
+		// Second pass: connector bounds need the elements they attach to.
+		const entries: [string, Rect][] = [];
+		for (const el of this.elements.values()) {
+			if (el.type === 'connector') this.connectors.add(el);
+			entries.push([el.id, this.#aabb(el)]);
 		}
 		this.index.load(entries);
 		this.#recomputeOrder();
@@ -56,6 +64,11 @@ export class BoardStore {
 		return this.elements.get(id);
 	}
 
+	/** Connectors attached to an element. */
+	connectorsOf(id: string): string[] {
+		return this.connectors.of(id);
+	}
+
 	/** Union of all element AABBs, or null for an empty board. */
 	contentBounds(): Rect | null {
 		return this.index.bounds();
@@ -65,21 +78,34 @@ export class BoardStore {
 		this.#map.unobserveDeep(this.#observer);
 	}
 
+	#aabb(el: Element): Rect {
+		return definitionOf(el).aabb(el, this.world);
+	}
+
 	#apply(ids: Set<string>): void {
 		let orderDirty = false;
+		// Changed elements plus connectors attached to them (their bounds follow the elements).
+		const touched: string[] = [];
 		for (const id of ids) {
 			const ymap = this.#map.get(id);
 			const next = ymap ? readElement(ymap) : null;
 			const prev = this.elements.get(id);
+			this.connectors.remove(prev);
 			if (next) {
 				this.elements.set(id, next);
-				this.index.upsert(id, definitionOf(next).aabb(next));
+				this.connectors.add(next);
+				touched.push(id);
 				if (!prev || prev.z !== next.z) orderDirty = true;
 			} else if (prev) {
 				this.elements.delete(id);
 				this.index.remove(id);
 				orderDirty = true;
 			}
+			touched.push(...this.connectors.of(id));
+		}
+		for (const id of touched) {
+			const el = this.elements.get(id);
+			if (el) this.index.upsert(id, this.#aabb(el));
 		}
 		if (orderDirty) this.#recomputeOrder();
 		this.version++;

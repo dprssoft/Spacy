@@ -15,11 +15,15 @@
 {#if el}
 	{@const def = definitionOf(el)}
 	{@const View = def.component}
+	{@const isConnector = el.type === 'connector'}
+	<!-- Connectors draw in absolute world coordinates (their geometry is derived), others in their box. -->
 	<div
 		class="pointer-events-none absolute top-0 left-0"
-		style:width="{el.w}px"
-		style:height="{el.h}px"
-		style:transform="translate({el.x}px, {el.y}px) rotate({el.rotation}rad)"
+		style:width={isConnector ? '0px' : `${el.w}px`}
+		style:height={isConnector ? '0px' : `${el.h}px`}
+		style:transform={isConnector
+			? undefined
+			: `translate(${el.x}px, ${el.y}px) rotate(${el.rotation}rad)`}
 		style={styleToCss(el.style)}
 		data-element-id={id}
 		data-type={el.type}

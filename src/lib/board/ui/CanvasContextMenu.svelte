@@ -14,6 +14,7 @@
 		ungroupSelection
 	} from '../commands/edit';
 	import { getBoard } from '../context';
+	import { danglingConnectors } from '../diagram/ops';
 	import { formatKeys } from '../tools/formatKeys';
 
 	let { children }: { children: Snippet } = $props();
@@ -73,6 +74,9 @@
 					)
 				)}
 				{@render entry('Zoom to fit', 'Shift+1', () => ctx.viewport.fit(ctx.store.contentBounds()))}
+				{@render entry('Select dangling connectors', null, () =>
+					ctx.selection.set(danglingConnectors(ctx.store.elements.values()))
+				)}
 			{/if}
 		</ContextMenu.Content>
 	</ContextMenu.Portal>

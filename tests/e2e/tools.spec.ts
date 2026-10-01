@@ -28,15 +28,15 @@ test('tool shortcuts switch tools; Escape returns to select', async ({ page }) =
 });
 
 test('tools not built yet are disabled and ignore their shortcuts', async ({ page }) => {
-	// Connector arrives in step 20.
+	// Doc card arrives in step 23.
 	await createBoard(page);
 	const toolbar = page.getByRole('toolbar', { name: 'Tools' });
-	await expect(toolbar.getByRole('button', { name: 'Connector' })).toHaveAttribute(
+	await expect(toolbar.getByRole('button', { name: 'Doc card' })).toHaveAttribute(
 		'aria-disabled',
 		'true'
 	);
 	await page.getByTestId('canvas').focus();
-	await page.keyboard.press('a');
+	await page.keyboard.press('n');
 	await expect(toolbar.getByRole('button', { name: 'Select' })).toHaveAttribute(
 		'aria-pressed',
 		'true'

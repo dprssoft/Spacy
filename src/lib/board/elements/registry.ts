@@ -1,6 +1,7 @@
 import type { Component } from 'svelte';
 import type { Element, ElementType, Point, Rect } from '$lib/model/types';
 import type { Connectable } from '../diagram/connectable';
+import type { DiagramWorld } from '../diagram/endpoints';
 import type { StyleOption } from '../style/options';
 
 export interface ElementViewProps<E extends Element = Element> {
@@ -12,10 +13,13 @@ export interface ElementViewProps<E extends Element = Element> {
 export interface ElementDefinition<E extends Element = Element> {
 	type: E['type'];
 	component: Component<ElementViewProps<E>>;
-	/** World-space axis-aligned bounds (rotation applied). */
-	aabb(el: E): Rect;
+	/**
+	 * World-space axis-aligned bounds (rotation applied). `world` gives access to other elements
+	 * (connectors derive their geometry from the elements they attach to).
+	 */
+	aabb(el: E, world?: DiagramWorld): Rect;
 	/** Precise hit test; `tol` is in world units. */
-	hitTest(el: E, p: Point, tol: number): boolean;
+	hitTest(el: E, p: Point, tol: number, world?: DiagramWorld): boolean;
 	/** How connectors attach; null only for connectors themselves. */
 	connectable: Connectable<E> | null;
 	resizable: boolean;

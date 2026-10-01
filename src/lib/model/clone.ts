@@ -3,10 +3,13 @@ import type { Element, NewElement, Point } from './types';
 
 /**
  * Post-processing for cloned elements, e.g. remapping connector endpoints (step 20).
- * Receives the clone (new id, offset applied) and the complete old → new id map.
+ * Receives the clone (new id, offset applied to x/y), the complete old → new id map and the offset.
  */
-export const cloneHooks: ((el: NewElement, idMap: ReadonlyMap<string, string>) => NewElement)[] =
-	[];
+export const cloneHooks: ((
+	el: NewElement,
+	idMap: ReadonlyMap<string, string>,
+	offset: Point
+) => NewElement)[] = [];
 
 /**
  * Copies elements with new ids, shifted by `offset`. Groups get new group ids; parents are
@@ -30,7 +33,7 @@ export function cloneElements(
 			parentId: el.parentId === null ? null : (idMap.get(el.parentId) ?? el.parentId),
 			groupId: el.groupId === null ? null : remapGroup(el.groupId, groupMap)
 		};
-		for (const hook of cloneHooks) clone = hook(clone, idMap);
+		for (const hook of cloneHooks) clone = hook(clone, idMap, opts.offset);
 		return clone;
 	});
 	return { elements, idMap };

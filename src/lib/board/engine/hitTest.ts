@@ -15,7 +15,7 @@ export function hitElement(store: BoardStore, p: Point, tol: number): string | n
 	let best: Element | null = null;
 	for (const id of store.index.near(p, tol)) {
 		const el = store.get(id);
-		if (!el || !definitionOf(el).hitTest(el, p, tol)) continue;
+		if (!el || !definitionOf(el).hitTest(el, p, tol, store.world)) continue;
 		if (!best || above(el, best)) best = el;
 	}
 	return best?.id ?? null;
