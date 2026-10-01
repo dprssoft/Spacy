@@ -51,8 +51,8 @@ Freehand drawing with pressure, an eraser, and images (upload, paste, drag-drop)
 - `tests/e2e/pen-images.spec.ts`: P + a mouse drag path → one stroke element; reload → still there; E + drag across it → deleted. Upload `sample.png` via the file chooser → an image element with an `<img>` whose `naturalWidth > 0`; reload → the image still loads.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Drawing is smooth with no lag at 3,000 elements (the preview doesn't touch Yjs)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Drawing is smooth with no lag at 3,000 elements (the preview doesn't touch Yjs)
 - [ ] Pressure works with a pen or stylus where available (manual, optional)
 
 ## Out of scope
