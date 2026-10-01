@@ -49,9 +49,9 @@ Straight, elbow (orthogonal) and curved routing, seven marker types at either en
 - `tests/e2e/routing.spec.ts`: create two rects plus a connector via test hooks → switching routing in the popover changes the path's `d`; set the end marker to diamond → the marker element exists; double-click the connector → type "yes" → the label is visible; `toHaveScreenshot` of a fixture showing all 3 routings × 3 marker kinds (Chromium only).
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Elbow connectors leave the port perpendicular to the side and look tidy for the common cases: side by side, stacked, diagonal (manual screenshots noted in PROGRESS)
-- [ ] Label dragging follows the path
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Elbow connectors leave the port perpendicular to the side and look tidy for the common cases: side by side, stacked, diagonal (manual screenshots noted in PROGRESS)
+- [x] Label dragging follows the path
 
 ## Out of scope
 Manual waypoints (step 22), line jumps (never).

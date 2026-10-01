@@ -1,6 +1,6 @@
 import type * as Y from 'yjs';
 import { cloneHooks } from '$lib/model/clone';
-import { baseStyleFor } from '$lib/model/defaults';
+import { getConnectorDefaults, getDefaultStyle } from '../style/styleDefaults';
 import { getElement, getElementsMap, readElement } from '$lib/model/doc';
 import { newId } from '$lib/model/ids';
 import { beforeDeleteHooks, createElements, updateElements } from '$lib/model/ops';
@@ -23,18 +23,12 @@ export interface ConnectorOptions {
 	style?: Style;
 }
 
-/** Built-in connector defaults (00-architecture.md §12); routing becomes elbow in step 21. */
-export const CONNECTOR_DEFAULTS = {
-	routing: 'straight' as Routing,
-	markerStart: 'none' as Marker,
-	markerEnd: 'arrow' as Marker
-};
-
 export function newConnector(
 	from: Endpoint,
 	to: Endpoint,
 	opts: ConnectorOptions = {}
 ): Omit<ConnectorElement, 'z'> {
+	const defaults = getConnectorDefaults();
 	return {
 		id: newId(),
 		type: 'connector',
@@ -46,13 +40,13 @@ export function newConnector(
 		parentId: null,
 		groupId: null,
 		locked: false,
-		style: opts.style ?? baseStyleFor('connector'),
+		style: opts.style ?? getDefaultStyle('connector'),
 		from,
 		to,
-		routing: opts.routing ?? CONNECTOR_DEFAULTS.routing,
+		routing: opts.routing ?? defaults.routing,
 		waypoints: [],
-		markerStart: opts.markerStart ?? CONNECTOR_DEFAULTS.markerStart,
-		markerEnd: opts.markerEnd ?? CONNECTOR_DEFAULTS.markerEnd,
+		markerStart: opts.markerStart ?? defaults.markerStart,
+		markerEnd: opts.markerEnd ?? defaults.markerEnd,
 		label: { text: '', t: 0.5, background: true }
 	};
 }

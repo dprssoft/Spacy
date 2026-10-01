@@ -40,7 +40,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 18 | [Style productivity and snapping](./steps/18-style-productivity-snapping.md) | D | 17 | 2d |
 | [x] | 19 | [Connectable interface](./steps/19-connectable.md) | E. Diagrams | 18 | 1.5d |
 | [x] | 20 | [Connector tool and endpoints](./steps/20-connector-tool-endpoints.md) | E | 19 | 2d |
-| [ ] | 21 | [Routing, markers, labels](./steps/21-routing-markers-labels.md) | E | 20 | 2d |
+| [x] | 21 | [Routing, markers, labels](./steps/21-routing-markers-labels.md) | E | 20 | 2d |
 | [ ] | 22 | [Bends, shape library, quick-create](./steps/22-bends-library-quick-create.md) | E | 21 | 2.5d |
 | [ ] | 23 | [Doc card element](./steps/23-doc-card-element.md) | F. Doc cards | 20 | 2d |
 | [ ] | 24 | [Focus mode and mentions](./steps/24-focus-mode-mentions.md) | F | 23 | 2d |
