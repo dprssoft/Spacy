@@ -11,6 +11,7 @@
 	import { getBoard } from './context';
 	import SaveIndicator from './SaveIndicator.svelte';
 	import { formatKeys } from './tools/formatKeys';
+	import { exportDialog } from './ui/exportDialogState.svelte';
 	import type { BoardTitle } from './title.svelte';
 
 	let { title }: { title: BoardTitle } = $props();
@@ -94,10 +95,13 @@
 					sideOffset={4}
 					class="z-50 min-w-48 rounded-lg border border-border bg-surface p-1 shadow-lg"
 				>
-					<DropdownMenu.Item class={item} disabled>PNG…</DropdownMenu.Item>
-					<DropdownMenu.Item class={item} disabled>SVG…</DropdownMenu.Item>
+					<DropdownMenu.Item class={item} onSelect={() => exportDialog.show('png')}
+						>PNG…</DropdownMenu.Item
+					>
+					<DropdownMenu.Item class={item} onSelect={() => exportDialog.show('svg')}
+						>SVG…</DropdownMenu.Item
+					>
 					<DropdownMenu.Item class={item} disabled>Download .smthng</DropdownMenu.Item>
-					<p class="px-2 pt-1 pb-0.5 text-xs text-muted">Coming soon</p>
 				</DropdownMenu.Content>
 			</DropdownMenu.Portal>
 		</DropdownMenu.Root>

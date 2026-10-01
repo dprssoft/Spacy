@@ -10,7 +10,8 @@ import type {
 	StrokeElement,
 	TextElement
 } from '$lib/model/types';
-import { boxConnectable, polygonConnectable } from '../diagram/connectable';
+import { boxConnectable } from '../diagram/connectable';
+import { shapeConnectable } from './connectables';
 import { connectorGeometry, distToPolyline, inRect } from '../diagram/geometry';
 import ConnectorView from './connector/ConnectorView.svelte';
 import { docCardLimits } from './doccard/collapse';
@@ -22,7 +23,6 @@ import { frameAABB, frameHitTest } from './frame/geometry';
 import FrameView from './frame/FrameView.svelte';
 import ImageView from './image/ImageView.svelte';
 import { registerElement, type ElementDefinition } from './registry';
-import { shapeOutline } from './shape/paths';
 import ShapeView from './shape/ShapeView.svelte';
 import StickyView from './sticky/StickyView.svelte';
 import { strokeAABB, strokeHitTest } from './stroke/geometry';
@@ -44,7 +44,7 @@ registerElement<ShapeElement>({
 	...boxDefaults,
 	type: 'shape',
 	styleOptions: STYLE_OPTIONS.shape,
-	connectable: polygonConnectable<ShapeElement>((el) => shapeOutline(el.kind, el.w, el.h)),
+	connectable: shapeConnectable,
 	component: ShapeView,
 	editableText: true
 });

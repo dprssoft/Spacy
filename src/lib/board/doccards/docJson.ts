@@ -9,6 +9,11 @@ import type { DocNode } from './markdown';
  * short-lived headless editor on the card's fragment. Async so the editor can be lazy-loaded later.
  */
 export async function getDocJSON(ctx: BoardContext, id: string): Promise<DocNode> {
+	return getDocJSONSync(ctx, id);
+}
+
+/** Synchronous variant, for callers that must finish reading before the board closes. */
+export function getDocJSONSync(ctx: BoardContext, id: string): DocNode {
 	const live = liveEditor(id);
 	if (live) return live.getJSON();
 	const fragment = getDocsMap(ctx.doc).get(id);

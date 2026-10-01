@@ -515,3 +515,37 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (547 unit tests; new: a table of every node and mark, nested bullet → ordered → task, quote with a list, code containing a fence, escaping, mention, `start: 3`, title-only, adjacent-mark merging; slug; `getDocJSON` headless vs live) · pnpm test:e2e ✅ (108; new `markdown.spec.ts`: H2 + checklist + bold typed with Markdown shortcuts → "Download .md" file content and "Copy as Markdown" clipboard content match exactly) · manual spot check: a sample covering nesting, escaping, fences, marks and hard breaks rendered as intended with `marked` (GFM), run one-off and not added to the project.
+
+## Step 26 — Static SVG renderer, export, thumbnails — 2026-10-01
+**Summary:**
+- `render/staticSvg.ts` (pure; measuring, image data and doc lines are injected) mirrors the DOM views without `foreignObject`:
+  - shapes: `shapePath` plus wrapped, aligned text
+  - stickies: shadow filter
+  - texts: auto-width or wrapped
+  - images: data URLs, rounded clip, border
+  - strokes: `strokeSvgPath`
+  - frames: semi fill via `fill-opacity`, title above
+  - doc cards: header, separator, clipped body lines
+  - connectors: the shared `connectorGeometry`, markers from `markerShape`, label with an optional background
+  - All text is XML-escaped.
+- `render/wrapText.ts` handles newlines, word wrap and hard breaks of long words. Text is measured with canvas `measureText`, falling back to an estimate in jsdom.
+- `render/bounds.ts` and `elements/connectables.ts`: the renderer computes bounds and connector geometry without the Svelte registry (`pureWorld`). The registry now takes its shape connectable from the same module, and a test checks that the two agree for every type.
+- `doccards/docLines.ts`: doc JSON → plain lines (headings, `•`, `1.`, `☐`/`☑`, mentions, hard breaks).
+- `render/exportImage.ts`:
+  - Scopes: board; selection (plus frame contents and connectors between included elements); frame (children plus connectors with both ends inside).
+  - Exports SVG or PNG at 1–3×, capped at 16,384 px per side and ~120 Mpx (the scale is reduced, with a toast).
+  - Asset data URLs are cached per export.
+- `ui/ExportDialog.svelte`: format, area (board / selection / frame picker), background, scale, a live preview and Download (`slug(title)` plus a scope suffix). Opened from TopBar Export → "PNG…" / "SVG…" and from the context menu's "Export selection…".
+- `render/thumbnails.ts`: the board fitted into 480×300 on `#f7f7f8` (WebP 0.8). Saved 10 s after the last local edit, when the tab is hidden, and when the board closes (only if something changed). Fire and forget.
+
+**Deviations:**
+- Doc card text is read synchronously at the start of a render (`getDocJSONSync`), so a thumbnail rendered while the board closes doesn't depend on the doc that's being destroyed.
+- Marker "hollow" fills and label backgrounds use the chosen background, or white for transparent exports.
+- Doc card headings render at one size (1.3×) in static output, smaller than the canvas H1; checkboxes are ☐/☑ glyphs.
+- The planned "every type" snapshot is split: a structural test over all types (valid XML, one `<g>` per element, no `foreignObject`, no external refs) plus a small fixed snapshot.
+
+**Dependencies added:** none.
+
+**Follow-ups:** Manual export check in Firefox not done (only Chromium is installed here).
+
+**Verification:** pnpm verify ✅ (561 unit tests; new: wrapText, renderer over every type, XML escaping, transparent background/padding, snapshot, export scopes, docLines, pure connectables vs registry) · pnpm test:e2e ✅ (112; new `export.spec.ts`: PNG download > 1 KB with a PNG signature, SVG download is escaped and has no foreignObject, "Export selection…" preset and filename, leaving the board shows a thumbnail `<img>` on the start page) · manual comparison of a canvas screenshot and a 1× PNG of a fixture (frame, terminator/decision/database shapes, sticky, elbow/straight/curve connectors with labels and circle/diamond/arrow/open-arrow markers, a doc card with heading and checklist): positions, colors, wrapping and markers match.
