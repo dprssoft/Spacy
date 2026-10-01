@@ -21,12 +21,12 @@ export function pointerRouter(ctx: BoardContext) {
 			const pe = e instanceof PointerEvent ? e : null;
 			const hit: CanvasPointerEvent['hit'] = {};
 			if (withHit) {
+				// Report both: tools give handles priority, but hover must keep the element under the
+				// pointer (a port dot's handle overlaps its element; dropping the element would hide it).
 				const handle = ctx.handles.hit(screen);
 				if (handle) hit.handle = handle;
-				else {
-					const id = hitElement(ctx.store, world, HIT_TOLERANCE_PX / ctx.viewport.zoom);
-					if (id) hit.elementId = id;
-				}
+				const id = hitElement(ctx.store, world, HIT_TOLERANCE_PX / ctx.viewport.zoom);
+				if (id) hit.elementId = id;
 			}
 			return {
 				world,

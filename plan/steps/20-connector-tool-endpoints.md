@@ -54,10 +54,10 @@ Connectors that attach to any connectable element via a port, a floating attachm
 - `tests/e2e/connect.spec.ts`: for each pair among [rect, sticky, text, image, doccard placeholder, frame, stroke] (choose 4 representative pairs to keep it fast, plus one test looping over all types connecting to a rect): create both via test hooks → the connector tool drags from A to B → the connector exists with `from.elementId = A` and `to.elementId = B` → move B via a drag → the connector's path `d` attribute changed and its end lies on B's outline (checked via hooks).
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Connectors stay attached through move, resize, rotate, duplicate (both selected) and undo/redo
-- [ ] Deleting an attached element leaves a free-ended connector; undo reattaches it
-- [ ] Moving a shape writes nothing to connector elements (verify: count Yjs updates on the connector map during a drag = 0)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Connectors stay attached through move, resize, rotate, duplicate (both selected) and undo/redo
+- [x] Deleting an attached element leaves a free-ended connector; undo reattaches it
+- [x] Moving a shape writes nothing to connector elements (verify: count Yjs updates on the connector map during a drag = 0)
 
 ## Out of scope
 Elbow and curve routing, markers, labels (step 21); waypoints (step 22).

@@ -11,7 +11,9 @@
 	import { TextEditing } from './editing';
 	import { SelectionState } from './selection.svelte';
 	import SelectionOverlay from './canvas/SelectionOverlay.svelte';
+	import ConnectOverlay from './canvas/ConnectOverlay.svelte';
 	import PreviewOverlay from './canvas/PreviewOverlay.svelte';
+	import { installConnectorHooks } from './diagram/ops';
 	import { imagePaste, onCopyEvent, onPasteEvent } from './commands/clipboard';
 	import { AssetUrlCache } from './images/assetUrls';
 	import { gcAssets } from './images/gcAssets';
@@ -33,6 +35,8 @@
 	import { ViewportState } from './viewport.svelte';
 
 	let { board }: { board: OpenBoard } = $props();
+
+	installConnectorHooks();
 
 	// The board is fixed for this component's lifetime (the route re-creates it per id).
 	// svelte-ignore state_referenced_locally
@@ -134,6 +138,7 @@
 				{/snippet}
 				{#snippet overlay()}
 					<PreviewOverlay />
+					<ConnectOverlay />
 					<SelectionOverlay />
 					<StylePopover />
 				{/snippet}

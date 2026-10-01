@@ -11,6 +11,8 @@ import type {
 	TextElement
 } from '$lib/model/types';
 import { boxConnectable, polygonConnectable } from '../diagram/connectable';
+import { connectorGeometry, distToPolyline } from '../diagram/geometry';
+import ConnectorView from './connector/ConnectorView.svelte';
 import { rectFromPoints } from '../engine/geometry';
 import { STYLE_OPTIONS, type StyleOption } from '../style/options';
 import { boxAABB, boxHitTest } from './common';
@@ -102,9 +104,14 @@ registerElement<ConnectorElement>({
 	...boxDefaults,
 	type: 'connector',
 	styleOptions: STYLE_OPTIONS.connector,
-	component: PlaceholderView,
-	aabb: (el) => rectFromPoints(endpointPoint(el.from), endpointPoint(el.to)),
-	hitTest: () => false,
+	component: ConnectorView,
+	aabb: (el, world) =>
+		world
+			? connectorGeometry(el, world).bounds
+			: rectFromPoints(endpointPoint(el.from), endpointPoint(el.to)),
+	hitTest: (el, p, tol, world) =>
+		!!world &&
+		distToPolyline(connectorGeometry(el, world).points, p) <= tol + el.style.strokeWidth / 2 + 2,
 	connectable: null,
 	resizable: false,
 	rotatable: false

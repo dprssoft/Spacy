@@ -385,3 +385,23 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Strokes attach to their bounding box (convex hull is a later improvement per plan).
 
 **Verification:** pnpm verify ✅ (473 unit tests — the matrix iterates the registry: 17 element variants × 3 rotations × {ports on outline with outward unit normals, ray exits on the outline toward the target, local↔world round-trip}, plus a guard that every type except connectors is connectable) · pnpm test:e2e ✅ (77, unchanged) · `connectable.ts` has no Svelte imports.
+
+## Step 20 — Connector tool and endpoints — 2026-10-01
+**Summary:**
+- Pure diagram modules: `endpoints.ts` (`resolveEndpoints` for free/port/float/fixed ends with outward directions; floating ends aim at the other end or its element's center; missing elements fall back to last position; `makeEndpoint`), `geometry.ts` (`connectorGeometry` straight polyline + bounds, `distToPolyline`), `connectorIndex.ts` (element → attached connectors). They take a `DiagramWorld` (lookup + connectable) so they don't import the element registry; `diagram/world.ts` builds it.
+- `BoardStore`: connector bounds derived from attached elements; when an element changes, only its connectors' index entries are refreshed — **moving a shape writes nothing to connectors** (D8, unit-tested).
+- `diagram/ops.ts`: `createConnector`/`newConnector` (defaults: straight, end arrow), delete hook converts ends attached to deleted elements into free ends at their current position (same transaction → one undo restores both), clone hook remaps ends to copied elements or frees them (offset applied), `danglingConnectors`.
+- Interaction: Connector tool (A) and dragging from a hovered element's **port dots** (select tool) share `connectGesture` (dashed preview, target outline + port dots, port within 12 px, float inside, Alt = fixed spot, no self-loops, < 8 px = cancel). A selected connector shows a highlight and two end handles: drag to re-attach / drop on empty canvas to detach (Escape reverts). Moving a selection carries selected connectors' free ends. Canvas menu: "Select dangling connectors". `ConnectorView` draws in world coordinates with a simple end arrow.
+
+**Deviations:**
+- `ElementDefinition.aabb`/`hitTest` take an optional `world` (connectors need other elements); other types ignore it.
+- `cloneHooks` now also receive the offset (to shift free ends and fallback positions).
+- `lastX/lastY` are written only when attaching (not on every move), per D8.
+- **Bug found by e2e and fixed:** the pointer router reported only the handle when one was hit, which cleared the hover and hid the port dots under the pointer (flicker, impossible to grab). It now reports both the handle and the element under the pointer.
+- Updated the step 11 e2e "unbuilt tool" example again (Connector → Doc card).
+
+**Dependencies added:** none.
+
+**Follow-ups:** Routing, markers and labels are step 21.
+
+**Verification:** pnpm verify ✅ (481 unit tests: endpoint resolution incl. rotation/missing elements, makeEndpoint port/float/fixed, delete→free end + undo, clone remap, no connector writes when a shape moves, bounds follow) · pnpm test:e2e ✅ (88; new connect suite: all 7 connectable types connect to a rectangle and the connector follows its move; delete frees + undo reattaches; port-dot drag; end-handle re-attach and detach; no self-loop; free-to-free connector).
