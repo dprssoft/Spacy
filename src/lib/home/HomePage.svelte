@@ -9,6 +9,7 @@
 	import * as actions from './actions';
 	import { BoardsQuery } from './boards.svelte';
 	import BoardGrid from './BoardGrid.svelte';
+	import DropZone from './DropZone.svelte';
 	import GridToolbar from './GridToolbar.svelte';
 	import HomeHeader from './HomeHeader.svelte';
 	import { HomeUI, setHomeUI, type Layout } from './homeUI.svelte';
@@ -59,6 +60,7 @@
 	);
 </script>
 
+<DropZone />
 <div class="flex h-dvh flex-col">
 	<HomeHeader bind:search />
 	<div class="flex min-h-0 flex-1 flex-col md:flex-row">

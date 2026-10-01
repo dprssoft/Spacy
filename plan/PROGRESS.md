@@ -549,3 +549,29 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Manual export check in Firefox not done (only Chromium is installed here).
 
 **Verification:** pnpm verify ✅ (561 unit tests; new: wrapText, renderer over every type, XML escaping, transparent background/padding, snapshot, export scopes, docLines, pure connectables vs registry) · pnpm test:e2e ✅ (112; new `export.spec.ts`: PNG download > 1 KB with a PNG signature, SVG download is escaped and has no foreignObject, "Export selection…" preset and filename, leaving the board shows a thumbnail `<img>` on the start page) · manual comparison of a canvas screenshot and a 1× PNG of a fixture (frame, terminator/decision/database shapes, sticky, elbow/straight/curve connectors with labels and circle/diamond/arrow/open-arrow markers, a doc card with heading and checklist): positions, colors, wrapping and markers match.
+
+## Step 27 — `.smthng` files, import, backup — 2026-10-01
+**Summary:**
+- `storage/fileFormat.ts`: the zod schema matches §10 exactly (board and backup files, base64 validated). Exports a board (meta, Yjs snapshot, assets) or a backup of every non-trashed board; a backup stores the pref `lastBackupAt`.
+- `parseSmthngFile` errors are user-friendly: not JSON, not a SMTHNG file, newer version, damaged (with the field path). Backups keep their valid boards and count the damaged ones.
+- `importPayload` always creates a new board (keeping `createdAt`) and new asset ids:
+  - The doc is applied to a temp doc (`IMPORT`) and migrated **before** anything is created.
+  - Image `assetId`s are remapped; invalid elements are dropped and counted.
+  - Missing doc card fragments are created and the title is set before `writeSnapshot`.
+  - A failure after creating the board destroys it, so no half-imported board is left behind.
+- `importFile`: rejects files over 500 MB, asks before importing over 100 MB, and imports boards sequentially, returning warnings.
+- Start page:
+  - Import button (header, multiple files) and a full-page drop overlay ("Drop .smthng files to import").
+  - Card menu "Export" and sidebar "Backup all boards" (`smthng-backup-YYYY-MM-DD.smthng`).
+  - Toasts: "Imported “X”" (with Open) or "Imported N boards", warnings, and "Couldn’t import {file}: {reason}".
+- Board TopBar Export menu: "Download .smthng" and, where `showSaveFilePicker` exists, "Save to file…". The picked handle is kept for the session, so the item becomes "Save to {name}" and rewrites without prompting; a cancel (AbortError) is silent.
+
+**Deviations:**
+- The File System Access API types are declared locally in `saveToFile.svelte.ts` (not in TypeScript's DOM lib).
+- The drop overlay listens on the window of the start page only (the board has its own image drop).
+
+**Dependencies added:** none.
+
+**Follow-ups:** Manual Chrome → Firefox import check not done (no Firefox installed here).
+
+**Verification:** pnpm verify ✅ (566 unit tests; new: round trip of a board with every element type, an image asset and doc card text → new board with remapped asset of the same size, equal text and title, original untouched; a 3-board backup imports 3 boards; rejects non-JSON, a wrong format, a newer version and malformed base64; an invalid element is dropped with a warning) · pnpm test:e2e ✅ (115; new `files.spec.ts`: export "Launch" from the card menu → delete forever → import via the Import button → same title and the sticky "Exported" is there; importing twice gives two boards; a bad file shows the error toast; the board Export menu downloads `untitled-board.smthng`) · drop overlay screenshot reviewed.
