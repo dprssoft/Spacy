@@ -332,3 +332,21 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (291 unit tests: frameFor/containsRect, membership enter/leave/frame resize, children for move/copy, delete with locked child released + undo, frame hit band/title) · pnpm test:e2e ✅ (64; new frames suite: children move with the frame / not after leaving, delete + undo, marquee inside an empty frame, title rename, zoom-menu navigation) · **M2 walkthrough:** built a retro board (frame + stickies + pen circle + shapes with text + free text + image), screenshot reviewed — a usable whiteboard.
+
+## Step 17 — Style popover — 2026-10-01
+**Summary:**
+- `style/options.ts`: typed `StyleOption`, `STYLE_OPTIONS` per element type (wired into every definition's `styleOptions`), `optionsFor` (intersection across the selected types), `commonValue` (value or `MIXED`).
+- `style/applyStyle.ts`: one transaction for the whole selection, nested font merge, `kind` only for shapes and `color` only for stickies; discrete changes are separate undo steps, continuous ones (slider) merge.
+- `StylePopover` (screen-space toolbar above the selection, flips below near the top, clamped; hidden while transforming, marquee-selecting, editing, or with non-select tools): Shape kind, Sticky color, Fill (+ fill style), Stroke (+ width, dash), Text (size, bold/italic, align, vertical align, color), More (corners, shadow, opacity slider). Panels are bits-ui popovers; mixed values show no checked option / a neutral swatch.
+- Controls: `ColorSwatches` (12-color palette with names, checkerboard transparent, custom color input), `Segmented` (radiogroup, arrow keys, one tab stop), `ToggleButton`, `Slider`, `PanelButton`, shape icons from the real shape paths.
+
+**Deviations:**
+- Grouped controls by topic in fewer panels than the plan's list: fill style sits in the Fill panel, width + dash in the Stroke panel, vertical align + bold/italic in the Text panel; "More" holds corners, shadow, opacity.
+- The popover hides during any text editing (not only doc cards) — clicking it would blur the editor and end editing.
+- The opacity slider starts a new undo step on pointer-down/focus, so one adjustment session (drag or keyboard) is one undo step (keyboard arrows were separate steps at first; caught by e2e).
+
+**Dependencies added:** none.
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (297 unit tests: option intersection, commonValue/MIXED, font merge, kind/color scoping, one undo step for multi-element and continuous changes) · pnpm test:e2e ✅ (72; new style suite: fill persists after reload, intersection of options for shape+sticky with shared change applied to both, mixed fills show no checked swatch, shape kind keeps text, sticky color, opacity adjustment = one undo step, bold toggle, keyboard on segmented controls, popover never covers the selection and flips below near the top, hidden while dragging/editing) · visual check of the Fill and Text panels; element views audited to honor every option they declare.

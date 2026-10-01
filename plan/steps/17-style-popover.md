@@ -56,9 +56,9 @@ A contextual floating style bar above the selection that shows only the options 
 - `tests/e2e/style.spec.ts`: select a rect → set the fill to red from the palette → the rect's path fill attribute is red → reload → still red. Select a rect and a sticky → the popover shows no fill control (not in the intersection) but shows font size. Two rects with different fills → the fill control shows the mixed state.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] The popover never covers the selected element when there's room above or below
-- [ ] All controls are keyboard-operable with visible focus
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] The popover never covers the selected element when there's room above or below
+- [x] All controls are keyboard-operable with visible focus
 
 ## Out of scope
 Quick styles, copy/paste style, defaults, align/distribute (step 18); connector options (step 21).
