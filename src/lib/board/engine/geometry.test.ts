@@ -3,11 +3,14 @@ import {
 	distToSegment,
 	expandRect,
 	expandRectRatio,
+	nearestPointOnPolygon,
 	pointInRotatedRect,
 	polygonContains,
 	rectCenter,
 	rectCorners,
 	rectFromPoints,
+	rayPolygonExit,
+	raySegmentIntersection,
 	rectsIntersect,
 	rotatedAABB,
 	rotatePoint,
@@ -101,5 +104,39 @@ describe('rotation and hit helpers', () => {
 
 	it('builds a normalized rect from two points', () => {
 		expect(rectFromPoints({ x: 10, y: 5 }, { x: 2, y: 9 })).toEqual({ x: 2, y: 5, w: 8, h: 4 });
+	});
+});
+
+describe('ray and polygon helpers', () => {
+	const square = [
+		{ x: 0, y: 0 },
+		{ x: 10, y: 0 },
+		{ x: 10, y: 10 },
+		{ x: 0, y: 10 }
+	];
+
+	it('intersects a ray with a segment', () => {
+		expect(
+			raySegmentIntersection({ x: 0, y: 5 }, { x: 1, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 })
+		).toBe(10);
+		expect(
+			raySegmentIntersection({ x: 0, y: 5 }, { x: -1, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 })
+		).toBeNull();
+		expect(
+			raySegmentIntersection({ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 5 }, { x: 10, y: 5 })
+		).toBeNull();
+	});
+
+	it('finds where a ray leaves a polygon', () => {
+		expect(rayPolygonExit({ x: 5, y: 5 }, { x: 0, y: -1 }, square)).toEqual({ x: 5, y: 0 });
+		const d = Math.SQRT1_2;
+		const p = rayPolygonExit({ x: 5, y: 5 }, { x: d, y: d }, square)!;
+		expect(p.x).toBeCloseTo(10);
+		expect(p.y).toBeCloseTo(10);
+	});
+
+	it('finds the nearest boundary point', () => {
+		expect(nearestPointOnPolygon(square, { x: 5, y: 3 })).toEqual({ x: 5, y: 0 });
+		expect(nearestPointOnPolygon(square, { x: 15, y: 15 })).toEqual({ x: 10, y: 10 });
 	});
 });

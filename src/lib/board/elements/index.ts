@@ -10,6 +10,7 @@ import type {
 	StrokeElement,
 	TextElement
 } from '$lib/model/types';
+import { boxConnectable, polygonConnectable } from '../diagram/connectable';
 import { rectFromPoints } from '../engine/geometry';
 import { STYLE_OPTIONS, type StyleOption } from '../style/options';
 import { boxAABB, boxHitTest } from './common';
@@ -18,6 +19,7 @@ import FrameView from './frame/FrameView.svelte';
 import ImageView from './image/ImageView.svelte';
 import PlaceholderView from './placeholder/PlaceholderView.svelte';
 import { registerElement, type ElementDefinition } from './registry';
+import { shapeOutline } from './shape/paths';
 import ShapeView from './shape/ShapeView.svelte';
 import StickyView from './sticky/StickyView.svelte';
 import { strokeAABB, strokeHitTest } from './stroke/geometry';
@@ -27,7 +29,7 @@ import TextView from './text/TextView.svelte';
 const boxDefaults = {
 	aabb: boxAABB,
 	hitTest: boxHitTest,
-	connectable: null,
+	connectable: boxConnectable,
 	resizable: true,
 	rotatable: true,
 	keepAspect: false,
@@ -39,6 +41,7 @@ registerElement<ShapeElement>({
 	...boxDefaults,
 	type: 'shape',
 	styleOptions: STYLE_OPTIONS.shape,
+	connectable: polygonConnectable<ShapeElement>((el) => shapeOutline(el.kind, el.w, el.h)),
 	component: ShapeView,
 	editableText: true
 });
@@ -102,6 +105,7 @@ registerElement<ConnectorElement>({
 	component: PlaceholderView,
 	aabb: (el) => rectFromPoints(endpointPoint(el.from), endpointPoint(el.to)),
 	hitTest: () => false,
+	connectable: null,
 	resizable: false,
 	rotatable: false
 } satisfies ElementDefinition<ConnectorElement>);

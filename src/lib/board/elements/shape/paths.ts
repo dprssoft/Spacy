@@ -1,4 +1,4 @@
-import type { ShapeKind } from '$lib/model/types';
+import type { Point, ShapeKind } from '$lib/model/types';
 
 /**
  * SVG path for a shape of size w×h, inset by `inset` on every side (so strokes stay inside the
@@ -40,5 +40,39 @@ export function shapePath(kind: ShapeKind, w: number, h: number, radius = 0, ins
 				'Z'
 			].join(' ');
 		}
+	}
+}
+
+const ELLIPSE_SEGMENTS = 48;
+
+/**
+ * Outline polygon of a shape kind in local coordinates (relative to the box's top-left), used for
+ * connector attachment. Corner rounding is ignored. Flowchart kinds are added in step 22.
+ */
+export function shapeOutline(kind: ShapeKind, w: number, h: number): Point[] {
+	switch (kind) {
+		case 'ellipse': {
+			const pts: Point[] = [];
+			for (let i = 0; i < ELLIPSE_SEGMENTS; i++) {
+				const a = (i / ELLIPSE_SEGMENTS) * Math.PI * 2;
+				pts.push({ x: w / 2 + (Math.cos(a) * w) / 2, y: h / 2 + (Math.sin(a) * h) / 2 });
+			}
+			return pts;
+		}
+		case 'diamond':
+		case 'decision':
+			return [
+				{ x: w / 2, y: 0 },
+				{ x: w, y: h / 2 },
+				{ x: w / 2, y: h },
+				{ x: 0, y: h / 2 }
+			];
+		default:
+			return [
+				{ x: 0, y: 0 },
+				{ x: w, y: 0 },
+				{ x: w, y: h },
+				{ x: 0, y: h }
+			];
 	}
 }

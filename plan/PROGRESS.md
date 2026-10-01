@@ -370,3 +370,18 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** none.
 
 **Verification:** pnpm verify ✅ (315 unit tests: align/distribute/match, snapMove/snapPoint/grid, presets persistence + patch scoping, pickStyle, defaults incl. corrupted data, copy/paste style one undo step, arrange with frame contents + undo, match size) · pnpm test:e2e ✅ (77; new arrange suite: align left, snap to an edge with guide shown and removed, Ctrl/Cmd disables snapping, snap to grid via Mod+', quick style + copy/paste style + set-as-default used by a new shape) · visual check of guides mid-drag and the Arrange panel · **M3 reached.**
+
+## Step 19 — Connectable interface — 2026-10-01
+**Summary:**
+- `board/diagram/connectable.ts`: `Connectable` (outline, ports, portNormal, rayExit, localToWorld, worldToLocal — world coordinates, rotation-aware), `polygonConnectable(localOutline)` (ports where the box axes cross the outline; ray exit = farthest crossing), `boxConnectable` (rotated bounding box). `diagram/index.ts`: `getConnectable`, `isConnectable`, `nearestPort`.
+- Every definition has `connectable`: shapes use `shapeOutline(kind)` (rect, 48-segment ellipse, diamond/decision; other flowchart kinds are rects until step 22); sticky, text, image, stroke, frame, doc card use the box; connectors are `null`. `ElementDefinition.connectable` is now typed `Connectable<E> | null`.
+- Geometry: `raySegmentIntersection`, `rayPolygonExit`, `nearestPointOnPolygon`.
+
+**Deviations:**
+- `elements/fixtures.ts` provides `sampleElements(type)` (one per shape kind) built on `model/testFixtures.ts`.
+
+**Dependencies added:** none.
+
+**Follow-ups:** Strokes attach to their bounding box (convex hull is a later improvement per plan).
+
+**Verification:** pnpm verify ✅ (473 unit tests — the matrix iterates the registry: 17 element variants × 3 rotations × {ports on outline with outward unit normals, ray exits on the outline toward the target, local↔world round-trip}, plus a guard that every type except connectors is connectable) · pnpm test:e2e ✅ (77, unchanged) · `connectable.ts` has no Svelte imports.

@@ -34,9 +34,9 @@ Every element type (except connectors) implements `Connectable`: outline, ports,
 - `geometry.test.ts`: the new ray/polygon helpers.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` passes
-- [ ] The matrix test iterates the registry (adding a new element type without a connectable makes it fail or explicitly opt out)
-- [ ] `src/lib/board/diagram/connectable.ts` has no Svelte imports
+- [x] `pnpm verify` passes
+- [x] The matrix test iterates the registry (adding a new element type without a connectable makes it fail or explicitly opt out)
+- [x] `src/lib/board/diagram/connectable.ts` has no Svelte imports
 
 ## Out of scope
 The connector element, tool and rendering (step 20+).
