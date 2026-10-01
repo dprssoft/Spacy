@@ -1,6 +1,7 @@
 import { updateElements } from '$lib/model/ops';
 import { unionRects } from '../engine/geometry';
 import { fitRect } from '../engine/viewport';
+import { syncFrameMembership, withFrameChildren } from '../frameMembership';
 import { transformTargets } from '../selectionInfo';
 import type { Shortcut } from './shortcuts';
 
@@ -11,11 +12,19 @@ const nudge = (id: string, keys: string[], dx: number, dy: number): Shortcut => 
 	group: 'Arrange',
 	when: (ctx) => ctx.tools.current === 'select' && ctx.selection.size > 0,
 	run: (ctx) => {
-		const targets = transformTargets(ctx);
+		const targets = withFrameChildren(ctx, transformTargets(ctx));
+		const before = new Map(
+			targets.filter((el) => el.type === 'frame').map((f) => [f.id, { ...f }])
+		);
 		// Consecutive nudges merge into one undo step through the undo manager's capture window.
 		updateElements(
 			ctx.doc,
 			targets.map((el) => ({ id: el.id, patch: { x: el.x + dx, y: el.y + dy } }))
+		);
+		syncFrameMembership(
+			ctx,
+			targets.map((el) => el.id),
+			before
 		);
 	}
 });

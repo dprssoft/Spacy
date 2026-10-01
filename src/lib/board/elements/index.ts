@@ -12,6 +12,8 @@ import type {
 } from '$lib/model/types';
 import { rectFromPoints } from '../engine/geometry';
 import { boxAABB, boxHitTest } from './common';
+import { frameAABB, frameHitTest } from './frame/geometry';
+import FrameView from './frame/FrameView.svelte';
 import ImageView from './image/ImageView.svelte';
 import PlaceholderView from './placeholder/PlaceholderView.svelte';
 import { registerElement, type ElementDefinition } from './registry';
@@ -65,8 +67,17 @@ registerElement<StrokeElement>({
 	hitTest: strokeHitTest
 });
 
-// Placeholders until their steps: frame (16), connector (20), doccard (23).
-registerElement<FrameElement>({ ...boxDefaults, type: 'frame', component: PlaceholderView });
+registerElement<FrameElement>({
+	...boxDefaults,
+	type: 'frame',
+	component: FrameView,
+	aabb: frameAABB,
+	hitTest: frameHitTest,
+	rotatable: false,
+	editableText: true
+});
+
+// Placeholders until their steps: connector (20), doccard (23).
 registerElement<DocCardElement>({ ...boxDefaults, type: 'doccard', component: PlaceholderView });
 
 const endpointPoint = (e: Endpoint): Point =>

@@ -2,6 +2,7 @@ import { newElementBase } from '$lib/model/defaults';
 import { newId } from '$lib/model/ids';
 import { createElements } from '$lib/model/ops';
 import type { BoardContext } from '../context';
+import { syncFrameMembership } from '../frameMembership';
 import { simplifyRDP } from '../engine/simplify';
 import { getDefaultStyle } from '../style/styleDefaults';
 import { createRafWriter } from './rafBatch';
@@ -97,6 +98,7 @@ export function createPenTool(ctx: BoardContext): Tool {
 					points: local
 				}
 			]);
+			syncFrameMembership(ctx, [id]);
 			ctx.undo.stopCapturing();
 			reset();
 		},

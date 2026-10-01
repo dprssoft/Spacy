@@ -5,6 +5,8 @@
 	import { nextZoomStep, zoomAt } from '../engine/viewport';
 	import type { ViewportState } from '../viewport.svelte';
 	import type { Rect } from '$lib/model/types';
+	import { getBoard } from '../context';
+	import { fitRect } from '../engine/viewport';
 
 	let {
 		viewport,
@@ -16,6 +18,13 @@
 	} = $props();
 
 	const percent = $derived(Math.round(viewport.zoom * 100));
+	const { store } = getBoard();
+	const frames = $derived(
+		store.frameOrder.flatMap((id) => {
+			const el = store.get(id);
+			return el?.type === 'frame' ? [el] : [];
+		})
+	);
 
 	function zoomTo(z: number) {
 		viewport.animateTo(zoomAt(viewport.vp, viewport.center, z));
@@ -64,6 +73,22 @@
 						{#if z === 1}<kbd class="text-xs text-muted">⇧0</kbd>{/if}
 					</DropdownMenu.Item>
 				{/each}
+				{#if frames.length}
+					<DropdownMenu.Separator class="my-1 h-px bg-border" />
+					<DropdownMenu.Group>
+						<DropdownMenu.GroupHeading class="px-2 pt-1 pb-0.5 text-xs font-medium text-muted"
+							>Frames</DropdownMenu.GroupHeading
+						>
+						{#each frames as frame (frame.id)}
+							<DropdownMenu.Item
+								class={item}
+								onSelect={() => viewport.animateTo(fitRect(frame, viewport.size, 64, 2))}
+							>
+								<span class="max-w-48 truncate">{frame.title}</span>
+							</DropdownMenu.Item>
+						{/each}
+					</DropdownMenu.Group>
+				{/if}
 			</DropdownMenu.Content>
 		</DropdownMenu.Portal>
 	</DropdownMenu.Root>

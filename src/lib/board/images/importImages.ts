@@ -5,6 +5,7 @@ import { createElements } from '$lib/model/ops';
 import type { NewElement, Point } from '$lib/model/types';
 import * as assetsRepo from '$lib/storage/assetsRepo';
 import type { BoardContext } from '../context';
+import { syncFrameMembership } from '../frameMembership';
 import { visibleWorldRect } from '../engine/viewport';
 import { getDefaultStyle } from '../style/styleDefaults';
 
@@ -112,6 +113,10 @@ export async function importImageFiles(
 	if (els.length === 0) return [];
 	ctx.undo.stopCapturing();
 	const created = createElements(ctx.doc, els);
+	syncFrameMembership(
+		ctx,
+		created.map((e) => e.id)
+	);
 	ctx.undo.stopCapturing();
 	ctx.tools.setTool('select');
 	ctx.selection.set(created.map((e) => e.id));

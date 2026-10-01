@@ -12,6 +12,7 @@ import type { BoardContext } from '../context';
 import { rectCenter, rectsIntersect, unionRects } from '../engine/geometry';
 import { visibleWorldRect } from '../engine/viewport';
 import { getDefaultStyle } from '../style/styleDefaults';
+import { syncFrameMembership, withFrameChildren } from '../frameMembership';
 import { createWithContent, deleteSelection, selectedElements } from './edit';
 
 export const CLIPBOARD_PREFIX = 'SMTHNG-CLIPBOARD:';
@@ -70,7 +71,7 @@ export function parsePayload(text: string): ClipPayload | null {
 
 /** Text for the clipboard for the current selection, or null if nothing is selected. */
 export function copySelectionText(ctx: BoardContext): string | null {
-	const els = selectedElements(ctx);
+	const els = withFrameChildren(ctx, selectedElements(ctx));
 	if (els.length === 0) return null;
 	const text = serializeElements(ctx, els);
 	memory = text;
@@ -162,7 +163,7 @@ export function pastePlainText(ctx: BoardContext, text: string): string | null {
 	const at = pasteAnchor(ctx);
 	const id = newId();
 	ctx.undo.stopCapturing();
-	createElements(ctx.doc, [
+	const [created] = createElements(ctx.doc, [
 		{
 			...newElementBase('text', id, at, getDefaultStyle('text')),
 			x: at.x - w / 2,
@@ -174,6 +175,7 @@ export function pastePlainText(ctx: BoardContext, text: string): string | null {
 			autoWidth: true
 		}
 	]);
+	if (created) syncFrameMembership(ctx, [created.id]);
 	ctx.undo.stopCapturing();
 	ctx.tools.setTool('select');
 	ctx.selection.set([id]);
