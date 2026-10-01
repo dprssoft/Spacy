@@ -2,11 +2,12 @@ import * as Y from 'yjs';
 import { cloneElements } from '$lib/model/clone';
 import { getDocsMap } from '$lib/model/doc';
 import { newId } from '$lib/model/ids';
-import { createElements, deleteElements, updateElements } from '$lib/model/ops';
+import { createElements, updateElements } from '$lib/model/ops';
 import { LOCAL } from '$lib/model/origins';
 import type { Element, NewElement, Point } from '$lib/model/types';
 import { compareZ } from '$lib/model/zorder';
 import type { BoardContext } from '../context';
+import { deleteWithChildren, syncFrameMembership, withFrameChildren } from '../frameMembership';
 import { reorder, type ReorderOp } from './reorder';
 
 // Board editing commands. Each is one undo step.
@@ -24,7 +25,7 @@ export function deleteSelection(ctx: BoardContext): void {
 		.map((el) => el.id);
 	if (ids.length === 0) return;
 	ctx.undo.stopCapturing();
-	deleteElements(ctx.doc, ids);
+	deleteWithChildren(ctx, ids);
 	ctx.selection.clear();
 }
 
@@ -43,12 +44,18 @@ export function createWithContent(
 		const docs = getDocsMap(ctx.doc);
 		for (const [id, frag] of fragments) docs.set(id, frag.clone());
 	}, LOCAL);
+	// After the transaction: the store only sees the new elements once it has committed.
+	syncFrameMembership(
+		ctx,
+		created.map((e) => e.id)
+	);
 	return created;
 }
 
 /** Copies the selection with an offset; the copies become the selection. */
 export function duplicateSelection(ctx: BoardContext, offset: Point = { x: 16, y: 16 }): void {
-	const els = selectedElements(ctx);
+	// A frame is copied with its contents.
+	const els = withFrameChildren(ctx, selectedElements(ctx));
 	if (els.length === 0) return;
 	const { elements, idMap } = cloneElements(els, { offset });
 	const docs = getDocsMap(ctx.doc);

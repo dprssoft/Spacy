@@ -1,6 +1,7 @@
 import { updateElement } from '$lib/model/ops';
 import type { Point, Rect } from '$lib/model/types';
 import type { BoardContext } from '../context';
+import { syncFrameMembership } from '../frameMembership';
 import { createShape, createShapeAt } from './create';
 import { dragRect } from './dragRect';
 import { undoGesture } from './gesture';
@@ -60,6 +61,7 @@ export function createShapeTool(ctx: BoardContext): Tool {
 			} else {
 				created = createShapeAt(ctx, ctx.tools.shapeKind, e.world);
 			}
+			syncFrameMembership(ctx, [created]);
 			reset();
 			finish(created);
 		},

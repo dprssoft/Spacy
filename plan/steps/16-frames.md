@@ -36,9 +36,9 @@ Frames that group content spatially: they're drawn beneath other elements, adopt
 - `tests/e2e/frames.spec.ts`: draw a frame → add a sticky inside → drag the frame by its title → the sticky moved by the same delta; drag the sticky out → dragging the frame no longer moves it; delete the frame → the sticky inside is also deleted → Mod+Z restores both.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Clicking inside an empty frame starts a marquee (it doesn't select the frame)
-- [ ] **M2 demo:** a usable whiteboard (manual walkthrough noted in PROGRESS)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Clicking inside an empty frame starts a marquee (it doesn't select the frame)
+- [x] **M2 demo:** a usable whiteboard (manual walkthrough noted in PROGRESS)
 
 ## Out of scope
 Clipping, nested frames, presenter mode.

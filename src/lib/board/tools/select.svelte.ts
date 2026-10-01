@@ -17,6 +17,7 @@ import {
 	type Box,
 	type ResizeHandle
 } from '../engine/transform';
+import { syncFrameMembership, withFrameChildren } from '../frameMembership';
 import { groupOf, targetsBox, transformTargets } from '../selectionInfo';
 import { createText } from './create';
 import { undoGesture } from './gesture';
@@ -54,24 +55,38 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		selection.transforming = true;
 	}
 
-	function endTransform() {
+	function endTransform(snapshot: readonly Element[]) {
 		writer.flush();
+		// Moved/resized elements may have entered or left frames: same undo step as the gesture.
+		// A one-off lookup, not reactive state.
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const before = new Map(snapshot.filter((el) => el.type === 'frame').map((f) => [f.id, f]));
+		syncFrameMembership(
+			ctx,
+			snapshot.map((el) => el.id),
+			before
+		);
 		gesture.end();
 		selection.transforming = false;
 	}
+
+	const idsIn = (els: readonly Element[], id: string) => els.some((e) => e.id === id);
 
 	/** Alt-drag: copies the targets (keeping their stacking order) and selects the copies. */
 	function duplicateForDrag(targets: Element[]): Element[] {
 		const sorted = [...targets].sort((a, b) => compareZ(a.z, b.z));
 		const { elements } = cloneElements(sorted, { offset: { x: 0, y: 0 } });
 		const created = createElements(doc, elements);
-		selection.set(created.map((e) => e.id));
+		selection.set(
+			created.filter((e) => !e.parentId || !idsIn(created, e.parentId)).map((e) => e.id)
+		);
 		return created;
 	}
 
 	function startMoving(e: CanvasPointerEvent, start: Point) {
 		beginTransform();
-		let targets = transformTargets(ctx);
+		// A frame carries its contents along.
+		let targets = withFrameChildren(ctx, transformTargets(ctx));
 		if (e.alt && targets.length > 0) targets = duplicateForDrag(targets);
 		state = { kind: 'moving', start, snapshot: targets };
 		ui.cursor = 'move';
@@ -245,7 +260,7 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		onPointerUp(e) {
 			const s = state;
 			if (s.kind === 'moving' || s.kind === 'resizing' || s.kind === 'rotating') {
-				endTransform(); // the last move already pushed the final position
+				endTransform(s.snapshot); // the last move already pushed the final position
 			} else if (s.kind === 'pointing' && s.wasSelected && !e.shift) {
 				// Click (no drag) on an element of a multi-selection: select just its group.
 				const el = store.get(s.clickedId);

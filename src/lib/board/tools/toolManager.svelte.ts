@@ -1,6 +1,7 @@
 import type { ShapeKind } from '$lib/model/types';
 import type { BoardContext } from '../context';
 import { createEraserTool } from './eraser';
+import { createFrameTool } from './frame';
 import { createHandTool } from './hand.svelte';
 import { createPenTool } from './pen';
 import { createSelectTool } from './select.svelte';
@@ -35,6 +36,7 @@ export class ToolManager {
 		this.register('text', createTextTool);
 		this.register('pen', createPenTool);
 		this.register('eraser', createEraserTool);
+		this.register('frame', createFrameTool);
 	}
 
 	/** Later steps register their tools here. */

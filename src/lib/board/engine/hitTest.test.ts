@@ -22,20 +22,26 @@ describe('hitElement', () => {
 		const store = setup();
 		expect(hitElement(store, { x: 80, y: 60 }, 0)).toBe('high');
 		expect(hitElement(store, { x: 20, y: 30 }, 0)).toBe('low');
-		expect(hitElement(store, { x: 350, y: 250 }, 0)).toBe('frame');
 		expect(hitElement(store, { x: 1000, y: 1000 }, 0)).toBeNull();
+	});
+
+	it('hits frames only on their border or title label (step 16)', () => {
+		const store = setup();
+		expect(hitElement(store, { x: 350, y: 250 }, 0)).toBeNull(); // empty interior
+		expect(hitElement(store, { x: 399.5, y: 250 }, 0)).toBe('frame'); // border
+		expect(hitElement(store, { x: 20, y: -10 }, 0)).toBe('frame'); // title label
 	});
 
 	it('respects rotation', () => {
 		const store = setup();
 		// Rotated 90° around its center (250, 110): now spans x 240..260, y 60..160.
 		expect(hitElement(store, { x: 250, y: 150 }, 0)).toBe('rotated');
-		expect(hitElement(store, { x: 290, y: 110 }, 0)).toBe('frame');
+		expect(hitElement(store, { x: 290, y: 110 }, 0)).toBeNull(); // frame interior
 	});
 
 	it('applies tolerance', () => {
 		const store = setup();
-		expect(hitElement(store, { x: 5, y: 30 }, 0)).toBe('frame');
+		expect(hitElement(store, { x: 5, y: 30 }, 0)).toBeNull();
 		expect(hitElement(store, { x: 5, y: 30 }, 6)).toBe('low');
 	});
 });

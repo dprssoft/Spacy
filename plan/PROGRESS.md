@@ -312,3 +312,23 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** **Needs a human:** pressure with a real pen/stylus (optional criterion, unchecked).
 
 **Verification:** pnpm verify ✅ (282 unit tests: RDP, stroke hit/AABB/path, image sizing/validation, gcAssets grace + scoping) · pnpm test:e2e ✅ (59; new: stroke preview → written only on release → persists → eraser deletes, Escape cancels erasing, upload 64×48 PNG + reload, drop at point, image paste) · pen drawing with 3,000 elements: 60 fps (p95 16.7 ms) · visual check of strokes and an image. Fixture `tests/e2e/fixtures/sample.png` generated with Node zlib (no new dependency).
+
+## Step 16 — Frames — 2026-10-01
+**Summary:**
+- Frame element: semi-transparent fill, border, title label above the top-left (world-sized, scales with zoom); hit only on the border band or title (empty interior clicks reach the canvas → marquee); not rotatable; bounds include the title. Frames render beneath everything (frame layer).
+- Frame tool (F): drag (Shift square, Alt from center) or click for 800×600; titled "Frame N"; adopts elements fully inside.
+- Membership (`engine/frames.ts` pure `frameFor`/`containsRect` + `board/frameMembership.ts`): topmost frame fully containing an element's bounds; recomputed after create (all tools, images, paste, duplicate), move, resize and nudge — inside the same undo step; frame moves/resizes re-check everything overlapping the frame before and after.
+- Moving a frame carries its unlocked children (drag, Alt-duplicate, nudge); duplicate/copy of a frame includes its contents; deleting a frame (Delete, eraser) deletes unlocked children and **releases locked children** (parentId cleared) — one undo step.
+- Title editing: double-click the title (or Enter on a selected frame) → inline input (Enter/blur saves, Escape cancels). Zoom menu lists frames → animate to fit (max 200%).
+
+**Deviations:**
+- Locked children of a deleted frame are kept and released (the plan said "delete children"; deleting locked content silently felt wrong).
+- Frames are hit on a border band of 2× the hit tolerance (≈ 12 screen px) — the hit-test API has no zoom, so the band is derived from the tolerance.
+- Copying/duplicating a frame includes its children (not in the plan; a frame copied empty would be surprising).
+- Updated 4 earlier unit expectations that assumed frames behaved like plain boxes (interior hits, bounds without title) — new rules tested explicitly (border/title hits, interior misses).
+
+**Dependencies added:** none.
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (291 unit tests: frameFor/containsRect, membership enter/leave/frame resize, children for move/copy, delete with locked child released + undo, frame hit band/title) · pnpm test:e2e ✅ (64; new frames suite: children move with the frame / not after leaving, delete + undo, marquee inside an empty frame, title rename, zoom-menu navigation) · **M2 walkthrough:** built a retro board (frame + stickies + pen circle + shapes with text + free text + image), screenshot reviewed — a usable whiteboard.

@@ -1,6 +1,6 @@
-import { deleteElements } from '$lib/model/ops';
 import type { Point } from '$lib/model/types';
 import type { BoardContext } from '../context';
+import { deleteWithChildren } from '../frameMembership';
 import { hitElement } from '../engine/hitTest';
 import { screenToWorld } from '../engine/viewport';
 import type { Tool } from './types';
@@ -56,7 +56,7 @@ export function createEraserTool(ctx: BoardContext): Tool {
 			const ids = [...ctx.preview.erasing];
 			if (ids.length > 0) {
 				ctx.undo.stopCapturing();
-				deleteElements(ctx.doc, ids);
+				deleteWithChildren(ctx, ids);
 				ctx.undo.stopCapturing();
 				for (const id of ids) ctx.selection.ids.delete(id);
 			}

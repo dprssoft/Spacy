@@ -1,4 +1,5 @@
 import type { BoardContext } from '../context';
+import { syncFrameMembership } from '../frameMembership';
 import { createSticky } from './create';
 import type { Tool } from './types';
 
@@ -12,6 +13,7 @@ export function createStickyTool(ctx: BoardContext): Tool {
 		onPointerUp(e) {
 			ctx.undo.stopCapturing();
 			const id = createSticky(ctx, e.world);
+			syncFrameMembership(ctx, [id]);
 			ctx.tools.returnToSelect();
 			ctx.editing.start(id);
 		},

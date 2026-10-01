@@ -70,7 +70,8 @@ describe('BoardStore', () => {
 		const v = store.version;
 		updateElement(doc, 'a', { x: -100 });
 		expect(store.version).toBe(v + 1);
-		expect(store.contentBounds()).toEqual({ x: -100, y: 20, w: 210, h: 50 });
+		// The frame's bounds include its title label (22px above its box, which starts at y=20).
+		expect(store.contentBounds()).toEqual({ x: -100, y: -2, w: 210, h: 72 });
 	});
 
 	it('stops listening after destroy', () => {

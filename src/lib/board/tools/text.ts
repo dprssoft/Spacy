@@ -1,4 +1,5 @@
 import type { BoardContext } from '../context';
+import { syncFrameMembership } from '../frameMembership';
 import { createText } from './create';
 import type { Tool } from './types';
 
@@ -12,6 +13,7 @@ export function createTextTool(ctx: BoardContext): Tool {
 		onPointerUp(e) {
 			ctx.undo.stopCapturing();
 			const id = createText(ctx, e.world);
+			syncFrameMembership(ctx, [id]);
 			ctx.tools.returnToSelect();
 			ctx.editing.start(id, { discardIfEmpty: true });
 		},
