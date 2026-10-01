@@ -58,8 +58,8 @@ A pure static SVG renderer (no `foreignObject`) used for SVG/PNG export of the b
 - `tests/e2e/export.spec.ts`: create a few elements → Export → PNG → a download event with size > 1 KB; SVG download contains `<svg`; after leaving the board, the home card shows an `<img>` thumbnail within 2 s.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Exported PNGs look like the canvas: positions, colors, text wrapping, markers (manual comparison noted in PROGRESS)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Exported PNGs look like the canvas: positions, colors, text wrapping, markers (manual comparison noted in PROGRESS)
 - [ ] Export works in Chrome and Firefox (manual)
 
 ## Out of scope

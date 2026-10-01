@@ -18,6 +18,7 @@
 	import { danglingConnectors } from '../diagram/ops';
 	import { connectedComponent } from '../diagram/quickCreate';
 	import { copyMarkdown, downloadMarkdown } from '../doccards/exportMarkdown';
+	import { exportDialog } from './exportDialogState.svelte';
 	import { formatKeys } from '../tools/formatKeys';
 
 	let { children }: { children: Snippet } = $props();
@@ -87,6 +88,8 @@
 				{@render entry('Select connected', 'Mod+Shift+A', () =>
 					ctx.selection.set(connectedComponent(ctx, ctx.selection.ids))
 				)}
+				<ContextMenu.Separator class={sep} />
+				{@render entry('Export selection…', null, () => exportDialog.show('png', 'selection'))}
 				{#if docCard}
 					<ContextMenu.Separator class={sep} />
 					{@render entry('Copy as Markdown', null, () => copyMarkdown(ctx, docCard))}

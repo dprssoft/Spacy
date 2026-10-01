@@ -20,6 +20,7 @@
 	import { closeFocus, FOCUS_PARAM } from './doccards/focus';
 	import FocusMode from './doccards/FocusMode.svelte';
 	import PulseHighlight from './canvas/PulseHighlight.svelte';
+	import { trackThumbnail } from './render/thumbnails';
 	import PreviewOverlay from './canvas/PreviewOverlay.svelte';
 	import { installConnectorHooks } from './diagram/ops';
 	import { imagePaste, onCopyEvent, onPasteEvent } from './commands/clipboard';
@@ -37,6 +38,7 @@
 	import { HandleRegistry } from './tools/handles';
 	import { isTypingTarget, ShortcutRegistry } from './tools/shortcuts';
 	import { ToolManager } from './tools/toolManager.svelte';
+	import ExportDialog from './ui/ExportDialog.svelte';
 	import Toolbar from './ui/Toolbar.svelte';
 	import { BoardTitle } from './title.svelte';
 	import TopBar from './TopBar.svelte';
@@ -89,6 +91,7 @@
 		void gcAssets(ctx.id, ctx.doc).catch((err) => console.error('Asset cleanup failed', err));
 	});
 	$effect(() => installTestHooks(ctx));
+	$effect(() => trackThumbnail(ctx));
 	// Keep the selection valid when elements disappear (other tab, undo…).
 	$effect(() => {
 		void ctx.store.version;
@@ -171,6 +174,7 @@
 			</Canvas>
 		</CanvasContextMenu>
 		<Toolbar />
+		<ExportDialog />
 		{#if focusCard}
 			{#key focusCard.id}
 				<FocusMode card={focusCard} />
