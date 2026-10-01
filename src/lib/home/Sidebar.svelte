@@ -5,6 +5,7 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import { resolve } from '$app/paths';
 	import type { BoardFilter } from '$lib/storage/types';
+	import BackupButton from './BackupButton.svelte';
 	import { VIEWS } from './views';
 
 	let { active }: { active: BoardFilter } = $props();
@@ -15,7 +16,7 @@
 <!-- Vertical sidebar from md up; a horizontal tab row on small screens. -->
 <nav
 	aria-label="Board views"
-	class="shrink-0 border-b border-border bg-surface md:w-56 md:border-r md:border-b-0 md:py-3"
+	class="flex shrink-0 flex-col border-b border-border bg-surface md:w-56 md:border-r md:border-b-0 md:py-3"
 >
 	<ul class="flex gap-1 overflow-x-auto px-3 py-2 md:flex-col md:px-2 md:py-0">
 		{#each VIEWS as view (view.id)}
@@ -32,4 +33,7 @@
 			</li>
 		{/each}
 	</ul>
+	<div class="mt-auto hidden px-2 md:block">
+		<BackupButton />
+	</div>
 </nav>

@@ -45,9 +45,9 @@ Share and back up boards as files: export one board or all boards, and import th
 - `tests/e2e/files.spec.ts`: create a board with a sticky "Exported" → export from the card menu (capture the download) → delete the board forever → import the downloaded file via the Import button → a board with the same title appears and opening it shows "Exported".
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `pnpm verify` and `pnpm test:e2e` pass
 - [ ] A file exported in Chrome imports correctly in Firefox (manual)
-- [ ] An import never overwrites existing boards
+- [x] An import never overwrites existing boards
 
 ## Out of scope
 Importing draw.io/Excalidraw/Miro files (not planned). File handler registration (step 29).

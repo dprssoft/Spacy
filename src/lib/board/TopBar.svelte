@@ -12,12 +12,14 @@
 	import SaveIndicator from './SaveIndicator.svelte';
 	import { formatKeys } from './tools/formatKeys';
 	import { exportDialog } from './ui/exportDialogState.svelte';
+	import { canSaveToFile, downloadBoardFile, saveTarget } from './ui/saveToFile.svelte';
 	import type { BoardTitle } from './title.svelte';
 
 	let { title }: { title: BoardTitle } = $props();
 
 	let editing = $state(false);
-	const { history } = getBoard();
+	const ctx = getBoard();
+	const { history } = ctx;
 	const iconButton =
 		'inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-35 disabled:hover:bg-transparent';
 
@@ -101,7 +103,15 @@
 					<DropdownMenu.Item class={item} onSelect={() => exportDialog.show('svg')}
 						>SVG…</DropdownMenu.Item
 					>
-					<DropdownMenu.Item class={item} disabled>Download .smthng</DropdownMenu.Item>
+					<DropdownMenu.Separator class="my-1 h-px bg-border" />
+					<DropdownMenu.Item class={item} onSelect={() => downloadBoardFile(ctx.id, title.value)}
+						>Download .smthng</DropdownMenu.Item
+					>
+					{#if canSaveToFile()}
+						<DropdownMenu.Item class={item} onSelect={() => saveTarget.save(ctx.id, title.value)}
+							>{saveTarget.label(ctx.id)}</DropdownMenu.Item
+						>
+					{/if}
 				</DropdownMenu.Content>
 			</DropdownMenu.Portal>
 		</DropdownMenu.Root>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { exportBoard } from './fileActions';
 	import { DropdownMenu } from 'bits-ui';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import { goto } from '$app/navigation';
@@ -61,7 +62,9 @@
 				<DropdownMenu.Item class={item} onSelect={() => actions.duplicate(board)}>
 					Duplicate
 				</DropdownMenu.Item>
-				<DropdownMenu.Item class={item} disabled title="Coming soon">Export</DropdownMenu.Item>
+				<DropdownMenu.Item class={item} onSelect={() => exportBoard(board)}
+					>Export</DropdownMenu.Item
+				>
 				<DropdownMenu.Separator class="my-1 h-px bg-border" />
 				<DropdownMenu.Item class="{item} text-danger" onSelect={() => actions.moveToTrash(board)}>
 					Move to trash
