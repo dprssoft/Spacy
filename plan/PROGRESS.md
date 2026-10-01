@@ -426,3 +426,23 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Small vertical offsets between facing ports produce a short jog in elbow routes (inherent to orthogonal routing; same in draw.io).
 
 **Verification:** pnpm verify ✅ (491 unit tests: all routings start/end correctly, elbows orthogonal and outside both boxes, leave along the port, pass through bends, curve ≥ straight, pointAt/nearestT inverse, every marker has a shape) · pnpm test:e2e ✅ (92; new: default elbow + routing switch changes the path, markers at both ends, label edit + drag along the path, connector "set as default") · fixture screenshot reviewed.
+
+## Step 22 — Bends, shape library, quick-create — 2026-10-01
+**Summary:**
+- Shape library: `shapePath` for all 11 kinds (rect, ellipse, diamond + process, decision, start/end, data, document, database, cloud, actor), with matching `shapeOutline`s for connector attachment. The toolbar's shape button is a flyout grouped Basic / Flowchart with drawn icons; items can be clicked (pick the tool) or dragged onto the canvas (created at the drop point, joins a frame under it). The style popover's shape picker lists every kind.
+- Quick-create: four "+" buttons outside the ports of the hovered or single selected element. Click → a same-type, same-style neighbour 80 px away (shifted sideways while the spot is taken), connected port to opposite port, in one transaction / undo step; the new element is selected and starts text editing. Shift+click opens a type picker (all shapes, sticky, text, doc card). Keyboard: Mod+Alt+Arrows. Mod+Shift+A (and the canvas menu) selects everything connected to the selection.
+- Bends: a selected elbow connector shows a handle on each inner segment — dragging slides the segment and stores the route as waypoints; straight/curve connectors show midpoint handles (drag inserts a waypoint) and round waypoint handles (drag to move, double-click to remove). "Reset route" in the connector panel and the canvas menu clears waypoints.
+
+**Deviations:**
+- Quick-create maps types it can't clone meaningfully: image → sticky, stroke → rectangle, text stays text; frames create a same-size frame.
+- Buttons linger 700 ms after the pointer leaves the element so they can be reached across the gap. On a selected element the top "+" is omitted: the rotate handle and the style popover sit there (Mod+Alt+Up still works). Found by the full e2e run — the top "+" covered the rotate handle.
+- Cloud connects on an inscribed ellipse; document on its average bottom line (close enough to the drawn outline).
+- `selectConnected` lives in `quickCreate.ts` (`connectedComponent`) and is tested in `quickCreate.test.ts` rather than a separate file.
+- The e2e mixed diagram uses sticky → doc card → sticky → shape via quick-create (quick-create can't produce images, and e2e has no image fixture helper); images connecting is covered by the connectable matrix test and the step 20 connect suite.
+- Not done (manual): timing a 20-node diagram build.
+
+**Dependencies added:** none.
+
+**Follow-ups:** `commands.spec` "context menu reorders layers" failed once in a full e2e run and passed in 4 reruns (flaky; watch it).
+
+**Verification:** pnpm verify ✅ (499 unit tests; new: placement per direction + collision shift, same-kind/override/type mapping, one undo step, connected component BFS, elbow bends reproduce the dragged polyline) · pnpm test:e2e ✅ (97; new `diagram.spec.ts`: 3× quick-create chain → 4 shapes + 3 connectors, Mod+Shift+A selects 7, Shift+click type picker, elbow segment drag → waypoints → Reset route, mixed diagram all attached, drag-drop from the library) · screenshots of all 11 shapes, the flyout and the "+" buttons reviewed.

@@ -58,6 +58,10 @@ type State =
 	| { kind: 'connecting'; gesture: ReturnType<typeof createConnectGesture> }
 	| { kind: 'endpoint'; drag: ReturnType<typeof createEndpointDrag> }
 	| { kind: 'label'; connector: ConnectorElement }
+	/** Sliding an elbow segment perpendicular to itself. */
+	| { kind: 'segment'; id: string; points: Point[]; index: number; start: Point }
+	/** Moving a bend point of a straight/curved connector. */
+	| { kind: 'waypoint'; id: string; index: number }
 	| { kind: 'marquee'; start: Point; base: string[] }
 	| { kind: 'resizing'; handle: ResizeHandle; box: Box; snapshot: Element[]; snapper: Snapper }
 	| { kind: 'rotating'; center: Point; startAngle: number; snapshot: Element[] };
@@ -227,11 +231,14 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		clearGuides();
 		if (state.kind === 'connecting') state.gesture.cancel();
 		if (state.kind === 'endpoint') state.drag.cancel();
-		const transforming =
-			state.kind === 'moving' ||
-			state.kind === 'resizing' ||
-			state.kind === 'rotating' ||
-			state.kind === 'label';
+		const transforming = [
+			'moving',
+			'resizing',
+			'rotating',
+			'label',
+			'segment',
+			'waypoint'
+		].includes(state.kind);
 		writer.cancel();
 		if (transforming) {
 			gesture.end();
@@ -264,6 +271,30 @@ export function createSelectTool(ctx: BoardContext): Tool {
 					const at = c.ports(el)[port as Port];
 					const from = makeEndpoint(el, c, at, 'auto', 1);
 					state = { kind: 'connecting', gesture: createConnectGesture(ctx, from, e.screen) };
+				}
+				return;
+			}
+			if (handle && (handle.startsWith('bend:') || handle.startsWith('wp:'))) {
+				const c = selection.single ? store.get(selection.single) : undefined;
+				if (c?.type !== 'connector') return;
+				const index = Number(handle.split(':')[1]);
+				beginTransform();
+				if (handle.startsWith('wp:')) {
+					state = { kind: 'waypoint', id: c.id, index };
+				} else if (c.routing === 'elbow') {
+					state = {
+						kind: 'segment',
+						id: c.id,
+						points: connectorGeometry(c, store.world).points,
+						index,
+						start: e.world
+					};
+				} else {
+					// Insert a bend between control points `index` and `index + 1`, then drag it.
+					const waypoints = [...c.waypoints];
+					waypoints.splice(index, 0, e.world);
+					writer.push([{ id: c.id, patch: { waypoints } }]);
+					state = { kind: 'waypoint', id: c.id, index };
 				}
 				return;
 			}
@@ -364,6 +395,26 @@ export function createSelectTool(ctx: BoardContext): Tool {
 					return s.gesture.move(e.world, e.alt);
 				case 'endpoint':
 					return s.drag.move(e.world, e.alt);
+				case 'segment': {
+					const a = s.points[s.index]!;
+					const b = s.points[s.index + 1]!;
+					const horizontal = Math.abs(a.y - b.y) < 1e-6;
+					const d = horizontal ? e.world.y - s.start.y : e.world.x - s.start.x;
+					const moved = s.points.map((p, i) =>
+						i === s.index || i === s.index + 1
+							? horizontal
+								? { x: p.x, y: p.y + d }
+								: { x: p.x + d, y: p.y }
+							: p
+					);
+					return writer.push([{ id: s.id, patch: { waypoints: moved.slice(1, -1) } }]);
+				}
+				case 'waypoint': {
+					const c = store.get(s.id);
+					if (c?.type !== 'connector') return;
+					const waypoints = c.waypoints.map((w, i) => (i === s.index ? e.world : w));
+					return writer.push([{ id: s.id, patch: { waypoints } }]);
+				}
 				case 'label': {
 					const current = store.get(s.connector.id);
 					if (current?.type !== 'connector') return;
@@ -380,7 +431,7 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				if (id) selection.set([id]);
 			} else if (s.kind === 'endpoint') {
 				s.drag.finish();
-			} else if (s.kind === 'label') {
+			} else if (s.kind === 'label' || s.kind === 'segment' || s.kind === 'waypoint') {
 				endTransform([]);
 			} else if (s.kind === 'moving' || s.kind === 'resizing' || s.kind === 'rotating') {
 				endTransform(s.snapshot); // the last move already pushed the final position
@@ -396,6 +447,19 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		},
 
 		onDoubleClick(e) {
+			if (e.hit.handle?.startsWith('wp:') && selection.single) {
+				// Double-click a bend point to remove it.
+				const c = store.get(selection.single);
+				if (c?.type === 'connector') {
+					const index = Number(e.hit.handle.split(':')[1]);
+					undo.stopCapturing();
+					updateElements(doc, [
+						{ id: c.id, patch: { waypoints: c.waypoints.filter((_, i) => i !== index) } }
+					]);
+					undo.stopCapturing();
+				}
+				return;
+			}
 			const id = e.hit.elementId;
 			const el = id ? store.get(id) : undefined;
 			if (el?.groupId && selection.enteredGroup !== el.groupId && selection.size > 1) {

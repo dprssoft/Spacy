@@ -2,7 +2,7 @@
 	import type { ShapeElement } from '$lib/model/types';
 	import { dashArray, fillColor, fontToCss, radiusPx, valignToJustify } from '../common';
 	import type { ElementViewProps } from '../registry';
-	import { shapePath } from './paths';
+	import { isLineArt, shapePath } from './paths';
 
 	let { el, editing }: ElementViewProps<ShapeElement> = $props();
 
@@ -12,7 +12,7 @@
 <svg width={el.w} height={el.h} class="absolute inset-0 overflow-visible" aria-hidden="true">
 	<path
 		{d}
-		fill={fillColor(el.style)}
+		fill={isLineArt(el.kind) ? 'none' : fillColor(el.style)}
 		stroke={el.style.stroke}
 		stroke-width={el.style.strokeWidth}
 		stroke-dasharray={dashArray(el.style.dash, el.style.strokeWidth)}

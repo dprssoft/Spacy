@@ -114,3 +114,27 @@ describe('markers', () => {
 		}
 	});
 });
+
+describe('elbow bends from a dragged segment', () => {
+	it('reproduces the moved polyline when its interior points are stored as waypoints', () => {
+		const r = route('elbow', diagonal);
+		const i = 1; // first inner segment
+		const a = r.points[i]!;
+		const b = r.points[i + 1]!;
+		const horizontal = Math.abs(a.y - b.y) < 1e-6;
+		const moved = r.points.map((p, k) =>
+			k === i || k === i + 1 ? (horizontal ? { x: p.x, y: p.y + 40 } : { x: p.x + 40, y: p.y }) : p
+		);
+		const again = route('elbow', { ...diagonal, waypoints: moved.slice(1, -1) });
+		for (const p of moved) {
+			expect(
+				again.points.some((q) => Math.abs(q.x - p.x) < 1e-6 && Math.abs(q.y - p.y) < 1e-6)
+			).toBe(true);
+		}
+		for (let k = 1; k < again.points.length; k++) {
+			const p = again.points[k - 1]!;
+			const q = again.points[k]!;
+			expect(Math.abs(p.x - q.x) < 1e-6 || Math.abs(p.y - q.y) < 1e-6).toBe(true);
+		}
+	});
+});

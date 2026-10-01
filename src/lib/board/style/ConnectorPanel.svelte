@@ -79,6 +79,14 @@
 {@render markerPicker('Start marker', start, (m) => apply({ markerStart: m }), true)}
 <span class="text-xs text-muted">End</span>
 {@render markerPicker('End marker', end, (m) => apply({ markerEnd: m }), false)}
+{#if conns.some((c) => c.type === 'connector' && c.waypoints.length > 0)}
+	<button
+		type="button"
+		class="text-xs text-accent hover:underline"
+		title="Reset route to auto-layout"
+		onclick={() => apply({ waypoints: [] })}>Reset route</button
+	>
+{/if}
 <label class="flex items-center justify-between gap-6 self-stretch text-xs text-muted">
 	Label background
 	<input
