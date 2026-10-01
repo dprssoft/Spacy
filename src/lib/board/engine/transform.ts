@@ -41,6 +41,14 @@ export interface ResizeOptions {
 	keepAspect: boolean;
 	fromCenter: boolean;
 	minSize: number;
+	/** Per-axis limits that override `minSize` (doc cards: min 240×120, fixed height when collapsed). */
+	limits?: SizeLimits;
+}
+
+export interface SizeLimits {
+	minW: number;
+	minH: number;
+	maxH?: number;
 }
 
 /**
@@ -58,26 +66,36 @@ export function resizeBox(
 	const p = rotatePoint(pointer, c, -start.rotation);
 	const d = DIRS[handle];
 	const min = opts.minSize;
+	const minW = opts.limits?.minW ?? min;
+	const minH = opts.limits?.minH ?? min;
+	const maxH = opts.limits?.maxH ?? Infinity;
 
-	const extent = (dir: -1 | 0 | 1, pos: number, lo: number, size: number, center: number) => {
+	const extent = (
+		dir: -1 | 0 | 1,
+		pos: number,
+		lo: number,
+		size: number,
+		center: number,
+		lim: number
+	) => {
 		if (dir === 0) return size;
-		if (opts.fromCenter) return Math.max(min, (pos - center) * dir * 2);
+		if (opts.fromCenter) return Math.max(lim, (pos - center) * dir * 2);
 		const anchor = dir === 1 ? lo : lo + size;
-		return Math.max(min, (pos - anchor) * dir);
+		return Math.max(lim, (pos - anchor) * dir);
 	};
-	let w = extent(d.x, p.x, start.x, start.w, c.x);
-	let h = extent(d.y, p.y, start.y, start.h, c.y);
+	let w = extent(d.x, p.x, start.x, start.w, c.x, minW);
+	let h = Math.min(maxH, extent(d.y, p.y, start.y, start.h, c.y, minH));
 
 	if (opts.keepAspect && start.w > 0 && start.h > 0) {
 		const ratio = start.w / start.h;
 		if (d.x !== 0 && d.y !== 0) {
 			const s = Math.max(w / start.w, h / start.h);
-			w = Math.max(min, start.w * s);
-			h = Math.max(min, start.h * s);
+			w = Math.max(minW, start.w * s);
+			h = Math.min(maxH, Math.max(minH, start.h * s));
 		} else if (d.x !== 0) {
-			h = Math.max(min, w / ratio);
+			h = Math.min(maxH, Math.max(minH, w / ratio));
 		} else {
-			w = Math.max(min, h * ratio);
+			w = Math.max(minW, h * ratio);
 		}
 	}
 

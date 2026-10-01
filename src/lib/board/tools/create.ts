@@ -58,3 +58,19 @@ export function createText(ctx: BoardContext, at: Point): string {
 	]);
 	return id;
 }
+
+/** A default-sized doc card centered on `at`. */
+export function createDocCard(ctx: BoardContext, at: Point): string {
+	const id = newId();
+	const { h } = DEFAULT_SIZES.doccard;
+	createElements(ctx.doc, [
+		{
+			...newElementBase('doccard', id, at, getDefaultStyle('doccard')),
+			type: 'doccard',
+			title: 'Untitled',
+			collapsed: false,
+			expandedH: h
+		}
+	]);
+	return id;
+}

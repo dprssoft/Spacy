@@ -1,7 +1,7 @@
 import { deleteDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
-import { getElementsMap, getMeta, listElements } from '$lib/model/doc';
+import { getDocsMap, getElementsMap, getMeta, listElements } from '$lib/model/doc';
 import { migrate } from '$lib/model/migrations';
 import { updateElements } from '$lib/model/ops';
 import { IMPORT, LOCAL, MIGRATION, type Origin } from '$lib/model/origins';
@@ -52,11 +52,7 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 	}
 
 	const stopTabSync = createTabSync(doc, boardChannelName(id));
-	// Canvas undo covers elements only; doc card text has its own editor undo (D10).
-	const undo = new Y.UndoManager(getElementsMap(doc), {
-		trackedOrigins: new Set([LOCAL]),
-		captureTimeout: 500
-	});
+	const undo = createBoardUndo(doc);
 
 	const touch = debounce(() => boardsRepo.touchUpdated(id), TOUCH_UPDATED_MS);
 	const onUpdate = (_update: Uint8Array, origin: unknown) => {
@@ -136,4 +132,17 @@ export async function duplicateBoard(id: string): Promise<BoardMeta> {
 
 	if (src.thumbnail) await boardsRepo.setThumbnail(meta.id, src.thumbnail);
 	return (await boardsRepo.get(meta.id)) ?? meta;
+}
+
+/**
+ * Canvas undo (D10): tracks only LOCAL transactions. Doc card text edits come from the editor's
+ * Yjs binding (another origin) and have their own editor undo. The `docs` map is in scope so that
+ * undoing the creation or deletion of a card also removes or restores its content (they change in
+ * the same LOCAL transaction as the element).
+ */
+export function createBoardUndo(doc: Y.Doc): Y.UndoManager {
+	return new Y.UndoManager([getElementsMap(doc), getDocsMap(doc)], {
+		trackedOrigins: new Set([LOCAL]),
+		captureTimeout: 500
+	});
 }

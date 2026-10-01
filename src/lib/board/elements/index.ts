@@ -13,13 +13,14 @@ import type {
 import { boxConnectable, polygonConnectable } from '../diagram/connectable';
 import { connectorGeometry, distToPolyline, inRect } from '../diagram/geometry';
 import ConnectorView from './connector/ConnectorView.svelte';
+import { docCardLimits } from './doccard/collapse';
+import DocCardView from './doccard/DocCardView.svelte';
 import { rectFromPoints } from '../engine/geometry';
 import { STYLE_OPTIONS, type StyleOption } from '../style/options';
 import { boxAABB, boxHitTest } from './common';
 import { frameAABB, frameHitTest } from './frame/geometry';
 import FrameView from './frame/FrameView.svelte';
 import ImageView from './image/ImageView.svelte';
-import PlaceholderView from './placeholder/PlaceholderView.svelte';
 import { registerElement, type ElementDefinition } from './registry';
 import { shapeOutline } from './shape/paths';
 import ShapeView from './shape/ShapeView.svelte';
@@ -89,12 +90,15 @@ registerElement<FrameElement>({
 	editableText: true
 });
 
-// Placeholders until their steps: connector (20), doccard (23).
 registerElement<DocCardElement>({
 	...boxDefaults,
 	type: 'doccard',
 	styleOptions: STYLE_OPTIONS.doccard,
-	component: PlaceholderView
+	component: DocCardView,
+	sizeLimits: docCardLimits,
+	// A rotated editor is hard to use and its caret placement breaks.
+	rotatable: false,
+	editableText: true
 });
 
 const endpointPoint = (e: Endpoint): Point =>

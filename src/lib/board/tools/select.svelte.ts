@@ -190,11 +190,13 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		e = { ...e, world: pointer };
 		if (s.snapshot.length === 1) {
 			const el = s.snapshot[0]!;
-			const keepAspect = e.shift !== definitionOf(el).keepAspect;
+			const def = definitionOf(el);
+			const keepAspect = e.shift !== def.keepAspect;
 			const next = resizeBox(s.box, s.handle, e.world, {
 				keepAspect,
 				fromCenter: e.alt,
-				minSize: MIN_SIZE
+				minSize: MIN_SIZE,
+				limits: def.sizeLimits?.(el)
 			});
 			writer.push([
 				{ id: el.id, patch: { ...sizePatch(el, next.w, next.h), x: next.x, y: next.y } }
@@ -469,7 +471,8 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				return;
 			}
 			if (el && !el.locked && definitionOf(el).editableText) {
-				ctx.editing.start(el.id);
+				const n = e.native;
+				ctx.editing.start(el.id, { at: { x: n.clientX, y: n.clientY } });
 			} else if (!id) {
 				// Whiteboard convenience: double-click empty canvas to write.
 				undo.stopCapturing();

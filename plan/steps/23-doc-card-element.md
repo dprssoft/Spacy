@@ -54,10 +54,10 @@ Doc cards: canvas elements with a title and a collaborative TipTap rich-text bod
 - `tests/e2e/doccard.spec.ts`: N + click → type "# Plan" (the markdown shortcut makes an H1) then "- item" → Escape → reload → the H1 "Plan" and the list item are visible. A second page on the same board sees the typed text within 1 s. Collapse → the card height is 40 → a connector attached to it still ends at its border. Copy/paste the card → the new card has the same text.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Text selection with the mouse works inside an editing card and never moves the card
-- [ ] Undo of card deletion restores the text
-- [ ] TipTap is imported only from `editorFactory.ts` (and step 24/25 doccard modules)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Text selection with the mouse works inside an editing card and never moves the card
+- [x] Undo of card deletion restores the text
+- [x] TipTap is imported only from `editorFactory.ts` (and step 24/25 doccard modules)
 
 ## Out of scope
 Focus mode, bubble menu, slash commands, mentions (step 24); Markdown (step 25).
