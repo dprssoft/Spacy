@@ -13,8 +13,10 @@
 		toggleLock,
 		ungroupSelection
 	} from '../commands/edit';
+	import { updateElements } from '$lib/model/ops';
 	import { getBoard } from '../context';
 	import { danglingConnectors } from '../diagram/ops';
+	import { connectedComponent } from '../diagram/quickCreate';
 	import { formatKeys } from '../tools/formatKeys';
 
 	let { children }: { children: Snippet } = $props();
@@ -66,6 +68,20 @@
 					{@render entry('Group', 'Mod+G', () => groupSelection(ctx))}
 				{/if}
 				{@render entry(allLocked ? 'Unlock' : 'Lock', 'Mod+Shift+L', () => toggleLock(ctx))}
+				<ContextMenu.Separator class={sep} />
+				{#if selectedElements(ctx).some((el) => el.type === 'connector' && el.waypoints.length > 0)}
+					{@render entry('Reset route', null, () =>
+						updateElements(
+							ctx.doc,
+							selectedElements(ctx)
+								.filter((el) => el.type === 'connector')
+								.map((el) => ({ id: el.id, patch: { waypoints: [] } }))
+						)
+					)}
+				{/if}
+				{@render entry('Select connected', 'Mod+Shift+A', () =>
+					ctx.selection.set(connectedComponent(ctx, ctx.selection.ids))
+				)}
 			{:else}
 				{@render entry('Paste', 'Mod+V', () => pasteFromClipboard(ctx))}
 				{@render entry('Select all', 'Mod+A', () =>

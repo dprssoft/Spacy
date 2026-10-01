@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu, Tooltip } from 'bits-ui';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import Circle from '@lucide/svelte/icons/circle';
-	import Diamond from '@lucide/svelte/icons/diamond';
 	import Eraser from '@lucide/svelte/icons/eraser';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Frame from '@lucide/svelte/icons/frame';
@@ -16,6 +14,7 @@
 	import StickyNote from '@lucide/svelte/icons/sticky-note';
 	import Type from '@lucide/svelte/icons/type';
 	import type { ShapeKind } from '$lib/model/types';
+	import { SHAPE_DRAG_TYPE, SHAPE_KINDS, shapePath } from '../elements/shape/paths';
 	import { getBoard } from '../context';
 	import { openImagePicker } from '../images/importImages';
 	import type { ToolId } from '../tools/types';
@@ -48,17 +47,10 @@
 		]
 	];
 
-	const shapes: {
-		kind: ShapeKind;
-		label: string;
-		keys: string;
-		icon: IconComponent;
-	}[] = [
-		{ kind: 'rect', label: 'Rectangle', keys: 'R', icon: Square },
-		{ kind: 'ellipse', label: 'Ellipse', keys: 'O', icon: Circle },
-		{ kind: 'diamond', label: 'Diamond', keys: 'D', icon: Diamond }
-	];
+	const KEYS: Partial<Record<ShapeKind, string>> = { rect: 'R', ellipse: 'O', diamond: 'D' };
+	const shapes = SHAPE_KINDS;
 	const currentShape = $derived(shapes.find((s) => s.kind === tools.shapeKind) ?? shapes[0]!);
+	const iconPath = (kind: ShapeKind) => shapePath(kind, 16, 12, 2, 1);
 
 	const button =
 		'relative inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none aria-pressed:bg-accent aria-pressed:text-accent-contrast aria-disabled:cursor-not-allowed aria-disabled:opacity-35 aria-disabled:hover:bg-transparent';
@@ -98,7 +90,6 @@
 							{#snippet child({ props: tipProps })}
 								<DropdownMenu.Trigger {...tipProps}>
 									{#snippet child({ props })}
-										{@const Icon = currentShape.icon}
 										<button
 											{...props}
 											type="button"
@@ -107,7 +98,14 @@
 											aria-pressed={tools.current === 'shape'}
 											aria-disabled={!available}
 										>
-											<Icon class="size-[18px]" aria-hidden="true" />
+											<svg viewBox="-1 -1 18 14" class="size-[18px]" aria-hidden="true">
+												<path
+													d={iconPath(currentShape.kind)}
+													fill="none"
+													stroke="currentColor"
+													stroke-width="1.5"
+												/>
+											</svg>
 											<span
 												class="absolute right-0.5 bottom-0.5 size-0 border-4 border-transparent border-r-current border-b-current opacity-50"
 												aria-hidden="true"
@@ -123,22 +121,41 @@
 						<DropdownMenu.Content
 							side="right"
 							sideOffset={8}
-							class="z-50 min-w-44 rounded-lg border border-border bg-surface p-1 shadow-lg"
+							class="z-50 min-w-48 rounded-lg border border-border bg-surface p-1 shadow-lg"
 						>
-							{#each shapes as s (s.kind)}
-								{@const Icon = s.icon}
-								<DropdownMenu.Item
-									class={menuItem}
-									disabled={!available}
-									onSelect={() => {
-										tools.shapeKind = s.kind;
-										select('shape');
-									}}
-								>
-									<Icon class="size-4" aria-hidden="true" />
-									<span class="flex-1">{s.label}</span>
-									<kbd class="text-xs text-muted">{s.keys}</kbd>
-								</DropdownMenu.Item>
+							{#each ['Basic', 'Flowchart'] as group (group)}
+								<DropdownMenu.Group>
+									<DropdownMenu.GroupHeading
+										class="px-2 pt-1.5 pb-0.5 text-xs font-medium text-muted"
+										>{group}</DropdownMenu.GroupHeading
+									>
+									{#each shapes.filter((x) => x.group === group) as s (s.kind)}
+										<DropdownMenu.Item
+											class={menuItem}
+											disabled={!available}
+											draggable="true"
+											ondragstart={(e: DragEvent) => {
+												e.dataTransfer?.setData(SHAPE_DRAG_TYPE, s.kind);
+												if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copy';
+											}}
+											onSelect={() => {
+												tools.shapeKind = s.kind;
+												select('shape');
+											}}
+										>
+											<svg viewBox="-1 -1 18 14" class="size-4" aria-hidden="true">
+												<path
+													d={iconPath(s.kind)}
+													fill="none"
+													stroke="currentColor"
+													stroke-width="1.5"
+												/>
+											</svg>
+											<span class="flex-1">{s.label}</span>
+											{#if KEYS[s.kind]}<kbd class="text-xs text-muted">{KEYS[s.kind]}</kbd>{/if}
+										</DropdownMenu.Item>
+									{/each}
+								</DropdownMenu.Group>
 							{/each}
 						</DropdownMenu.Content>
 					</DropdownMenu.Portal>

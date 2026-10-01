@@ -95,10 +95,37 @@
 			: []
 	);
 
+	// Bends of a single selected connector: elbow segments slide; straight/curve get insert + move handles.
+	const bendHandles = $derived.by(() => {
+		if (endHandles.length === 0) return [];
+		const c = selectedConnectors[0];
+		if (c?.type !== 'connector') return [];
+		void [viewport.x, viewport.y, viewport.zoom];
+		const g = connectorGeometry(c, store.world);
+		const mid = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+			toScreen({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+		if (c.routing === 'elbow') {
+			const pts = g.points;
+			const out: { id: string; x: number; y: number; round: boolean }[] = [];
+			for (let i = 1; i + 2 < pts.length; i++)
+				out.push({ id: `bend:${i}`, ...mid(pts[i]!, pts[i + 1]!), round: false });
+			return out;
+		}
+		const control = [g.start, ...c.waypoints, g.end];
+		return [
+			...control
+				.slice(0, -1)
+				.map((p, i) => ({ id: `bend:${i}`, ...mid(p, control[i + 1]!), round: false })),
+			...c.waypoints.map((w, i) => ({ id: `wp:${i}`, ...toScreen(w), round: true }))
+		];
+	});
+
 	// Handles are hit-tested before elements by the pointer router.
 	$effect(() =>
 		ctx.handles.register((p) => {
 			for (const h of endHandles)
+				if (Math.hypot(h.x - p.x, h.y - p.y) <= HANDLE_HIT_RADIUS) return h.id;
+			for (const h of bendHandles)
 				if (Math.hypot(h.x - p.x, h.y - p.y) <= HANDLE_HIT_RADIUS) return h.id;
 			// A selected connector's label can be dragged along the path.
 			const l = endHandles.length ? connectorLines[0]?.label : null;
@@ -138,6 +165,31 @@
 			stroke-width="1.5"
 			stroke-opacity="0.6"
 		/>
+	{/each}
+	{#each bendHandles as h (h.id)}
+		{#if h.round}
+			<circle
+				cx={h.x}
+				cy={h.y}
+				r="4"
+				fill="var(--selection)"
+				stroke="white"
+				stroke-width="1.5"
+				data-handle={h.id}
+			/>
+		{:else}
+			<rect
+				x={h.x - 4}
+				y={h.y - 4}
+				width="8"
+				height="8"
+				transform="rotate(45 {h.x} {h.y})"
+				fill="white"
+				stroke="var(--selection)"
+				stroke-width="1.5"
+				data-handle={h.id}
+			/>
+		{/if}
 	{/each}
 	{#each endHandles as h (h.id)}
 		<circle

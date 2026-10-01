@@ -47,9 +47,9 @@ Manual connector bends with reset, a small flowchart shape library, quick-create
 - `tests/e2e/diagram.spec.ts`: create a process shape → click the right "+" three times in a row (each time on the newest shape) → 4 shapes and 3 connectors; Mod+Shift+A on the first selects 7 items; drag an elbow segment → `waypoints` is non-empty → Reset route → empty. **Mixed diagram:** sticky → doc card → image → shape connected via quick-create or the connector tool, all attached.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `pnpm verify` and `pnpm test:e2e` pass
 - [ ] A 20-node mixed diagram can be built in under 3 minutes (manual; note the time in PROGRESS)
-- [ ] **M4 demo:** connect anything to anything, style it, bend it, reset it
+- [x] **M4 demo:** connect anything to anything, style it, bend it, reset it
 
 ## Out of scope
 Swimlanes, auto-layout, connector-to-connector junctions.

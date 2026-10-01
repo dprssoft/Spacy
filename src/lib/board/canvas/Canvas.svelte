@@ -7,6 +7,9 @@
 	import { getBoard } from '../context';
 	import { centeredOrigin, screenToWorld } from '../engine/viewport';
 	import { ACCEPTED_TYPES, importImageFiles } from '../images/importImages';
+	import { SHAPE_DRAG_TYPE, SHAPE_KINDS } from '../elements/shape/paths';
+	import { createShapeAt } from '../tools/create';
+	import { syncFrameMembership } from '../frameMembership';
 	import { pointerRouter } from '../tools/pointerRouter';
 	import ZoomControls from '../ui/ZoomControls.svelte';
 	import { viewportInput } from './viewportInput';
@@ -61,8 +64,14 @@
 	// Image files dropped onto the canvas land where they were dropped.
 	let dropping = $state(false);
 	const hasFiles = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files');
+	const hasShape = (e: DragEvent) => !!e.dataTransfer?.types.includes(SHAPE_DRAG_TYPE);
 
 	function ondragover(e: DragEvent) {
+		if (hasShape(e)) {
+			e.preventDefault();
+			if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+			return;
+		}
 		if (!hasFiles(e)) return;
 		e.preventDefault();
 		if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
@@ -70,6 +79,22 @@
 	}
 
 	function ondrop(e: DragEvent) {
+		if (hasShape(e) && container) {
+			e.preventDefault();
+			const kind = SHAPE_KINDS.find(
+				(k) => k.kind === e.dataTransfer?.getData(SHAPE_DRAG_TYPE)
+			)?.kind;
+			if (!kind) return;
+			const r = container.getBoundingClientRect();
+			const at = screenToWorld(viewport.vp, { x: e.clientX - r.left, y: e.clientY - r.top });
+			ctx.undo.stopCapturing();
+			const id = createShapeAt(ctx, kind, at);
+			syncFrameMembership(ctx, [id]);
+			ctx.undo.stopCapturing();
+			ctx.tools.setTool('select');
+			ctx.selection.set([id]);
+			return;
+		}
 		if (!hasFiles(e) || !container) return;
 		e.preventDefault();
 		dropping = false;

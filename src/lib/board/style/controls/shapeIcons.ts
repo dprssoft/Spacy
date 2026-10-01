@@ -6,8 +6,4 @@ export function shapeIconPath(kind: ShapeKind): string {
 	return shapePath(kind, 16, 12, 2, 1);
 }
 
-export const BASIC_KINDS: { kind: ShapeKind; label: string }[] = [
-	{ kind: 'rect', label: 'Rectangle' },
-	{ kind: 'ellipse', label: 'Ellipse' },
-	{ kind: 'diamond', label: 'Diamond' }
-];
+export { SHAPE_KINDS as BASIC_KINDS } from '../../elements/shape/paths';

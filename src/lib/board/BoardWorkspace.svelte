@@ -12,6 +12,8 @@
 	import { SelectionState } from './selection.svelte';
 	import SelectionOverlay from './canvas/SelectionOverlay.svelte';
 	import ConnectOverlay from './canvas/ConnectOverlay.svelte';
+	import QuickCreateButtons from './canvas/QuickCreateButtons.svelte';
+	import { diagramShortcuts } from './diagram/diagramShortcuts';
 	import PreviewOverlay from './canvas/PreviewOverlay.svelte';
 	import { installConnectorHooks } from './diagram/ops';
 	import { imagePaste, onCopyEvent, onPasteEvent } from './commands/clipboard';
@@ -61,7 +63,8 @@
 		...toolShortcuts,
 		...viewShortcuts,
 		...selectShortcuts,
-		...editShortcuts
+		...editShortcuts,
+		...diagramShortcuts
 	]);
 	setBoard(ctx);
 	const title = new BoardTitle(ctx.id, ctx.doc);
@@ -140,6 +143,7 @@
 					<PreviewOverlay />
 					<ConnectOverlay />
 					<SelectionOverlay />
+					<QuickCreateButtons />
 					<StylePopover />
 				{/snippet}
 			</Canvas>

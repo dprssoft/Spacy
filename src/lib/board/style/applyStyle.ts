@@ -1,5 +1,13 @@
 import { updateElements } from '$lib/model/ops';
-import type { Element, ElementPatch, Marker, Routing, ShapeKind, Style } from '$lib/model/types';
+import type {
+	Element,
+	ElementPatch,
+	Marker,
+	Point,
+	Routing,
+	ShapeKind,
+	Style
+} from '$lib/model/types';
 import type { BoardContext } from '../context';
 
 export type StylePatch = Partial<Omit<Style, 'font'>> & { font?: Partial<Style['font']> };
@@ -15,6 +23,7 @@ export interface AppearancePatch {
 	markerStart?: Marker;
 	markerEnd?: Marker;
 	labelBackground?: boolean;
+	waypoints?: Point[];
 }
 
 export function mergeStyle(style: Style, patch: StylePatch): Style {
@@ -29,6 +38,7 @@ export function appearancePatch(el: Element, patch: AppearancePatch): ElementPat
 	if (patch.color && el.type === 'sticky') out.color = patch.color;
 	if (el.type === 'connector') {
 		if (patch.routing) out.routing = patch.routing;
+		if (patch.waypoints) out.waypoints = patch.waypoints;
 		if (patch.markerStart) out.markerStart = patch.markerStart;
 		if (patch.markerEnd) out.markerEnd = patch.markerEnd;
 		if (patch.labelBackground !== undefined)

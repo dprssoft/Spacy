@@ -164,7 +164,7 @@
 						/>
 					</svg>
 				{/snippet}
-				<div role="radiogroup" aria-label="Shape" class="flex gap-1">
+				<div role="radiogroup" aria-label="Shape" class="grid grid-cols-6 gap-1">
 					{#each BASIC_KINDS as k (k.kind)}
 						<button
 							type="button"
