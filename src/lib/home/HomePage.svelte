@@ -8,6 +8,7 @@
 	import type { BoardSort } from '$lib/storage/types';
 	import * as actions from './actions';
 	import { BoardsQuery } from './boards.svelte';
+	import BackupReminder from './BackupReminder.svelte';
 	import BoardGrid from './BoardGrid.svelte';
 	import DropZone from './DropZone.svelte';
 	import GridToolbar from './GridToolbar.svelte';
@@ -15,6 +16,7 @@
 	import { HomeUI, setHomeUI, type Layout } from './homeUI.svelte';
 	import Sidebar from './Sidebar.svelte';
 	import TemplatesRow from './TemplatesRow.svelte';
+	import { handleLaunchFiles } from './fileActions';
 	import { parseView } from './views';
 
 	const SORTS: BoardSort[] = ['opened', 'updated', 'created', 'title'];
@@ -45,6 +47,8 @@
 		void purgeExpiredTrash().catch((err) => console.error('Trash purge failed', err));
 	});
 
+	$effect(() => handleLaunchFiles());
+
 	// Keeps "Edited …" labels fresh while the page stays open.
 	let now = $state(Date.now());
 	$effect(() => {
@@ -67,6 +71,7 @@
 		<Sidebar active={view} />
 		<main class="min-h-0 flex-1 overflow-y-auto">
 			<div class="mx-auto max-w-7xl space-y-8 p-4 md:p-8">
+				<BackupReminder />
 				{#if (view === 'recent' || view === 'all') && !query.query}
 					<TemplatesRow />
 				{/if}

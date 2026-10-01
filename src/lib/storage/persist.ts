@@ -1,7 +1,11 @@
 let requested: Promise<boolean> | null = null;
 
-/** Asks the browser not to evict our data under storage pressure. Once per session; never throws. */
-export function requestPersistentStorage(): Promise<boolean> {
+/**
+ * Asks the browser not to evict our data under storage pressure. Once per session unless `again`
+ * (an explicit user request); never throws.
+ */
+export function requestPersistentStorage(again = false): Promise<boolean> {
+	if (again) requested = null;
 	requested ??= (async () => {
 		try {
 			if (await navigator.storage?.persisted?.()) return true;

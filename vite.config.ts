@@ -2,9 +2,15 @@
 import tailwindcss from '@tailwindcss/vite';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig } from 'vite';
+import pkg from './package.json' with { type: 'json' };
+
+const FALLBACK = 'index.html';
+const BUILD_ID = `${pkg.version}-${Date.now().toString(36)}`;
 
 export default defineConfig({
+	define: { __APP_VERSION__: JSON.stringify(pkg.version) },
 	plugins: [
 		tailwindcss(),
 		sveltekit({
@@ -14,7 +20,46 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 			// SPA mode: every route falls back to index.html (see plan/00-architecture.md §2).
-			adapter: adapter({ fallback: 'index.html' })
+			adapter: adapter({ fallback: FALLBACK }),
+			// Absolute asset URLs: the service worker serves the same page for every route when offline.
+			paths: { relative: false }
+		}),
+		SvelteKitPWA({
+			// 'prompt': a new version waits until the user reloads (never mid-edit).
+			registerType: 'prompt',
+			kit: {
+				adapterFallback: FALLBACK,
+				// The fallback page changes with every build (it references hashed assets).
+				// Precached as '/' (every static host and the preview server serve the fallback there).
+				spa: { fallbackMapping: '/', fallbackRevision: async () => BUILD_ID }
+			},
+			manifest: {
+				name: 'SMTHNG',
+				short_name: 'SMTHNG',
+				description: 'A whiteboard with diagrams and docs that lives in your browser.',
+				start_url: '/',
+				scope: '/',
+				display: 'standalone',
+				theme_color: '#4f46e5',
+				background_color: '#f7f7f8',
+				icons: [
+					{ src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
+					{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+					{ src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+					{
+						src: 'maskable-icon-512x512.png',
+						sizes: '512x512',
+						type: 'image/png',
+						purpose: 'maskable'
+					}
+				],
+				file_handlers: [{ action: '/', accept: { 'application/x-smthng': ['.smthng'] } }]
+			},
+			workbox: {
+				// Everything the client needs, so any route (the SPA fallback) works offline.
+				globPatterns: ['client/**/*.{js,css,html,svg,png,ico,webp,woff2,webmanifest}'],
+				navigateFallback: '/'
+			}
 		})
 	],
 	// Svelte resolves its server build under Node unless told otherwise; component tests need the browser build.

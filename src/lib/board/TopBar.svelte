@@ -7,6 +7,7 @@
 	import { resolve } from '$app/paths';
 	import InlineEditable from '$lib/shared/ui/InlineEditable.svelte';
 	import Logo from '$lib/shared/ui/Logo.svelte';
+	import SettingsMenu from '$lib/home/SettingsMenu.svelte';
 	import ThemeToggle from '$lib/shared/ui/ThemeToggle.svelte';
 	import { getBoard } from './context';
 	import SaveIndicator from './SaveIndicator.svelte';
@@ -116,5 +117,8 @@
 			</DropdownMenu.Portal>
 		</DropdownMenu.Root>
 		<ThemeToggle />
+		<SettingsMenu
+			class="inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+		/>
 	</div>
 </header>
