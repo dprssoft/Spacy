@@ -107,3 +107,19 @@
 	pointer-events: none;
 	color: var(--prose-muted);
 }
+.doc-prose .mention {
+	color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 12%, transparent);
+	border-radius: 4px;
+	padding: 0.05em 0.25em;
+	cursor: pointer;
+	white-space: nowrap;
+}
+.doc-prose .mention.mention-missing {
+	color: var(--prose-muted);
+	background: var(--prose-faint);
+	text-decoration: line-through;
+}
+.doc-prose .suggestion {
+	color: var(--accent);
+}

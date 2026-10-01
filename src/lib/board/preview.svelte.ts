@@ -16,4 +16,6 @@ export class PreviewState {
 	connector = $state<ConnectorElement | null>(null);
 	/** The element a connector end would attach to. */
 	connectTarget = $state<string | null>(null);
+	/** An element briefly highlighted after jumping to it (mention click); `n` restarts the pulse. */
+	pulse = $state<{ id: string; n: number } | null>(null);
 }

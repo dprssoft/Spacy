@@ -1,13 +1,15 @@
 <script lang="ts">
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Maximize2 from '@lucide/svelte/icons/maximize-2';
 	import { DOC_CARD_HEADER_H } from '$lib/model/defaults';
 	import { updateElement } from '$lib/model/ops';
 	import type { DocCardElement } from '$lib/model/types';
 	import { getBoard } from '../../context';
 	import { setCollapsed } from './collapse';
 
-	let { el, editingTitle }: { el: DocCardElement; editingTitle: boolean } = $props();
+	let { el, editingTitle, onopen }: { el: DocCardElement; editingTitle: boolean; onopen(): void } =
+		$props();
 
 	const ctx = getBoard();
 	let draft = $state('');
@@ -29,6 +31,7 @@
 
 <div
 	class="flex shrink-0 items-center gap-1 border-b px-3"
+	data-doccard-header
 	style:height="{DOC_CARD_HEADER_H}px"
 	style:border-color={el.collapsed
 		? 'transparent'
@@ -67,6 +70,18 @@
 			}}
 		/>
 	{:else}
-		<div class="min-w-0 flex-1 truncate px-1 font-semibold" data-doccard-title>{el.title}</div>
+		<div class="min-w-0 truncate px-1 font-semibold" data-doccard-title>{el.title}</div>
+		<div class="flex-1"></div>
 	{/if}
+	<button
+		type="button"
+		class="pointer-events-auto -mr-1.5 inline-flex size-6 shrink-0 items-center justify-center rounded opacity-60 hover:bg-black/5 hover:opacity-100"
+		aria-label="Open in focus mode"
+		title="Open (Ctrl/⌘+Enter)"
+		data-interactive
+		onpointerdown={(e) => e.stopPropagation()}
+		onclick={onopen}
+	>
+		<Maximize2 class="size-3.5" aria-hidden="true" />
+	</button>
 </div>

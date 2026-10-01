@@ -43,9 +43,9 @@ A full-page focus editor for doc cards (linkable with `?doc=<id>`), a bubble for
   - Create a sticky "Login flow" → in the card type `@Log` → Enter → a chip exists → click the chip → the sticky is selected (via hooks) and the viewport centered on it.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Deep link `/board/<id>?doc=<cardId>` opens focus mode directly after load
-- [ ] Popups never render off-screen
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Deep link `/board/<id>?doc=<cardId>` opens focus mode directly after load
+- [x] Popups never render off-screen
 
 ## Out of scope
 Markdown export (step 25); comments (never, in this version).
