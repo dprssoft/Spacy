@@ -17,6 +17,7 @@
 	import { gcAssets } from './images/gcAssets';
 	import { importImageFiles } from './images/importImages';
 	import { PreviewState } from './preview.svelte';
+	import StylePopover from './style/StylePopover.svelte';
 	import { editShortcuts } from './commands/editShortcuts';
 	import { HistoryState } from './commands/history.svelte';
 	import CanvasContextMenu from './ui/CanvasContextMenu.svelte';
@@ -132,6 +133,7 @@
 				{#snippet overlay()}
 					<PreviewOverlay />
 					<SelectionOverlay />
+					<StylePopover />
 				{/snippet}
 			</Canvas>
 		</CanvasContextMenu>

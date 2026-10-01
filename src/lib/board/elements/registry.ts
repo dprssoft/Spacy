@@ -1,5 +1,6 @@
 import type { Component } from 'svelte';
 import type { Element, ElementType, Point, Rect } from '$lib/model/types';
+import type { StyleOption } from '../style/options';
 
 export interface ElementViewProps<E extends Element = Element> {
 	el: E;
@@ -22,8 +23,8 @@ export interface ElementDefinition<E extends Element = Element> {
 	keepAspect: boolean;
 	/** Double-click edits text. */
 	editableText: boolean;
-	/** Popover controls that apply (typed in step 17). */
-	styleOptions: string[];
+	/** Popover controls that apply to this type. */
+	styleOptions: readonly StyleOption[];
 }
 
 const definitions = new Map<ElementType, ElementDefinition>();
