@@ -34,10 +34,10 @@ Three built-in templates (Flowchart, Brainstorm, Meeting notes) built programmat
 - `tests/e2e/templates.spec.ts`: click "Flowchart" → the board opens with ≥ 5 shapes and ≥ 5 connectors (`[data-type="connector"]`); back home → the new board card has a thumbnail.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Templates look tidy (manual screenshots noted in PROGRESS)
-- [ ] The home route bundle doesn't include TipTap (check the build output chunks)
-- [ ] **M6 demo:** export/import, backup, templates
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Templates look tidy (manual screenshots noted in PROGRESS)
+- [x] The home route bundle doesn't include TipTap (check the build output chunks)
+- [x] **M6 demo:** export/import, backup, templates
 
 ## Out of scope
 User-defined templates ("Save as template") — later.
