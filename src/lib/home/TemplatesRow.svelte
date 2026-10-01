@@ -1,14 +1,42 @@
 <script lang="ts">
+	import { templates } from '$lib/templates';
 	import NewBoardCard from './NewBoardCard.svelte';
-	import type { TemplateCardData } from './views';
+	import TemplateCard from './TemplateCard.svelte';
 
-	// Templates arrive in step 28; until then only the "New board" card is shown.
-	let { templates = [] }: { templates?: TemplateCardData[] } = $props();
+	let section = $state<HTMLElement>();
+	let previews = $state<Record<string, string>>({});
+
+	// Previews are built in memory the first time the row is on screen (cached for the session).
+	$effect(() => {
+		if (!section) return;
+		let alive = true;
+		const observer = new IntersectionObserver((entries) => {
+			if (!entries.some((e) => e.isIntersecting)) return;
+			observer.disconnect();
+			void import('$lib/templates/preview').then(({ templatePreview }) => {
+				for (const t of templates)
+					void templatePreview(t)
+						.then((url) => {
+							if (alive) previews[t.id] = url;
+						})
+						.catch((err: unknown) => console.error('Template preview failed', err));
+			});
+		});
+		observer.observe(section);
+		return () => {
+			alive = false;
+			observer.disconnect();
+		};
+	});
 </script>
 
-<section aria-label="Create" class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
+<section
+	bind:this={section}
+	aria-label="Create"
+	class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4"
+>
 	<NewBoardCard />
 	{#each templates as template (template.id)}
-		<div class="rounded-xl border border-border bg-surface p-3 text-sm">{template.name}</div>
+		<TemplateCard {template} preview={previews[template.id] ?? null} />
 	{/each}
 </section>

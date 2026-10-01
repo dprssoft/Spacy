@@ -575,3 +575,27 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Manual Chrome → Firefox import check not done (no Firefox installed here).
 
 **Verification:** pnpm verify ✅ (566 unit tests; new: round trip of a board with every element type, an image asset and doc card text → new board with remapped asset of the same size, equal text and title, original untouched; a 3-board backup imports 3 boards; rejects non-JSON, a wrong format, a newer version and malformed base64; an invalid element is dropped with a warning) · pnpm test:e2e ✅ (115; new `files.spec.ts`: export "Launch" from the card menu → delete forever → import via the Import button → same title and the sticky "Exported" is there; importing twice gives two boards; a bad file shows the error toast; the board Export menu downloads `untitled-board.smthng`) · drop overlay screenshot reviewed.
+
+## Step 28 — Templates — 2026-10-01
+**Summary:**
+- `templates/index.ts`: registry (Flowchart, Brainstorm, Meeting notes). Metadata is eager; builders load on use. `createBoardFromTemplate` builds into a migrated temp doc (all writes `TEMPLATE`), creates the board, writes the snapshot, then renders and saves a thumbnail so the card has a preview immediately.
+- `templates/builder.ts` (`TemplateBuilder`) builds frames, shapes, stickies, texts, doc cards and connectors with explicit styles, `parentId`s and port positions (from the pure `connectableFor`), then writes them in one `TEMPLATE` transaction.
+- `templates/docContent.ts`: `setDocContent` (`prosemirrorJSONToYXmlFragment` from `@tiptap/y-tiptap` with `getSchema(docExtensions(...))`) and `fragmentToJSON` (no editor needed).
+- The templates:
+  - **Flowchart:** frame; Start → Step 1 (Blue) → OK? (Yellow) → Yes → Step 2 (Blue) → End; an elbow "No" back to Step 1.
+  - **Brainstorm:** frame; a violet "Topic" ellipse; six stickies in the six sticky colors at radius 320; curved, marker-less connectors; title text.
+  - **Meeting notes:** a 480×560 doc card (H1, date, attendees, numbered agenda, notes, 3 action items) → elbow "decisions" → frame "Decisions" with 3 stickies.
+- Start page: `TemplateCard`s next to "New board". Previews are built in memory and rendered to SVG data URLs once the row is on screen, cached per session, with a skeleton until ready. A click creates the board and opens it.
+- `render/thumbnails.ts` gained `thumbnailFromSvg`; `templates/preview.ts` renders any `Y.Doc` without a board context (`renderDocSvg`, `thumbnailForDoc`).
+
+**Deviations:**
+- `Template.build` is async (it lazy-imports the builder module).
+- Template connectors are built directly rather than with `newConnector`, which reads user defaults and pulls in the element registry. Templates look the same for everyone.
+- The template cards' accessible names are "{name} template"; "New board from template: …" collided with the existing "New board" button in tests.
+- Bundle check: the home route's static imports (node 2) contain no TipTap/ProseMirror (~149 KB gzipped). Template builders, previews and the doc-content helper are separate lazy chunks.
+
+**Dependencies added:** none.
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (572 unit tests; new, per template: every element passes `parseElement`, only `TEMPLATE` transactions, connector ends exist, frame children inside their frame; flowchart 5 shapes + 5 connectors with Yes/No; brainstorm six colors; meeting notes Markdown has the agenda and action items) · pnpm test:e2e ✅ (117; new `templates.spec.ts`: the Flowchart card shows a preview → opens a board with 5 shapes, 5 connectors and Yes/No labels → back home the board card has a thumbnail; Meeting notes opens with "Action items" and 3 checkboxes) · screenshots of the start-page row and the three boards (fit-to-content) reviewed: tidy.

@@ -10,9 +10,3 @@ export const VIEWS: readonly { id: BoardFilter; label: string; title: string }[]
 export function parseView(value: string | null): BoardFilter {
 	return VIEWS.find((v) => v.id === value)?.id ?? 'recent';
 }
-
-export interface TemplateCardData {
-	id: string;
-	name: string;
-	description: string;
-}
