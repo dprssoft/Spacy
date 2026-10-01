@@ -44,7 +44,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 22 | [Bends, shape library, quick-create](./steps/22-bends-library-quick-create.md) | E | 21 | 2.5d |
 | [x] | 23 | [Doc card element](./steps/23-doc-card-element.md) | F. Doc cards | 20 | 2d |
 | [x] | 24 | [Focus mode and mentions](./steps/24-focus-mode-mentions.md) | F | 23 | 2d |
-| [ ] | 25 | [Markdown export](./steps/25-markdown-export.md) | F | 24 | 1d |
+| [x] | 25 | [Markdown export](./steps/25-markdown-export.md) | F | 24 | 1d |
 | [ ] | 26 | [Static SVG renderer, export, thumbnails](./steps/26-static-svg-export-thumbnails.md) | G. Sharing | 22, 25 | 2d |
 | [ ] | 27 | [`.smthng` files, import, backup](./steps/27-file-format-import-export.md) | G | 26 | 1.5d |
 | [ ] | 28 | [Templates](./steps/28-templates.md) | G | 27 | 1.5d |

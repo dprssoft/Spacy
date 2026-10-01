@@ -7,6 +7,7 @@
 	import { createBoardDocEditor, mentionAt, refreshMentions } from '../../doccards/boardEditor';
 	import BubbleMenu from '../../doccards/BubbleMenu.svelte';
 	import type { Editor } from '../../doccards/editorFactory';
+	import { registerEditor } from '../../doccards/editorRegistry';
 	import { openFocus } from '../../doccards/focus';
 	import { jumpToElement } from '../../doccards/jumpTo';
 	import { isSuggestionKey } from '../../doccards/suggestionPopup.svelte';
@@ -65,6 +66,7 @@
 			bubbleMenu: menu
 		});
 		editor = ed;
+		const unregister = registerEditor(id, ed);
 		// The editor itself is the interactive element (role textbox); listen on its container.
 		node.addEventListener('keydown', onkeydown);
 		node.addEventListener('wheel', onwheel);
@@ -73,6 +75,7 @@
 			node.removeEventListener('keydown', onkeydown);
 			node.removeEventListener('wheel', onwheel);
 			node.removeEventListener('click', onclick);
+			unregister();
 			editor = null;
 			ed.destroy();
 		};

@@ -494,3 +494,24 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** The board route's JS is ~205 KB gzipped with TipTap. Lazy-loading the doccards modules is step 30.
 
 **Verification:** pnpm verify ✅ (515 unit tests; new: slash filtering, mention ranking/limit/exclusions/labels) · pnpm test:e2e ✅ (106; new `focus-mentions.spec.ts`: Mod+Enter → `?doc=` → type → back closes and the card shows the text → forward reopens → Escape closes; a deep link opens focus mode and close replaces the URL; an unknown id → toast + stripped; `/head` + Enter → H1; bubble menu Heading/Bold keeps editing; `@Log` + Enter → chip → click selects and centers the sticky with a pulse; a deleted target → struck-through chip + toast; the slash popup near the bottom stays inside the window) · screenshots of the mention popup, slash popup, bubble menu (card and focus mode) and focus mode reviewed.
+
+## Step 25 — Markdown export — 2026-10-01
+**Summary:**
+- `doccards/markdown.ts` (pure, works on the editor's JSON): `docToMarkdown(doc, { title })` handles every node in the doc card schema:
+  - Blocks: paragraphs, headings 1–3, bullet, ordered and task lists (nested, tight), blockquotes (with nested blocks), fenced code (longer fence when needed), horizontal rules, hard breaks.
+  - Inline: mentions (`@label`) and marks applied in a stable order (link ⟩ bold ⟩ italic ⟩ strike ⟩ code). Adjacent text nodes with the same marks are merged, and whitespace stays outside delimiters.
+  - Escaping: inline `\ * _ ` [ ]` everywhere, plus `#`, `>`, list markers and `1.` at line starts.
+- `docJson.ts` `getDocJSON` reads a live editor (new `editorRegistry.ts`; the canvas card and focus mode register theirs), or else a short-lived headless editor on the fragment.
+- `exportMarkdown.ts`: copy to the clipboard (toast "Copied as Markdown") or download `slug(title) || 'doc'` + `.md`. Available from a "⋯" menu in the card header and in the focus-mode top bar, and from the canvas context menu when one doc card is selected.
+- `shared/slug.ts`, `shared/download.ts`.
+
+**Deviations:**
+- Ordered-list continuation lines are indented by the marker width (3 for `1.`–`9.`, 4 for `10.`), as CommonMark requires; the plan said a fixed 3.
+- Link URLs: spaces and parentheses are percent-encoded so the `[text](url)` form stays valid.
+- Focus mode ignores Escape while a menu (the "⋯" menu) has focus.
+
+**Dependencies added:** none.
+
+**Follow-ups:** none.
+
+**Verification:** pnpm verify ✅ (547 unit tests; new: a table of every node and mark, nested bullet → ordered → task, quote with a list, code containing a fence, escaping, mention, `start: 3`, title-only, adjacent-mark merging; slug; `getDocJSON` headless vs live) · pnpm test:e2e ✅ (108; new `markdown.spec.ts`: H2 + checklist + bold typed with Markdown shortcuts → "Download .md" file content and "Copy as Markdown" clipboard content match exactly) · manual spot check: a sample covering nesting, escaping, fences, marks and hard breaks rendered as intended with `marked` (GFM), run one-off and not added to the project.
