@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createBoard, el, enableTestHooks, waitForHooks } from './helpers';
+import { createBoard, el, enableTestHooks, waitForHooks, waitForInitialView } from './helpers';
 
 test.beforeEach(async ({ page }) => {
 	await enableTestHooks(page);
@@ -44,6 +44,8 @@ test('culling keeps off-screen elements out of the DOM, and Shift+1 fits content
 }) => {
 	await createBoard(page);
 	await waitForHooks(page);
+	// Otherwise the board may open fitted to the 3,000 elements, with all of them on screen.
+	await waitForInitialView(page);
 	const total = await page.evaluate(() => window.__smthng!.perf(3000));
 	expect(total).toBe(3000);
 	await expect(page.locator('[data-element-id]').first()).toBeVisible();

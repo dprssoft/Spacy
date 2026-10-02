@@ -768,3 +768,10 @@ Reported by the human: a doc card froze the page when manipulated.
 - `render.spec.ts` "culling keeps off-screen elements out of the DOM" failed once in the full parallel run (it counted elements before the first cull) and passed 3/3 alone; it doesn't involve doc cards and was left as is.
 
 **Verification:** pnpm verify ✅ · pnpm test:e2e: 151 passed, 1 failed (the culling test above, passing on its own) · new e2e in `doccard.spec.ts` (re-enter a card by double-click and by Enter, type both times, no page errors); without the fix it fails with `effect_update_depth_exceeded`.
+
+## Extra — Flaky culling e2e test — 2026-10-02
+`render.spec.ts` "culling keeps off-screen elements out of the DOM" sometimes rendered all 3,000 elements. The canvas sets a board's initial view asynchronously (after its first size measurement and a storage read), and a board without a saved view fits its content. When the test created the elements before that, the view was fitted to them at 10 % zoom and nothing was off-screen. The app behaved as designed; the test raced it.
+
+**Fix (test only):** `waitForInitialView` in `tests/e2e/helpers.ts`, used by the culling test before it creates the elements.
+
+**Verification:** creating the elements as soon as the hooks exist reproduced the failure 6/6 (zoom 0.1, 3,000 rendered); after waiting for the view, 6/6 gave zoom 1 and 101 rendered. The test passed 10/10 with `--repeat-each=10`; pnpm lint and pnpm check ✅ · pnpm test:e2e ✅ (152).
