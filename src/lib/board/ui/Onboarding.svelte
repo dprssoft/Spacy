@@ -10,7 +10,7 @@
 		},
 		{
 			anchor: '[data-tool="connector"]',
-			text: 'Hover any object and drag from its dots to connect it to anything.'
+			text: 'Drag from an object’s + buttons or dots onto any other object to connect them.'
 		},
 		{
 			anchor: '[data-tool="doccard"]',

@@ -137,3 +137,42 @@ test('shapes can be dragged from the library onto the canvas', async ({ page }) 
 	await item.dragTo(page.getByTestId('canvas'), { targetPosition: { x: 600, y: 300 } });
 	await expect.poll(async () => (await list(page))[0]?.kind).toBe('database');
 });
+
+test('dragging a + button onto an object of another type connects them', async ({ page }) => {
+	await page.evaluate(
+		(els) => window.__smthng!.createElements(els as never),
+		[
+			el.shape('rect', -400, -60),
+			{
+				...el.shape('note', 0, -100),
+				type: 'sticky',
+				kind: undefined,
+				text: 'Note',
+				color: '#ffe066',
+				w: 180,
+				h: 180
+			}
+		]
+	);
+	await clickElement(page, 'rect');
+	const plus = (await page.locator('[data-quick-create="e"]').boundingBox())!;
+	const note = (await page.locator('[data-element-id="note"]').boundingBox())!;
+	await page.mouse.move(plus.x + plus.width / 2, plus.y + plus.height / 2);
+	await page.mouse.down();
+	await page.mouse.move(note.x + note.width / 2, note.y + note.height / 2, { steps: 8 });
+	await page.mouse.up();
+
+	const els = await list(page);
+	// A drag connects the two existing objects: nothing is copied.
+	expect(els.map((e) => e.type).sort()).toEqual(['connector', 'shape', 'sticky']);
+	const conn = els.find((e) => e.type === 'connector')!;
+	expect(conn.from).toMatchObject({ kind: 'port', elementId: 'rect' });
+	expect(conn.to).toMatchObject({ elementId: 'note' });
+	expect(await selected(page)).toEqual([conn.id]);
+
+	// A plain click on + still adds a connected copy.
+	await clickElement(page, 'rect');
+	await page.locator('[data-quick-create="s"]').click();
+	await page.keyboard.press('Escape');
+	expect((await list(page)).filter((e) => e.type === 'shape')).toHaveLength(2);
+});
