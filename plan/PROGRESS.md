@@ -753,3 +753,18 @@ Requested by the human: "drawing but not that will save every stroke as separate
 - Stylus pressure is tested through the Chromium DevTools protocol (`pointerType: 'pen'`, `force`); it has not been tried with a physical stylus.
 
 **Verification:** unit tests for brushes, frame growth, moved and resized sketches, hit testing, undo, duplicate, delete and SVG export; `sketch.spec.ts` e2e (one object per session, undo per stroke, reload, erasing measured on canvas pixels, continue and "New sketch", stylus pressure, vector export); the visual fixture includes a sketch.
+
+## Extra — Doc card freeze when editing again — 2026-10-02
+Reported by the human: a doc card froze the page when manipulated.
+
+**Cause:** editing the body of an existing card (double-click or Enter) looped an effect forever. `DocCardView`'s editable/focus effect focuses the editor, which dispatches a transaction synchronously; `BubbleMenu`'s transaction listener ran `tick++` inside that effect, so the effect both read and wrote `tick` and invalidated itself. A just-placed card was not affected (its first focus happens before the listener is attached), which is why no e2e test caught it.
+
+**Fix:**
+- `BubbleMenu`: the transaction listener bumps `tick` inside `untrack`.
+- `DocCardView`: the imperative editor calls in the editable/focus effect run inside `untrack`, so the effect depends only on `editor` and `part`.
+
+**Notes:**
+- The page hangs (about a minute) only on the dev server, where Svelte records a stack for every looped update. A production build runs the loop to Svelte's limit quickly, throws `effect_update_depth_exceeded` repeatedly and carries on, so the e2e test asserts that no page error is thrown.
+- `render.spec.ts` "culling keeps off-screen elements out of the DOM" failed once in the full parallel run (it counted elements before the first cull) and passed 3/3 alone; it doesn't involve doc cards and was left as is.
+
+**Verification:** pnpm verify ✅ · pnpm test:e2e: 151 passed, 1 failed (the culling test above, passing on its own) · new e2e in `doccard.spec.ts` (re-enter a card by double-click and by Enter, type both times, no page errors); without the fix it fails with `effect_update_depth_exceeded`.
