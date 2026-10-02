@@ -775,3 +775,14 @@ Reported by the human: a doc card froze the page when manipulated.
 **Fix (test only):** `waitForInitialView` in `tests/e2e/helpers.ts`, used by the culling test before it creates the elements.
 
 **Verification:** creating the elements as soon as the hooks exist reproduced the failure 6/6 (zoom 0.1, 3,000 rendered); after waiting for the view, 6/6 gave zoom 1 and 101 rendered. The test passed 10/10 with `--repeat-each=10`; pnpm lint and pnpm check ✅ · pnpm test:e2e ✅ (152).
+
+## Extra — Dragging big doc cards — 2026-10-02
+Requested by the human: "make dragging big doc cards faster". Measured before: a card with 1M characters dragged at 100 ms per frame, 5M at 450 ms (headless Chromium, production build).
+
+**Cause:** not script, layout or paint. A trace showed 95 ms of every frame in Blink's `EditingUtility::previousCandidateAlgorithm`. After editing ends the caret stays in the card's text, which is then read-only and `user-select: none`; on every style change the browser looks for a valid caret position and walks the whole document without finding one. It happened on any frame while such a selection existed, not only while dragging that card.
+
+**Fix:** `DocCardView` removes the selection from the card when body editing ends.
+
+**Measured after:** 17 ms per frame (60 fps) at 1M and at 5M characters. Leaving editing also got faster (279 → 188 ms at 1M). Typing and reopening are unchanged (30 ms per key and 2.3 s at 1M).
+
+**Verification:** `perf-guard.spec.ts`: after Escape no selection is left inside the card. pnpm verify ✅.

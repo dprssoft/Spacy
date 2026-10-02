@@ -91,3 +91,27 @@ test('doc cards show a preview when zoomed far out and an editor when zoomed in'
 	});
 	await expect(page.locator('[data-doccard-body] .ProseMirror')).toHaveText('Readable text');
 });
+
+test('leaving a doc card leaves no selection in its text', async ({ page }) => {
+	// A caret left in the read-only text made the browser search the whole document for a valid
+	// position on every frame: dragging a card with 1M characters ran at 10 fps.
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	const box = (await page.getByTestId('canvas').boundingBox())!;
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('n');
+	await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+	const editor = page.locator('[data-doccard-body] .ProseMirror');
+	await expect(editor).toBeFocused();
+	await page.keyboard.type('Some text');
+	const inCard = () =>
+		page.evaluate(() => {
+			const node = getSelection()?.anchorNode;
+			return !!node && !!document.querySelector('[data-doccard-body]')?.contains(node);
+		});
+	expect(await inCard()).toBe(true);
+	await page.keyboard.press('Escape');
+	await expect(editor).not.toBeFocused();
+	expect(await inCard()).toBe(false);
+});
