@@ -63,6 +63,8 @@ export interface DocEditorOptions extends DocExtensionOptions {
 	element: HTMLElement;
 	fragment: Y.XmlFragment;
 	editable: boolean;
+	/** Accessible name of the text box. */
+	label?: string;
 	onFocus?(): void;
 	onBlur?(): void;
 }
@@ -71,6 +73,10 @@ export function createDocEditor(opts: DocEditorOptions): Editor {
 	return new Editor({
 		element: opts.element,
 		editable: opts.editable,
+		// The editor is a multi-line text box: give it a name for screen readers.
+		editorProps: {
+			attributes: { 'aria-label': opts.label ?? 'Doc card text', 'aria-multiline': 'true' }
+		},
 		extensions: docExtensions(opts.fragment, opts),
 		onFocus: () => opts.onFocus?.(),
 		onBlur: () => opts.onBlur?.()

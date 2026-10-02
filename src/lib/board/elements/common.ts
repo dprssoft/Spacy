@@ -45,4 +45,25 @@ export function fillColor(style: Style): string {
 	return style.fill;
 }
 
+/** The default dark ink. On the canvas it follows the theme so it stays visible on a dark board. */
+export const DEFAULT_INK = '#1e1e1e';
+
+/**
+ * Render-time color for strokes and text drawn directly on the canvas: the default dark ink
+ * becomes `--ink` (light in dark mode). Never written to data; exports use the authored color.
+ */
+export function ink(color: string): string {
+	return color.toLowerCase() === DEFAULT_INK ? 'var(--ink)' : color;
+}
+
+/** A font whose default-ink text follows the theme (`onCanvas`: it isn't on an opaque fill). */
+export function inkFont(font: Style['font'], onCanvas = true): Style['font'] {
+	return onCanvas ? { ...font, color: ink(font.color) } : font;
+}
+
+/** True when a shape's text sits on the canvas background rather than on its own solid fill. */
+export function seeThrough(style: Style): boolean {
+	return style.fillStyle !== 'solid' || style.fill === 'transparent';
+}
+
 export const radiusPx = (style: Style): number => RADIUS_PX[style.radius];

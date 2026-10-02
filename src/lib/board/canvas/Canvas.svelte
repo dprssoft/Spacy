@@ -4,6 +4,7 @@
 	import type { Rect } from '$lib/model/types';
 	import { debounce } from '$lib/shared/debounce';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
+	import { cycleSelection } from '../a11y/keyboard';
 	import { getBoard } from '../context';
 	import { centeredOrigin, screenToWorld } from '../engine/viewport';
 	import { ACCEPTED_TYPES, importImageFiles } from '../images/importImages';
@@ -105,13 +106,21 @@
 		void importImageFiles(ctx, files, at);
 	}
 
+	// Tab on the canvas itself walks through the objects; past the last one, focus moves on.
+	function onkeydown(e: KeyboardEvent) {
+		if (e.key !== 'Tab' || e.target !== container || e.ctrlKey || e.metaKey || e.altKey) return;
+		if (ctx.selection.editingId || ctx.tools.current !== 'select') return;
+		if (cycleSelection(ctx, e.shiftKey)) e.preventDefault();
+		else ctx.selection.clear();
+	}
+
 	const gridSize = $derived(
 		GRID_SIZE * viewport.zoom < 8 ? GRID_SIZE * 4 * viewport.zoom : GRID_SIZE * viewport.zoom
 	);
 </script>
 
 <!-- The canvas is a focusable application region: it must receive keyboard shortcuts. -->
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
 <div
 	bind:this={container}
 	{@attach viewportInput(viewport, {
@@ -131,8 +140,11 @@
 	{ondragover}
 	ondragleave={() => (dropping = false)}
 	{ondrop}
+	{onkeydown}
 	role="application"
+	aria-roledescription="whiteboard"
 	aria-label="Board canvas"
+	aria-describedby="canvas-help"
 	tabindex="0"
 	data-testid="canvas"
 >
@@ -156,4 +168,8 @@
 	{/if}
 </div>
 
+<p id="canvas-help" class="sr-only">
+	Use tools from the toolbar. Press Enter to create with the active tool, Tab to move between
+	objects. Press ? for keyboard shortcuts.
+</p>
 <ZoomControls {viewport} {contentBounds} />

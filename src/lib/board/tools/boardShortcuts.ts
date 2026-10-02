@@ -1,5 +1,7 @@
 import type { ShapeKind } from '$lib/model/types';
+import { createAtCenter, CREATION_TOOLS } from '../a11y/keyboard';
 import type { BoardContext } from '../context';
+import { help } from '../ui/helpState.svelte';
 import { nextZoomStep, zoomAt } from '../engine/viewport';
 import { openImagePicker } from '../images/importImages';
 import type { Shortcut } from './shortcuts';
@@ -29,6 +31,21 @@ const zoomStep = (ctx: BoardContext, dir: 1 | -1) =>
 	);
 
 export const toolShortcuts: Shortcut[] = [
+	{
+		id: 'tool.createAtCenter',
+		keys: ['Enter'],
+		label: 'Create at the center (with a tool active)',
+		group: 'Tools',
+		when: (ctx) => CREATION_TOOLS.includes(ctx.tools.current),
+		run: (ctx) => void createAtCenter(ctx)
+	},
+	{
+		id: 'help.shortcuts',
+		keys: ['?'],
+		label: 'Keyboard shortcuts',
+		group: 'View',
+		run: () => (help.shortcutsOpen = true)
+	},
 	tool('select', 'V', 'Select', 'select'),
 	tool('hand', 'H', 'Hand', 'hand'),
 	tool('pen', 'P', 'Pen', 'pen'),

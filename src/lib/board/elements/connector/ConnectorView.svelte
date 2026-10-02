@@ -6,7 +6,7 @@
 	import { connectorGeometry } from '../../diagram/geometry';
 	import { markerShape, markerSize, markerTransform } from '../../diagram/markers';
 	import { pointAt } from '../../diagram/routing';
-	import { dashArray } from '../common';
+	import { dashArray, ink } from '../common';
 	import type { ElementViewProps } from '../registry';
 
 	let { el, editing }: ElementViewProps<ConnectorElement> = $props();
@@ -45,8 +45,8 @@
 		<path
 			d={shape.d}
 			{transform}
-			fill={shape.open ? 'none' : shape.filled ? el.style.stroke : 'var(--canvas-bg)'}
-			stroke={el.style.stroke}
+			fill={shape.open ? 'none' : shape.filled ? ink(el.style.stroke) : 'var(--canvas-bg)'}
+			stroke={ink(el.style.stroke)}
 			stroke-width={el.style.strokeWidth}
 			stroke-linejoin="round"
 			stroke-linecap="round"
@@ -58,7 +58,7 @@
 	<path
 		d={geo.d}
 		fill="none"
-		stroke={el.style.stroke}
+		stroke={ink(el.style.stroke)}
 		stroke-width={el.style.strokeWidth}
 		stroke-dasharray={dashArray(el.style.dash, el.style.strokeWidth)}
 		stroke-linecap="round"
@@ -77,7 +77,7 @@
 		style:font-family={FONT_FAMILY}
 		style:font-size="{fontPx}px"
 		style:line-height={LINE_HEIGHT}
-		style:color={el.style.stroke === 'transparent' ? 'var(--text)' : el.style.font.color}
+		style:color={el.style.stroke === 'transparent' ? 'var(--text)' : ink(el.style.font.color)}
 		data-connector-label
 	>
 		{#if editing}

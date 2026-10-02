@@ -660,3 +660,37 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Decide whether the all-visible pan case needs a canvas renderer at low zoom; re-measure the fps numbers on real hardware.
 
 **Verification:** pnpm verify ✅ (581 unit tests; new: fragment → JSON equals editor JSON, stroke memo) · pnpm test:e2e ✅ (125; new `perf-guard.spec.ts`: on a 500-element mixed board, dragging one element changes no other element's render count; the start page's static scripts contain no TipTap/ProseMirror; a doc card shows the preview at 30 % zoom and its editor at 100 %).
+
+## Step 31 — Accessibility, help, onboarding — 2026-10-03
+**Summary:**
+- **Axe audit** (`tests/e2e/a11y.spec.ts`, `@axe-core/playwright`): zero serious or critical violations on the empty start page, the start page with boards, the settings menu, a board with a selection and the style popover, focus mode, the export dialog, the shortcuts dialog, and the start page and a board in dark mode.
+- **Toolbar:** one tab stop with arrow keys, Home and End (`ui/rovingTabindex.ts`). Labels include the key ("Rectangle (R)" style: "Select (V)", "Doc card (N)"), `aria-pressed` on tools, and the shapes flyout is announced as a menu.
+- **Canvas:** `role="application"`, `aria-roledescription="whiteboard"`, and a hidden description. `LiveAnnouncer` (polite live region) speaks tool changes, selection changes and local create/delete.
+- **Keyboard-only flows** (`a11y/keyboard.ts`):
+  - Enter with a creation tool makes the element at the center of the view and selects it (text goes straight to typing).
+  - Tab / Shift+Tab on the canvas select objects in reading order (`a11y/readingOrder.ts`), bringing them into view.
+- **Shortcuts dialog** (`?`): generated from the registry, grouped, with platform key labels and a search filter. It notes that Mod+Alt+Arrow connects by keyboard.
+- **Help menu** next to the zoom controls: Keyboard shortcuts, Show tips again, About.
+- **Onboarding:** three tips anchored to the toolbar, the connector tool and the doc card tool, shown on the first board (pref `onboarded`), with Next / Skip.
+- **Focus ring:** a zero-specificity global `:focus-visible` outline (2 px accent, offset 2), so every control has one; components with their own ring keep it.
+- **Reduced motion:** animations and transitions are cut globally, card hover lifts are `motion-safe` only, `animateTo` was already instant and the pulse static.
+- **Touch:** on coarse pointers, selection handles are 14 px with a 14 px hit radius, and toolbar buttons are 44 px.
+
+**Dark mode audit** (screenshots of a board with every element kind, the style popover, the shortcuts dialog and the tips):
+- Default-ink (`#1e1e1e`) strokes and text drawn on the canvas render as `--ink` (`#e9e9ee` in dark): shape outlines, line-art shapes, plain text, pen strokes, connectors with their markers and labels. Render-time only (`elements/common.ts` `ink`); data and exports keep the authored color.
+- Sticky text stays dark. Menus, dialogs, tips and the toolbar are readable.
+- Fixed: the checkbox in a (white) canvas doc card followed the dark scheme; canvas card bodies now use `color-scheme: light` (focus mode follows the theme).
+
+**Deviations:**
+- **Tab doesn't trap focus:** past the last (or before the first) object, Tab leaves the canvas instead of wrapping.
+- **Shape text on a solid fill keeps its authored color** in dark mode (light text on a white shape would be unreadable). It maps only when the shape is unfilled, semi-filled or line art. Pen strokes are mapped too (the step listed shapes, text and connectors).
+- Deleted elements are announced generically ("Element deleted", "3 elements deleted").
+- Axe excludes the world layer's internals (`[data-testid="world"]`): they are user content in any authored color, hit-tested in code; the canvas itself is the accessible object.
+- e2e: `createBoard` marks the browser as onboarded, so the first-run tips don't sit over the canvas in every test; `onboarding.spec.ts` opts in.
+- **Bug caught before commit:** the first version of the roving tabindex watched `tabindex` with a MutationObserver and also wrote it, which looped and hung the page (the whole e2e suite timed out). It now watches only `aria-pressed` and writes only real changes.
+
+**Dependencies added:** `@axe-core/playwright` 4.13.0 (dev).
+
+**Follow-ups:** Manual checks not done: a full keyboard-only pass of the start page and board by hand, and a VoiceOver/NVDA spot check of the announcements. The actor shape's label overlaps its figure (not dark-specific).
+
+**Verification:** pnpm verify ✅ (593 unit tests; new: reading order and Tab stepping, announcement texts, ink mapping) · pnpm test:e2e ✅ (136; new `a11y.spec.ts` (6), `keyboard-only.spec.ts`: R → Enter creates a rectangle → Enter edits → type → Escape → ArrowRight ×10 moves 10 px → `?` opens the dialog, search filters, Escape closes; Enter creation for sticky, doc card, frame and text; Tab order a → b → c then out of the canvas; toolbar arrows/Home/End with a single tab stop; `onboarding.spec.ts`: three tips once, again from Help, About).

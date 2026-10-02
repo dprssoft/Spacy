@@ -4,7 +4,8 @@
 	import type { ShapeElement, StickyElement, TextElement } from '$lib/model/types';
 	import { debounce } from '$lib/shared/debounce';
 	import { getBoard } from '../context';
-	import { fontToCss, valignToJustify } from './common';
+	import { fontToCss, inkFont, seeThrough, valignToJustify } from './common';
+	import { isLineArt } from './shape/paths';
 
 	type Editable = ShapeElement | StickyElement | TextElement;
 	let { el }: { el: Editable } = $props();
@@ -21,7 +22,11 @@
 
 	const autoWidth = $derived(el.type === 'text' && el.autoWidth);
 	const font = $derived(
-		fontToCss(el.type === 'sticky' ? { ...el.style.font, color: STICKY_TEXT_COLOR } : el.style.font)
+		fontToCss(
+			el.type === 'sticky'
+				? { ...el.style.font, color: STICKY_TEXT_COLOR }
+				: inkFont(el.style.font, el.type === 'text' || isLineArt(el.kind) || seeThrough(el.style))
+		)
 	);
 	const padding = $derived(el.type === 'sticky' ? 16 : el.type === 'shape' ? 8 : 0);
 

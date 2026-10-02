@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { StrokeElement } from '$lib/model/types';
+	import { ink } from '../common';
 	import type { ElementViewProps } from '../registry';
 	import { strokePathMemo } from './strokePath';
 
@@ -12,5 +13,5 @@
 </script>
 
 <svg width={el.w} height={el.h} class="absolute inset-0 overflow-visible" aria-hidden="true">
-	<path {d} fill={el.style.stroke} />
+	<path {d} fill={ink(el.style.stroke)} />
 </svg>

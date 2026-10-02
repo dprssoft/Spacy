@@ -1,6 +1,15 @@
 <script lang="ts">
 	import type { ShapeElement } from '$lib/model/types';
-	import { dashArray, fillColor, fontToCss, radiusPx, valignToJustify } from '../common';
+	import {
+		dashArray,
+		fillColor,
+		fontToCss,
+		ink,
+		inkFont,
+		radiusPx,
+		seeThrough,
+		valignToJustify
+	} from '../common';
 	import type { ElementViewProps } from '../registry';
 	import { isLineArt, shapePath } from './paths';
 
@@ -13,7 +22,7 @@
 	<path
 		{d}
 		fill={isLineArt(el.kind) ? 'none' : fillColor(el.style)}
-		stroke={el.style.stroke}
+		stroke={ink(el.style.stroke)}
 		stroke-width={el.style.strokeWidth}
 		stroke-dasharray={dashArray(el.style.dash, el.style.strokeWidth)}
 		stroke-linecap="round"
@@ -23,7 +32,9 @@
 {#if !editing && el.text}
 	<div
 		class="absolute inset-0 flex flex-col overflow-visible p-2 break-words whitespace-pre-wrap"
-		style="justify-content:{valignToJustify(el.style.font.valign)};{fontToCss(el.style.font)}"
+		style="justify-content:{valignToJustify(el.style.font.valign)};{fontToCss(
+			inkFont(el.style.font, isLineArt(el.kind) || seeThrough(el.style))
+		)}"
 	>
 		<div>{el.text}</div>
 	</div>

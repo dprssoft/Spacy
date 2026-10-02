@@ -11,7 +11,12 @@
 	const ctx = getBoard();
 	const { selection, store, viewport, tools } = ctx;
 
-	const HANDLE_HIT_RADIUS = 7;
+	// Touch and pen need bigger targets: 14 px handles instead of 8.
+	const COARSE = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+	const HANDLE_HIT_RADIUS = COARSE ? 14 : 7;
+	/** Half the side of a square handle / radius of a round one. */
+	const H = COARSE ? 7 : 4;
+	const R = COARSE ? 8 : 5;
 
 	const toScreen = (p: Point) => worldToScreen(viewport.vp, p);
 	const outline = (el: Element) =>
@@ -171,7 +176,7 @@
 			<circle
 				cx={h.x}
 				cy={h.y}
-				r="4"
+				r={H}
 				fill="var(--selection)"
 				stroke="white"
 				stroke-width="1.5"
@@ -179,10 +184,10 @@
 			/>
 		{:else}
 			<rect
-				x={h.x - 4}
-				y={h.y - 4}
-				width="8"
-				height="8"
+				x={h.x - H}
+				y={h.y - H}
+				width={H * 2}
+				height={H * 2}
 				transform="rotate(45 {h.x} {h.y})"
 				fill="white"
 				stroke="var(--selection)"
@@ -195,7 +200,7 @@
 		<circle
 			cx={h.x}
 			cy={h.y}
-			r="5"
+			r={R}
 			fill="white"
 			stroke="var(--selection)"
 			stroke-width="1.5"
@@ -220,7 +225,7 @@
 			<circle
 				cx={h.x}
 				cy={h.y}
-				r="5"
+				r={R}
 				fill="white"
 				stroke="var(--selection)"
 				stroke-width="1.5"
@@ -228,10 +233,10 @@
 			/>
 		{:else}
 			<rect
-				x={h.x - 4}
-				y={h.y - 4}
-				width="8"
-				height="8"
+				x={h.x - H}
+				y={h.y - H}
+				width={H * 2}
+				height={H * 2}
 				rx="1.5"
 				fill="white"
 				stroke="var(--selection)"
