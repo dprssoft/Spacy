@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Bold from '@lucide/svelte/icons/bold';
 	import Code from '@lucide/svelte/icons/code';
 	import Heading1 from '@lucide/svelte/icons/heading-1';
@@ -19,7 +20,9 @@
 	$effect(() => {
 		const ed = editor;
 		if (!ed) return;
-		const bump = () => tick++;
+		// Transactions are also dispatched from inside other components' effects (focusing the
+		// editor): a tracked read of `tick` there would make that effect depend on it and loop.
+		const bump = () => untrack(() => tick++);
 		ed.on('transaction', bump);
 		return () => {
 			ed.off('transaction', bump);

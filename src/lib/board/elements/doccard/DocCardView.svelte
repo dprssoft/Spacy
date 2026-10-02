@@ -101,15 +101,19 @@
 		const ed = editor;
 		if (!ed) return;
 		const on = part === 'body';
-		ed.setEditable(on);
-		if (!on) {
-			if (ed.view.hasFocus()) (ed.view.dom as HTMLElement).blur();
-			return;
-		}
-		const at = untrack(() => ctx.selection.editingAt);
-		const pos = at ? ed.view.posAtCoords({ left: at.x, top: at.y }) : null;
-		if (pos) ed.chain().setTextSelection(pos.pos).focus(null, { scrollIntoView: false }).run();
-		else ed.commands.focus('end', { scrollIntoView: false });
+		// The editor calls emit events synchronously; whatever their listeners read must not become
+		// a dependency of this effect (it would rerun, focus again and loop).
+		untrack(() => {
+			ed.setEditable(on);
+			if (!on) {
+				if (ed.view.hasFocus()) (ed.view.dom as HTMLElement).blur();
+				return;
+			}
+			const at = ctx.selection.editingAt;
+			const pos = at ? ed.view.posAtCoords({ left: at.x, top: at.y }) : null;
+			if (pos) ed.chain().setTextSelection(pos.pos).focus(null, { scrollIntoView: false }).run();
+			else ed.commands.focus('end', { scrollIntoView: false });
+		});
 	});
 
 	// Mention chips of deleted objects are struck through.

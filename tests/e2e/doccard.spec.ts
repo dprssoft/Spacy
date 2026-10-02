@@ -60,6 +60,33 @@ test('selecting text with the mouse never moves the card', async ({ page }) => {
 	expect(selected.length).toBeGreaterThan(3);
 });
 
+test('an existing card can be edited again by double-click and by Enter', async ({ page }) => {
+	// Focusing the editor once looped an effect: a hang in dev, an uncaught error in a build.
+	const errors: string[] = [];
+	page.on('pageerror', (e) => errors.push(e.message));
+	await createBoard(page);
+	await waitForHooks(page);
+	const editor = await placeCard(page);
+	await page.keyboard.type('First');
+	await page.keyboard.press('Escape');
+	await expect(editor).not.toBeFocused();
+
+	// Below the text: the caret goes to the end.
+	const body = (await page.locator('[data-doccard-body]').boundingBox())!;
+	await page.mouse.dblclick(body.x + body.width / 2, body.y + body.height - 20);
+	await expect(editor).toBeFocused();
+	await page.keyboard.type(' second');
+	await expect(editor).toHaveText('First second');
+	await page.keyboard.press('Escape');
+	await expect(editor).not.toBeFocused();
+
+	await page.keyboard.press('Enter');
+	await expect(editor).toBeFocused();
+	await page.keyboard.type(' third');
+	await expect(editor).toHaveText('First second third');
+	expect(errors).toEqual([]);
+});
+
 test('collapse keeps connectors attached to the header', async ({ page }) => {
 	await createBoard(page);
 	await waitForHooks(page);
