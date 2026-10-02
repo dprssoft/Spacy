@@ -40,6 +40,12 @@ The first release: a whiteboard that lives in your browser, with diagrams and do
 - `.smthng` files: export, import, full backup; "Save to file" in Chromium.
 - Flowchart, Brainstorm and Meeting notes templates.
 
+### Pages and layout
+
+- Several pages per board, as sheet tabs in the status bar: add, rename (double-click), reorder and delete; undo returns to the page it happened on.
+- Office-style layout: a ribbon toolbar with Select, Draw, Insert and Options groups, and a status bar with pages, an object count and zoom.
+- Drag a "+" button onto any object to connect to it.
+
 ### M7 — Release quality
 
 - Installable and fully offline (PWA) with an update prompt; settings and a backup reminder.

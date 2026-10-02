@@ -28,6 +28,7 @@
 	import { AssetUrlCache } from './images/assetUrls';
 	import { gcAssets } from './images/gcAssets';
 	import { importImageFiles } from './images/importImages';
+	import { PagesState } from './pages.svelte';
 	import { BoardPrefs } from './prefs.svelte';
 	import { PreviewState } from './preview.svelte';
 	import StylePopover from './style/StylePopover.svelte';
@@ -43,6 +44,7 @@
 	import LiveAnnouncer from './ui/LiveAnnouncer.svelte';
 	import Onboarding from './ui/Onboarding.svelte';
 	import ShortcutsDialog from './ui/ShortcutsDialog.svelte';
+	import StatusBar from './ui/StatusBar.svelte';
 	import Toolbar from './ui/Toolbar.svelte';
 	import { BoardTitle } from './title.svelte';
 	import TopBar from './TopBar.svelte';
@@ -71,6 +73,9 @@
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);
+	// Before the store is used: it decides which page's elements the store shows.
+	ctx.pages = new PagesState(ctx);
+	ctx.store.rebind();
 	ctx.shortcuts.register([
 		...toolShortcuts,
 		...viewShortcuts,
@@ -87,6 +92,7 @@
 		ctx.viewport.destroy();
 		ctx.store.destroy();
 		ctx.history.destroy();
+		ctx.pages.destroy();
 		ctx.assets.revokeAll();
 	});
 	$effect(() => {
@@ -173,6 +179,8 @@
 	$effect(() => {
 		if (!focusId || focusCard) return;
 		untrack(() => {
+			// The card may be on another page: go there.
+			if (ctx.pages.reveal(focusId) && ctx.store.get(focusId)?.type === 'doccard') return;
 			toast.error('Doc card not found');
 			closeFocus(ctx.id);
 		});
@@ -188,9 +196,10 @@
 
 <div class="flex h-dvh flex-col">
 	<TopBar {title} />
+	<Toolbar />
 	<main class="relative min-h-0 flex-1 overflow-hidden bg-canvas">
 		<CanvasContextMenu>
-			<Canvas contentBounds={() => ctx.store.contentBounds()}>
+			<Canvas>
 				{#snippet world()}
 					<ElementsLayer />
 				{/snippet}
@@ -204,7 +213,6 @@
 				{/snippet}
 			</Canvas>
 		</CanvasContextMenu>
-		<Toolbar />
 		<LiveAnnouncer />
 		<ShortcutsDialog />
 		<Onboarding />
@@ -239,4 +247,5 @@
 			</div>
 		{/if}
 	</main>
+	<StatusBar />
 </div>

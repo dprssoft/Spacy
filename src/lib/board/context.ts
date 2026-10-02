@@ -6,6 +6,7 @@ import type { HistoryState } from './commands/history.svelte';
 import type { TextEditing } from './editing';
 import type { AssetUrlCache } from './images/assetUrls';
 import type { PreviewState } from './preview.svelte';
+import type { PagesState } from './pages.svelte';
 import type { BoardPrefs } from './prefs.svelte';
 import type { SelectionState } from './selection.svelte';
 import type { HandleRegistry } from './tools/handles';
@@ -31,6 +32,7 @@ export interface BoardContext {
 	preview: PreviewState;
 	assets: AssetUrlCache;
 	prefs: BoardPrefs;
+	pages: PagesState;
 }
 
 const KEY = Symbol('board');

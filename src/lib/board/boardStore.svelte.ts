@@ -25,11 +25,43 @@ export class BoardStore {
 	readonly connectors = new ConnectorIndex();
 	readonly world: DiagramWorld = boardWorld((id) => this.elements.get(id));
 
-	readonly #map: Y.Map<ElementYMap>;
-	readonly #observer: (events: Y.YEvent<Y.AbstractType<unknown>>[]) => void;
+	readonly #doc: Y.Doc;
+	#map: Y.Map<ElementYMap>;
+	readonly #observer = (events: Y.YEvent<Y.AbstractType<unknown>>[]) => {
+		// A throwaway per-transaction set, not reactive state.
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const changed = new Set<string>();
+		for (const e of events) {
+			if (e.target === this.#map) {
+				for (const key of e.changes.keys.keys()) changed.add(key);
+			} else {
+				const id = e.path[0];
+				if (typeof id === 'string') changed.add(id);
+			}
+		}
+		this.#apply(changed);
+	};
 
 	constructor(doc: Y.Doc) {
+		this.#doc = doc;
 		this.#map = getElementsMap(doc);
+		this.#load();
+		this.#map.observeDeep(this.#observer);
+	}
+
+	/** Switches to the document's active page: everything is reloaded from that page's elements. */
+	rebind(): void {
+		this.#map.unobserveDeep(this.#observer);
+		this.#map = getElementsMap(this.#doc);
+		this.elements.clear();
+		this.index.clear();
+		this.connectors.clear();
+		this.#load();
+		this.#map.observeDeep(this.#observer);
+		this.version++;
+	}
+
+	#load(): void {
 		for (const [id, ymap] of this.#map) {
 			const el = readElement(ymap);
 			if (el) this.elements.set(id, el);
@@ -42,22 +74,6 @@ export class BoardStore {
 		}
 		this.index.load(entries);
 		this.#recomputeOrder();
-
-		this.#observer = (events) => {
-			// A throwaway per-transaction set, not reactive state.
-			// eslint-disable-next-line svelte/prefer-svelte-reactivity
-			const changed = new Set<string>();
-			for (const e of events) {
-				if (e.target === this.#map) {
-					for (const key of e.changes.keys.keys()) changed.add(key);
-				} else {
-					const id = e.path[0];
-					if (typeof id === 'string') changed.add(id);
-				}
-			}
-			this.#apply(changed);
-		};
-		this.#map.observeDeep(this.#observer);
 	}
 
 	get(id: string): Element | undefined {

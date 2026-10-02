@@ -24,6 +24,10 @@ export class ConnectorIndex {
 		}
 	}
 
+	clear(): void {
+		this.#attached.clear();
+	}
+
 	of(elementId: string): string[] {
 		return [...(this.#attached.get(elementId) ?? [])];
 	}

@@ -14,6 +14,8 @@ export function mentionAt(target: EventTarget | null): string | null {
 
 /** Brings a mentioned object into view, selects it and pulses it (closing focus mode first). */
 export function jumpToElement(ctx: BoardContext, id: string): boolean {
+	// The object may be on another page: go there first.
+	if (!ctx.store.get(id)) ctx.pages?.reveal(id);
 	const el = ctx.store.get(id);
 	if (!el) {
 		toast('This object was deleted');

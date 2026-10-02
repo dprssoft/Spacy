@@ -65,7 +65,10 @@
 				? '-selection'
 				: s.kind === 'frame'
 					? `-${slug(frames.find((f) => f.id === s.id)?.title ?? '') || 'frame'}`
-					: '';
+					: // The current page; named in the file only when the board has several.
+						ctx.pages.list.length > 1
+						? `-${slug(ctx.pages.page.name) || 'page'}`
+						: '';
 		return `${title}${suffix}.${format}`;
 	}
 
@@ -146,7 +149,7 @@
 				{@render choice<ExportScope['kind']>(
 					'Area',
 					[
-						{ value: 'board', label: 'Board' },
+						{ value: 'board', label: 'Page' },
 						{ value: 'selection', label: 'Selection', disabled: !hasSelection },
 						{ value: 'frame', label: 'Frame', disabled: frames.length === 0 }
 					],

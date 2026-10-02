@@ -1,0 +1,132 @@
+import { expect, test, type Page } from '@playwright/test';
+import { createBoard, el, enableTestHooks, waitForHooks } from './helpers';
+
+const ids = (page: Page) =>
+	page.evaluate(() =>
+		window
+			.__smthng!.list()
+			.map((e) => e.id)
+			.sort()
+	);
+const tab = (page: Page, name: string) => page.getByRole('tab', { name, exact: true });
+const add = (page: Page, id: string) =>
+	page.evaluate(
+		(e) => window.__smthng!.createElements([e as never]),
+		el.shape(id, -80, -50, { text: id })
+	);
+
+test.beforeEach(async ({ page }) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+});
+
+test('pages keep separate content; the last page is reopened after a reload', async ({ page }) => {
+	await expect(page.getByRole('tab')).toHaveText(['Page 1']);
+	await add(page, 'one');
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await expect(page.getByRole('tab')).toHaveText(['Page 1', 'Page 2']);
+	await expect(tab(page, 'Page 2')).toHaveAttribute('aria-selected', 'true');
+	await expect(page.locator('[data-element-id]')).toHaveCount(0);
+	await expect(page.getByTestId('status-count')).toHaveText('0 objects');
+
+	await add(page, 'two');
+	await expect(page.locator('[data-element-id="two"]')).toHaveText('two');
+	await tab(page, 'Page 1').click();
+	await expect(page.locator('[data-element-id="one"]')).toBeVisible();
+	await expect(page.locator('[data-element-id="two"]')).toHaveCount(0);
+	expect(await ids(page)).toEqual(['one']);
+
+	await tab(page, 'Page 2').click();
+	await expect(page.getByText('Saved locally')).toBeVisible();
+	await page.reload();
+	await expect(tab(page, 'Page 2')).toHaveAttribute('aria-selected', 'true');
+	await expect(page.locator('[data-element-id="two"]')).toBeVisible();
+});
+
+test('rename, move and delete a page from its tab', async ({ page }) => {
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await add(page, 'two');
+	await tab(page, 'Page 2').dblclick();
+	const input = page.getByRole('textbox', { name: 'Page name' });
+	await input.fill('Budget');
+	await input.press('Enter');
+	await expect(page.getByRole('tab')).toHaveText(['Page 1', 'Budget']);
+
+	await tab(page, 'Budget').click({ button: 'right' });
+	await page.getByRole('menuitem', { name: 'Move left' }).click();
+	await expect(page.getByRole('tab')).toHaveText(['Budget', 'Page 1']);
+
+	await tab(page, 'Budget').click({ button: 'right' });
+	await page.getByRole('menuitem', { name: 'Delete' }).click();
+	await expect(page.getByRole('alertdialog')).toContainText('Delete “Budget”?');
+	await page.getByRole('button', { name: 'Delete page' }).click();
+	await expect(page.getByRole('tab')).toHaveText(['Page 1']);
+	expect(await ids(page)).toEqual([]);
+
+	// The last page can't be deleted.
+	await tab(page, 'Page 1').click({ button: 'right' });
+	await expect(page.getByRole('menuitem', { name: 'Delete' })).toHaveAttribute('data-disabled', '');
+});
+
+test('undo returns to the page where the change was made', async ({ page }) => {
+	await add(page, 'one');
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('s');
+	await page.keyboard.press('Enter'); // a sticky at the center of page 2
+	await expect(page.locator('[data-type="sticky"]')).toHaveCount(1);
+	await page.keyboard.press('Escape');
+	await tab(page, 'Page 1').click();
+
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('ControlOrMeta+z');
+	await expect(tab(page, 'Page 2')).toHaveAttribute('aria-selected', 'true');
+	await expect(page.locator('[data-type="sticky"]')).toHaveCount(0);
+});
+
+test('a second tab sees new pages and their content', async ({ page, context }) => {
+	const other = await context.newPage();
+	await other.goto(page.url());
+	await other.waitForFunction(() => !!window.__smthng);
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await add(page, 'two');
+	await expect(other.getByRole('tab')).toHaveText(['Page 1', 'Page 2']);
+	// Each tab keeps its own current page.
+	await expect(other.getByRole('tab', { name: 'Page 1' })).toHaveAttribute('aria-selected', 'true');
+	await other.getByRole('tab', { name: 'Page 2' }).click();
+	await expect(other.locator('[data-element-id="two"]')).toHaveText('two');
+});
+
+test('a mention jumps to an object on another page', async ({ page }) => {
+	await page.evaluate((e) => window.__smthng!.createElements([e as never]), {
+		...el.shape('st', 0, 0),
+		type: 'sticky',
+		kind: undefined,
+		text: 'Login flow',
+		color: '#ffe066',
+		w: 160,
+		h: 160
+	});
+	await page.getByRole('button', { name: 'Add page' }).click();
+	const box = (await page.getByTestId('canvas').boundingBox())!;
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('n');
+	await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+	const editor = page.locator('[data-doccard-body] .ProseMirror');
+	await expect(editor).toBeFocused();
+	// Objects on other pages aren't offered, but an existing chip still finds its target.
+	await page.evaluate(() => {
+		const ed = (
+			document.querySelector('[data-doccard-body] .ProseMirror') as HTMLElement & {
+				editor: { commands: { insertContent(c: unknown): void } };
+			}
+		).editor;
+		ed.commands.insertContent({ type: 'mention', attrs: { id: 'st', label: 'Login flow' } });
+	});
+	await editor.locator('.mention[data-id="st"]').click();
+	await expect(tab(page, 'Page 1')).toHaveAttribute('aria-selected', 'true');
+	await expect
+		.poll(() => page.evaluate(() => [...window.__smthng!.ctx.selection.ids]))
+		.toEqual(['st']);
+});

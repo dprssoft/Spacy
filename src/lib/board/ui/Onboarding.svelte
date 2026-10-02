@@ -32,10 +32,8 @@
 		const place = () => {
 			const r = document.querySelector(tip.anchor)?.getBoundingClientRect();
 			if (!r) return;
-			const below = r.left > window.innerWidth / 3; // horizontal toolbar: show above it
-			pos = below
-				? { x: Math.max(8, Math.min(r.left, window.innerWidth - 296)), y: r.top - 132 }
-				: { x: r.right + 12, y: Math.max(8, r.top + r.height / 2 - 60) };
+			// The toolbar is a ribbon along the top: the tip goes right below its anchor.
+			pos = { x: Math.max(8, Math.min(r.left, window.innerWidth - 296)), y: r.bottom + 10 };
 		};
 		place();
 		window.addEventListener('resize', place);

@@ -6,7 +6,25 @@ import { compareZ } from './zorder';
 export type ElementYMap = Y.Map<unknown>;
 
 export const getMeta = (doc: Y.Doc): Y.Map<unknown> => doc.getMap('meta');
-export const getElementsMap = (doc: Y.Doc): Y.Map<ElementYMap> => doc.getMap('elements');
+/** Id of the first page of every board: its elements live in the original `elements` map. */
+export const MAIN_PAGE = 'main';
+
+/** The element map of one page (see model/pages.ts). */
+export const pageElementsMap = (doc: Y.Doc, pageId: string): Y.Map<ElementYMap> =>
+	doc.getMap(pageId === MAIN_PAGE ? 'elements' : `page:${pageId}`);
+
+// Which page this tab is working on. Local view state, never stored: two tabs can show different
+// pages of the same board.
+const activePages = new WeakMap<Y.Doc, string>();
+
+export const getActivePageId = (doc: Y.Doc): string => activePages.get(doc) ?? MAIN_PAGE;
+export function setActivePageId(doc: Y.Doc, pageId: string): void {
+	activePages.set(doc, pageId);
+}
+
+/** The elements of the active page: everything that reads or writes elements works on it. */
+export const getElementsMap = (doc: Y.Doc): Y.Map<ElementYMap> =>
+	pageElementsMap(doc, getActivePageId(doc));
 export const getDocsMap = (doc: Y.Doc): Y.Map<Y.XmlFragment> => doc.getMap('docs');
 
 /** Plain snapshot of a stored element; null if the stored data is invalid. */

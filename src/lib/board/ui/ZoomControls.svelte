@@ -32,15 +32,12 @@
 	}
 
 	const button =
-		'inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-40';
+		'inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-40';
 	const item =
 		'flex h-8 cursor-default items-center justify-between gap-6 rounded-md px-2 text-sm outline-none select-none data-[highlighted]:bg-surface-2';
 </script>
 
-<div
-	class="absolute right-3 bottom-3 z-20 flex items-center gap-0.5 rounded-lg border border-border bg-surface p-0.5 shadow-md"
-	data-interactive
->
+<div class="flex shrink-0 items-center gap-0.5" data-interactive>
 	<button
 		type="button"
 		class={button}
@@ -53,7 +50,7 @@
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
 			aria-label="Zoom options, current zoom {percent}%"
-			class="h-8 min-w-14 rounded-md px-1.5 text-xs font-medium tabular-nums hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+			class="h-7 min-w-14 rounded-md px-1.5 text-xs font-medium tabular-nums hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
 		>
 			<span data-testid="zoom-level">{percent}%</span>
 		</DropdownMenu.Trigger>
