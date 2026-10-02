@@ -6,6 +6,7 @@ import type {
 	ImageElement,
 	Point,
 	ShapeElement,
+	SketchElement,
 	StickyElement,
 	StrokeElement,
 	TextElement
@@ -21,6 +22,8 @@ import { STYLE_OPTIONS, type StyleOption } from '../style/options';
 import { boxAABB, boxHitTest } from './common';
 import { frameAABB, frameHitTest } from './frame/geometry';
 import FrameView from './frame/FrameView.svelte';
+import { sketchHit } from '../sketch/geometry';
+import SketchView from './sketch/SketchView.svelte';
 import ImageView from './image/ImageView.svelte';
 import { registerElement, type ElementDefinition } from './registry';
 import ShapeView from './shape/ShapeView.svelte';
@@ -77,6 +80,19 @@ registerElement<StrokeElement>({
 	component: StrokeView,
 	aabb: strokeAABB,
 	hitTest: strokeHitTest
+});
+
+registerElement<SketchElement>({
+	...boxDefaults,
+	type: 'sketch',
+	styleOptions: STYLE_OPTIONS.sketch,
+	component: SketchView,
+	// Clickable on its strokes only, so a large sketch doesn't cover what is around it.
+	hitTest: (el, p, tol, world) =>
+		world?.strokes ? sketchHit(el, world.strokes(el.id), p, tol) : boxHitTest(el, p, tol),
+	// Its frame follows the drawing; a rotated frame couldn't grow in place.
+	rotatable: false,
+	keepAspect: true
 });
 
 registerElement<FrameElement>({

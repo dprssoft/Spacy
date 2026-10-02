@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { getBoard } from '../context';
+	import { ink } from '../elements/common';
 	import { strokeSvgPath } from '../elements/stroke/strokePath';
+	import { strokePaint } from '../sketch/brushes';
 
 	const { preview, viewport } = getBoard();
 
@@ -26,6 +28,9 @@
 					};
 		})
 	);
+	// The brush stroke in progress. An eraser can't erase in this overlay, so it shows as a grey
+	// band; the real erasing happens when the stroke is committed.
+	const sketchPaint = $derived(preview.sketch ? strokePaint(preview.sketch) : null);
 	const trail = $derived(preview.eraserTrail.map((p) => `${p.x},${p.y}`).join(' '));
 </script>
 
@@ -36,6 +41,23 @@
 			transform="translate({viewport.x} {viewport.y})"
 			fill={preview.stroke?.color}
 			data-testid="stroke-preview"
+		/>
+	{/if}
+	{#if sketchPaint}
+		<path
+			d={sketchPaint.d}
+			transform="translate({viewport.x} {viewport.y}) scale({viewport.zoom})"
+			fill={sketchPaint.mode === 'fill' ? ink(sketchPaint.color) : 'none'}
+			stroke={sketchPaint.mode === 'stroke'
+				? sketchPaint.erase
+					? 'var(--text-muted)'
+					: ink(sketchPaint.color)
+				: 'none'}
+			stroke-width={sketchPaint.width}
+			stroke-linecap={sketchPaint.cap}
+			stroke-linejoin="round"
+			opacity={sketchPaint.erase ? 0.3 : sketchPaint.opacity}
+			data-testid="sketch-preview"
 		/>
 	{/if}
 	{#each guides as g, i (i)}

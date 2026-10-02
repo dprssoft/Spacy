@@ -14,6 +14,9 @@ export function connectableFor(el: Element): Connectable | null {
 }
 
 /** A diagram world over any element lookup, without the (Svelte) element registry. */
-export function pureWorld(get: (id: string) => Element | undefined): DiagramWorld {
-	return { get, connectable: connectableFor };
+export function pureWorld(
+	get: (id: string) => Element | undefined,
+	strokes?: DiagramWorld['strokes']
+): DiagramWorld {
+	return { get, connectable: connectableFor, strokes };
 }

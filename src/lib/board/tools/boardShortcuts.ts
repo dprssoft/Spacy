@@ -49,6 +49,7 @@ export const toolShortcuts: Shortcut[] = [
 	tool('select', 'V', 'Select', 'select'),
 	tool('hand', 'H', 'Hand', 'hand'),
 	tool('pen', 'P', 'Pen', 'pen'),
+	tool('sketch', 'B', 'Sketch (brushes)', 'sketch'),
 	tool('eraser', 'E', 'Eraser', 'eraser'),
 	tool('rect', 'R', 'Rectangle', 'shape', 'rect'),
 	tool('ellipse', 'O', 'Ellipse', 'shape', 'ellipse'),

@@ -1,5 +1,13 @@
 import * as Y from 'yjs';
-import { getDocsMap, getElementsMap, getMeta, maxZ, readElement, toYMap } from './doc';
+import {
+	getDocsMap,
+	getElementsMap,
+	getMeta,
+	getSketchesMap,
+	maxZ,
+	readElement,
+	toYMap
+} from './doc';
 import { jsonEqual } from './equal';
 import { LOCAL, type Origin } from './origins';
 import { parseElement } from './schema';
@@ -34,6 +42,7 @@ export function createElements(
 	doc.transact(() => {
 		const map = getElementsMap(doc);
 		const docs = getDocsMap(doc);
+		const sketches = getSketchesMap(doc);
 		const keys = zManyAbove(maxZ(doc), els.filter((e) => e.z === undefined).length);
 		let k = 0;
 		for (const input of els) {
@@ -42,6 +51,7 @@ export function createElements(
 			if (map.has(el.id)) throw new InvalidElementError(`Duplicate element id ${el.id}`, input);
 			map.set(el.id, toYMap(el));
 			if (el.type === 'doccard' && !docs.has(el.id)) docs.set(el.id, new Y.XmlFragment());
+			if (el.type === 'sketch' && !sketches.has(el.id)) sketches.set(el.id, new Y.Array());
 			created.push(el);
 		}
 	}, origin);
@@ -86,20 +96,55 @@ export function updateElements(
 	}, origin);
 }
 
-/** Deletes elements (and doc card contents). Unknown ids are ignored. */
+/** Deletes elements (and doc card contents and sketch strokes). Unknown ids are ignored. */
 export function deleteElements(doc: Y.Doc, ids: Iterable<string>, origin: Origin = LOCAL): void {
 	doc.transact(() => {
 		const map = getElementsMap(doc);
 		const docs = getDocsMap(doc);
+		const sketches = getSketchesMap(doc);
 		const set = new Set([...ids].filter((id) => map.has(id)));
 		for (const hook of beforeDeleteHooks) hook(doc, set);
 		for (const id of set) {
 			map.delete(id);
 			docs.delete(id);
+			sketches.delete(id);
 		}
 	}, origin);
 }
 
 export function setMeta(doc: Y.Doc, key: string, value: unknown, origin: Origin = LOCAL): void {
 	doc.transact(() => getMeta(doc).set(key, value), origin);
+}
+
+/**
+ * Adds one brush stroke to a sketch, in one transaction (one undo step): optionally creates the
+ * sketch element first, and applies `patch` (its frame, which grows with the drawing).
+ */
+export function addSketchStroke(
+	doc: Y.Doc,
+	opts: { id: string; stroke: unknown; create?: NewElement; patch?: ElementPatch },
+	origin: Origin = LOCAL
+): void {
+	doc.transact(() => {
+		if (opts.create) createElements(doc, [opts.create], origin);
+		if (opts.patch) updateElements(doc, [{ id: opts.id, patch: opts.patch }], origin);
+		const sketches = getSketchesMap(doc);
+		let strokes = sketches.get(opts.id);
+		if (!strokes) sketches.set(opts.id, (strokes = new Y.Array()));
+		strokes.push([opts.stroke]);
+	}, origin);
+}
+
+/** Sets a sketch's strokes (copies made by paste and duplicate). */
+export function setSketchStrokes(
+	doc: Y.Doc,
+	id: string,
+	strokes: readonly unknown[],
+	origin: Origin = LOCAL
+): void {
+	doc.transact(() => {
+		const arr = new Y.Array<unknown>();
+		arr.push([...strokes]);
+		getSketchesMap(doc).set(id, arr);
+	}, origin);
 }

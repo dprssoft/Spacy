@@ -2,6 +2,7 @@ import * as Y from 'yjs';
 import { cloneElements } from '$lib/model/clone';
 import { DEFAULT_SIZES, FONT_SIZE_PX, LINE_HEIGHT, newElementBase } from '$lib/model/defaults';
 import { getDocsMap } from '$lib/model/doc';
+import { rawStrokes } from '../sketch/data';
 import { newId } from '$lib/model/ids';
 import { createElements } from '$lib/model/ops';
 import { parseElement } from '$lib/model/schema';
@@ -24,6 +25,8 @@ export interface ClipPayload {
 	elements: Element[];
 	/** base64 Yjs update of a doc whose `docs` map holds the copied doc cards' contents. */
 	docs: string;
+	/** Brush strokes of copied sketches, by element id. */
+	sketches?: Record<string, unknown[]>;
 }
 
 /** Last copy made in this tab; used when the system clipboard is unavailable. */
@@ -39,11 +42,14 @@ export function serializeElements(ctx: BoardContext, els: readonly Element[]): s
 		const frag = el.type === 'doccard' ? docs.get(el.id) : undefined;
 		if (frag) tempDocs.set(el.id, frag.clone());
 	}
+	const sketches: Record<string, unknown[]> = {};
+	for (const el of els) if (el.type === 'sketch') sketches[el.id] = rawStrokes(ctx.doc, el.id);
 	const payload: ClipPayload = {
 		smthng: 1,
 		sourceBoardId: ctx.id,
 		elements: [...els],
-		docs: bytesToBase64(Y.encodeStateAsUpdate(temp))
+		docs: bytesToBase64(Y.encodeStateAsUpdate(temp)),
+		sketches
 	};
 	temp.destroy();
 	return CLIPBOARD_PREFIX + JSON.stringify(payload);
@@ -62,7 +68,11 @@ export function parsePayload(text: string): ClipPayload | null {
 			smthng: 1,
 			sourceBoardId: raw.sourceBoardId,
 			elements,
-			docs: typeof raw.docs === 'string' ? raw.docs : ''
+			docs: typeof raw.docs === 'string' ? raw.docs : '',
+			sketches:
+				raw.sketches && typeof raw.sketches === 'object'
+					? (raw.sketches as Record<string, unknown[]>)
+					: undefined
 		};
 	} catch {
 		return null;
@@ -144,8 +154,14 @@ export async function pastePayload(
 		}
 	}
 
+	const sketches = new Map<string, readonly unknown[]>();
+	for (const [oldId, strokes] of Object.entries(payload.sketches ?? {})) {
+		const id = idMap.get(oldId);
+		if (id && Array.isArray(strokes)) sketches.set(id, strokes);
+	}
+
 	ctx.undo.stopCapturing();
-	const created = createWithContent(ctx, remapped, fragments);
+	const created = createWithContent(ctx, remapped, fragments, sketches);
 	ctx.undo.stopCapturing();
 	ctx.tools.setTool('select');
 	ctx.selection.set(created.map((e) => e.id));

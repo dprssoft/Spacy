@@ -117,6 +117,14 @@ export const strokeSchema = z.object({
 	type: z.literal('stroke'),
 	points: z.array(num)
 });
+export const sketchSchema = z.object({
+	...base,
+	type: z.literal('sketch'),
+	bx: num,
+	by: num,
+	nw: nonNeg,
+	nh: nonNeg
+});
 export const frameSchema = z.object({ ...base, type: z.literal('frame'), title: z.string() });
 export const docCardSchema = z.object({
 	...base,
@@ -143,6 +151,7 @@ export const elementSchema = z.discriminatedUnion('type', [
 	textSchema,
 	imageSchema,
 	strokeSchema,
+	sketchSchema,
 	frameSchema,
 	docCardSchema,
 	connectorSchema

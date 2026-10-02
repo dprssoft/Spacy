@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { DropdownMenu, Tooltip } from 'bits-ui';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import Brush from '@lucide/svelte/icons/brush';
 	import Eraser from '@lucide/svelte/icons/eraser';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Frame from '@lucide/svelte/icons/frame';
@@ -19,6 +20,7 @@
 	import { openImagePicker } from '../images/importImages';
 	import type { ToolId } from '../tools/types';
 	import { rovingTabindex } from './rovingTabindex';
+	import SketchRibbon from './SketchRibbon.svelte';
 
 	const ctx = getBoard();
 	const { tools } = ctx;
@@ -34,6 +36,7 @@
 		],
 		[
 			{ id: 'pen', label: 'Pen', keys: 'P', icon: Pencil },
+			{ id: 'sketch', label: 'Sketch', keys: 'B', icon: Brush },
 			{ id: 'eraser', label: 'Eraser', keys: 'E', icon: Eraser }
 		],
 		[
@@ -212,4 +215,7 @@
 		</Tooltip.Root>
 		<span class={caption} aria-hidden="true">Options</span>
 	</div>
+	{#if tools.current === 'sketch'}
+		<SketchRibbon {groupBox} {caption} {button} />
+	{/if}
 </div>

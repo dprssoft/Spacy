@@ -26,6 +26,8 @@ export function setActivePageId(doc: Y.Doc, pageId: string): void {
 export const getElementsMap = (doc: Y.Doc): Y.Map<ElementYMap> =>
 	pageElementsMap(doc, getActivePageId(doc));
 export const getDocsMap = (doc: Y.Doc): Y.Map<Y.XmlFragment> => doc.getMap('docs');
+/** Brush strokes of sketch elements: one append-only array of plain stroke objects per sketch. */
+export const getSketchesMap = (doc: Y.Doc): Y.Map<Y.Array<unknown>> => doc.getMap('sketches');
 
 /** Plain snapshot of a stored element; null if the stored data is invalid. */
 export function readElement(ymap: ElementYMap): Element | null {

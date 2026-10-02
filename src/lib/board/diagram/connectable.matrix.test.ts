@@ -22,7 +22,17 @@ describe('every element type is connectable (except connectors)', () => {
 	it('covers all registered types', () => {
 		const types = new Set(allDefinitions().map((d) => d.type));
 		expect(types).toEqual(
-			new Set(['shape', 'sticky', 'text', 'image', 'stroke', 'frame', 'doccard', 'connector'])
+			new Set([
+				'shape',
+				'sticky',
+				'text',
+				'image',
+				'stroke',
+				'sketch',
+				'frame',
+				'doccard',
+				'connector'
+			])
 		);
 		for (const d of allDefinitions()) {
 			if (d.type === 'connector') expect(d.connectable).toBeNull();

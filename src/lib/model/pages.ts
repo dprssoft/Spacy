@@ -3,6 +3,7 @@ import {
 	getActivePageId,
 	getDocsMap,
 	getMeta,
+	getSketchesMap,
 	MAIN_PAGE,
 	pageElementsMap,
 	readElement,
@@ -102,9 +103,11 @@ export function deletePage(doc: Y.Doc, pageId: string): boolean {
 	doc.transact(() => {
 		const map = pageElementsMap(doc, pageId);
 		const docs = getDocsMap(doc);
+		const sketches = getSketchesMap(doc);
 		for (const id of [...map.keys()]) {
 			map.delete(id);
 			docs.delete(id);
+			sketches.delete(id);
 		}
 	}, PAGES);
 	// A stored list must exist from here on: without one, the first page would come back.

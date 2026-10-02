@@ -43,6 +43,7 @@ export const STYLE_OPTIONS: Record<ElementType, readonly StyleOption[]> = {
 	text: ['textColor', 'fontSize', 'fontStyle', 'align', 'opacity'],
 	image: ['stroke', 'strokeWidth', 'dash', 'radius', 'shadow', 'opacity'],
 	stroke: ['stroke', 'strokeWidth', 'opacity'],
+	sketch: ['opacity'],
 	frame: ['fill', 'fillStyle', 'stroke', 'radius'],
 	doccard: ['fill', 'stroke', 'radius', 'shadow', 'fontSize'],
 	connector: ['stroke', 'strokeWidth', 'dash', 'opacity', 'routing', 'markers', 'labelBackground']

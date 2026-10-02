@@ -10,6 +10,7 @@ There is no backend and no account.
 ## Features
 
 - **Pages:** several pages per board, as sheet tabs along the bottom (add, rename, reorder, delete).
+- **Sketching:** a sketch is one object you keep drawing into, with pen, pencil, marker, highlighter and an eraser; pen and pencil follow stylus pressure.
 - **Whiteboard:** infinite canvas, shapes, sticky notes, text, pen, images, frames; select, move, resize, rotate, group, lock; undo and redo; copy and paste.
 - **Styling:** contextual style popover, quick styles, align and distribute, smart guides, snap to grid.
 - **Diagrams:** straight, elbow and curved connectors, seven end markers, labels, manual bends, a flowchart shape library, quick-create of connected shapes.

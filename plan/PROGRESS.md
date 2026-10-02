@@ -733,3 +733,23 @@ Requested by the human after step 31: "make it look a bit like office software, 
 - A board opened without a saved view now fits its content (templates and imports no longer open half off-screen).
 
 **Verification:** see the commit; unit tests for the page model, page state, cross-page undo, asset cleanup and multi-page import/duplicate; `pages.spec.ts` e2e.
+
+## Extra — Sketch tool — 2026-10-03
+Requested by the human: "drawing but not that will save every stroke as separate object (like real sketching tool with few brushes and pressure support)".
+
+**Summary:**
+- New element type `sketch` (schema version 3, D12 and §5 updated): one object holding many brush strokes. Strokes are plain objects `{ b, c, s, p }` in an append-only `Y.Array` per sketch in `doc.getMap('sketches')`. The element stores the rectangle `(bx, by, nw, nh)` of stroke space it shows; adding a stroke grows that rectangle and the box together, so earlier strokes never move and are never rewritten.
+- `sketch/brushes.ts` (pure): pen and pencil (perfect-freehand outline, width follows pressure; mouse input simulates it from speed), marker, highlighter, eraser. One `strokePaint()` gives SVG path data and paint settings used by the canvas, the live preview and SVG export.
+- `SketchView`: one `<canvas>` per sketch, redrawn when strokes change or the zoom crosses a power of two (resolution capped at 4,096 px a side). The eraser paints with `destination-out`, so it really erases inside the sketch. Default-ink strokes follow the theme.
+- Tool (B, "Sketch" in the Draw group): a session draws into one object. Picking the tool with a sketch selected, or double-clicking a sketch, continues it; leaving the tool selects it; "New sketch" starts another. The ribbon shows contextual groups: Brush, Size, Color.
+- Sketches are hit on their strokes only (not their whole box), connectable like any object, resizable (aspect kept by default), not rotatable.
+- Everything that handles doc card contents handles strokes too: delete and undo, duplicate, copy/paste (strokes travel in the clipboard payload), page deletion, the undo scope, PNG/SVG export (erasers become SVG masks) and thumbnails.
+- The existing Pen tool (one object per stroke) is unchanged.
+
+**Deviations / notes:**
+- The live preview of an eraser stroke is a grey band; the erasing shows when the stroke is released.
+- An eraser stroke never grows the sketch, and does nothing before a sketch exists.
+- Bounds leave room for full pressure: a pen stroke can reach 0.8 × its size from the center line.
+- Stylus pressure is tested through the Chromium DevTools protocol (`pointerType: 'pen'`, `force`); it has not been tried with a physical stylus.
+
+**Verification:** unit tests for brushes, frame growth, moved and resized sketches, hit testing, undo, duplicate, delete and SVG export; `sketch.spec.ts` e2e (one object per session, undo per stroke, reload, erasing measured on canvas pixels, continue and "New sketch", stylus pressure, vector export); the visual fixture includes a sketch.

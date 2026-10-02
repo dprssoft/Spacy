@@ -10,6 +10,7 @@ const TYPES: ElementType[] = [
 	'text',
 	'image',
 	'stroke',
+	'sketch',
 	'frame',
 	'doccard',
 	'connector'

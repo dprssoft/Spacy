@@ -50,6 +50,7 @@ Accounts, server sync, comments, version history, UML/BPMN libraries, auto-layou
 | D9 | **Framework-agnostic core** (`model`, `storage`, `engine`, `diagram`, `render`) has no Svelte imports | Testable, portable |
 | D10 | **Canvas undo ≠ editor undo.** Canvas `Y.UndoManager` scope = every page's element map + the `docs` map, tracking only `LOCAL` transactions; TipTap edits use the y-prosemirror origin, so they stay out of it and use the editor's own collaboration undo inside a focused editor | Avoids cross-talk between text and canvas undo; `docs` is in scope so undoing a card's creation/deletion (same LOCAL transaction) also removes/restores its text (step 23) |
 | D11 | **Pages (sheets) are separate element maps in the same `Y.Doc`**: `meta.pages` lists them, the first page is the original `elements` map, others are `page:<id>`. The active page is per-tab view state (`getElementsMap(doc)` returns it), so the store, tools, undo and export work on one page at a time | Old boards and files stay valid with no data migration; switching pages swaps one map instead of filtering every element; two tabs can show different pages |
+| D12 | **A sketch is one element with many strokes**, kept in an append-only `sketches` array outside the element and drawn on one `<canvas>` (the same path data is used for the live preview and SVG export) | "Real" sketching: hundreds of strokes don't become hundreds of objects, DOM nodes or undo-heavy element rewrites; the eraser can truly erase (`destination-out`) |
 
 ## 4. Folder structure
 
@@ -97,7 +98,7 @@ export type Point = { x: number; y: number };
 export type Rect = { x: number; y: number; w: number; h: number };
 
 export type ElementType =
-  | 'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'frame' | 'doccard' | 'connector';
+  | 'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'sketch' | 'frame' | 'doccard' | 'connector';
 
 export type ShapeKind =
   | 'rect' | 'ellipse' | 'diamond'                       // basic (toolbar)
@@ -185,6 +186,9 @@ doc.getMap('page:<id>') same shape, one map per additional page
                         - object/array fields (style, from, to, label, waypoints, points) are stored
                           as plain JSON values and replaced as a whole on change
 doc.getMap('docs')      Y.Map<doccardId, Y.XmlFragment>   (TipTap content)
+doc.getMap('sketches')  Y.Map<sketchId, Y.Array<{ b: brush, c: color, s: size, p: number[] }>>
+                        - append-only brush strokes of sketch elements; p = flat [x, y, pressure, …]
+                          in the sketch's own coordinates
 ```
 
 Rules:
@@ -194,6 +198,7 @@ Rules:
 - Deleting a doccard deletes its `docs` entry in the same transaction.
 - Deleting an element converts endpoints of connectors attached to it into `free` endpoints at their current resolved position, in the same transaction (step 20).
 - `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards).
+- Sketches (schema version 3): `SketchElement { type: 'sketch'; bx; by; nw; nh }` shows the rectangle `(bx, by, nw, nh)` of its stroke space stretched onto its box. Adding a stroke appends to `sketches[id]` and grows that rectangle and the box together (one transaction, one undo step), so moving or resizing never rewrites stroke data. `sketches` entries are created, deleted, copied and undone with their element, like `docs`.
 - Pages (`src/lib/model/pages.ts`): elements never move between maps; connectors attach only within a page; `docs` is shared and keyed by element id. Anything that must see the whole board (asset cleanup, import, board duplication) uses `allPageMaps` / `listAllElements`. Deleting a page removes its elements and their `docs` entries with origin `PAGES` (not undoable) and clears the undo history.
 
 ## 6. Storage

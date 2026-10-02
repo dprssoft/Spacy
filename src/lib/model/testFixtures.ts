@@ -44,6 +44,14 @@ export const samples: { [T in ElementType]: (id?: string, z?: string) => Element
 		naturalW: 640,
 		naturalH: 480
 	}),
+	sketch: (id = 'sketch1', z = 'a8') => ({
+		...base('sketch', id, z),
+		type: 'sketch',
+		bx: 0,
+		by: 0,
+		nw: 100,
+		nh: 50
+	}),
 	stroke: (id = 'stroke1', z = 'a4') => ({
 		...base('stroke', id, z),
 		type: 'stroke',
