@@ -6,6 +6,7 @@
 	import type { ViewportState } from '../viewport.svelte';
 	import type { Rect } from '$lib/model/types';
 	import { getBoard } from '../context';
+	import HelpMenu from './HelpMenu.svelte';
 	import { fitRect } from '../engine/viewport';
 
 	let {
@@ -120,4 +121,6 @@
 	>
 		<Plus class="size-4" aria-hidden="true" />
 	</button>
+	<div class="mx-0.5 h-5 w-px bg-border" aria-hidden="true"></div>
+	<HelpMenu class={button} />
 </div>

@@ -123,3 +123,9 @@
 .doc-prose .suggestion {
 	color: var(--accent);
 }
+
+/* Canvas cards keep their authored (light by default) fill in dark mode: native controls inside
+   them must not switch to the dark scheme. Focus mode follows the theme. */
+[data-doccard-body] {
+	color-scheme: light;
+}

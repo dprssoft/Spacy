@@ -23,7 +23,9 @@ export async function resetStorage(page: Page): Promise<void> {
 }
 
 /** Creates a board from the start page and returns its id (the page ends up on the board). */
-export async function createBoard(page: Page): Promise<string> {
+export async function createBoard(page: Page, opts: { tips?: boolean } = {}): Promise<string> {
+	// First-run tips would sit over the canvas in every test; only the onboarding test wants them.
+	if (!opts.tips) await page.addInitScript(() => localStorage.setItem('smthng:onboarded', 'true'));
 	await page.goto('/');
 	await page.getByRole('button', { name: /New board/ }).click();
 	await page.waitForURL(/\/board\/[\w-]+$/);

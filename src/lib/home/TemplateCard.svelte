@@ -29,7 +29,7 @@
 	disabled={pending}
 	aria-label="{template.name} template"
 	data-template={template.id}
-	class="group flex aspect-[16/10] flex-col overflow-hidden rounded-xl border border-border bg-surface text-left transition hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg focus-visible:outline-none disabled:opacity-60"
+	class="group flex aspect-[16/10] flex-col overflow-hidden rounded-xl border border-border bg-surface text-left transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg focus-visible:outline-none disabled:opacity-60 motion-safe:hover:-translate-y-0.5"
 >
 	<div class="min-h-0 flex-1 bg-white">
 		{#if preview}

@@ -18,7 +18,7 @@ export function nextFrameTitle(ctx: BoardContext): string {
 	return `Frame ${ctx.store.frameOrder.length + 1}`;
 }
 
-function createFrame(ctx: BoardContext, rect: Rect): string {
+export function createFrame(ctx: BoardContext, rect: Rect): string {
 	const id = newId();
 	createElements(ctx.doc, [
 		{

@@ -18,6 +18,7 @@
 	import { getBoard } from '../context';
 	import { openImagePicker } from '../images/importImages';
 	import type { ToolId } from '../tools/types';
+	import { rovingTabindex } from './rovingTabindex';
 
 	const ctx = getBoard();
 	const { tools } = ctx;
@@ -53,7 +54,7 @@
 	const iconPath = (kind: ShapeKind) => shapePath(kind, 16, 12, 2, 1);
 
 	const button =
-		'relative inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none aria-pressed:bg-accent aria-pressed:text-accent-contrast aria-disabled:cursor-not-allowed aria-disabled:opacity-35 aria-disabled:hover:bg-transparent';
+		'relative inline-flex size-9 pointer-coarse:size-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none aria-pressed:bg-accent aria-pressed:text-accent-contrast aria-disabled:cursor-not-allowed aria-disabled:opacity-35 aria-disabled:hover:bg-transparent';
 	const tip = 'z-50 rounded-md bg-text px-2 py-1 text-xs font-medium text-bg shadow-md';
 	const menuItem =
 		'flex h-8 cursor-default items-center gap-2 rounded-md px-2 text-sm outline-none select-none data-[highlighted]:bg-surface-2';
@@ -73,6 +74,7 @@
 	role="toolbar"
 	aria-label="Tools"
 	aria-orientation="vertical"
+	{@attach rovingTabindex()}
 	data-interactive
 	class="absolute top-1/2 left-3 z-20 flex -translate-y-1/2 flex-col gap-1 rounded-xl border border-border bg-surface p-1 shadow-md max-sm:top-auto max-sm:bottom-3 max-sm:left-1/2 max-sm:-translate-x-1/2 max-sm:translate-y-0 max-sm:flex-row"
 >
@@ -94,7 +96,9 @@
 											{...props}
 											type="button"
 											class={button}
-											aria-label="Shapes"
+											aria-label="Shapes ({currentShape.label})"
+											aria-haspopup="menu"
+											data-tool="shape"
 											aria-pressed={tools.current === 'shape'}
 											aria-disabled={!available}
 										>
@@ -165,8 +169,9 @@
 				<Tooltip.Root>
 					<Tooltip.Trigger
 						class={button}
-						aria-label={item.label}
+						aria-label="{item.label} ({item.keys})"
 						aria-keyshortcuts={item.keys}
+						data-tool={item.id}
 						aria-pressed={action ? undefined : tools.current === item.id}
 						aria-disabled={!available}
 						onclick={() => (action ? action() : select(item.id))}

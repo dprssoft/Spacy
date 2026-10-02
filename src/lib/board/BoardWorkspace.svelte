@@ -40,6 +40,9 @@
 	import { isTypingTarget, ShortcutRegistry } from './tools/shortcuts';
 	import { ToolManager } from './tools/toolManager.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
+	import LiveAnnouncer from './ui/LiveAnnouncer.svelte';
+	import Onboarding from './ui/Onboarding.svelte';
+	import ShortcutsDialog from './ui/ShortcutsDialog.svelte';
 	import Toolbar from './ui/Toolbar.svelte';
 	import { BoardTitle } from './title.svelte';
 	import TopBar from './TopBar.svelte';
@@ -202,6 +205,9 @@
 			</Canvas>
 		</CanvasContextMenu>
 		<Toolbar />
+		<LiveAnnouncer />
+		<ShortcutsDialog />
+		<Onboarding />
 		{#if exportDialogWanted}
 			{#await import('./ui/ExportDialog.svelte') then { default: ExportDialog }}
 				<ExportDialog />

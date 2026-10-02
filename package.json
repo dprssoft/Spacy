@@ -21,6 +21,7 @@
 		"verify": "pnpm check && pnpm lint && pnpm test && pnpm build"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.13.0",
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.60.0",
 		"@sveltejs/adapter-static": "^3.0.10",

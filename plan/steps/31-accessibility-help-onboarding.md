@@ -37,7 +37,7 @@ Keyboard-complete and screen-reader-friendly UI, a shortcuts dialog, a help menu
 - `tests/e2e/keyboard-only.spec.ts`: without the mouse: focus the canvas → R → Enter creates a rect → Enter edits the text → type → Escape → ArrowRight ×10 moves it by 10 px → `?` opens the shortcuts dialog → Escape closes it.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass (including axe)
+- [x] `pnpm verify` and `pnpm test:e2e` pass (including axe)
 - [ ] The whole start page and the core board flows are usable with the keyboard only (manual)
 - [ ] VoiceOver or NVDA announces tool and selection changes (manual spot check, noted in PROGRESS)
 
