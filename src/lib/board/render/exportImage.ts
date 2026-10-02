@@ -5,6 +5,8 @@ import type { BoardContext } from '../context';
 import { getDocJSON } from '../doccards/docJson';
 import { docLines, type DocLine } from '../doccards/docLines';
 import { pointInRotatedRect } from '../engine/geometry';
+import type { SketchStroke } from '../sketch/brushes';
+import { readStrokes } from '../sketch/data';
 import { renderStaticSvg, type StaticSvg } from './staticSvg';
 import { createCanvasMeasurer } from './wrapText';
 
@@ -53,6 +55,10 @@ export async function renderScope(
 	const lines = new Map<string, DocLine[]>();
 	for (const el of elements)
 		if (el.type === 'doccard') lines.set(el.id, docLines(getDocJSON(ctx, el.id)));
+	// Read now, like the doc lines: the document may be closing.
+	const strokes = new Map<string, SketchStroke[]>();
+	for (const el of elements)
+		if (el.type === 'sketch') strokes.set(el.id, readStrokes(ctx.doc, el.id));
 	const byId = new Map([...ctx.store.elements].map(([id, el]) => [id, el]));
 	const measure = createCanvasMeasurer();
 	const assets = new Map<string, Promise<string | null>>();
@@ -67,7 +73,8 @@ export async function renderScope(
 			if (!p) assets.set(id, (p = assetDataUrl(id)));
 			return p;
 		},
-		docLines: async (id) => lines.get(id) ?? []
+		docLines: async (id) => lines.get(id) ?? [],
+		sketchStrokes: (id) => strokes.get(id) ?? []
 	});
 }
 

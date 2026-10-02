@@ -8,6 +8,7 @@ import { createHandTool } from './hand.svelte';
 import { createPenTool } from './pen';
 import { createSelectTool } from './select.svelte';
 import { createShapeTool } from './shape';
+import { createSketchTool } from './sketch';
 import { createStickyTool } from './sticky';
 import { createTextTool } from './text';
 import type { Tool, ToolId } from './types';
@@ -41,6 +42,7 @@ export class ToolManager {
 		this.register('frame', createFrameTool);
 		this.register('connector', createConnectorTool);
 		this.register('doccard', createDocCardTool);
+		this.register('sketch', createSketchTool);
 	}
 
 	/** Later steps register their tools here. */

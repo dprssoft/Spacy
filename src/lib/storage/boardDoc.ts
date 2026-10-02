@@ -1,7 +1,7 @@
 import { deleteDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
-import { getDocsMap, getMeta } from '$lib/model/doc';
+import { getDocsMap, getMeta, getSketchesMap } from '$lib/model/doc';
 import { migrate } from '$lib/model/migrations';
 import { allPageMaps } from '$lib/model/pages';
 import { IMPORT, LOCAL, MIGRATION, type Origin } from '$lib/model/origins';
@@ -145,7 +145,7 @@ export async function duplicateBoard(id: string): Promise<BoardMeta> {
  */
 export function createBoardUndo(doc: Y.Doc): Y.UndoManager {
 	// Every page is in scope; pages added later join through `undo.addToScope` (board/pages).
-	return new Y.UndoManager([...allPageMaps(doc), getDocsMap(doc)], {
+	return new Y.UndoManager([...allPageMaps(doc), getDocsMap(doc), getSketchesMap(doc)], {
 		trackedOrigins: new Set([LOCAL]),
 		captureTimeout: 500
 	});

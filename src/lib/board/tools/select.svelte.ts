@@ -470,6 +470,12 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				selection.set([el.id]);
 				return;
 			}
+			if (el?.type === 'sketch' && !el.locked) {
+				// Continue drawing in it.
+				selection.set([el.id]);
+				ctx.tools.setTool('sketch');
+				return;
+			}
 			if (el && !el.locked && definitionOf(el).editableText) {
 				const n = e.native;
 				ctx.editing.start(el.id, { at: { x: n.clientX, y: n.clientY } });

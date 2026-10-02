@@ -2,6 +2,7 @@ import * as Y from 'yjs';
 import { getDocsMap, listElements } from '$lib/model/doc';
 import { docLines } from '$lib/board/doccards/docLines';
 import { thumbnailFromSvg, THUMB_BG } from '$lib/board/render/thumbnails';
+import { readStrokes } from '$lib/board/sketch/data';
 import { renderStaticSvg, type StaticSvg } from '$lib/board/render/staticSvg';
 import { createCanvasMeasurer } from '$lib/board/render/wrapText';
 import { fragmentToJSON } from '$lib/board/doccards/fragmentJson';
@@ -27,6 +28,7 @@ export async function renderDocSvg(
 		padding: opts.padding,
 		measure: createCanvasMeasurer(),
 		assetDataUrl: async () => null,
+		sketchStrokes: (id) => readStrokes(doc, id),
 		docLines: async (id) => {
 			const frag = docs.get(id);
 			return frag ? docLines(fragmentToJSON(frag)) : [];

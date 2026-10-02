@@ -1,6 +1,7 @@
 import { SvelteSet } from 'svelte/reactivity';
 import type { ConnectorElement, Point, StrokeWidth } from '$lib/model/types';
 import type { Guide } from './engine/snapping';
+import type { SketchStroke } from './sketch/brushes';
 
 /** Transient, local-only feedback drawn by tools (never stored in the document). */
 export class PreviewState {
@@ -12,6 +13,8 @@ export class PreviewState {
 	eraserTrail = $state<Point[]>([]);
 	/** Snap guides (world coordinates) shown while dragging. */
 	guides = $state<Guide[]>([]);
+	/** The brush stroke being drawn with the sketch tool (board coordinates). */
+	sketch = $state<SketchStroke | null>(null);
 	/** A connector being drawn (not yet in the document). */
 	connector = $state<ConnectorElement | null>(null);
 	/** The element a connector end would attach to. */

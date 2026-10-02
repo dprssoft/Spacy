@@ -9,7 +9,17 @@ describe('visual fixture', () => {
 		const els = listElements(doc);
 		expect(els).toHaveLength(getElementsMap(doc).size); // nothing invalid
 		expect(new Set(els.map((e) => e.type))).toEqual(
-			new Set(['frame', 'shape', 'sticky', 'text', 'image', 'stroke', 'doccard', 'connector'])
+			new Set([
+				'frame',
+				'shape',
+				'sticky',
+				'text',
+				'image',
+				'stroke',
+				'sketch',
+				'doccard',
+				'connector'
+			])
 		);
 		const conns = els.filter((e) => e.type === 'connector');
 		expect(new Set(conns.map((c) => c.routing))).toEqual(new Set(['straight', 'elbow', 'curve']));

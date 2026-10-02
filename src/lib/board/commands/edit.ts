@@ -2,7 +2,8 @@ import * as Y from 'yjs';
 import { cloneElements } from '$lib/model/clone';
 import { getDocsMap } from '$lib/model/doc';
 import { newId } from '$lib/model/ids';
-import { createElements, updateElements } from '$lib/model/ops';
+import { createElements, setSketchStrokes, updateElements } from '$lib/model/ops';
+import { rawStrokes } from '../sketch/data';
 import { LOCAL } from '$lib/model/origins';
 import type { Element, NewElement, Point } from '$lib/model/types';
 import { compareZ } from '$lib/model/zorder';
@@ -36,13 +37,16 @@ export function deleteSelection(ctx: BoardContext): void {
 export function createWithContent(
 	ctx: BoardContext,
 	els: NewElement[],
-	fragments: Map<string, Y.XmlFragment> = new Map()
+	fragments: Map<string, Y.XmlFragment> = new Map(),
+	/** New sketch ids → the strokes to copy into them. */
+	sketches: Map<string, readonly unknown[]> = new Map()
 ): Element[] {
 	let created: Element[] = [];
 	ctx.doc.transact(() => {
 		created = createElements(ctx.doc, els);
 		const docs = getDocsMap(ctx.doc);
 		for (const [id, frag] of fragments) docs.set(id, frag.clone());
+		for (const [id, strokes] of sketches) setSketchStrokes(ctx.doc, id, strokes);
 	}, LOCAL);
 	// After the transaction: the store only sees the new elements once it has committed.
 	syncFrameMembership(
@@ -64,8 +68,13 @@ export function duplicateSelection(ctx: BoardContext, offset: Point = { x: 16, y
 		const frag = docs.get(oldId);
 		if (frag) fragments.set(newIdValue, frag);
 	}
+	const sketches = new Map<string, readonly unknown[]>();
+	for (const el of els) {
+		const copy = el.type === 'sketch' ? idMap.get(el.id) : undefined;
+		if (copy) sketches.set(copy, rawStrokes(ctx.doc, el.id));
+	}
 	ctx.undo.stopCapturing();
-	const created = createWithContent(ctx, elements, fragments);
+	const created = createWithContent(ctx, elements, fragments, sketches);
 	ctx.undo.stopCapturing();
 	ctx.selection.set(created.map((e) => e.id));
 }

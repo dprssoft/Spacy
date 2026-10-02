@@ -37,6 +37,7 @@ export const DEFAULT_SIZES: Record<ElementType, { w: number; h: number }> = {
 	text: { w: 20, h: Math.ceil(FONT_SIZE_PX.m * LINE_HEIGHT) },
 	image: { w: 0, h: 0 },
 	stroke: { w: 0, h: 0 },
+	sketch: { w: 0, h: 0 },
 	frame: { w: 800, h: 600 },
 	doccard: { w: 360, h: 280 },
 	connector: { w: 0, h: 0 }
@@ -75,6 +76,7 @@ const TYPE_TWEAKS: Record<ElementType, StyleTweak> = {
 	},
 	image: { fill: 'transparent', fillStyle: 'none', stroke: 'transparent', radius: 'none' },
 	stroke: { fill: 'transparent', fillStyle: 'none' },
+	sketch: { fill: 'transparent', fillStyle: 'none', stroke: 'transparent' },
 	frame: { fill: '#ffffff', fillStyle: 'semi', stroke: '#868e96', strokeWidth: 1 },
 	doccard: {
 		fill: '#ffffff',

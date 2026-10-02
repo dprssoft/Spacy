@@ -11,6 +11,7 @@ const TYPES: ElementType[] = [
 	'text',
 	'image',
 	'stroke',
+	'sketch',
 	'doccard',
 	'connector'
 ];

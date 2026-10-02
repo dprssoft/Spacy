@@ -10,6 +10,7 @@ import { PagesState } from './pages.svelte';
 import { BoardPrefs } from './prefs.svelte';
 import { PreviewState } from './preview.svelte';
 import { SelectionState } from './selection.svelte';
+import { SketchSettings } from './sketch/settings.svelte';
 import { ViewportState } from './viewport.svelte';
 
 export function testCtx(id = 'board-1', doc = new Y.Doc()): BoardContext {
@@ -29,6 +30,7 @@ export function testCtx(id = 'board-1', doc = new Y.Doc()): BoardContext {
 		pointer: null,
 		preview: new PreviewState(),
 		prefs: new BoardPrefs(),
+		sketch: new SketchSettings(),
 		tools: { setTool() {}, current: 'select', tool: { onCancel() {} } }
 	} as unknown as BoardContext;
 	ctx.editing = new TextEditing(ctx);

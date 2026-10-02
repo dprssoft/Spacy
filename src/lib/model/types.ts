@@ -4,7 +4,7 @@ export type Point = { x: number; y: number };
 export type Rect = { x: number; y: number; w: number; h: number };
 
 export type ElementType =
-	'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'frame' | 'doccard' | 'connector';
+	'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'sketch' | 'frame' | 'doccard' | 'connector';
 
 export type ShapeKind =
 	| 'rect'
@@ -81,6 +81,19 @@ export interface StrokeElement extends BaseElement {
 	type: 'stroke';
 	points: number[]; // flat [x,y,p,...] relative to (x,y), unscaled
 }
+/**
+ * A drawing made of many brush strokes in one object. The strokes live in `doc.getMap('sketches')`
+ * (append-only, keyed by element id) in the sketch's own coordinates; `bx, by, nw, nh` is the
+ * rectangle of that space the element's box shows. It grows as strokes are added and is stretched
+ * onto `w × h`, so moving or resizing the element never rewrites stroke data.
+ */
+export interface SketchElement extends BaseElement {
+	type: 'sketch';
+	bx: number;
+	by: number;
+	nw: number;
+	nh: number;
+}
 export interface FrameElement extends BaseElement {
 	type: 'frame';
 	title: string;
@@ -120,6 +133,7 @@ export type Element =
 	| TextElement
 	| ImageElement
 	| StrokeElement
+	| SketchElement
 	| FrameElement
 	| DocCardElement
 	| ConnectorElement;

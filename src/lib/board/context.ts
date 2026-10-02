@@ -9,6 +9,7 @@ import type { PreviewState } from './preview.svelte';
 import type { PagesState } from './pages.svelte';
 import type { BoardPrefs } from './prefs.svelte';
 import type { SelectionState } from './selection.svelte';
+import type { SketchSettings } from './sketch/settings.svelte';
 import type { HandleRegistry } from './tools/handles';
 import type { ShortcutRegistry } from './tools/shortcuts';
 import type { ToolManager } from './tools/toolManager.svelte';
@@ -33,6 +34,7 @@ export interface BoardContext {
 	assets: AssetUrlCache;
 	prefs: BoardPrefs;
 	pages: PagesState;
+	sketch: SketchSettings;
 }
 
 const KEY = Symbol('board');

@@ -5,6 +5,7 @@ export type ToolId =
 	| 'hand'
 	| 'pen'
 	| 'eraser'
+	| 'sketch'
 	| 'shape'
 	| 'connector'
 	| 'text'

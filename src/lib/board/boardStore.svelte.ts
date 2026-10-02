@@ -8,6 +8,7 @@ import { ConnectorIndex } from './diagram/connectorIndex';
 import { boardWorld } from './diagram/world';
 import { definitionOf } from './elements';
 import { SpatialIndex } from './engine/spatialIndex';
+import { readStrokes } from './sketch/data';
 
 /**
  * Reactive, read-only view of a board's elements (00-architecture.md §7).
@@ -23,7 +24,10 @@ export class BoardStore {
 	version = $state(0);
 	readonly index = new SpatialIndex();
 	readonly connectors = new ConnectorIndex();
-	readonly world: DiagramWorld = boardWorld((id) => this.elements.get(id));
+	readonly world: DiagramWorld = boardWorld(
+		(id) => this.elements.get(id),
+		(id) => readStrokes(this.#doc, id)
+	);
 
 	readonly #doc: Y.Doc;
 	#map: Y.Map<ElementYMap>;

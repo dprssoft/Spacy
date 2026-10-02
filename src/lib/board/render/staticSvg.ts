@@ -18,6 +18,7 @@ import { pureWorld } from '../elements/connectables';
 import { FRAME_TITLE_FONT, FRAME_TITLE_H } from '../elements/frame/geometry';
 import { isLineArt, shapePath } from '../elements/shape/paths';
 import { strokeSvgPath } from '../elements/stroke/strokePath';
+import { strokePaint, type SketchStroke } from '../sketch/brushes';
 import { expandRect } from '../engine/geometry';
 import { unionBounds } from './bounds';
 import { wrapText, type FontSpec } from './wrapText';
@@ -35,6 +36,8 @@ export interface StaticRenderOptions {
 	measure: (text: string, font: FontSpec) => number;
 	assetDataUrl: (assetId: string) => Promise<string | null>;
 	docLines: (doccardId: string) => Promise<DocLine[]>;
+	/** Brush strokes of a sketch element. */
+	sketchStrokes?: (sketchId: string) => readonly SketchStroke[];
 }
 
 export interface StaticSvg {
@@ -55,7 +58,7 @@ export function escapeXml(s: string): string {
 const n = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/\.?0+$/, ''));
 
 export async function renderStaticSvg(o: StaticRenderOptions): Promise<StaticSvg> {
-	const world = pureWorld(o.lookup);
+	const world = pureWorld(o.lookup, o.sketchStrokes);
 	const padding = o.padding ?? 32;
 	const content = o.bounds ?? unionBounds(o.elements, world) ?? { x: 0, y: 0, w: 0, h: 0 };
 	const vb = expandRect(content, padding);
@@ -143,6 +146,8 @@ class Renderer {
 			}
 			case 'stroke':
 				return `<path d="${strokeSvgPath(el.points, s.strokeWidth)}" fill="${escapeXml(s.stroke)}"/>`;
+			case 'sketch':
+				return this.sketch(el);
 			case 'frame': {
 				const title = el.title
 					? `<text x="0" y="${n(-FRAME_TITLE_H / 2 + FRAME_TITLE_FONT * 0.35)}" font-size="${FRAME_TITLE_FONT}" font-weight="500" fill="${MUTED}">${escapeXml(this.fit(el.title, FRAME_TITLE_FONT, Math.max(48, el.w)))}</text>`
@@ -194,6 +199,36 @@ class Renderer {
 		}
 		const clip = this.clip(0, DOC_CARD_HEADER_H, el.w, el.h - DOC_CARD_HEADER_H, 0);
 		return card + title + sep + `<g${clip}>${lines.join('')}</g>`;
+	}
+
+	/**
+	 * A sketch: its strokes in drawing order. An eraser removes what was drawn before it, so each
+	 * one wraps everything so far in a mask.
+	 */
+	sketch(el: Extract<Element, { type: 'sketch' }>): string {
+		const strokes = this.o.sketchStrokes?.(el.id) ?? [];
+		if (strokes.length === 0 || el.nw <= 0 || el.nh <= 0) return '';
+		let body = '';
+		for (const stroke of strokes) {
+			const p = strokePaint(stroke);
+			if (p.erase) {
+				if (!body) continue;
+				const id = `erase${++this.#clips}`;
+				this.defs.push(
+					`<mask id="${id}" maskUnits="userSpaceOnUse" x="${n(el.bx)}" y="${n(el.by)}" width="${n(el.nw)}" height="${n(el.nh)}"><rect x="${n(el.bx)}" y="${n(el.by)}" width="${n(el.nw)}" height="${n(el.nh)}" fill="#fff"/><path d="${p.d}" fill="none" stroke="#000" stroke-width="${n(p.width)}" stroke-linecap="round" stroke-linejoin="round"/></mask>`
+				);
+				body = `<g mask="url(#${id})">${body}</g>`;
+				continue;
+			}
+			const opacity = p.opacity < 1 ? ` opacity="${p.opacity}"` : '';
+			body +=
+				p.mode === 'fill'
+					? `<path d="${p.d}" fill="${escapeXml(p.color)}"${opacity}/>`
+					: `<path d="${p.d}" fill="none" stroke="${escapeXml(p.color)}" stroke-width="${n(p.width)}" stroke-linecap="${p.cap}" stroke-linejoin="round"${opacity}/>`;
+		}
+		const sx = el.w / el.nw;
+		const sy = el.h / el.nh;
+		return `<g transform="scale(${n(sx)} ${n(sy)}) translate(${n(-el.bx)} ${n(-el.by)})">${body}</g>`;
 	}
 
 	connector(el: ConnectorElement): string {

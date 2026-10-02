@@ -1,13 +1,15 @@
 // The board used by the visual regression test: every element type, all routings and markers.
 // Built by `pnpm fixtures` (scripts/make-fixtures.ts) into tests/e2e/fixtures/visual-board.smthng.
 import * as Y from 'yjs';
-import { STICKY_COLORS } from '$lib/model/defaults';
+import { baseStyleFor, STICKY_COLORS } from '$lib/model/defaults';
 import { getDocsMap } from '$lib/model/doc';
 import { migrate } from '$lib/model/migrations';
-import { createElements } from '$lib/model/ops';
+import { addSketchStroke, createElements } from '$lib/model/ops';
 import { TEMPLATE } from '$lib/model/origins';
 import type { Marker, NewElement } from '$lib/model/types';
 import { bytesToBase64 } from '$lib/shared/base64';
+import type { SketchStroke } from '$lib/board/sketch/brushes';
+import { firstFrame, growFrame } from '$lib/board/sketch/geometry';
 import { TemplateBuilder } from '$lib/templates/builder';
 
 const ASSET_ID = 'visual-asset';
@@ -155,6 +157,45 @@ export function buildVisualBoard(): Y.Doc {
 	doc.transact(() => {
 		b.commit(doc);
 		createElements(doc, extra, TEMPLATE);
+		// A sketch: one object with a stroke of each brush and an eraser pass.
+		const wavy = (y: number) => {
+			const p: number[] = [];
+			for (let x = 150; x <= 420; x += 15)
+				p.push(x, y + Math.sin(x / 30) * 8, 0.2 + ((x - 150) / 270) * 0.7);
+			return p;
+		};
+		const strokes: SketchStroke[] = [
+			{ b: 'pen', c: '#1e1e1e', s: 8, p: wavy(200) },
+			{ b: 'pencil', c: '#1971c2', s: 8, p: wavy(222) },
+			{ b: 'marker', c: '#e03131', s: 6, p: wavy(244) },
+			{ b: 'highlighter', c: '#f59f00', s: 6, p: wavy(266) },
+			{ b: 'eraser', c: '#000000', s: 6, p: [300, 185, 0.5, 300, 285, 0.5] }
+		];
+		let frame = firstFrame(strokes[0]!);
+		for (const s of strokes.slice(0, 4)) frame = growFrame(frame, s) ?? frame;
+		strokes.forEach((stroke, i) =>
+			addSketchStroke(
+				doc,
+				{
+					id: 'visual-sketch',
+					stroke,
+					create:
+						i === 0
+							? {
+									id: 'visual-sketch',
+									type: 'sketch',
+									rotation: 0,
+									parentId: null,
+									groupId: null,
+									locked: false,
+									style: baseStyleFor('sketch'),
+									...frame
+								}
+							: undefined
+				},
+				TEMPLATE
+			)
+		);
 		getDocsMap(doc)
 			.get(card.id)!
 			.insert(0, [

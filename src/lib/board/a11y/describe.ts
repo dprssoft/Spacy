@@ -7,6 +7,7 @@ const TYPE_NAMES: Record<Exclude<Element['type'], 'shape'>, string> = {
 	text: 'text',
 	image: 'image',
 	stroke: 'drawing',
+	sketch: 'sketch',
 	frame: 'frame',
 	doccard: 'doc card',
 	connector: 'connector'
@@ -42,6 +43,7 @@ const TOOL_NAMES: Record<ToolId, string> = {
 	hand: 'Hand',
 	pen: 'Pen',
 	eraser: 'Eraser',
+	sketch: 'Sketch',
 	shape: 'Shape',
 	connector: 'Connector',
 	text: 'Text',

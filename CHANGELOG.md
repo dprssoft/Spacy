@@ -46,6 +46,12 @@ The first release: a whiteboard that lives in your browser, with diagrams and do
 - Office-style layout: a ribbon toolbar with Select, Draw, Insert and Options groups, and a status bar with pages, an object count and zoom.
 - Drag a "+" button onto any object to connect to it.
 
+### Sketching
+
+- Sketch tool (B): strokes go into one sketch object instead of one object per stroke.
+- Brushes: pen and pencil (stylus pressure changes the width), marker, highlighter, and an eraser that erases inside the sketch. Size and color in the ribbon.
+- Sketches move, resize, copy, export (vector) and undo stroke by stroke.
+
 ### M7 — Release quality
 
 - Installable and fully offline (PWA) with an update prompt; settings and a backup reminder.

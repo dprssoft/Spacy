@@ -1,11 +1,14 @@
 import type { ConnectorElement, Element, Endpoint, Point } from '$lib/model/types';
 import { nearestPointOnPolygon, rectCenter } from '../engine/geometry';
+import type { SketchStroke } from '../sketch/brushes';
 import { PORTS, type Connectable } from './connectable';
 
 /** What diagram geometry needs from the board: element lookup and how each element connects. */
 export interface DiagramWorld {
 	get(id: string): Element | undefined;
 	connectable(el: Element): Connectable | null;
+	/** Brush strokes of a sketch element (for hit testing and rendering), when available. */
+	strokes?(sketchId: string): readonly SketchStroke[];
 }
 
 export interface Resolved {

@@ -12,6 +12,7 @@
 	import { setBoard, type BoardContext } from './context';
 	import { TextEditing } from './editing';
 	import { SelectionState } from './selection.svelte';
+	import { SketchSettings } from './sketch/settings.svelte';
 	import SelectionOverlay from './canvas/SelectionOverlay.svelte';
 	import ConnectOverlay from './canvas/ConnectOverlay.svelte';
 	import QuickCreateButtons from './canvas/QuickCreateButtons.svelte';
@@ -69,7 +70,8 @@
 		pointer: null,
 		preview: new PreviewState(),
 		assets: new AssetUrlCache(),
-		prefs: new BoardPrefs()
+		prefs: new BoardPrefs(),
+		sketch: new SketchSettings()
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);
@@ -113,6 +115,25 @@
 			if (idle !== null) window.cancelIdleCallback?.(idle);
 			if (timer !== null) clearTimeout(timer);
 		};
+	});
+
+	// Sketching goes into one object: picking the tool with a sketch selected continues it, and
+	// leaving the tool selects what was drawn.
+	let lastTool = ctx.tools.current;
+	$effect(() => {
+		const tool = ctx.tools.current;
+		untrack(() => {
+			if (tool === 'sketch' && lastTool !== 'sketch') {
+				const id = ctx.selection.single;
+				ctx.sketch.activeId = id && ctx.store.get(id)?.type === 'sketch' ? id : null;
+				ctx.selection.clear();
+			} else if (tool !== 'sketch' && lastTool === 'sketch') {
+				const id = ctx.sketch.activeId;
+				ctx.sketch.activeId = null;
+				if (id && ctx.store.get(id) && ctx.selection.size === 0) ctx.selection.set([id]);
+			}
+			lastTool = tool;
+		});
 	});
 
 	// The export dialog (and the static renderer behind it) loads the first time it's opened.
