@@ -107,6 +107,10 @@
 			ed.setEditable(on);
 			if (!on) {
 				if (ed.view.hasFocus()) (ed.view.dom as HTMLElement).blur();
+				// A selection left in the now unselectable text makes the browser search the whole
+				// document for a valid caret position on every frame (100 ms per frame at 1M characters).
+				const sel = getSelection();
+				if (sel?.anchorNode && ed.view.dom.contains(sel.anchorNode)) sel.removeAllRanges();
 				return;
 			}
 			const at = ctx.selection.editingAt;
