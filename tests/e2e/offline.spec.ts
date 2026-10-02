@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { createBoard, el, enableTestHooks, waitForHooks } from './helpers';
 
+test.skip(
+	({ browserName }) => browserName !== 'chromium',
+	'service worker offline behaviour is verified in Chromium'
+);
+
 test('boards and the start page work offline after the first visit', async ({ page, context }) => {
 	await enableTestHooks(page);
 	const id = await createBoard(page);

@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { createBoard, el, enableTestHooks, waitForHooks } from './helpers';
 
+test.skip(
+	({ browserName }) => browserName !== 'chromium',
+	'performance guards are measured in Chromium'
+);
+
 test('dragging one element re-renders only that element', async ({ page }) => {
 	await enableTestHooks(page);
 	await createBoard(page);

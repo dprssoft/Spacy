@@ -4,11 +4,13 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
+		"fixtures": "node scripts/make-fixtures.ts",
 		"analyze": "ANALYZE=1 vite build",
 		"icons": "pwa-assets-generator",
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "vite build && node scripts/postbuild-csp.mjs",
 		"preview": "vite preview",
+		"serve": "node scripts/serve-build.mjs",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -17,7 +19,8 @@
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage",
-		"test:e2e": "playwright test",
+		"test:e2e": "playwright test --project=chromium",
+		"test:e2e:all": "playwright test",
 		"verify": "pnpm check && pnpm lint && pnpm test && pnpm build"
 	},
 	"devDependencies": {

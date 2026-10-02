@@ -1,5 +1,5 @@
 import * as Y from 'yjs';
-import { z } from 'zod';
+import { z } from '$lib/shared/zod';
 import { getDocsMap, getElementsMap, getMeta, readElement } from '$lib/model/doc';
 import { migrate, NewerSchemaError } from '$lib/model/migrations';
 import { IMPORT } from '$lib/model/origins';
