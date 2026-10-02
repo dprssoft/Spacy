@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { getSketchesMap } from '$lib/model/doc';
 	import type { SketchElement } from '$lib/model/types';
 	import { theme } from '$lib/shared/theme.svelte';
@@ -47,8 +48,11 @@
 		return Math.min(wanted, side, area);
 	});
 
-	$effect(() => {
-		void version;
+	// What the drawing depends on. Moving the sketch gives it a new snapshot but the same frame:
+	// comparing these values (not the element object) keeps a drag from redrawing every frame.
+	const frame = $derived(`${el.w}|${el.h}|${el.bx}|${el.by}|${el.nw}|${el.nh}`);
+
+	function draw() {
 		const node = canvas;
 		if (!node || el.nw <= 0 || el.nh <= 0) return;
 		const k = resolution;
@@ -77,6 +81,27 @@
 				c.stroke(path);
 			}
 		}
+	}
+
+	// New strokes, a theme change and a new frame from drawing redraw at once. A frame that changes
+	// without new strokes is a resize: the canvas is stretched by CSS meanwhile, and redrawn sharp
+	// once the size settles.
+	let drawnVersion = -1;
+	let pending: ReturnType<typeof setTimeout> | null = null;
+	$effect(() => {
+		void [frame, resolution, theme.resolved, canvas];
+		const v = version;
+		untrack(() => {
+			if (pending) clearTimeout(pending);
+			pending = null;
+			if (v !== drawnVersion) {
+				drawnVersion = v;
+				draw();
+			} else pending = setTimeout(draw, 120);
+		});
+	});
+	$effect(() => () => {
+		if (pending) clearTimeout(pending);
 	});
 </script>
 
