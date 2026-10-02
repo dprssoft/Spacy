@@ -1,12 +1,14 @@
 <script lang="ts">
 	import Plus from '@lucide/svelte/icons/plus';
-	import type { Element, Port } from '$lib/model/types';
+	import type { Element, Point, Port } from '$lib/model/types';
 	import { getBoard } from '../context';
 	import { PORTS } from '../diagram/connectable';
+	import { createConnectGesture } from '../diagram/connectGesture';
+	import { makeEndpoint } from '../diagram/endpoints';
 	import { quickCreate, type QuickKind } from '../diagram/quickCreate';
 	import { definitionOf } from '../elements';
 	import { SHAPE_KINDS } from '../elements/shape/paths';
-	import { worldToScreen } from '../engine/viewport';
+	import { screenToWorld, worldToScreen } from '../engine/viewport';
 
 	const ctx = getBoard();
 	const { selection, store, viewport, tools } = ctx;
@@ -30,6 +32,8 @@
 	});
 
 	const source = $derived.by((): Element | null => {
+		// While a connection is being dragged from a button, stay on the element it started from.
+		if (drag) return store.get(drag.sourceId) ?? null;
 		if (
 			tools.current !== 'select' ||
 			selection.transforming ||
@@ -66,6 +70,71 @@
 
 	const LABELS: Record<Port, string> = { n: 'above', e: 'right', s: 'below', w: 'left' };
 
+	// Dragging a "+" draws a connector from that side to whatever it's dropped on (any type of
+	// object); a plain click adds a connected copy instead.
+	const DRAG_THRESHOLD_PX = 5;
+	let drag = $state<{
+		sourceId: string;
+		port: Port;
+		start: Point;
+		gesture: ReturnType<typeof createConnectGesture> | null;
+	} | null>(null);
+	let suppressClick = false;
+
+	/** Pointer position on the canvas (screen) and in the world. */
+	function locate(e: PointerEvent) {
+		const r = (e.currentTarget as HTMLElement).offsetParent?.getBoundingClientRect();
+		const screen = { x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) };
+		return { screen, world: screenToWorld(viewport.vp, screen) };
+	}
+
+	function onpointerdown(e: PointerEvent, port: Port) {
+		e.stopPropagation();
+		if (e.button !== 0 || !source) return;
+		suppressClick = false;
+		drag = { sourceId: source.id, port, start: locate(e).screen, gesture: null };
+		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+	}
+
+	function onpointermove(e: PointerEvent) {
+		if (!drag) return;
+		const { screen, world } = locate(e);
+		if (!drag.gesture) {
+			if (Math.hypot(screen.x - drag.start.x, screen.y - drag.start.y) < DRAG_THRESHOLD_PX) return;
+			const el = store.get(drag.sourceId);
+			const c = el ? definitionOf(el).connectable : null;
+			if (!el || !c) return;
+			picker = null;
+			const from = makeEndpoint(el, c, c.ports(el)[drag.port], 'auto', 1);
+			drag.gesture = createConnectGesture(ctx, from, drag.start);
+		}
+		drag.gesture.move(world, e.altKey);
+	}
+
+	function onpointerup(e: PointerEvent) {
+		const d = drag;
+		drag = null;
+		if (!d?.gesture) return;
+		suppressClick = true; // the click that follows a drag isn't a "create a copy"
+		const { screen, world } = locate(e);
+		const id = d.gesture.finish(world, screen, e.altKey);
+		if (id) selection.set([id]);
+	}
+
+	function oncancel() {
+		drag?.gesture?.cancel();
+		drag = null;
+	}
+
+	function onclick(e: MouseEvent, b: { port: Port; x: number; y: number }) {
+		if (suppressClick) {
+			suppressClick = false;
+			return;
+		}
+		if (e.shiftKey) picker = { port: b.port, x: b.x, y: b.y };
+		else create(b.port);
+	}
+
 	function create(port: Port, override?: QuickKind) {
 		if (!source) return;
 		const id = quickCreate(ctx, source.id, port, override);
@@ -95,12 +164,16 @@
 		data-interactive
 		data-quick-create={b.port}
 		aria-label="Add connected element {LABELS[b.port]}"
-		title="Add connected element (Shift: choose type)"
+		title="Drag to connect to another object · Click to add a connected copy · Shift+click to choose its type"
 		class="pointer-events-auto absolute flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent text-accent-contrast opacity-70 shadow transition hover:scale-110 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none"
+		class:invisible={drag?.gesture != null}
 		style:left="{b.x}px"
 		style:top="{b.y}px"
-		onpointerdown={(e) => e.stopPropagation()}
-		onclick={(e) => (e.shiftKey ? (picker = { port: b.port, x: b.x, y: b.y }) : create(b.port))}
+		onpointerdown={(e) => onpointerdown(e, b.port)}
+		{onpointermove}
+		{onpointerup}
+		onpointercancel={oncancel}
+		onclick={(e) => onclick(e, b)}
 	>
 		<Plus class="size-3.5" aria-hidden="true" />
 	</button>

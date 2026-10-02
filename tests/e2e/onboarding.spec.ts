@@ -7,7 +7,7 @@ test('first-run tips show once, and again from the help menu', async ({ page }) 
 	await expect(tip).toContainText('Tip 1 of 3');
 	await expect(tip).toContainText('Pick a tool');
 	await tip.getByRole('button', { name: 'Next' }).click();
-	await expect(tip).toContainText('drag from its dots');
+	await expect(tip).toContainText('onto any other object to connect them');
 	await tip.getByRole('button', { name: 'Next' }).click();
 	await expect(tip).toContainText('Press N for a doc card');
 	await tip.getByRole('button', { name: 'Got it' }).click();
