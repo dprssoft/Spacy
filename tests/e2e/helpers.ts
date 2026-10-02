@@ -42,6 +42,15 @@ export async function waitForHooks(page: Page): Promise<void> {
 	await page.waitForFunction(() => !!window.__smthng);
 }
 
+/**
+ * Waits until a new, empty board has set its initial view (the origin at the canvas center).
+ * The view is set asynchronously after the hooks appear; content created before that is fitted
+ * on screen instead, at whatever zoom it takes.
+ */
+export async function waitForInitialView(page: Page): Promise<void> {
+	await page.waitForFunction(() => (window.__smthng?.ctx.viewport.x ?? 0) !== 0);
+}
+
 /** Shape/sticky/text element inputs (without z) for creating elements through the test hooks. */
 export const el = {
 	shape: (id: string, x: number, y: number, extra: Record<string, unknown> = {}) => ({
