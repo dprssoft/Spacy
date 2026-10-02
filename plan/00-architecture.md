@@ -48,7 +48,8 @@ Accounts, server sync, comments, version history, UML/BPMN libraries, auto-layou
 | D7 | **Every element type is connectable** via a `Connectable` implementation (default = rotated bounding box) | "Any object can be part of a diagram" is enforced by architecture |
 | D8 | **Connector geometry is derived at render time**, never stored (except `lastX/lastY` on attachment and conversion to free) | Moving a shape never writes to connectors; no write storms |
 | D9 | **Framework-agnostic core** (`model`, `storage`, `engine`, `diagram`, `render`) has no Svelte imports | Testable, portable |
-| D10 | **Canvas undo ≠ editor undo.** Canvas `Y.UndoManager` scope = `elements` + `docs` maps, tracking only `LOCAL` transactions; TipTap edits use the y-prosemirror origin, so they stay out of it and use the editor's own collaboration undo inside a focused editor | Avoids cross-talk between text and canvas undo; `docs` is in scope so undoing a card's creation/deletion (same LOCAL transaction) also removes/restores its text (step 23) |
+| D10 | **Canvas undo ≠ editor undo.** Canvas `Y.UndoManager` scope = every page's element map + the `docs` map, tracking only `LOCAL` transactions; TipTap edits use the y-prosemirror origin, so they stay out of it and use the editor's own collaboration undo inside a focused editor | Avoids cross-talk between text and canvas undo; `docs` is in scope so undoing a card's creation/deletion (same LOCAL transaction) also removes/restores its text (step 23) |
+| D11 | **Pages (sheets) are separate element maps in the same `Y.Doc`**: `meta.pages` lists them, the first page is the original `elements` map, others are `page:<id>`. The active page is per-tab view state (`getElementsMap(doc)` returns it), so the store, tools, undo and export work on one page at a time | Old boards and files stay valid with no data migration; switching pages swaps one map instead of filtering every element; two tabs can show different pages |
 
 ## 4. Folder structure
 
@@ -176,8 +177,10 @@ export type Element =
 ### Y.Doc layout
 
 ```
-doc.getMap('meta')      schemaVersion: number, title: string, stylePresets: Style[] (JSON)
-doc.getMap('elements')  Y.Map<elementId, Y.Map<string, unknown>>
+doc.getMap('meta')      schemaVersion: number, title: string, stylePresets: Style[] (JSON),
+                        pages: { id: string; name: string }[] (JSON; absent = one page "Page 1" with id 'main')
+doc.getMap('elements')  Y.Map<elementId, Y.Map<string, unknown>>   — the elements of page 'main'
+doc.getMap('page:<id>') same shape, one map per additional page
                         - one nested Y.Map per element; each top-level field is one key
                         - object/array fields (style, from, to, label, waypoints, points) are stored
                           as plain JSON values and replaced as a whole on change
@@ -190,7 +193,8 @@ Rules:
 - Frames render beneath all non-frame elements (own layer); `z` orders frames among themselves.
 - Deleting a doccard deletes its `docs` entry in the same transaction.
 - Deleting an element converts endpoints of connectors attached to it into `free` endpoints at their current resolved position, in the same transaction (step 20).
-- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open.
+- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards).
+- Pages (`src/lib/model/pages.ts`): elements never move between maps; connectors attach only within a page; `docs` is shared and keyed by element id. Anything that must see the whole board (asset cleanup, import, board duplication) uses `allPageMaps` / `listAllElements`. Deleting a page removes its elements and their `docs` entries with origin `PAGES` (not undoable) and clears the undo history.
 
 ## 6. Storage
 

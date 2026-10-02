@@ -1,6 +1,7 @@
 import * as Y from 'yjs';
 import { z } from '$lib/shared/zod';
-import { getDocsMap, getElementsMap, getMeta, readElement } from '$lib/model/doc';
+import { getDocsMap, getMeta, readElement } from '$lib/model/doc';
+import { allPageMaps } from '$lib/model/pages';
 import { migrate, NewerSchemaError } from '$lib/model/migrations';
 import { IMPORT } from '$lib/model/origins';
 import { base64ToBytes, bytesToBase64 } from '$lib/shared/base64';
@@ -187,23 +188,24 @@ export async function importPayload(
 			assetIds.set(a.id, await assetsRepo.put(meta.id, blob, { width: a.width, height: a.height }));
 		}
 
-		const elements = getElementsMap(doc);
 		const docs = getDocsMap(doc);
 		doc.transact(() => {
-			for (const [id, value] of [...elements.entries()]) {
-				const el = value instanceof Y.Map ? readElement(value) : null;
-				if (!el || el.id !== id) {
-					elements.delete(id);
-					dropped++;
-					continue;
+			// Every page of the board.
+			for (const elements of allPageMaps(doc))
+				for (const [id, value] of [...elements.entries()]) {
+					const el = value instanceof Y.Map ? readElement(value) : null;
+					if (!el || el.id !== id) {
+						elements.delete(id);
+						dropped++;
+						continue;
+					}
+					if (el.type === 'image') {
+						const next = assetIds.get(el.assetId);
+						if (next) value.set('assetId', next);
+					}
+					if (el.type === 'doccard' && !(docs.get(id) instanceof Y.XmlFragment))
+						docs.set(id, new Y.XmlFragment());
 				}
-				if (el.type === 'image') {
-					const next = assetIds.get(el.assetId);
-					if (next) value.set('assetId', next);
-				}
-				if (el.type === 'doccard' && !(docs.get(id) instanceof Y.XmlFragment))
-					docs.set(id, new Y.XmlFragment());
-			}
 			getMeta(doc).set('title', meta.title);
 		}, IMPORT);
 

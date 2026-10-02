@@ -694,3 +694,42 @@ Append one entry per completed step (newest at the bottom). Keep entries short a
 **Follow-ups:** Manual checks not done: a full keyboard-only pass of the start page and board by hand, and a VoiceOver/NVDA spot check of the announcements. The actor shape's label overlaps its figure (not dark-specific).
 
 **Verification:** pnpm verify ✅ (593 unit tests; new: reading order and Tab stepping, announcement texts, ink mapping) · pnpm test:e2e ✅ (136; new `a11y.spec.ts` (6), `keyboard-only.spec.ts`: R → Enter creates a rectangle → Enter edits → type → Escape → ArrowRight ×10 moves 10 px → `?` opens the dialog, search filters, Escape closes; Enter creation for sticky, doc card, frame and text; Tab order a → b → c then out of the canvas; toolbar arrows/Home/End with a single tab stop; `onboarding.spec.ts`: three tips once, again from Help, About).
+
+## Step 32 (in progress) — Full E2E and deployment — 2026-10-03
+**Done so far** (commit `e55a9fe`):
+- **Security headers and CSP.** `static/_headers` and `_redirects`; the theme script moved to `static/theme-init.js`. SvelteKit's inline bootstrap script changes per build, so `scripts/postbuild-csp.mjs` (part of `pnpm build`) adds its sha256 to `script-src` in `build/_headers`. No `'unsafe-inline'` for scripts.
+- **E2E runs against the real static output.** `scripts/serve-build.mjs` serves `build/` with the SPA fallback and the headers from `_headers`; Playwright uses it instead of `vite preview`. `csp.spec.ts` checks the header and that home, template previews, a doc card editor, the export preview and the service worker cause no violations.
+- **Zod runs without `eval`** (`shared/zod.ts`, `jitless`): its fast path probes `new Function`, which the CSP reports as a violation.
+- **`tabs-sync.spec.ts`**: create, move and type across two tabs; remote changes stay off the local undo stack.
+- **Visual regression**: `pnpm fixtures` (`scripts/make-fixtures.ts` loads `src/lib/dev/visualFixture.ts` through Vite) writes `tests/e2e/fixtures/visual-board.smthng` with every element type, routing and marker. `visual.spec.ts` compares the canvas in light and dark (Chromium, local only: baselines depend on the machine's fonts; tolerance 0.1 %).
+- **Bug found by the baselines and fixed:** the database shape's lid was an unfilled hole (the lid arc ran against the body under the nonzero fill rule).
+- **Browsers:** `firefox` and `webkit` projects; `pnpm test:e2e` runs Chromium, `pnpm test:e2e:all` runs all three; offline and perf-guard are Chromium-only. CI runs a browser matrix with cached browsers, 2 retries and 2 workers, and uploads reports and traces on failure.
+- README (features, data & privacy, development, testing, deploy, roadmap) and `CHANGELOG.md`.
+
+**Still open:**
+- Firefox: the first local run had failures (at least nine, mostly clipboard tests) that haven't been triaged. WebKit can't launch on this machine (needs Ubuntu system libraries); it runs in CI only.
+- No deploy credentials in the environment: the manual steps are in README → Deploy.
+- Version 1.0.0, the `v1.0.0` tag and Lighthouse are not done.
+
+## Extra — Connect by dragging "+" — 2026-10-03 (commit `4415227`)
+The "+" buttons were click-only (a click adds a connected copy of the same type), so connecting two existing objects needed the Connector tool or the small hover dots. Dragging a "+" now runs the same connect gesture as the dots (preview, target highlight, any object type); a click still adds a copy. e2e: `diagram.spec.ts`.
+
+## Extra — Pages and Office-style layout — 2026-10-03
+Requested by the human after step 31: "make it look a bit like office software, but keep simple" and "add page systems like in ms excel".
+
+**Pages (data model change, D11 and §5 updated):**
+- `model/pages.ts`: `meta.pages` lists `{ id, name }`; the first page (`main`) is the original `elements` map and other pages are `page:<id>` maps. `getElementsMap(doc)` returns the active page's map; the active page is per-tab view state (a WeakMap), so ops, the store, tools, clipboard and export work on one page with no changes.
+- Schema version 2 (no data moves). The bump stops an older app from opening a multi-page board, whose asset cleanup would not know about the other pages.
+- Whole-board code uses every page: asset cleanup (`gcAssets`), `.smthng` import (validation and asset remap), board duplication, and the undo manager's scope.
+- `board/pages.svelte.ts` (`ctx.pages`): select, add, rename, move, remove, reveal. Switching ends editing, clears the selection, rebinds the store (`BoardStore.rebind`) and restores that page's view (kept per session; a page seen for the first time fits its content). The last shown page is remembered per board in localStorage.
+- Undo follows pages: each undo step records the page it changed, and undo/redo switch to it first.
+- Deleting a page removes its elements and doc card contents (origin `PAGES`, not undoable), clears the undo history, and asks for confirmation. The last page can't be deleted.
+- Mentions and `?doc=` links find objects on other pages and switch to them. Connectors and mention suggestions stay within a page.
+- Export "Board" is now "Page" (the current page); the file name gets the page name when there are several.
+
+**Layout:**
+- Title bar, then a docked ribbon (`Toolbar`) with labelled groups (Select, Draw, Insert, Options), the canvas, and a status bar (`StatusBar`) with the sheet tabs (`PageTabs`), an object/selection count, zoom and help.
+- Sheet tabs: click to switch, double-click or F2 to rename, right-click or the menu key for Rename / Move left / Move right / Delete, arrow keys between tabs, "+" to add.
+- A board opened without a saved view now fits its content (templates and imports no longer open half off-screen).
+
+**Verification:** see the commit; unit tests for the page model, page state, cross-page undo, asset cleanup and multi-page import/duplicate; `pages.spec.ts` e2e.

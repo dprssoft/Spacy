@@ -1,30 +1,26 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { GRID_SIZE } from '$lib/model/defaults';
-	import type { Rect } from '$lib/model/types';
 	import { debounce } from '$lib/shared/debounce';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
 	import { cycleSelection } from '../a11y/keyboard';
 	import { getBoard } from '../context';
-	import { centeredOrigin, screenToWorld } from '../engine/viewport';
+	import { centeredOrigin, fitRect, screenToWorld } from '../engine/viewport';
 	import { ACCEPTED_TYPES, importImageFiles } from '../images/importImages';
 	import { SHAPE_DRAG_TYPE, SHAPE_KINDS } from '../elements/shape/paths';
 	import { createShapeAt } from '../tools/create';
 	import { syncFrameMembership } from '../frameMembership';
 	import { pointerRouter } from '../tools/pointerRouter';
-	import ZoomControls from '../ui/ZoomControls.svelte';
 	import { viewportInput } from './viewportInput';
 
 	let {
 		world,
-		overlay,
-		contentBounds = () => null
+		overlay
 	}: {
 		/** Content in world coordinates (scaled and translated with the viewport). */
 		world?: Snippet;
 		/** Content in screen coordinates (selection handles, guides…). */
 		overlay?: Snippet;
-		contentBounds?: () => Rect | null;
 	} = $props();
 
 	const ctx = getBoard();
@@ -44,7 +40,12 @@
 			if (!restored) {
 				restored = true;
 				void boardsRepo.get(id).then((meta) => {
-					viewport.set(meta?.viewport ?? centeredOrigin(viewport.size));
+					// A saved view, else fit what's there (a template, an import), else the origin.
+					const content = ctx.store.contentBounds();
+					viewport.set(
+						meta?.viewport ??
+							(content ? fitRect(content, viewport.size, 64, 1) : centeredOrigin(viewport.size))
+					);
 				});
 			}
 		});
@@ -172,4 +173,3 @@
 	Use tools from the toolbar. Press Enter to create with the active tool, Tab to move between
 	objects. Press ? for keyboard shortcuts.
 </p>
-<ZoomControls {viewport} {contentBounds} />

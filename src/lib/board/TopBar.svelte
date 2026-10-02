@@ -28,7 +28,7 @@
 		'flex h-8 cursor-default items-center rounded-md px-2 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-surface-2';
 </script>
 
-<header class="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-surface px-2">
+<header class="flex h-11 shrink-0 items-center gap-2 border-b border-border bg-surface-2 px-2">
 	<a
 		href={resolve('/')}
 		aria-label="Back to boards"

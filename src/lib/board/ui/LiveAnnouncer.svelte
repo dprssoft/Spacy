@@ -46,7 +46,18 @@
 		say(describeSelection(ids.flatMap((id) => ctx.store.get(id) ?? [])));
 	});
 
+	let firstPage = true;
 	$effect(() => {
+		const name = ctx.pages.page.name;
+		if (firstPage) {
+			firstPage = false;
+			return;
+		}
+		say(name, 3);
+	});
+
+	$effect(() => {
+		void ctx.pages.current; // each page has its own element map
 		const map = getElementsMap(ctx.doc);
 		const onChange = (e: {
 			transaction: { origin: unknown };

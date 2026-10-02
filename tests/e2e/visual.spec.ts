@@ -6,6 +6,9 @@ import { expect, test, type Page } from '@playwright/test';
 test.skip(({ browserName }) => browserName !== 'chromium', 'visual baselines are Chromium-only');
 test.skip(!!process.env.CI, 'visual baselines are machine-specific; run locally');
 
+// Large enough for the fixture to fit at 100 % (a board opened for the first time fits its content).
+test.use({ viewport: { width: 1440, height: 900 } });
+
 async function openFixture(page: Page, theme: 'light' | 'dark') {
 	await page.addInitScript((t) => {
 		localStorage.setItem('smthng:theme', JSON.stringify(t));
@@ -20,6 +23,7 @@ async function openFixture(page: Page, theme: 'light' | 'dark') {
 	await expect(page.locator('[data-type="image"] img')).toBeVisible();
 	await expect(page.locator('[data-type="connector"]')).toHaveCount(13);
 	await expect(page.getByText('Saved locally')).toBeVisible();
+	await expect(page.getByRole('button', { name: /Zoom options, current zoom 100%/ })).toBeVisible();
 	await page.mouse.move(2, 2); // no hover feedback
 }
 

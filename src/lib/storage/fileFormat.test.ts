@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { getDocsMap, getElementsMap, listElements } from '$lib/model/doc';
 import { createElements } from '$lib/model/ops';
+import { addPage, getPages, listAllElements, pageOfElement, setActivePage } from '$lib/model/pages';
 import { samples } from '$lib/model/testFixtures';
 import type { Element } from '$lib/model/types';
 import { bytesToBase64 } from '$lib/shared/base64';
 import * as assetsRepo from './assetsRepo';
-import { loadSnapshot, openBoard } from './boardDoc';
+import { duplicateBoard, loadSnapshot, openBoard } from './boardDoc';
 import * as boardsRepo from './boardsRepo';
 import {
 	exportBackup,
@@ -98,6 +99,36 @@ describe('board files', () => {
 		const result = await importFile(new File([JSON.stringify(file)], 'x.smthng'));
 		expect(result.warnings).toEqual(['“Broken”: 1 damaged object(s) were skipped']);
 		expect(listElements(await contentOf(result.boards[0]!.id))).toHaveLength(8);
+	});
+});
+
+describe('boards with pages', () => {
+	it('export, import and duplicate keep every page and remap images on all of them', async () => {
+		const meta = await boardsRepo.create({ title: 'Paged' });
+		const png = new Blob([new Uint8Array(64).fill(3)], { type: 'image/png' });
+		const assetId = await assetsRepo.put(meta.id, png, { width: 4, height: 4 });
+		const board = await openBoard(meta.id);
+		createElements(board.doc, [samples.shape('first')]);
+		const second = addPage(board.doc, { name: 'Second' });
+		setActivePage(board.doc, second.id);
+		createElements(board.doc, [{ ...samples.image('img'), assetId }, samples.doccard('card')]);
+		await board.close();
+
+		const check = async (id: string) => {
+			const doc = await contentOf(id);
+			expect(getPages(doc).map((p) => p.name)).toEqual(['Page 1', 'Second']);
+			const all = listAllElements(doc);
+			expect(all.map((e) => e.id).sort()).toEqual(['card', 'first', 'img']);
+			const image = all.find((e) => e.type === 'image');
+			const newAsset = image?.type === 'image' ? image.assetId : '';
+			expect(newAsset).not.toBe(assetId);
+			expect((await assetsRepo.get(newAsset))?.boardId).toBe(id);
+			expect(pageOfElement(doc, 'img')).toBe(second.id);
+		};
+		const imported = await importFile(await asFile(await exportBoardFile(meta.id)));
+		expect(imported.warnings).toEqual([]);
+		await check(imported.boards[0]!.id);
+		await check((await duplicateBoard(meta.id)).id);
 	});
 });
 

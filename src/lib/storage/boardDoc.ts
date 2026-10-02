@@ -1,9 +1,9 @@
 import { deleteDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
-import { getDocsMap, getElementsMap, getMeta, listElements } from '$lib/model/doc';
+import { getDocsMap, getMeta } from '$lib/model/doc';
 import { migrate } from '$lib/model/migrations';
-import { updateElements } from '$lib/model/ops';
+import { allPageMaps } from '$lib/model/pages';
 import { IMPORT, LOCAL, MIGRATION, type Origin } from '$lib/model/origins';
 import { debounce } from '$lib/shared/debounce';
 import * as assetsRepo from './assetsRepo';
@@ -120,13 +120,16 @@ export async function duplicateBoard(id: string): Promise<BoardMeta> {
 
 	const doc = new Y.Doc();
 	Y.applyUpdate(doc, await loadSnapshot(id), IMPORT);
-	const patches = listElements(doc).flatMap((el) =>
-		el.type === 'image' && assetMap.has(el.assetId)
-			? [{ id: el.id, patch: { assetId: assetMap.get(el.assetId) } }]
-			: []
-	);
-	updateElements(doc, patches, IMPORT);
-	doc.transact(() => getMeta(doc).set('title', title), IMPORT);
+	doc.transact(() => {
+		// Images on every page point at the copied assets.
+		for (const map of allPageMaps(doc))
+			for (const ymap of map.values()) {
+				const next =
+					ymap.get('type') === 'image' ? assetMap.get(String(ymap.get('assetId'))) : null;
+				if (next) ymap.set('assetId', next);
+			}
+		getMeta(doc).set('title', title);
+	}, IMPORT);
 	await writeSnapshot(meta.id, Y.encodeStateAsUpdate(doc));
 	doc.destroy();
 
@@ -141,7 +144,8 @@ export async function duplicateBoard(id: string): Promise<BoardMeta> {
  * the same LOCAL transaction as the element).
  */
 export function createBoardUndo(doc: Y.Doc): Y.UndoManager {
-	return new Y.UndoManager([getElementsMap(doc), getDocsMap(doc)], {
+	// Every page is in scope; pages added later join through `undo.addToScope` (board/pages).
+	return new Y.UndoManager([...allPageMaps(doc), getDocsMap(doc)], {
 		trackedOrigins: new Set([LOCAL]),
 		captureTimeout: 500
 	});

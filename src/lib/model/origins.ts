@@ -9,3 +9,5 @@ export const REMOTE_TAB: Origin = Object.freeze({ name: 'remote-tab' });
 export const IMPORT: Origin = Object.freeze({ name: 'import' });
 export const MIGRATION: Origin = Object.freeze({ name: 'migration' });
 export const TEMPLATE: Origin = Object.freeze({ name: 'template' });
+/** Page management (deleting a page's content): local, but deliberately not undoable. */
+export const PAGES: Origin = Object.freeze({ name: 'pages' });
