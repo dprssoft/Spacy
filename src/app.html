@@ -9,18 +9,7 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon-180x180.png" />
 		<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
-		<script>
-			// Apply the theme before first paint to avoid a flash (see src/lib/shared/theme.svelte.ts).
-			try {
-				var mode = JSON.parse(localStorage.getItem('smthng:theme') || '"system"');
-				var dark =
-					mode === 'dark' ||
-					(mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-				document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-			} catch (e) {
-				document.documentElement.dataset.theme = 'light';
-			}
-		</script>
+		<script src="%sveltekit.assets%/theme-init.js"></script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

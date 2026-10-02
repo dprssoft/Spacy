@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from '$lib/shared/zod';
 import type { Element } from './types';
 
 const num = z.number(); // zod rejects NaN and ±Infinity

@@ -90,8 +90,9 @@ export function shapePath(kind: ShapeKind, w: number, h: number, radius = 0, ins
 				`V ${f(y1 - ry)}`,
 				`A ${f(rx)} ${f(ry)} 0 0 1 ${f(x0)} ${f(y1 - ry)}`,
 				'Z',
-				// The visible front edge of the top lid.
-				`M ${f(x0)} ${f(y0 + ry)} A ${f(rx)} ${f(ry)} 0 0 0 ${f(x1)} ${f(y0 + ry)}`
+				// The visible front edge of the top lid. Drawn in the same direction as the body:
+				// the other way round, the two cancel out under the nonzero fill rule (a hole).
+				`M ${f(x1)} ${f(y0 + ry)} A ${f(rx)} ${f(ry)} 0 0 1 ${f(x0)} ${f(y0 + ry)}`
 			].join(' ');
 		}
 		case 'cloud': {
