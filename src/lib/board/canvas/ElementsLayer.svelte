@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Rect } from '$lib/model/types';
+	import { timed } from '$lib/dev/testHooks';
 	import { getBoard } from '../context';
 	import ElementView from '../elements/ElementView.svelte';
 	import { expandRectRatio } from '../engine/geometry';
@@ -48,7 +49,7 @@
 	$effect(() => {
 		// Dependencies: viewport and any element change.
 		void [viewport.x, viewport.y, viewport.zoom, viewport.size, store.version];
-		if (!frame) frame = requestAnimationFrame(recompute);
+		if (!frame) frame = requestAnimationFrame(() => timed('layer.cull', recompute));
 	});
 	$effect(() => () => cancelAnimationFrame(frame));
 
