@@ -5,7 +5,7 @@
 	import { cycleSelection } from '../a11y/keyboard';
 	import { getBoard } from '../context';
 	import { centeredOrigin, fitRect, screenToWorld } from '../engine/viewport';
-	import { ACCEPTED_TYPES, importImageFiles } from '../images/importImages';
+	import { canImport, importFiles } from '../files/importFiles';
 	import { SHAPE_DRAG_TYPE, SHAPE_KINDS } from '../elements/shape/paths';
 	import { createShapeAt } from '../tools/create';
 	import { syncFrameMembership } from '../frameMembership';
@@ -64,7 +64,7 @@
 	});
 	$effect(() => () => saveViewport.flush());
 
-	// Image files dropped onto the canvas land where they were dropped.
+	// Files dropped onto the canvas (images, text, Markdown, Word) land where they were dropped.
 	let dropping = $state(false);
 	const hasFiles = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files');
 	const hasShape = (e: DragEvent) => !!e.dataTransfer?.types.includes(SHAPE_DRAG_TYPE);
@@ -101,11 +101,11 @@
 		if (!hasFiles(e) || !container) return;
 		e.preventDefault();
 		dropping = false;
-		const files = [...(e.dataTransfer?.files ?? [])].filter((f) => ACCEPTED_TYPES.includes(f.type));
+		const files = [...(e.dataTransfer?.files ?? [])].filter(canImport);
 		if (files.length === 0) return;
 		const r = container.getBoundingClientRect();
 		const at = screenToWorld(viewport.vp, { x: e.clientX - r.left, y: e.clientY - r.top });
-		void importImageFiles(ctx, files, at);
+		void importFiles(ctx, files, at);
 	}
 
 	// Tab on the canvas itself walks through the objects; past the last one, focus moves on.

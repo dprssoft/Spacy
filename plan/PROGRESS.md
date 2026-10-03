@@ -918,3 +918,23 @@ Requested by the human ("step 2 and 3"). Targets were the hot spots measured in 
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (669 unit tests; new in `ops.test.ts`: invalid stored data is skipped, observers get the written element while later reads come from the map, stale keys fall back to parsing) · pnpm test:e2e ✅ (162, including the perf guard's render counts and the visual snapshots) · `pnpm bench`.
+
+## Extra — Drop text, Markdown and Word files — 2026-10-03
+Requested by the human: "can we add drag&drop for txt, gifs, webp, md, docx?". GIF and WebP drops already worked (`ACCEPTED_TYPES`); the rest is new.
+
+**Summary:**
+- `board/files/`: `fileKinds.ts` detects text, Markdown and Word files, by extension first (browsers often report no type for `.md`). `importFiles.ts` is the drop handler: images go through the existing image import, documents become doc cards. Everything added is selected.
+- `importDocs.ts` (lazy chunk) converts each file to HTML, maps that onto the doc card schema with ProseMirror's DOM parser, and writes it to a new 480 × 560 card titled with the file name. Creating and filling the card is one transaction, so one undo step.
+  - Text: blank lines separate paragraphs, single line breaks stay line breaks.
+  - Markdown: `marked` (GFM). Task lists become checklists.
+  - Links other than http(s)/mailto are unlinked. Elements the schema doesn't know (scripts, images, tables) are dropped.
+- `docx.ts`: a small converter with no dependency. It unzips with `DecompressionStream`, reads `document.xml` with `DOMParser`, and handles headings (from style names, so localized style ids work), bold/italic/underline/strike, tabs and breaks, external links, and bullet/numbered/nested lists (from `numbering.xml`). Tables are flattened to paragraphs.
+- Files over 10 MB, and `.docx` files that aren't Word documents, show an error toast.
+
+**Deviations / notes:**
+- `importDocs` writes the card and its content in one `doc.transact(…, LOCAL)` around `createElements` and `setDocContent` (like templates), rather than a new helper in `model/ops.ts`.
+- Not supported: `.doc` (the old binary format), images inside Word files, and pasting these files from the clipboard (only image paste exists).
+- `templates/docContent.ts` now exports `docSchema`.
+
+**Dependencies added:** `marked@18.0.14` (MIT): the Markdown parser, in the lazily loaded import chunk (15.6 KB gzipped together with the importer). `mammoth` was the alternative for `.docx`, but it adds about 170 KB gzipped, so `.docx` uses the small converter instead.
+**Verification:** pnpm verify ✅ (682 unit tests; new `docx.test.ts` on hand-built zips with stored and deflated entries, and `importDocs.test.ts`) · pnpm test:e2e ✅ (165; new `file-drop.spec.ts`: Markdown → formatted card with checklist, one undo step; `.txt` + a real `.docx` fixture → two selected cards, unsupported file ignored; a fake `.docx` shows an error).
