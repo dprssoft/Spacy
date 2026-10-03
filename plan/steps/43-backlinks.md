@@ -3,7 +3,7 @@
 Phase: K. Writers · Depends on: 39 · Estimate: 1 day
 
 ## Goal
-Every mentionable object shows where it's mentioned: a "Mentioned in…" list for characters, places, scenes, frames, media and (step 46) waystones, so doc cards work like a small wiki.
+Every mentionable object shows where it's mentioned: a "Mentioned in…" list for characters, places, scenes, frames, and media, so doc cards work like a small wiki.
 
 ## Read first
 - `src/lib/board/doccards/{mentions.ts, jumpTo.ts, fragmentJson.ts}`, `src/lib/board/elements/doccard/DocCardHeader.svelte`
