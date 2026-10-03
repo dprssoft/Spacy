@@ -17,6 +17,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | M7: v1.0 | 32 | PWA, performance, accessibility, full E2E, deploy |
 | M8: Extensions | 36 | Insert templates (kanban, retro, SWOT…) into any board; play YouTube, Vimeo, audio and video on the board with rich controls |
 | M9: Mobile | 38 | Use and edit boards on phones and tablets: fitted layout, finger gestures, long-press menu, style sheet, keyboard-aware editing |
+| M10: Writers | 46 | Word counts, focus aids, writing templates, outline + compile to one manuscript, backlinks, find & replace, comments on anything, waystones |
 
 ## Steps
 
@@ -60,6 +61,14 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 36 | [Rich media controls](./steps/36-rich-media-controls.md) | I | 35 | 2.5d |
 | [x] | 37 | [Mobile layout and touch navigation](./steps/37-mobile-layout-touch-navigation.md) | J. Mobile | 36 | 1.5d |
 | [x] | 38 | [Touch editing](./steps/38-mobile-touch-editing.md) | J | 37 | 1.5d |
+| [ ] | 39 | [Word count and focus mode options](./steps/39-word-count-focus-options.md) | K. Writers | 38 | 1d |
+| [ ] | 40 | [Writer templates](./steps/40-writer-templates.md) | K | 34 | 1d |
+| [ ] | 41 | [Outline panel](./steps/41-outline-panel.md) ⚠ approval (meta.outline) | K | 39 | 1.5d |
+| [ ] | 42 | [Manuscript compile](./steps/42-manuscript-compile.md) | K | 41 | 2d |
+| [ ] | 43 | [Backlinks](./steps/43-backlinks.md) | K | 39 | 1d |
+| [ ] | 44 | [Find and replace](./steps/44-find-replace.md) | K | 39 | 1.5d |
+| [ ] | 45 | [Comments](./steps/45-comments.md) ⚠ approval (non-goal, data model, schema 6) | K | 44 | 2.5d |
+| [ ] | 46 | [Waystones](./steps/46-waystones.md) ⚠ approval (element type, schema) | K | 43 | 1.5d |
 
 Total is about 46 working days for one developer, or about 11–12 weeks with a buffer.
 
