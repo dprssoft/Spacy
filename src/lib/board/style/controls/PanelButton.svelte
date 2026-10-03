@@ -25,7 +25,7 @@
 			sideOffset={8}
 			collisionPadding={8}
 			data-interactive
-			class="z-50 flex w-max max-w-72 flex-col items-start gap-3 rounded-xl border border-border bg-surface p-3 shadow-lg"
+			class="z-50 flex max-h-(--bits-floating-available-height) w-max max-w-72 flex-col items-start gap-3 overflow-y-auto rounded-xl border border-border bg-surface p-3 shadow-lg"
 		>
 			{@render children()}
 		</Popover.Content>

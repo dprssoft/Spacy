@@ -10,6 +10,7 @@ import {
 	STICKY_TEXT_COLOR
 } from '$lib/model/defaults';
 import type { ConnectorElement, Element, Rect, Style } from '$lib/model/types';
+import { fontStack } from '$lib/fonts/catalog';
 import { connectorGeometry } from '../diagram/geometry';
 import { markerShape, markerSize, markerTransform } from '../diagram/markers';
 import { pointAt } from '../diagram/routing';
@@ -38,6 +39,8 @@ export interface StaticRenderOptions {
 	docLines: (doccardId: string) => Promise<DocLine[]>;
 	/** Brush strokes of a sketch element. */
 	sketchStrokes?: (sketchId: string) => readonly SketchStroke[];
+	/** `@font-face` rules that embed the fonts used, so the file shows them anywhere. */
+	fontCss?: string;
 }
 
 export interface StaticSvg {
@@ -54,6 +57,10 @@ const CARD_BG_FALLBACK = '#ffffff';
 export function escapeXml(s: string): string {
 	return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
+
+/** A font-family attribute for anything but the document's default font. */
+const familyAttr = (stack: string) =>
+	stack === FONT_FAMILY ? '' : ` font-family="${escapeXml(stack)}"`;
 
 const n = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/\.?0+$/, ''));
 
@@ -76,7 +83,7 @@ export async function renderStaticSvg(o: StaticRenderOptions): Promise<StaticSvg
 			: `<rect x="${n(vb.x)}" y="${n(vb.y)}" width="${n(vb.w)}" height="${n(vb.h)}" fill="${escapeXml(o.background)}"/>`;
 	const svg =
 		`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${n(vb.x)} ${n(vb.y)} ${n(vb.w)} ${n(vb.h)}" font-family="${escapeXml(FONT_FAMILY)}">` +
-		`<defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.15"/></filter>${r.defs.join('')}</defs>` +
+		`<defs>${o.fontCss ? `<style>${o.fontCss}</style>` : ''}<filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.15"/></filter>${r.defs.join('')}</defs>` +
 		bg +
 		body.join('') +
 		'</svg>';
@@ -169,6 +176,7 @@ class Renderer {
 		const size = FONT_SIZE_PX[s.font.size];
 		const radius = RADIUS_PX[s.radius];
 		const color = escapeXml(s.font.color);
+		const family = fontStack(s.font.family);
 		const card = `<rect x="${n(s.strokeWidth / 2)}" y="${n(s.strokeWidth / 2)}" width="${n(el.w - s.strokeWidth)}" height="${n(el.h - s.strokeWidth)}" rx="${radius}" ${fillAttrs(s)} ${strokeAttrs(s)}/>`;
 		const titleX = 12 + 24 + 4;
 		const title = `<text x="${titleX}" y="${n(DOC_CARD_HEADER_H / 2 + size * 0.35)}" font-size="${size}" font-weight="600" fill="${color}">${escapeXml(this.fit(el.title, size, el.w - titleX - 48, true))}</text>`;
@@ -185,13 +193,13 @@ class Renderer {
 		let y = box.y;
 		for (const line of await this.o.docLines(el.id)) {
 			const fs = line.kind === 'h' ? Math.round(size * 1.3) : size;
-			const font: FontSpec = { size: fs, bold: line.kind === 'h', family: FONT_FAMILY };
+			const font: FontSpec = { size: fs, bold: line.kind === 'h', family };
 			const indent = line.kind === 'li' ? size : 0;
 			for (const t of wrapText(line.text, box.w - indent, (x) => this.o.measure(x, font))) {
 				const lh = fs * 1.55;
 				if (y > box.y + box.h) break;
 				lines.push(
-					`<text x="${n(box.x + indent)}" y="${n(y + lh / 2 + fs * 0.35)}" font-size="${fs}"${line.kind === 'h' ? ' font-weight="650"' : ''} fill="${color}">${escapeXml(t)}</text>`
+					`<text x="${n(box.x + indent)}" y="${n(y + lh / 2 + fs * 0.35)}" font-size="${fs}"${familyAttr(family)}${line.kind === 'h' ? ' font-weight="650"' : ''} fill="${color}">${escapeXml(t)}</text>`
 				);
 				y += lh;
 			}
@@ -274,7 +282,8 @@ class Renderer {
 	text(text: string, font: Style['font'], box: Rect, color: string, autoWidth?: number): string {
 		if (!text) return '';
 		const size = FONT_SIZE_PX[font.size];
-		const spec: FontSpec = { size, bold: font.bold, italic: font.italic, family: FONT_FAMILY };
+		const family = fontStack(font.family);
+		const spec: FontSpec = { size, bold: font.bold, italic: font.italic, family };
 		const lines = wrapText(text, box.w, (s) => this.o.measure(s, spec));
 		const lh = size * LINE_HEIGHT;
 		const total = lines.length * lh;
@@ -291,7 +300,7 @@ class Renderer {
 				: font.align === 'r'
 					? ['end', box.x + width]
 					: ['middle', box.x + width / 2];
-		const attrs = `font-size="${size}"${font.bold ? ' font-weight="700"' : ''}${font.italic ? ' font-style="italic"' : ''} fill="${escapeXml(color)}" text-anchor="${anchor}"`;
+		const attrs = `font-size="${size}"${familyAttr(family)}${font.bold ? ' font-weight="700"' : ''}${font.italic ? ' font-style="italic"' : ''} fill="${escapeXml(color)}" text-anchor="${anchor}"`;
 		return lines
 			.map((l, i) =>
 				l

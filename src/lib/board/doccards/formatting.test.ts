@@ -12,6 +12,7 @@ import {
 	setChoice
 } from './formatCommands';
 import { ALIGNS, FORMAT_MARKS, HIGHLIGHTS, TEXT_COLORS, type FormatMark } from './formatOptions';
+import { docFontCss } from '$lib/fonts/catalog';
 import { fragmentToJSON } from './fragmentJson';
 import { docToMarkdown } from './markdown';
 
@@ -74,6 +75,34 @@ describe('character formatting', () => {
 			'<p><span data-color="url(x)">a</span><span data-font="Comic Sans" data-size="huge">b</span></p>'
 		);
 		expect(ed.getHTML()).toBe('<p>a<span data-size="huge">b</span></p>');
+	});
+
+	it('takes any #rrggbb color for text and highlight, carried by a CSS variable', () => {
+		const ed = withContent('<p>Hello</p>');
+		setChoice(ed, 'textColor', '#12ab9f');
+		setChoice(ed, 'highlight', '#ffd43b');
+		const html = ed.getHTML();
+		expect(html).toContain('data-color="custom" style="--doc-color: #12ab9f;"');
+		expect(html).toContain('data-highlight="custom" style="--doc-highlight: #ffd43b;"');
+		expect(choiceOf(ed, 'textColor')).toBe('#12ab9f');
+		expect(choiceOf(ed, 'highlight')).toBe('#ffd43b');
+
+		// Read back from HTML (paste), and only real colors.
+		ed.commands.setContent(html);
+		expect(ed.getHTML()).toBe(html);
+		ed.commands.setContent(
+			'<p><span data-color="custom" style="--doc-color: red; background: url(x)">a</span><span data-color="custom">b</span></p>'
+		);
+		expect(ed.getHTML()).toBe('<p>ab</p>');
+		// Fonts and sizes take ids only.
+		setChoice(ed, 'fontFamily', '#123456');
+		expect(ed.getHTML()).toBe('<p>ab</p>');
+	});
+
+	it('offers every font of the catalog', () => {
+		const ed = withContent('<p>Hello</p>');
+		setChoice(ed, 'fontFamily', 'playfair');
+		expect(ed.getHTML()).toBe('<p><span data-font="playfair">Hello</span></p>');
 	});
 
 	it('reads several choices from one span', () => {
@@ -180,8 +209,11 @@ describe('prose.css', () => {
 	it('styles every choice and alignment', () => {
 		for (const mark of Object.keys(FORMAT_MARKS) as FormatMark[]) {
 			const { data, choices } = FORMAT_MARKS[mark];
-			for (const c of choices) expect(css, `${data}=${c.id}`).toContain(`[${data}='${c.id}']`);
+			// Font rules are generated from the font catalog.
+			const rules = mark === 'fontFamily' ? docFontCss() : css;
+			for (const c of choices) expect(rules, `${data}=${c.id}`).toContain(`[${data}='${c.id}']`);
 		}
+		expect(css).toContain("[data-color='custom']");
 		for (const a of ALIGNS.filter((a) => a !== 'left'))
 			expect(css).toContain(`[data-align='${a}']`);
 	});

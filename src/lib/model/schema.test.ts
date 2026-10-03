@@ -14,6 +14,18 @@ describe('parseElement', () => {
 		expect(parsed?.style).not.toBe(el.style);
 	});
 
+	it('keeps a font family, and accepts its absence', () => {
+		const base = samples.text();
+		const el = { ...base, style: { ...base.style, font: { ...base.style.font, family: 'lora' } } };
+		expect(parseElement(el)?.style.font.family).toBe('lora');
+		expect(parseElement(base)?.style.font).not.toHaveProperty('family');
+		const long = {
+			...el,
+			style: { ...el.style, font: { ...el.style.font, family: 'x'.repeat(41) } }
+		};
+		expect(parseElement(long)).toBeNull();
+	});
+
 	it('strips unknown keys', () => {
 		expect(parseElement({ ...samples.text(), extra: 1 })).not.toHaveProperty('extra');
 	});

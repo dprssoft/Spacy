@@ -54,6 +54,29 @@ describe('renderStaticSvg', () => {
 		expect(svg).not.toMatch(/href="(?!data:)/);
 	});
 
+	it('writes text in its font and embeds the given font rules', async () => {
+		const plain = { ...samples.shape('a'), text: 'Plain' };
+		const fancy = {
+			...samples.shape('b'),
+			x: 300,
+			text: 'Fancy',
+			style: {
+				...samples.shape('b').style,
+				font: { ...samples.shape('b').style.font, family: 'caveat' }
+			}
+		};
+		const css = '@font-face{font-family:"SMTHNG Caveat";src:url(data:font/woff2;base64,AA)}';
+		const { svg } = await renderStaticSvg(options([plain, fancy], { fontCss: css }));
+		const dom = parse(svg);
+		expect(dom.getElementsByTagName('parsererror')).toHaveLength(0);
+		const texts = [...dom.getElementsByTagName('text')];
+		expect(texts.find((t) => t.textContent === 'Plain')?.getAttribute('font-family')).toBeNull();
+		expect(texts.find((t) => t.textContent === 'Fancy')?.getAttribute('font-family')).toMatch(
+			/^"SMTHNG Caveat", cursive$/
+		);
+		expect(dom.getElementsByTagName('style')[0]?.textContent).toBe(css);
+	});
+
 	it('escapes text for XML', async () => {
 		const shape = { ...samples.shape('s'), w: 600, text: 'a <b> & "c" \'d\'' };
 		const { svg } = await renderStaticSvg(options([shape]));

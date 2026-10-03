@@ -58,6 +58,12 @@ The first release: a whiteboard that lives in your browser, with diagrams and do
 - Large doc cards drag at full speed (a card with a million characters went from 10 to 60 frames per second).
 - Ctrl/⌘+Enter in a doc card opens focus mode without adding a line break to the text.
 
+### Fonts and colors
+
+- 13 fonts for all text — shapes, sticky notes, text, doc cards (whole card or selected text): Inter, Montserrat, Oswald, Comfortaa, Lora, Roboto Slab, Playfair Display, JetBrains Mono, Caveat and Pacifico are bundled (Latin and Cyrillic, about 1 MB, work offline), plus the default, a system serif and a system monospace. Exports embed the fonts they use.
+- A 50-color palette (four shades of ten hues and a row of grays) in every color picker: fill, stroke, text, sticky notes, sketch brushes ("More colors"), doc card text and highlight.
+- Any color: a color picker and a hex field everywhere, and the last custom colors under "Recent". Sticky notes take any color too.
+
 ### M7 — Release quality
 
 - Installable and fully offline (PWA) with an update prompt; settings and a backup reminder.

@@ -173,6 +173,14 @@
 .doc-prose [data-color='pink'] {
 	color: var(--doc-pink);
 }
+/* Any color: the value is in a CSS variable on the span. In dark focus mode, dark text is lightened
+   enough to read (browsers without relative colors show it as authored). */
+.doc-prose [data-color='custom'] {
+	color: var(--doc-color);
+}
+[data-theme='dark'] [data-focus-body] [data-color='custom'] {
+	color: oklch(from var(--doc-color) max(l, 0.72) c h);
+}
 .doc-prose [data-highlight] {
 	background: color-mix(in srgb, var(--doc-highlight) 35%, transparent);
 }
@@ -197,12 +205,7 @@
 .doc-prose [data-highlight='pink'] {
 	--doc-highlight: var(--doc-pink);
 }
-:is(.doc-prose, .doc-format) [data-font='serif'] {
-	font-family: Georgia, Cambria, 'Times New Roman', Times, serif;
-}
-:is(.doc-prose, .doc-format) [data-font='mono'] {
-	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
+/* data-font rules come from the font catalog ($lib/fonts/register.ts). */
 .doc-prose [data-size='small'] {
 	font-size: 0.85em;
 }

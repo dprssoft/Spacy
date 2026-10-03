@@ -38,6 +38,8 @@ export interface Style {
 		color: string;
 		align: 'l' | 'c' | 'r';
 		valign: 't' | 'm' | 'b';
+		/** A font id from `$lib/fonts/catalog`; missing or unknown means the default font. */
+		family?: string;
 	};
 }
 

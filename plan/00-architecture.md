@@ -12,7 +12,7 @@ This document is the contract every step builds on. Steps may refine details, bu
 - Real-time multi-user collaboration is **not** in scope, but the data layer (Yjs) is chosen so a sync server can be added later by changing only `openBoard()`.
 
 ### Non-goals (do not build)
-Accounts, server sync, comments, version history, UML/BPMN libraries, auto-layout, swimlanes, gradients, custom fonts (doc cards offer a fixed set of system fonts), custom shape editor, frame clipping, nested frames, nested groups, connector-to-connector junctions, line jumps, page/print layout, tables/images inside doc cards, suggestion mode, mobile editing (mobile/touch: view + basic pan/zoom only).
+Accounts, server sync, comments, version history, UML/BPMN libraries, auto-layout, swimlanes, gradients, user-uploaded fonts (a fixed set of 10 bundled open-licence fonts plus system stacks is offered), custom shape editor, frame clipping, nested frames, nested groups, connector-to-connector junctions, line jumps, page/print layout, tables/images inside doc cards, suggestion mode, mobile editing (mobile/touch: view + basic pan/zoom only).
 
 ## 2. Tech stack
 
@@ -124,6 +124,7 @@ export interface Style {
     color: string;
     align: 'l' | 'c' | 'r';
     valign: 't' | 'm' | 'b';
+    family?: string;                    // font id ($lib/fonts/catalog); missing/unknown = default
   };
 }
 
@@ -198,7 +199,8 @@ Rules:
 - Deleting a doccard deletes its `docs` entry in the same transaction.
 - Deleting an element converts endpoints of connectors attached to it into `free` endpoints at their current resolved position, in the same transaction (step 20).
 - `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards).
-- Doc card text formatting (schema version 4): underline, `textColor`, `highlight`, `fontFamily` and `fontSize` marks and an `align` attribute on paragraphs and headings. The marks hold ids from fixed lists (`doccards/formatOptions.ts`), rendered as `data-*` attributes and styled in `prose.css`; unknown values are dropped on parse. The bump matters: an older editor deletes text carrying marks it doesn't know.
+- Fonts (`src/lib/fonts`): `catalog.ts` lists the fonts (id, label, category, CSS stack); 10 are bundled from `@fontsource*` packages (Latin, Latin Extended and Cyrillic woff2 subsets, ~1 MB in all, precached for offline use) and registered with the `FontFace` API under `SMTHNG <name>` families, so the browser downloads a subset only when text uses it. Canvas text stores the id in `style.font.family` (optional; no schema bump: an older app shows the default font); doc card text uses the `fontFamily` mark. Exports embed the files of the fonts they use as data URLs.
+- Doc card text formatting (schema version 4): underline, `textColor`, `highlight`, `fontFamily` and `fontSize` marks and an `align` attribute on paragraphs and headings. The marks hold ids from fixed lists (`doccards/formatOptions.ts`), rendered as `data-*` attributes and styled in `prose.css`; text color and highlight also take a `#rrggbb` value (`data-*="custom"` plus a CSS variable in the style attribute). Anything else is dropped on parse. The bump matters: an older editor deletes text carrying marks it doesn't know.
 - Sketches (schema version 3): `SketchElement { type: 'sketch'; bx; by; nw; nh }` shows the rectangle `(bx, by, nw, nh)` of its stroke space stretched onto its box. Adding a stroke appends to `sketches[id]` and grows that rectangle and the box together (one transaction, one undo step), so moving or resizing never rewrites stroke data. `sketches` entries are created, deleted, copied and undone with their element, like `docs`.
 - Pages (`src/lib/model/pages.ts`): elements never move between maps; connectors attach only within a page; `docs` is shared and keyed by element id. Anything that must see the whole board (asset cleanup, import, board duplication) uses `allPageMaps` / `listAllElements`. Deleting a page removes its elements and their `docs` entries with origin `PAGES` (not undoable) and clears the undo history.
 
