@@ -1054,3 +1054,12 @@ Requested by the human: "steps 37, 38 and button to return to canvas origin poin
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (795 unit tests; new `keyboard.test.ts`, palm rejection in `touchGestures.test.ts`) · pnpm test:e2e ✅ (197 = desktop + mobile; new `mobile-editing.spec.ts`: long-press a shape → menu (44 px rows) → Duplicate; still long-press on empty canvas → Paste / Select all; tap → docked style bar → Fill sheet (full width, axe-clean) → color applied → swipe closes; double-tap with a simulated 320 px keyboard → the element moves above it, typing saved, tools back after; one finger draws with the pen; right after a stylus a palm draws nothing, and fingers draw again after a second; media controls 44 px with a seek bar, tap pauses, axe-clean) · the palm test was checked by disabling palm rejection: it fails · screenshots (selection handles, sheet, doc card editing with the keyboard) reviewed.
+
+## Extra — Canvas focus ring only for keyboard navigation — 2026-10-03
+Reported by the human (screenshot): "why do we have this focus outline?"
+
+**Cause:** the canvas is focusable (it receives the shortcuts) and had a `focus-visible` ring. Every click focuses it from code (`pointerRouter`), and Chrome matches `:focus-visible` for script focus that follows a key press. So after any shortcut (a tool key, Escape out of text) the ring appeared and stayed while using the mouse.
+
+**Change:** `Canvas.svelte` shows the ring (`data-tab-focus`) only when Tab brought focus to the canvas; a pointer press or blur clears it. Keyboard users keep the indicator, and Tab cycling between objects keeps it on.
+
+**Verification:** pnpm verify ✅ (795) · pnpm test:e2e ✅ (198; new in `keyboard-only.spec.ts`: click + shortcut + Escape → focused without the ring; Tab from the toolbar → ring; a click → no ring).

@@ -128,6 +128,21 @@
 	}
 
 	// Tab on the canvas itself walks through the objects; past the last one, focus moves on.
+	// The focus ring is for keyboard navigation: it shows when Tab brought focus here, not when
+	// a click focused the canvas (the browser's :focus-visible also lights up after shortcuts).
+	let tabFocus = $state(false);
+	let lastKeyWasTab = false;
+	$effect(() => {
+		const note = (e: KeyboardEvent) => (lastKeyWasTab = e.key === 'Tab');
+		const clear = () => (lastKeyWasTab = false);
+		window.addEventListener('keydown', note, true);
+		window.addEventListener('pointerdown', clear, true);
+		return () => {
+			window.removeEventListener('keydown', note, true);
+			window.removeEventListener('pointerdown', clear, true);
+		};
+	});
+
 	function onkeydown(e: KeyboardEvent) {
 		if (e.key !== 'Tab' || e.target !== container || e.ctrlKey || e.metaKey || e.altKey) return;
 		if (ctx.selection.editingId || ctx.tools.current !== 'select') return;
@@ -167,7 +182,11 @@
 			spaceHeld = s;
 		}
 	})}
-	class="relative h-full w-full touch-none overflow-hidden overscroll-none outline-none select-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-inset"
+	class="relative h-full w-full touch-none overflow-hidden overscroll-none outline-none select-none data-[tab-focus]:ring-2 data-[tab-focus]:ring-accent/40 data-[tab-focus]:ring-inset"
+	data-tab-focus={tabFocus || undefined}
+	onfocus={() => (tabFocus = lastKeyWasTab)}
+	onblur={() => (tabFocus = false)}
+	onpointerdown={() => (tabFocus = false)}
 	{@attach pointerRouter(ctx)}
 	style:cursor={panning ? 'grabbing' : spaceHeld ? 'grab' : ctx.tools.tool.cursor}
 	style:background-image={gridImage}

@@ -100,3 +100,22 @@ test('the toolbar is one tab stop with arrow-key navigation', async ({ page }) =
 	await expect(toolbar.getByRole('button', { name: 'Select (V)' })).toBeFocused();
 	await expect(toolbar.locator('button[tabindex="0"]')).toHaveCount(1);
 });
+
+test('the canvas focus ring shows for Tab, not after clicks and shortcuts', async ({ page }) => {
+	await createBoard(page);
+	const canvas = page.getByTestId('canvas');
+	const box = (await canvas.boundingBox())!;
+	await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+	await page.keyboard.press('r');
+	await page.keyboard.press('Escape');
+	await expect(canvas).toBeFocused();
+	await expect(canvas).not.toHaveAttribute('data-tab-focus');
+
+	// Tab from the last toolbar control into the canvas.
+	await page.getByRole('button', { name: 'Keep tool active' }).focus();
+	await page.keyboard.press('Tab');
+	await expect(canvas).toBeFocused();
+	await expect(canvas).toHaveAttribute('data-tab-focus');
+	await page.mouse.click(box.x + 20, box.y + box.height - 20);
+	await expect(canvas).not.toHaveAttribute('data-tab-focus');
+});
