@@ -2,7 +2,7 @@
 
 Phase: K. Writers · Depends on: 44 · Estimate: 2.5 days
 
-> **Needs the human's approval:** lifts the "comments" non-goal, adds a `comments` map, a `comment` text mark and schema version 6.
+> **Approved by the human (2026-10-04):** lifts the "comments" non-goal, adds a `comments` map, a `comment` text mark and schema version 6.
 
 ## Goal
 Comment threads on **any object** (a sticky, a shape, a frame, an image, a connector, media…) and on **ranges of text** inside doc cards. Comments can be replied to, resolved and reopened, listed in a panel, and they travel with the board in `.smthng` files. No accounts: the author is a name you set once (per browser).
