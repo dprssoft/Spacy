@@ -2,6 +2,8 @@
 
 Phase: I. Extensions · Depends on: 31 · Estimate: 2.5 days
 
+The player here uses the providers' and the browser's built-in controls; step 36 replaces them with our own.
+
 > **Needs the human's approval before starting:** this adds an element type, bumps the schema version and widens the Content-Security-Policy. When approved, update `00-architecture.md` (§1 summary, §5 types and rules, §6 CSP note, §9 registry list) in the same commit.
 
 ## Goal
@@ -22,10 +24,12 @@ export interface MediaElement extends BaseElement {
   provider: MediaProvider;  // parsed once from the URL when created
   mediaId: string | null;   // provider video id (youtube/vimeo); null for files
   start: number;            // seconds, from ?t= / #t= (0 = start)
+  end: number | null;       // seconds; play only up to here (a clip). null = to the end (used by step 36)
+  loop: boolean;            // restart at `start` when reaching `end` or the end (used by step 36)
   title: string;            // label on the poster; defaults to the host + id or file name
 }
 ```
-- `ElementType` gains `'media'`; schema version 5 (no data moves). The bump keeps older apps from opening boards with media: they would drop the elements they can't parse from their view, and a later edit (e.g. deleting a frame) could leave them orphaned.
+- `ElementType` gains `'media'`; schema version 5 (no data moves). `end` and `loop` are part of the type from the start (defaults `null` / `false`), so step 36's controls need no second bump. The bump keeps older apps from opening boards with media: they would drop the elements they can't parse from their view, and a later edit (e.g. deleting a frame) could leave them orphaned.
 - No new Y.Doc maps, no assets, no file format change (`.smthng` carries the element like any other).
 
 ## Tasks
@@ -75,7 +79,7 @@ export interface MediaElement extends BaseElement {
 - [ ] `00-architecture.md` updated (types, schema version 5, CSP)
 
 ## Out of scope
-Local media files stored on the board (step 36), thumbnails from providers, other providers (Spotify, SoundCloud, Loom), synced playback between tabs, playlists.
+Our own play controls (step 36: this step uses the providers' and the browser's built-in controls), local media files stored on the board (dropped from the plan), thumbnails from providers, other providers (Spotify, SoundCloud, Loom), synced playback between tabs, playlists.
 
 ## Commit
 `feat(media): add media elements that play YouTube, Vimeo, audio and video links in place`
