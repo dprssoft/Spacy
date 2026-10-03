@@ -52,6 +52,12 @@ The first release: a whiteboard that lives in your browser, with diagrams and do
 - Brushes: pen and pencil (stylus pressure changes the width), marker, highlighter, and an eraser that erases inside the sketch. Size and color in the ribbon.
 - Sketches move, resize, copy, export (vector) and undo stroke by stroke.
 
+### Doc card formatting
+
+- While a doc card is edited, the ribbon shows Word-like formatting: style (normal text, headings, quote, code), font, size, bold, italic, underline, strikethrough, text color, highlight, clear formatting, lists and alignment. Focus mode has the same toolbar.
+- Large doc cards drag at full speed (a card with a million characters went from 10 to 60 frames per second).
+- Ctrl/⌘+Enter in a doc card opens focus mode without adding a line break to the text.
+
 ### M7 — Release quality
 
 - Installable and fully offline (PWA) with an update prompt; settings and a backup reminder.
