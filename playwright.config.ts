@@ -18,8 +18,10 @@ export default defineConfig({
 		reuseExistingServer: !process.env.CI
 	},
 	projects: [
-		{ name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-		{ name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-		{ name: 'webkit', use: { ...devices['Desktop Safari'] } }
+		{ name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /mobile-.*\.spec\.ts/ },
+		{ name: 'firefox', use: { ...devices['Desktop Firefox'] }, testIgnore: /mobile-.*\.spec\.ts/ },
+		{ name: 'webkit', use: { ...devices['Desktop Safari'] }, testIgnore: /mobile-.*\.spec\.ts/ },
+		// Phones: Chromium with touch input (Pixel 7 emulation).
+		{ name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /mobile-.*\.spec\.ts/ }
 	]
 });

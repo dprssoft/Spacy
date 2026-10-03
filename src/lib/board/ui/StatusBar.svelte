@@ -10,7 +10,7 @@
 
 <!-- Like a spreadsheet's bottom bar: page tabs on the left, status and zoom on the right. -->
 <footer
-	class="flex h-8 shrink-0 items-stretch gap-2 border-t border-border bg-surface-2 pr-1 text-xs"
+	class="flex h-8 shrink-0 items-stretch gap-2 border-t border-border bg-surface-2 pr-1 text-xs max-sm:gap-1 pointer-coarse:h-11"
 	data-interactive
 >
 	<PageTabs />

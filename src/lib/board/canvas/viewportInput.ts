@@ -1,5 +1,8 @@
 import type { ViewportState } from '../viewport.svelte';
 
+/** Dispatched on the canvas when a pinch starts: tools drop what the first finger started. */
+export const GESTURE_CANCEL = 'smthng:gesturecancel';
+
 export interface ViewportInputOptions {
 	/** When true, Space isn't taken for panning (a playing media element uses it to play/pause). */
 	spaceTaken?: () => boolean;
@@ -86,6 +89,8 @@ export function viewportInput(viewport: ViewportState, opts: ViewportInputOption
 				if (touches.size === 2) {
 					pinch = pinchState();
 					e.stopPropagation();
+					// The first finger may have started a tool gesture: a pinch never moves or selects.
+					node.dispatchEvent(new CustomEvent(GESTURE_CANCEL));
 				}
 				return;
 			}

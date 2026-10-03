@@ -1015,3 +1015,25 @@ Approved by the human ("approved, start step 35"): new element type, schema vers
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (790 unit tests; new `clip.test.ts`, `players.test.ts` (YouTube handshake, commands, info, ignored sources/origins/garbage, fallback, cleanup; Vimeo events, getPaused, refused speed, fallback; native state and controls), `controls.test.ts` (session prefs and clip enforcement, playInClip, undoable clamped clip writes, speed steps, keys with and without a target, one at a time incl. autoplay)) · pnpm test:e2e ✅ (179; new `media-controls.spec.ts`: play/pause/seek/time on YouTube; Set start/end + Loop → markers, loops, undo; volume/speed survive a reload and aren't on the element; a second media pauses the first and Vimeo hides speed when refused; Space/arrows/M on the selected playing media, arrows don't nudge, a doc card still gets spaces; bar height equal at 25 %, 100 %, 200 % and axe-clean; a silent player falls back) · `media-controls.spec.ts` 21/21 with `--repeat-each=3` · screenshots of the bar in light and dark reviewed.
+
+## Step 37 — Mobile layout and touch navigation (+ Back to origin) — 2026-10-03
+Requested by the human: "steps 37, 38 and button to return to canvas origin point".
+
+**Summary:**
+- **Phones (< 640 px), with Tailwind `max-sm:` and `pointer-coarse:`:**
+  - Board top bar: logo, title, undo/redo, save status and Export as icons (labels for screen readers), Settings; the theme toggle moves into Settings.
+  - The toolbar is a **bottom bar** (safe-area padding) with Select, Hand, Pen, Shapes, Sticky, Text and **"Insert more"** (Sketch, Eraser, Connector, Doc card, Frame, Image, Media…, Templates…). The media link popover can be opened from that menu (`mediaPromptState`, anchored to the menu button on phones). Group captions and the Options group are hidden.
+  - Start page: logo only (no wordmark), full-width search, the theme toggle in Settings; the views become a 4-way segmented control.
+  - Touch targets are 44 px under `(pointer: coarse)` (ribbon buttons, top bar, status bar, zoom controls); text fields use ≥ 16 px text (no iOS zoom on focus); `viewport-fit=cover` + safe-area insets.
+- `shared/layout.svelte.ts`: reactive `compact` / `coarse` media query state.
+- **Touch gestures** (`tools/touchGestures.ts`, pure, + `pointerRouter.ts`): with Select, one finger on empty canvas pans, long-press (500 ms) then drag draws a marquee, and a tap clears the selection. A double-tap is a double-click (edit, play, enter group). Touch `pointerdown` is `preventDefault`ed: the emulated mouse events after a tap moved focus and closed the editor a double-tap had just opened. Pinch: `viewportInput` dispatches `smthng:gesturecancel` when the second finger lands, and the router cancels the first finger's tool gesture.
+- **Back to origin:** a button (`LocateFixed`) in the zoom controls and the **Home** key: the view returns to the origin at 100 %. Media keys still take Home while a media element plays.
+- Playwright project **`mobile`** (Pixel 7, touch); `pnpm test:e2e` runs chromium + mobile. `tests/e2e/touch.ts` sends real touch events through CDP.
+
+**Deviations:**
+- The "⋯" overflow menu from the plan wasn't needed: on phones the top bar fits by turning Export and the save status into icons and moving the theme toggle into Settings (which already holds it).
+- The start page search stays a full-width field (it fits at 360 px) instead of collapsing to an icon.
+- Found by the desktop visual baselines: `box-content` on the headers made them 1 px taller on desktop; heights are now `calc(… + env(safe-area-inset-top))`, identical on desktop.
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (793 unit tests; new `touchGestures.test.ts`) · pnpm test:e2e ✅ (191 = desktop + mobile; new `mobile-layout.spec.ts` at 360 and 412 px: no sideways overflow on the start page, a board and the gallery, every action reachable and ≥ 44 px, toolbar below the canvas, title keeps room, the Insert menu holds the secondary tools / media / templates, Back to origin; `mobile-gestures.spec.ts`: one-finger pan selects nothing, drag on an element moves it, a pinch starting on an element zooms and moves nothing, long-press marquee, double-tap edits, tap clears) · desktop visual baselines unchanged · screenshots at 360 (light), 390 (dark), 412 (light) of the start page, a board and the Insert menu reviewed.

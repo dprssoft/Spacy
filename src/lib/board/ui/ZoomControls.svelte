@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
 	import Minus from '@lucide/svelte/icons/minus';
+	import LocateFixed from '@lucide/svelte/icons/locate-fixed';
 	import Plus from '@lucide/svelte/icons/plus';
 	import { nextZoomStep, zoomAt } from '../engine/viewport';
 	import type { ViewportState } from '../viewport.svelte';
@@ -32,7 +33,7 @@
 	}
 
 	const button =
-		'inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-40';
+		'inline-flex size-7 pointer-coarse:size-11 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-40';
 	const item =
 		'flex h-8 cursor-default items-center justify-between gap-6 rounded-md px-2 text-sm outline-none select-none data-[highlighted]:bg-surface-2';
 </script>
@@ -50,7 +51,7 @@
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
 			aria-label="Zoom options, current zoom {percent}%"
-			class="h-7 min-w-14 rounded-md px-1.5 text-xs font-medium tabular-nums hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+			class="h-7 min-w-14 rounded-md px-1.5 text-xs font-medium tabular-nums hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none pointer-coarse:h-11"
 		>
 			<span data-testid="zoom-level">{percent}%</span>
 		</DropdownMenu.Trigger>
@@ -117,6 +118,17 @@
 		onclick={() => zoomTo(nextZoomStep(viewport.zoom, 1))}
 	>
 		<Plus class="size-4" aria-hidden="true" />
+	</button>
+	<button
+		type="button"
+		class={button}
+		aria-label="Back to origin"
+		aria-keyshortcuts="Home"
+		title="Back to origin (Home)"
+		data-testid="back-to-origin"
+		onclick={() => viewport.fit(null)}
+	>
+		<LocateFixed class="size-4" aria-hidden="true" />
 	</button>
 	<div class="mx-0.5 h-5 w-px bg-border" aria-hidden="true"></div>
 	<HelpMenu class={button} />
