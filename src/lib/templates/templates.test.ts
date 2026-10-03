@@ -110,6 +110,28 @@ describe('template content', () => {
 		);
 	});
 
+	it('save the cat: fifteen beats', async () => {
+		const els = listElements((await built('save-the-cat')).doc);
+		expect(els.filter((e) => e.type === 'sticky')).toHaveLength(15);
+	});
+
+	it('scene cards: three chapters of four scene cards with prompts', async () => {
+		const { doc } = await built('scene-cards');
+		const els = listElements(doc);
+		const frames = els.filter((e) => e.type === 'frame');
+		expect(frames).toHaveLength(3);
+		for (const f of frames)
+			expect(els.filter((e) => e.type === 'doccard' && e.parentId === f.id)).toHaveLength(4);
+		const card = els.find((e) => e.type === 'doccard')!;
+		expect(docToMarkdown(fragmentToJSON(getDocsMap(doc).get(card.id)!))).toContain('Goal:');
+	});
+
+	it("hero's journey: twelve stages in a connected circle", async () => {
+		const els = listElements((await built('heros-journey')).doc);
+		expect(els.filter((e) => e.type === 'sticky')).toHaveLength(12);
+		expect(els.filter((e) => e.type === 'connector')).toHaveLength(12);
+	});
+
 	it('meeting notes: the doc card has the agenda and action items', async () => {
 		const { doc } = await built('meeting-notes');
 		const card = listElements(doc).find((e) => e.type === 'doccard')!;

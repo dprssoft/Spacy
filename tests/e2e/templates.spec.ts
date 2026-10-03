@@ -127,3 +127,23 @@ test('"More templates" on the start page creates a board from any template', asy
 	await expect(page.locator('[data-type=frame]')).toHaveCount(4);
 	await expect(page.getByRole('button', { name: /Rename board: SWOT analysis/ })).toBeVisible();
 });
+
+test("the Writing category inserts the Hero's Journey", async ({ page }) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	await waitForInitialView(page);
+	await page.keyboard.press('Shift+T');
+	const dialog = page.getByRole('dialog', { name: 'Insert template' });
+	await dialog.getByRole('button', { name: 'Writing' }).click();
+	await expect(dialog.locator('[data-template-card]')).toHaveCount(8);
+	await dialog.getByRole('button', { name: "Hero's Journey template" }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(() => window.__smthng!.list().filter((e) => e.type === 'sticky').length)
+		)
+		.toBe(12);
+	expect(
+		await page.evaluate(() => window.__smthng!.list().filter((e) => e.type === 'connector').length)
+	).toBe(12);
+});

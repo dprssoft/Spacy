@@ -43,7 +43,7 @@ test('the template gallery', async ({ page }) => {
 	await page.getByRole('button', { name: 'More templates' }).click();
 	const dialog = page.getByRole('dialog', { name: 'New board from a template' });
 	// Every visible preview has rendered.
-	await expect(dialog.locator('[data-template-card] img')).toHaveCount(12);
+	await expect(dialog.locator('[data-template-card] img')).toHaveCount(20);
 	await page.mouse.move(2, 2);
 	await expect(dialog).toHaveScreenshot('template-gallery.png', {
 		animations: 'disabled',

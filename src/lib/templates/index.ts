@@ -4,13 +4,15 @@ import type { BoardMeta } from '$lib/storage/types';
 // Template metadata is small and eager; builders and rendering load on first use (they pull in
 // the diagram, rendering and rich-text code).
 
-export type TemplateCategory = 'Planning' | 'Diagrams' | 'Workshops' | 'Strategy' | 'Notes';
+export type TemplateCategory =
+	'Planning' | 'Diagrams' | 'Workshops' | 'Strategy' | 'Notes' | 'Writing';
 export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
 	'Planning',
 	'Diagrams',
 	'Workshops',
 	'Strategy',
-	'Notes'
+	'Notes',
+	'Writing'
 ];
 
 export interface Template {
@@ -133,6 +135,78 @@ export const templates: Template[] = [
 		keywords: ['agenda', 'minutes', 'actions', 'document'],
 		featured: true,
 		build: async (doc) => (await import('./meetingNotes')).buildMeetingNotes(doc)
+	},
+	{
+		id: 'three-act',
+		name: 'Three-act structure',
+		description: 'Setup, confrontation and resolution with the key beats',
+		category: 'Writing',
+		keywords: ['story', 'plot', 'novel', 'screenplay', 'acts', 'beats'],
+		featured: false,
+		build: async (doc) => (await import('./threeAct')).buildThreeAct(doc)
+	},
+	{
+		id: 'heros-journey',
+		name: "Hero's Journey",
+		description: 'The twelve stages of the monomyth, connected in a circle',
+		category: 'Writing',
+		keywords: ['story', 'monomyth', 'campbell', 'plot', 'novel'],
+		featured: false,
+		build: async (doc) => (await import('./herosJourney')).buildHerosJourney(doc)
+	},
+	{
+		id: 'save-the-cat',
+		name: 'Save the Cat! beat sheet',
+		description: 'The fifteen beats, by act, with where they fall',
+		category: 'Writing',
+		keywords: ['story', 'beats', 'screenplay', 'novel', 'snyder'],
+		featured: false,
+		build: async (doc) => (await import('./saveTheCat')).buildSaveTheCat(doc)
+	},
+	{
+		id: 'character-profile',
+		name: 'Character profile',
+		description: 'Want, need, flaw, arc and voice, plus relationships',
+		category: 'Writing',
+		keywords: ['character', 'story', 'novel', 'cast'],
+		featured: false,
+		build: async (doc) => (await import('./characterProfile')).buildCharacterProfile(doc)
+	},
+	{
+		id: 'world-building',
+		name: 'World-building',
+		description: 'Places, cultures, rules and history',
+		category: 'Writing',
+		keywords: ['fantasy', 'setting', 'world', 'novel', 'lore'],
+		featured: false,
+		build: async (doc) => (await import('./worldBuilding')).buildWorldBuilding(doc)
+	},
+	{
+		id: 'scene-cards',
+		name: 'Scene cards',
+		description: 'Three chapters of four scenes: POV, goal, conflict, outcome',
+		category: 'Writing',
+		keywords: ['novel', 'chapters', 'scenes', 'corkboard', 'manuscript'],
+		featured: false,
+		build: async (doc) => (await import('./sceneCards')).buildSceneCards(doc)
+	},
+	{
+		id: 'article-outline',
+		name: 'Article outline',
+		description: 'Hook, thesis, sections, counterpoints, conclusion, sources',
+		category: 'Writing',
+		keywords: ['essay', 'blog', 'post', 'journalism', 'nonfiction'],
+		featured: false,
+		build: async (doc) => (await import('./articleOutline')).buildArticleOutline(doc)
+	},
+	{
+		id: 'screenplay',
+		name: 'Screenplay outline',
+		description: 'Teaser and four acts of scenes, plus the characters',
+		category: 'Writing',
+		keywords: ['script', 'tv', 'episode', 'film', 'screenwriting'],
+		featured: false,
+		build: async (doc) => (await import('./screenplay')).buildScreenplay(doc)
 	}
 ];
 

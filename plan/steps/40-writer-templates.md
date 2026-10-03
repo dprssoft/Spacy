@@ -25,8 +25,8 @@ The gallery's featured row on the start page doesn't change.
 - e2e: gallery → Writing → Hero's Journey inserts 12 connected stickies.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Screenshots of each template (light and dark) reviewed
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Screenshots of each template (light and dark) reviewed
 
 ## Commit
 `feat(templates): writing templates (story structures, characters, world-building, scene cards, article, screenplay)`
