@@ -8,10 +8,12 @@
 	import AboutDialog from './AboutDialog.svelte';
 	import { backupAll, importFiles } from './fileActions';
 	import { formatBytes } from './formatBytes';
+	import { readMediaPrefs, writeMediaPrefs } from '$lib/board/media/mediaPrefs';
 
 	let { class: className = '' }: { class?: string } = $props();
 
 	let open = $state(false);
+	let oneAtATime = $state(readMediaPrefs().oneAtATime);
 	let about = $state(false);
 	let input = $state<HTMLInputElement>();
 	let storage = $state<{ usage: number; persisted: boolean } | null>(null);
@@ -58,6 +60,18 @@
 					</DropdownMenu.RadioItem>
 				{/each}
 			</DropdownMenu.RadioGroup>
+			<DropdownMenu.Separator class={sep} />
+			<DropdownMenu.CheckboxItem
+				class={item}
+				closeOnSelect={false}
+				bind:checked={oneAtATime}
+				onCheckedChange={(v) => writeMediaPrefs({ oneAtATime: v })}
+			>
+				{#snippet children({ checked })}
+					<span class="w-4 text-accent" aria-hidden="true">{checked ? '✓' : ''}</span>Play one media
+					at a time
+				{/snippet}
+			</DropdownMenu.CheckboxItem>
 			<DropdownMenu.Separator class={sep} />
 			{#if pwa.canInstall}
 				<DropdownMenu.Item class={item} onSelect={() => pwa.install()}

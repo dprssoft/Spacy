@@ -74,15 +74,32 @@ export function parseMediaUrl(input: string): ParsedMedia | null {
 	return null;
 }
 
-/** The player URL for an embed (built from the id only, never from the stored link). */
-export function embedUrl(provider: 'youtube' | 'vimeo', id: string, start: number): string {
+/**
+ * The player URL for an embed (built from the id only, never from the stored link). With
+ * `controls: false` the player hides its own controls and answers our messages (`origin` is the
+ * page that will talk to it); `controls: true` is the fallback with the provider's controls.
+ */
+export function embedUrl(
+	provider: 'youtube' | 'vimeo',
+	id: string,
+	start: number,
+	opts: { controls?: boolean; origin?: string } = {}
+): string {
 	const s = Math.max(0, Math.floor(start));
+	const controls = opts.controls ?? true;
 	if (provider === 'youtube') {
 		const q = new URLSearchParams({ autoplay: '1', rel: '0', playsinline: '1' });
 		if (s) q.set('start', String(s));
+		if (!controls) {
+			q.set('controls', '0');
+			q.set('enablejsapi', '1');
+			if (opts.origin) q.set('origin', opts.origin);
+		}
 		return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?${q}`;
 	}
-	return `https://player.vimeo.com/video/${encodeURIComponent(id)}?dnt=1&autoplay=1${s ? `#t=${s}s` : ''}`;
+	const q = new URLSearchParams({ dnt: '1', autoplay: '1' });
+	if (!controls) q.set('controls', '0');
+	return `https://player.vimeo.com/video/${encodeURIComponent(id)}?${q}${s ? `#t=${s}s` : ''}`;
 }
 
 /** A shareable link to the media at `seconds` (YouTube/Vimeo understand t=). */

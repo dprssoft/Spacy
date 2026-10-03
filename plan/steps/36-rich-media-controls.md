@@ -68,10 +68,10 @@ Every media element, whether YouTube, Vimeo or an audio/video file, gets the sam
 - axe check on the controls bar.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] The same controls and shortcuts work for YouTube, Vimeo, video and audio
-- [ ] No third-party script loads in the app's page; CSP unchanged from step 35
-- [ ] Controls are usable with the keyboard only and pass axe
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] The same controls and shortcuts work for YouTube, Vimeo, video and audio
+- [x] No third-party script loads in the app's page; CSP unchanged from step 35
+- [x] Controls are usable with the keyboard only and pass axe
 
 ## Out of scope
 YouTube/Vimeo captions and quality selection (their own controls in fallback mode cover them), chapters, synced playback between tabs, playlists, waveform display, local media files.

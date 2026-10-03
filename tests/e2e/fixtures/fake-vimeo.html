@@ -1,0 +1,32 @@
+<!doctype html>
+<title>fake Vimeo player</title>
+<p>fake player</p>
+<script>
+	// The subset of Vimeo's player postMessage API that the board uses.
+	const st = { seconds: 0, duration: 120, playing: true };
+	const listening = new Set();
+	const post = (o) => parent.postMessage(JSON.stringify(o), '*');
+	const emit = (event, data) => listening.has(event) && post({ event, data });
+	addEventListener('message', (e) => {
+		let m;
+		try {
+			m = JSON.parse(e.data);
+		} catch {
+			return;
+		}
+		if (m.method === 'addEventListener') listening.add(m.value);
+		if (m.method === 'getDuration') post({ method: 'getDuration', value: st.duration });
+		if (m.method === 'getVolume') post({ method: 'getVolume', value: 1 });
+		if (m.method === 'getPaused') post({ method: 'getPaused', value: !st.playing });
+		if (m.method === 'play') ((st.playing = true), emit('play', {}));
+		if (m.method === 'pause') ((st.playing = false), emit('pause', {}));
+		if (m.method === 'setCurrentTime') st.seconds = m.value;
+		if (m.method === 'setPlaybackRate')
+			post({ event: 'error', data: { method: 'setPlaybackRate', name: 'PrivacyError' } });
+	});
+	post({ event: 'ready' });
+	setInterval(() => {
+		if (st.playing) st.seconds = Math.min(st.duration, st.seconds + 1);
+		emit('timeupdate', { seconds: st.seconds, duration: st.duration });
+	}, 250);
+</script>

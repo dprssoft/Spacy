@@ -1,0 +1,48 @@
+<!doctype html>
+<title>fake YouTube player</title>
+<p>fake player</p>
+<script>
+	// Speaks the subset of the YouTube embed's postMessage protocol that the board uses.
+	// Time runs at 4× (1 s per 250 ms tick) so tests don't wait long.
+	const st = {
+		currentTime: Number(new URLSearchParams(location.search).get('start') || 0),
+		duration: 300,
+		playerState: 1,
+		volume: 100,
+		muted: false,
+		playbackRate: 1,
+		videoLoadedFraction: 0.5
+	};
+	const send = (event, info) =>
+		parent.postMessage(JSON.stringify({ event, info, id: 1, channel: 'widget' }), '*');
+	addEventListener('message', (e) => {
+		let m;
+		try {
+			m = JSON.parse(e.data);
+		} catch {
+			return;
+		}
+		if (m.event === 'listening') {
+			send('onReady', {});
+			send('infoDelivery', st);
+		}
+		if (m.event === 'command') {
+			const a = m.args || [];
+			if (m.func === 'playVideo') st.playerState = 1;
+			if (m.func === 'pauseVideo') st.playerState = 2;
+			if (m.func === 'seekTo') st.currentTime = a[0];
+			if (m.func === 'setVolume') st.volume = a[0];
+			if (m.func === 'mute') st.muted = true;
+			if (m.func === 'unMute') st.muted = false;
+			if (m.func === 'setPlaybackRate') st.playbackRate = a[0];
+			send('infoDelivery', st);
+		}
+	});
+	setInterval(() => {
+		if (st.playerState === 1) {
+			st.currentTime = Math.min(st.duration, st.currentTime + st.playbackRate);
+			if (st.currentTime >= st.duration) st.playerState = 0;
+		}
+		send('infoDelivery', st);
+	}, 250);
+</script>

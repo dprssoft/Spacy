@@ -42,6 +42,8 @@
 	import { HandleRegistry } from './tools/handles';
 	import { isTypingTarget, ShortcutRegistry } from './tools/shortcuts';
 	import { ToolManager } from './tools/toolManager.svelte';
+	import { handleMediaKey } from './media/keys';
+	import MediaOverlay from './media/MediaOverlay.svelte';
 	import { PlaybackState } from './media/playback.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
 	import { templateGallery } from './ui/templateGalleryState.svelte';
@@ -185,6 +187,11 @@
 			e.target.closest('[role=menu],[role=dialog],[role=alertdialog]')
 		)
 			return;
+		// A playing media element (selected or being interacted with) takes its keys first.
+		if (handleMediaKey(ctx, e)) {
+			e.preventDefault();
+			return;
+		}
 		// While something is being edited, keys belong to its editor, even in the moment before a
 		// lazily loaded editor has taken focus. Escape still leaves editing.
 		if (ctx.selection.editingId) {
@@ -244,6 +251,7 @@
 					<QuickCreateButtons />
 					<PulseHighlight />
 					<StylePopover />
+					<MediaOverlay />
 				{/snippet}
 			</Canvas>
 		</CanvasContextMenu>
