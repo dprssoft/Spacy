@@ -11,6 +11,7 @@ export type StyleOption =
 	| 'shadow'
 	| 'opacity'
 	| 'fontSize'
+	| 'fontFamily'
 	| 'fontStyle'
 	| 'textColor'
 	| 'align'
@@ -33,19 +34,29 @@ export const STYLE_OPTIONS: Record<ElementType, readonly StyleOption[]> = {
 		'shadow',
 		'opacity',
 		'fontSize',
+		'fontFamily',
 		'fontStyle',
 		'textColor',
 		'align',
 		'valign',
 		'shapeKind'
 	],
-	sticky: ['stickyColor', 'fontSize', 'fontStyle', 'align', 'valign', 'shadow', 'opacity'],
-	text: ['textColor', 'fontSize', 'fontStyle', 'align', 'opacity'],
+	sticky: [
+		'stickyColor',
+		'fontSize',
+		'fontFamily',
+		'fontStyle',
+		'align',
+		'valign',
+		'shadow',
+		'opacity'
+	],
+	text: ['textColor', 'fontSize', 'fontFamily', 'fontStyle', 'align', 'opacity'],
 	image: ['stroke', 'strokeWidth', 'dash', 'radius', 'shadow', 'opacity'],
 	stroke: ['stroke', 'strokeWidth', 'opacity'],
 	sketch: ['opacity'],
 	frame: ['fill', 'fillStyle', 'stroke', 'radius'],
-	doccard: ['fill', 'stroke', 'radius', 'shadow', 'fontSize'],
+	doccard: ['fill', 'stroke', 'radius', 'shadow', 'fontSize', 'fontFamily'],
 	connector: ['stroke', 'strokeWidth', 'dash', 'opacity', 'routing', 'markers', 'labelBackground']
 };
 

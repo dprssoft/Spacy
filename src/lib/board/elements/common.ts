@@ -1,4 +1,5 @@
-import { FONT_FAMILY, FONT_SIZE_PX, LINE_HEIGHT, RADIUS_PX } from '$lib/model/defaults';
+import { fontStack } from '$lib/fonts/catalog';
+import { FONT_SIZE_PX, LINE_HEIGHT, RADIUS_PX } from '$lib/model/defaults';
 import type { BaseElement, Point, Rect, Style } from '$lib/model/types';
 import { pointInRotatedRect, rotatedAABB } from '../engine/geometry';
 
@@ -16,7 +17,7 @@ export function styleToCss(style: Style): string {
 
 export function fontToCss(font: Style['font']): string {
 	return [
-		`font-family:${FONT_FAMILY}`,
+		`font-family:${fontStack(font.family)}`,
 		`font-size:${FONT_SIZE_PX[font.size]}px`,
 		`line-height:${LINE_HEIGHT}`,
 		`font-weight:${font.bold ? 700 : 400}`,

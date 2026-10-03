@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import { fontStack } from '$lib/fonts/catalog';
 	import { FONT_SIZE_PX } from '$lib/model/defaults';
 	import { getDocsMap } from '$lib/model/doc';
 	import type { DocCardElement, Point } from '$lib/model/types';
@@ -211,6 +212,7 @@
 			class:pointer-events-auto={part === 'body'}
 			data-interactive={part === 'body' ? '' : undefined}
 			data-doccard-body
+			style:font-family={fontStack(el.style.font.family)}
 		></div>
 	{:else if !el.collapsed}
 		<div class="flex flex-1 flex-col gap-3 px-4 py-4" data-doccard-preview aria-hidden="true">

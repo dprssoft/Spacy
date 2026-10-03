@@ -35,7 +35,7 @@ test('changing the fill persists across reloads', async ({ page }) => {
 	await page.getByTestId('style-fill').click();
 	await page
 		.getByRole('radiogroup', { name: 'Fill color' })
-		.getByRole('radio', { name: 'Red' })
+		.getByRole('radio', { name: 'Red', exact: true })
 		.click();
 	await expect(page.locator('[data-element-id="a"] path')).toHaveAttribute('fill', '#e03131');
 	await page.reload();
@@ -70,7 +70,7 @@ test('mixed values show no selected swatch', async ({ page }) => {
 	await page.getByTestId('style-fill').click();
 	const swatches = page.getByRole('radiogroup', { name: 'Fill color' });
 	await expect(swatches.getByRole('radio', { checked: true })).toHaveCount(0);
-	await swatches.getByRole('radio', { name: 'Green' }).click();
+	await swatches.getByRole('radio', { name: 'Green', exact: true }).click();
 	await expect(swatches.getByRole('radio', { checked: true })).toHaveCount(1);
 });
 
@@ -83,7 +83,7 @@ test('changing the shape kind keeps the text; sticky color changes', async ({ pa
 
 	await clickElement(page, 's');
 	await page.getByTestId('style-sticky').click();
-	await page.getByRole('radio', { name: 'Blue' }).click();
+	await page.getByRole('radio', { name: 'Blue', exact: true }).click();
 	expect((await byId(page, 's')).color).toBe('#a5d8ff');
 });
 

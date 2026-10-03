@@ -1,5 +1,7 @@
-// Text formatting choices of doc cards. Content stores only these ids (as `data-*` attributes);
-// their appearance is in prose.css, so it can follow the theme and nothing unchecked reaches CSS.
+// Text formatting choices of doc cards. Content stores these ids (as `data-*` attributes, styled in
+// prose.css, so they can follow the theme) or, for colors, a `#rrggbb` value. Nothing else reaches
+// CSS.
+import { DEFAULT_FONT, FONTS as ALL_FONTS } from '$lib/fonts/catalog';
 
 export interface FormatChoice {
 	id: string;
@@ -27,11 +29,10 @@ export const HIGHLIGHTS: readonly FormatChoice[] = [
 	{ id: 'pink', label: 'Pink' }
 ];
 
-/** Besides the default (the app's sans-serif). System font stacks: nothing is downloaded. */
-export const FONTS: readonly FormatChoice[] = [
-	{ id: 'serif', label: 'Serif' },
-	{ id: 'mono', label: 'Monospace' }
-];
+/** Besides the default font (the card's own). */
+export const FONTS: readonly FormatChoice[] = ALL_FONTS.filter((f) => f.id !== DEFAULT_FONT).map(
+	({ id, label }) => ({ id, label })
+);
 
 /** Besides the default size. Relative to the card's own font size. */
 export const SIZES: readonly FormatChoice[] = [
@@ -43,17 +44,43 @@ export const SIZES: readonly FormatChoice[] = [
 export const ALIGNS = ['left', 'center', 'right', 'justify'] as const;
 export type Align = (typeof ALIGNS)[number];
 
-/** One mark per property: its name, its attribute and the DOM attribute that carries the id. */
+interface FormatMarkDef {
+	attr: string;
+	/** The DOM attribute that carries the id (`custom` for a color value). */
+	data: string;
+	choices: readonly FormatChoice[];
+	/** Colors: the CSS variable that carries a `#rrggbb` value. */
+	custom?: string;
+}
+
+/** One mark per property. */
 export const FORMAT_MARKS = {
-	textColor: { attr: 'color', data: 'data-color', choices: TEXT_COLORS },
-	highlight: { attr: 'color', data: 'data-highlight', choices: HIGHLIGHTS },
+	textColor: { attr: 'color', data: 'data-color', choices: TEXT_COLORS, custom: '--doc-color' },
+	highlight: {
+		attr: 'color',
+		data: 'data-highlight',
+		choices: HIGHLIGHTS,
+		custom: '--doc-highlight'
+	},
 	fontFamily: { attr: 'font', data: 'data-font', choices: FONTS },
 	fontSize: { attr: 'size', data: 'data-size', choices: SIZES }
-} as const;
+} as const satisfies Record<string, FormatMarkDef>;
 export type FormatMark = keyof typeof FORMAT_MARKS;
 
+export const CUSTOM = 'custom';
+export const isHexColor = (v: unknown): v is string =>
+	typeof v === 'string' && /^#[0-9a-f]{6}$/.test(v);
+
+const markDef = (mark: FormatMark): FormatMarkDef => FORMAT_MARKS[mark];
+
+/** An id from the mark's list, or a `#rrggbb` color for the color marks. */
 export const isChoice = (mark: FormatMark, value: unknown): value is string =>
-	typeof value === 'string' && FORMAT_MARKS[mark].choices.some((c) => c.id === value);
+	typeof value === 'string' &&
+	(markDef(mark).choices.some((c) => c.id === value) ||
+		(!!markDef(mark).custom && isHexColor(value)));
+
+/** The CSS variable for a mark's `#rrggbb` value, if it takes one. */
+export const customVar = (mark: FormatMark): string | undefined => markDef(mark).custom;
 
 export const BLOCK_STYLES = [
 	{ id: 'p', label: 'Normal text' },

@@ -7,6 +7,8 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import { getBoard } from '../context';
 	import { BRUSHES, MAX_SIZE, MIN_SIZE, type BrushId } from '../sketch/brushes';
+	import ColorSwatches from '../style/controls/ColorSwatches.svelte';
+	import PanelButton from '../style/controls/PanelButton.svelte';
 	import { OPAQUE_SWATCHES } from '../style/palette';
 
 	// The contextual part of the ribbon while the sketch tool is active.
@@ -22,7 +24,21 @@
 		highlighter: Highlighter,
 		eraser: Eraser
 	};
-	const colors = OPAQUE_SWATCHES.filter((c) => c.value !== '#ffffff').slice(0, 9);
+	// One tap away: black and the main shade of each hue; everything else under "More colors".
+	const QUICK = [
+		'Black',
+		'Gray',
+		'Red',
+		'Orange',
+		'Yellow',
+		'Green',
+		'Teal',
+		'Blue',
+		'Violet',
+		'Pink'
+	];
+	const colors = OPAQUE_SWATCHES.filter((c) => QUICK.includes(c.name));
+	const quick = $derived(colors.some((c) => c.value === sketch.color));
 
 	function newSketch() {
 		sketch.activeId = null;
@@ -80,6 +96,24 @@
 				onclick={() => sketch.set({ color: c.value })}
 			></button>
 		{/each}
+		<PanelButton label="More colors" testId="sketch-more-colors">
+			{#snippet trigger()}
+				<span
+					class="size-5 rounded-full border border-border"
+					class:ring-2={!quick}
+					class:ring-accent={!quick}
+					style:background={quick
+						? 'conic-gradient(#e03131, #f59f00, #2f9e44, #1971c2, #6741d9, #e03131)'
+						: sketch.color}
+				></span>
+			{/snippet}
+			<ColorSwatches
+				value={sketch.color}
+				colors={OPAQUE_SWATCHES}
+				label="Brush color"
+				onchange={(c) => sketch.set({ color: c })}
+			/>
+		</PanelButton>
 	</div>
 	<span class={caption} aria-hidden="true">Color</span>
 </div>

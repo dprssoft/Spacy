@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { createMixedPerfBoard, generatePerfElements } from '$lib/dev/perfBoard';
 	import { installTestHooks } from '$lib/dev/testHooks';
+	import { registerFonts } from '$lib/fonts/register';
 	import { createElements } from '$lib/model/ops';
 	import type { OpenBoard } from '$lib/storage/boardDoc';
 	import { BoardStore } from './boardStore.svelte';
@@ -87,6 +88,9 @@
 		...docShortcuts
 	]);
 	setBoard(ctx);
+	// Before the first render: text in a bundled font then never shows the fallback font first
+	// for longer than its download.
+	registerFonts();
 	const title = new BoardTitle(ctx.id, ctx.doc);
 
 	$effect(() => () => {

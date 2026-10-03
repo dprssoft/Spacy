@@ -12,7 +12,7 @@ There is no backend and no account.
 - **Pages:** several pages per board, as sheet tabs along the bottom (add, rename, reorder, delete).
 - **Sketching:** a sketch is one object you keep drawing into, with pen, pencil, marker, highlighter and an eraser; pen and pencil follow stylus pressure.
 - **Whiteboard:** infinite canvas, shapes, sticky notes, text, pen, images, frames; select, move, resize, rotate, group, lock; undo and redo; copy and paste.
-- **Styling:** contextual style popover, quick styles, align and distribute, smart guides, snap to grid.
+- **Styling:** contextual style popover with a 50-color palette, any custom color and recent colors, 13 fonts (10 bundled, with Cyrillic) for all text, quick styles, align and distribute, smart guides, snap to grid.
 - **Diagrams:** straight, elbow and curved connectors, seven end markers, labels, manual bends, a flowchart shape library, quick-create of connected shapes.
 - **Doc cards:** headings, lists, checklists, quotes, code, links; fonts, sizes, colors, highlights and alignment from a Word-like ribbon; focus mode; `/` commands; `@` mentions of canvas objects; Markdown export.
 - **Sharing:** PNG and SVG export, `.smthng` board files, full backup and restore, templates.
@@ -83,6 +83,10 @@ pnpm dlx wrangler pages deploy build --project-name smthng
 **Any other static host** works if it serves `index.html` for unknown paths and sends the headers from `build/_headers`. The `script-src` hash in that file is written by the build (`scripts/postbuild-csp.mjs`), so always deploy the `_headers` from the same build as the pages.
 
 To check a build locally exactly as it will be served: `pnpm build && pnpm serve`.
+
+## Fonts
+
+The bundled fonts come from [Fontsource](https://fontsource.org): Inter, Montserrat, Oswald, Comfortaa, Lora, Playfair Display, JetBrains Mono, Caveat and Pacifico under the SIL Open Font License 1.1, and Roboto Slab under the Apache License 2.0. Their licence texts ship in the `@fontsource*` packages.
 
 ## Roadmap
 

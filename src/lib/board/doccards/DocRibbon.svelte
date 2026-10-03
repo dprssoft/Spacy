@@ -18,14 +18,13 @@
 	import TextAlignStart from '@lucide/svelte/icons/text-align-start';
 	import Underline from '@lucide/svelte/icons/underline';
 	import { button, caption, groupBox } from '../ui/ribbon';
+	import DocColorPicker from './DocColorPicker.svelte';
 	import type { Editor } from './editorFactory';
 	import * as fmt from './formatCommands';
 	import {
 		BLOCK_STYLES,
 		FONTS,
-		HIGHLIGHTS,
 		SIZES,
-		TEXT_COLORS,
 		type Align,
 		type FormatChoice,
 		type FormatMark
@@ -122,8 +121,6 @@
 		'doc-format z-[70] rounded-lg border border-border bg-surface p-1 text-text shadow-lg outline-none';
 	const menuItem =
 		'flex h-8 cursor-default items-center gap-2 rounded-md px-2 text-sm outline-none select-none data-[highlighted]:bg-surface-2';
-	const swatch =
-		'size-6 cursor-default rounded-full border border-border outline-none data-[highlighted]:ring-2 data-[highlighted]:ring-accent aria-checked:ring-2 aria-checked:ring-accent aria-checked:ring-offset-1 aria-checked:ring-offset-surface';
 </script>
 
 {#snippet toggle(t: Toggle)}
@@ -151,19 +148,21 @@
 )}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class="{select} {width}"
+			class="{select} {width} doc-format"
 			aria-label="{name}: {labelOf(choices, current, fallback)}"
 			title={name}
 			data-doc-format={mark}
 		>
-			<span class="truncate">{labelOf(choices, current, fallback)}</span>
+			<span class="truncate" data-font={mark === 'fontFamily' ? current : undefined}
+				>{labelOf(choices, current, fallback)}</span
+			>
 			<ChevronDown class="size-3 shrink-0 opacity-60" aria-hidden="true" />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Portal>
 			<DropdownMenu.Content
 				align="start"
 				sideOffset={4}
-				class="{menu} min-w-40"
+				class="{menu} max-h-(--bits-floating-available-height) min-w-40 overflow-y-auto"
 				data-interactive
 				data-doc-popup
 				onCloseAutoFocus={refocus}
@@ -176,61 +175,6 @@
 						<span data-font={mark === 'fontFamily' ? c.id : undefined}>{c.label}</span>
 					</DropdownMenu.Item>
 				{/each}
-			</DropdownMenu.Content>
-		</DropdownMenu.Portal>
-	</DropdownMenu.Root>
-{/snippet}
-
-{#snippet colorMenu(
-	name: string,
-	mark: FormatMark,
-	choices: readonly FormatChoice[],
-	current: string | null,
-	none: string,
-	Icon: typeof Bold
-)}
-	<DropdownMenu.Root>
-		<DropdownMenu.Trigger
-			class="{button} doc-format"
-			aria-label="{name}: {labelOf(choices, current, none)}"
-			title={name}
-			data-doc-format={mark}
-		>
-			<Icon class="size-[18px]" aria-hidden="true" />
-			<span
-				class="absolute inset-x-1.5 bottom-1 h-1 rounded-full"
-				style:background={current ? `var(--doc-${current})` : 'transparent'}
-				aria-hidden="true"
-			></span>
-		</DropdownMenu.Trigger>
-		<DropdownMenu.Portal>
-			<DropdownMenu.Content
-				align="start"
-				sideOffset={4}
-				class="{menu} w-44"
-				data-interactive
-				data-doc-popup
-				onCloseAutoFocus={refocus}
-			>
-				<DropdownMenu.Item class={menuItem} onSelect={() => fmt.setChoice(editor, mark, null)}>
-					<span class="w-4 shrink-0">
-						{#if current === null}<Check class="size-4" aria-hidden="true" />{/if}
-					</span>
-					{none}
-				</DropdownMenu.Item>
-				<div class="flex flex-wrap gap-1.5 p-2">
-					{#each choices as c (c.id)}
-						<DropdownMenu.Item
-							class={swatch}
-							aria-label={c.label}
-							aria-checked={c.id === current}
-							title={c.label}
-							data-choice={c.id}
-							style="background: var(--doc-{c.id})"
-							onSelect={() => fmt.setChoice(editor, mark, c.id)}
-						/>
-					{/each}
-				</div>
 			</DropdownMenu.Content>
 		</DropdownMenu.Portal>
 	</DropdownMenu.Root>
@@ -271,18 +215,25 @@
 </div>
 <div role="group" aria-label="Font" class={groupBox} data-doc-popup>
 	<div class="flex items-center gap-0.5">
-		{@render choiceMenu('Font', 'fontFamily', FONTS, at.font, 'Default', 'w-28')}
+		{@render choiceMenu('Font', 'fontFamily', FONTS, at.font, 'Default', 'w-36')}
 		{@render choiceMenu('Size', 'fontSize', SIZES, at.size, 'Normal', 'w-20')}
 		{#each marks as t (t.label)}{@render toggle(t)}{/each}
-		{@render colorMenu('Text color', 'textColor', TEXT_COLORS, at.color, 'Default color', Baseline)}
-		{@render colorMenu(
-			'Highlight',
-			'highlight',
-			HIGHLIGHTS,
-			at.highlight,
-			'No highlight',
-			Highlighter
-		)}
+		<DocColorPicker
+			{editor}
+			mark="textColor"
+			name="Text color"
+			none="Default color"
+			current={at.color}
+			icon={Baseline}
+		/>
+		<DocColorPicker
+			{editor}
+			mark="highlight"
+			name="Highlight"
+			none="No highlight"
+			current={at.highlight}
+			icon={Highlighter}
+		/>
 		<button
 			type="button"
 			class={button}

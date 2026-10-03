@@ -1,12 +1,29 @@
 import { Extension, Mark, type Extensions } from '@tiptap/core';
-import { ALIGNS, FORMAT_MARKS, isChoice, type Align, type FormatMark } from './formatOptions';
+import {
+	ALIGNS,
+	CUSTOM,
+	customVar,
+	FORMAT_MARKS,
+	isChoice,
+	isHexColor,
+	type Align,
+	type FormatMark
+} from './formatOptions';
 
-/** A mark that holds one id from a fixed list (a color, a font…), rendered as a `data-*` attribute. */
+/**
+ * A mark that holds one id from a fixed list (a color, a font…), rendered as a `data-*` attribute;
+ * the color marks also take any `#rrggbb` value, carried by a CSS variable.
+ */
 function choiceMark(name: FormatMark) {
 	const { attr, data } = FORMAT_MARKS[name];
+	const cssVar = customVar(name);
 	const read = (el: HTMLElement) => {
 		const value = el.getAttribute(data);
-		return isChoice(name, value) ? value : null;
+		if (value === CUSTOM && cssVar) {
+			const color = el.style.getPropertyValue(cssVar).trim().toLowerCase();
+			return isHexColor(color) ? color : null;
+		}
+		return value !== CUSTOM && isChoice(name, value) ? value : null;
 	};
 	return Mark.create({
 		name,
@@ -18,8 +35,13 @@ function choiceMark(name: FormatMark) {
 				[attr]: {
 					default: null,
 					parseHTML: read,
-					renderHTML: (attrs: Record<string, unknown>) =>
-						isChoice(name, attrs[attr]) ? { [data]: attrs[attr] } : {}
+					renderHTML: (attrs: Record<string, unknown>) => {
+						const value = attrs[attr];
+						if (!isChoice(name, value)) return {};
+						return cssVar && isHexColor(value)
+							? { [data]: CUSTOM, style: `${cssVar}: ${value}` }
+							: { [data]: value };
+					}
 				}
 			};
 		},

@@ -22,7 +22,8 @@ export const styleSchema = z.object({
 		italic: z.boolean(),
 		color: z.string(),
 		align: z.enum(['l', 'c', 'r']),
-		valign: z.enum(['t', 'm', 'b'])
+		valign: z.enum(['t', 'm', 'b']),
+		family: z.string().max(40).optional()
 	})
 });
 

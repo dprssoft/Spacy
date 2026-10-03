@@ -2,6 +2,7 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import X from '@lucide/svelte/icons/x';
 	import { untrack } from 'svelte';
+	import { fontStack } from '$lib/fonts/catalog';
 	import { getDocsMap } from '$lib/model/doc';
 	import { updateElement } from '$lib/model/ops';
 	import type { DocCardElement } from '$lib/model/types';
@@ -177,6 +178,7 @@
 			bind:this={body}
 			class="doc-prose mx-auto max-w-[760px] px-6 py-10"
 			style:font-size="17px"
+			style:font-family={fontStack(card.style.font.family)}
 			data-focus-body
 			{onclick}
 		></div>

@@ -7,6 +7,9 @@ import { docLines, type DocLine } from '../doccards/docLines';
 import { pointInRotatedRect } from '../engine/geometry';
 import type { SketchStroke } from '../sketch/brushes';
 import { readStrokes } from '../sketch/data';
+import { DEFAULT_FONT } from '$lib/fonts/catalog';
+import { embeddedFontCss } from '$lib/fonts/embed';
+import { loadFonts } from '$lib/fonts/register';
 import { renderStaticSvg, type StaticSvg } from './staticSvg';
 import { createCanvasMeasurer } from './wrapText';
 
@@ -60,6 +63,9 @@ export async function renderScope(
 	for (const el of elements)
 		if (el.type === 'sketch') strokes.set(el.id, readStrokes(ctx.doc, el.id));
 	const byId = new Map([...ctx.store.elements].map(([id, el]) => [id, el]));
+	// Text is measured in its own font, and the file carries the fonts it uses.
+	const fonts = new Set(elements.map((el) => el.style.font.family ?? DEFAULT_FONT));
+	const [fontCss] = await Promise.all([embeddedFontCss(fonts), loadFonts(fonts)]);
 	const measure = createCanvasMeasurer();
 	const assets = new Map<string, Promise<string | null>>();
 	return renderStaticSvg({
@@ -74,7 +80,8 @@ export async function renderScope(
 			return p;
 		},
 		docLines: async (id) => lines.get(id) ?? [],
-		sketchStrokes: (id) => strokes.get(id) ?? []
+		sketchStrokes: (id) => strokes.get(id) ?? [],
+		fontCss
 	});
 }
 

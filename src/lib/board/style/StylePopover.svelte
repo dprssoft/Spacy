@@ -25,6 +25,7 @@
 		setDefaultStyle
 	} from './styleDefaults';
 	import ColorSwatches from './controls/ColorSwatches.svelte';
+	import FontList from './controls/FontList.svelte';
 	import PanelButton from './controls/PanelButton.svelte';
 	import Segmented from './controls/Segmented.svelte';
 	import { BASIC_KINDS, shapeIconPath } from './controls/shapeIcons';
@@ -98,7 +99,11 @@
 	const swatch = (c: string | Mixed) =>
 		c === MIXED ? 'conic-gradient(#e03131,#2f9e44,#1971c2,#e03131)' : c;
 	const hasText = $derived(
-		opts.has('fontSize') || opts.has('textColor') || opts.has('align') || opts.has('fontStyle')
+		opts.has('fontSize') ||
+			opts.has('fontFamily') ||
+			opts.has('textColor') ||
+			opts.has('align') ||
+			opts.has('fontStyle')
 	);
 	const hasMore = $derived(opts.has('radius') || opts.has('shadow') || opts.has('opacity'));
 	const kind = $derived(val((el) => (el.type === 'shape' ? el.kind : null)));
@@ -199,7 +204,6 @@
 					value={color}
 					colors={STICKY_SWATCHES}
 					label="Sticky color"
-					allowCustom={false}
 					onchange={(c) => apply({ color: c })}
 				/>
 			</PanelButton>
@@ -328,6 +332,12 @@
 							{ value: 'b', label: 'Bottom', text: 'Bottom' }
 						]}
 						onchange={(v) => apply({ style: { font: { valign: v } } })}
+					/>
+				{/if}
+				{#if opts.has('fontFamily')}
+					<FontList
+						value={font('family')}
+						onchange={(id) => apply({ style: { font: { family: id } } })}
 					/>
 				{/if}
 				{#if opts.has('textColor')}
