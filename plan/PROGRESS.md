@@ -1093,3 +1093,22 @@ Requested by the human: "start steps 39 to 46" (with `meta.outline` approved for
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (808 unit tests; new `wordCount.test.ts`, `boardStats.test.ts`) · pnpm test:e2e ✅ (202; new `writing-stats.spec.ts`: card footer and selection count, status bar, focus counter + details, focus paragraph dims others, hide interface fades and returns, prefs persist, typewriter keeps the caret line between 30 and 50 %).
+
+## Step 40 — Writer templates — 2026-10-04
+**Summary:** a "Writing" category in the template gallery with eight templates, each a lazy module:
+- Three-act structure: acts as 1:2:1 frames, six beat stickies, a Logline card.
+- Hero's Journey: 12 stages in a circle, connected in order.
+- Save the Cat! beat sheet: 15 beats with percentages, one frame per act.
+- Character profile: a doc card with Role, Want, Need, Flaw, Arc, Voice and Backstory, plus a Relationships frame of connected stickies.
+- World-building: Places, Cultures, Rules and magic, History, as frames with doc cards.
+- Scene cards: 3 chapters × 4 scene doc cards (POV / Goal / Conflict / Outcome), ready for the outline and compile.
+- Article outline: eight doc cards in reading order.
+- Screenplay outline: Teaser plus four acts of slugline stickies, and a Characters card.
+
+`templates/docHelpers.ts` holds the shared doc-content builders and `commitWithDocs` (one TEMPLATE transaction). `TemplateBuilder.docCard` takes a parent frame.
+
+**Deviations:**
+- The gallery's visual baseline had to be force-rewritten. With the "Writing" chip missing, the old baseline still matched within the 0.1 % pixel tolerance, so small additions can slip past that test.
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (835 unit tests; the shared template checks now cover the new templates, plus content checks for Save the Cat (15 beats), Scene cards (3 × 4 with prompts) and Hero's Journey (12 stickies, 12 connectors)) · pnpm test:e2e ✅ (203; gallery → Writing shows 8 → Hero's Journey inserts 12 connected stickies) · screenshots of the Writing gallery (light and dark) and of the Three-act template reviewed.

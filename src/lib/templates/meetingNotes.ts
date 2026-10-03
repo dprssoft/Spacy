@@ -5,22 +5,7 @@ import { TEMPLATE } from '$lib/model/origins';
 import type { DocNode } from '$lib/board/doccards/markdown';
 import { TemplateBuilder } from './builder';
 import { setDocContent } from './docContent';
-
-const t = (text: string): DocNode => ({ type: 'text', text });
-const p = (text: string): DocNode => ({ type: 'paragraph', content: text ? [t(text)] : [] });
-const h = (level: number, text: string): DocNode => ({
-	type: 'heading',
-	attrs: { level },
-	content: [t(text)]
-});
-const items = (type: string, texts: string[], item = 'listItem'): DocNode => ({
-	type,
-	content: texts.map((x) => ({
-		type: item,
-		...(item === 'taskItem' ? { attrs: { checked: false } } : {}),
-		content: [p(x)]
-	}))
-});
+import { h, items, p } from './docHelpers';
 
 export const MEETING_NOTES: DocNode = {
 	type: 'doc',

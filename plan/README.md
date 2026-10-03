@@ -62,7 +62,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 37 | [Mobile layout and touch navigation](./steps/37-mobile-layout-touch-navigation.md) | J. Mobile | 36 | 1.5d |
 | [x] | 38 | [Touch editing](./steps/38-mobile-touch-editing.md) | J | 37 | 1.5d |
 | [x] | 39 | [Word count and focus mode options](./steps/39-word-count-focus-options.md) | K. Writers | 38 | 1d |
-| [ ] | 40 | [Writer templates](./steps/40-writer-templates.md) | K | 34 | 1d |
+| [x] | 40 | [Writer templates](./steps/40-writer-templates.md) | K | 34 | 1d |
 | [ ] | 41 | [Outline panel](./steps/41-outline-panel.md) ⚠ approval (meta.outline) | K | 39 | 1.5d |
 | [ ] | 42 | [Manuscript compile](./steps/42-manuscript-compile.md) | K | 41 | 2d |
 | [ ] | 43 | [Backlinks](./steps/43-backlinks.md) | K | 39 | 1d |

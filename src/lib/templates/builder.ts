@@ -129,9 +129,9 @@ export class TemplateBuilder {
 		});
 	}
 
-	docCard(r: Rect, title: string): New<DocCardElement> {
+	docCard(r: Rect, title: string, parent?: { id: string }): New<DocCardElement> {
 		return this.#add({
-			...this.#base('doccard', r, styled('doccard')),
+			...this.#base('doccard', r, styled('doccard'), parent),
 			type: 'doccard',
 			title,
 			collapsed: false,
