@@ -18,6 +18,7 @@ export function mentionLabel(el: Element): string | null {
 	switch (el.type) {
 		case 'frame':
 		case 'doccard':
+		case 'media':
 			return el.title.trim() || null;
 		case 'shape':
 		case 'sticky':

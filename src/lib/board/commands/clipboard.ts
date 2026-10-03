@@ -10,6 +10,7 @@ import type { Element, Point } from '$lib/model/types';
 import { base64ToBytes, bytesToBase64 } from '$lib/shared/base64';
 import * as assetsRepo from '$lib/storage/assetsRepo';
 import type { BoardContext } from '../context';
+import { createMedia, mediaLinkIn } from '../media/createMedia';
 import { rectCenter, rectsIntersect, unionRects } from '../engine/geometry';
 import { visibleWorldRect } from '../engine/viewport';
 import { getDefaultStyle } from '../style/styleDefaults';
@@ -203,10 +204,12 @@ export const imagePaste: {
 	handler: ((ctx: BoardContext, files: File[], at: Point) => Promise<unknown>) | null;
 } = { handler: null };
 
-/** Handles clipboard text (a payload or plain text). */
+/** Handles clipboard text (a payload, a media link, or plain text). */
 export async function pasteText(ctx: BoardContext, text: string): Promise<void> {
 	const payload = parsePayload(text);
+	const media = payload ? null : mediaLinkIn(text);
 	if (payload) await pastePayload(ctx, payload, text);
+	else if (media) createMedia(ctx, media, pasteAnchor(ctx));
 	else pastePlainText(ctx, text);
 }
 

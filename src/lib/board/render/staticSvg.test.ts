@@ -13,7 +13,8 @@ const TYPES: ElementType[] = [
 	'stroke',
 	'sketch',
 	'doccard',
-	'connector'
+	'connector',
+	'media'
 ];
 
 function options(
@@ -115,5 +116,14 @@ describe('renderStaticSvg', () => {
 		} as Element;
 		const { svg } = await renderStaticSvg(options([shape, sticky, conn]));
 		expect(svg).toMatchSnapshot();
+	});
+
+	it('draws a media element as its poster, without referring to the link', async () => {
+		const media = { ...samples.media('m'), x: 0, y: 0, w: 480, h: 270, title: 'Launch talk' };
+		const { svg } = await renderStaticSvg(options([media]));
+		expect(svg).toContain('>Launch talk</text>');
+		expect(svg).toContain('>YouTube</text>');
+		expect(svg).not.toContain('youtu');
+		expect(svg).not.toMatch(/<image|<iframe|<video/);
 	});
 });

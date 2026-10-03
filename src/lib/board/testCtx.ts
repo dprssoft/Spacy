@@ -6,6 +6,7 @@ import { HistoryState } from './commands/history.svelte';
 import type { BoardContext } from './context';
 import { installConnectorHooks } from './diagram/ops';
 import { TextEditing } from './editing';
+import { PlaybackState } from './media/playback.svelte';
 import { PagesState } from './pages.svelte';
 import { BoardPrefs } from './prefs.svelte';
 import { PreviewState } from './preview.svelte';
@@ -30,6 +31,7 @@ export function testCtx(id = 'board-1', doc = new Y.Doc()): BoardContext {
 		pointer: null,
 		preview: new PreviewState(),
 		prefs: new BoardPrefs(),
+		playback: new PlaybackState(),
 		sketch: new SketchSettings(),
 		tools: { setTool() {}, current: 'select', tool: { onCancel() {} } }
 	} as unknown as BoardContext;

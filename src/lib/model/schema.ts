@@ -146,6 +146,24 @@ export const connectorSchema = z.object({
 	label: z.object({ text: z.string(), t: unit, background: z.boolean() })
 });
 
+export const mediaSchema = z.object({
+	...base,
+	type: z.literal('media'),
+	url: z
+		.string()
+		.max(2048)
+		.refine((u) => /^https:\/\/[^\s]+$/i.test(u), 'https URL'),
+	provider: z.enum(['youtube', 'vimeo', 'video', 'audio']),
+	mediaId: z
+		.string()
+		.regex(/^[\w-]{1,64}$/)
+		.nullable(),
+	start: nonNeg,
+	end: nonNeg.nullable(),
+	loop: z.boolean(),
+	title: z.string().max(200)
+});
+
 export const elementSchema = z.discriminatedUnion('type', [
 	shapeSchema,
 	stickySchema,
@@ -155,7 +173,8 @@ export const elementSchema = z.discriminatedUnion('type', [
 	sketchSchema,
 	frameSchema,
 	docCardSchema,
-	connectorSchema
+	connectorSchema,
+	mediaSchema
 ]);
 
 // Compile-time guard: the schemas and the hand-written types must describe the same shape.

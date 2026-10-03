@@ -10,7 +10,8 @@ const TYPE_NAMES: Record<Exclude<Element['type'], 'shape'>, string> = {
 	sketch: 'sketch',
 	frame: 'frame',
 	doccard: 'doc card',
-	connector: 'connector'
+	connector: 'connector',
+	media: 'media'
 };
 
 /** A short spoken name: "rectangle", "sticky note", "doc card"… */

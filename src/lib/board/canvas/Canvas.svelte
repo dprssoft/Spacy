@@ -6,6 +6,7 @@
 	import { getBoard } from '../context';
 	import { centeredOrigin, fitRect, screenToWorld } from '../engine/viewport';
 	import { canImport, importFiles } from '../files/importFiles';
+	import { createMedia, droppedMediaLink } from '../media/createMedia';
 	import { SHAPE_DRAG_TYPE, SHAPE_KINDS } from '../elements/shape/paths';
 	import { createShapeAt } from '../tools/create';
 	import { syncFrameMembership } from '../frameMembership';
@@ -69,8 +70,13 @@
 	const hasFiles = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files');
 	const hasShape = (e: DragEvent) => !!e.dataTransfer?.types.includes(SHAPE_DRAG_TYPE);
 
+	// A link dragged from a page or the address bar (types are known during the drag, data isn't).
+	const hasLink = (e: DragEvent) =>
+		!hasFiles(e) &&
+		!!e.dataTransfer?.types.some((t) => t === 'text/uri-list' || t === 'text/plain');
+
 	function ondragover(e: DragEvent) {
-		if (hasShape(e)) {
+		if (hasShape(e) || hasLink(e)) {
 			e.preventDefault();
 			if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
 			return;
@@ -96,6 +102,18 @@
 			ctx.undo.stopCapturing();
 			ctx.tools.setTool('select');
 			ctx.selection.set([id]);
+			return;
+		}
+		if (hasLink(e) && container) {
+			const link = droppedMediaLink(e.dataTransfer);
+			if (!link) return;
+			e.preventDefault();
+			const r = container.getBoundingClientRect();
+			createMedia(
+				ctx,
+				link,
+				screenToWorld(viewport.vp, { x: e.clientX - r.left, y: e.clientY - r.top })
+			);
 			return;
 		}
 		if (!hasFiles(e) || !container) return;

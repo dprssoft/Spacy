@@ -4,6 +4,7 @@ import type {
 	Endpoint,
 	FrameElement,
 	ImageElement,
+	MediaElement,
 	Point,
 	ShapeElement,
 	SketchElement,
@@ -25,6 +26,7 @@ import FrameView from './frame/FrameView.svelte';
 import { sketchHit } from '../sketch/geometry';
 import SketchView from './sketch/SketchView.svelte';
 import ImageView from './image/ImageView.svelte';
+import MediaView from './media/MediaView.svelte';
 import { registerElement, type ElementDefinition } from './registry';
 import ShapeView from './shape/ShapeView.svelte';
 import StickyView from './sticky/StickyView.svelte';
@@ -139,5 +141,15 @@ registerElement<ConnectorElement>({
 	resizable: false,
 	rotatable: false
 } satisfies ElementDefinition<ConnectorElement>);
+
+registerElement<MediaElement>({
+	...boxDefaults,
+	type: 'media',
+	styleOptions: STYLE_OPTIONS.media,
+	component: MediaView,
+	rotatable: false,
+	keepAspect: true,
+	sizeLimits: () => ({ minW: 160, minH: 64 })
+});
 
 export { allDefinitions, definitionOf, getDefinition } from './registry';

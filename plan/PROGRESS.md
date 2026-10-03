@@ -972,3 +972,25 @@ Requested by the human: "can we add drag&drop for txt, gifs, webp, md, docx?". G
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (726 unit tests; `templates.test.ts` now also checks for every template: no overlapping stickies within a frame, no overlapping frames, fits in 4,000 × 3,000; content checks for kanban, the business model canvas and the weekly planner; `align.test.ts` / `arrange.test.ts` for stacking) · pnpm test:e2e ✅ (169; new: insert Kanban → drag a card to Done → its frame changes → "Stack contents" stacks it under the existing card; "More templates" → Strategy → SWOT creates a board; visual baseline of the gallery) · screenshots of the gallery (light/dark) and of Kanban (light/dark), Mind map, Timeline, User journey map, Business model canvas and Eisenhower matrix reviewed.
+
+## Step 35 — Media element — 2026-10-03
+Approved by the human ("approved, start step 35"): new element type, schema version 5, CSP change.
+
+**Summary:**
+- **Model:** `MediaElement` (`url`, `provider`, `mediaId`, `start`, `end`, `loop`, `title`), validated by zod (https only, ≤ 2,048 chars; id `[\w-]{1,64}`; title ≤ 200). Schema version 5, no data moves. `end`/`loop` are stored now for step 36. Default 480 × 270 (audio 360 × 96), dark card, aspect kept, not rotatable.
+- **Links** (`board/media/parseMediaUrl.ts`): YouTube (watch, youtu.be, shorts, embed, live, nocookie; `t=`/`start=`), Vimeo (`vimeo.com/<id>`, channels, player; `#t=`), video/audio files by extension. http, credentials, lookalike hosts and bad ids are rejected. Embeds are built from the id only: `youtube-nocookie.com/embed/<id>?autoplay=1&rel=0&playsinline=1[&start]` and `player.vimeo.com/video/<id>?dnt=1&autoplay=1[#t]`.
+- **View** (`elements/media/MediaView.svelte`): a poster (play button, title, provider · host, clip/start, loop badge, "Offline: can't play", "Can't play this file") until playback starts. Nothing is requested before that. Then an iframe (sandboxed, `allow` for autoplay/fullscreen/PiP) or a native `<video>`/`<audio>` with controls. The player's src is fixed when playback starts, so moves don't reload it.
+- **Playing / interacting:** `PlaybackState` (board context, per tab) holds the playing ids. Double-click or Enter plays and enters the editing mode, where the player takes pointer events (its own controls). Escape or a click elsewhere leaves it and playback continues. The Play/Stop button in the style popover and the context menu (Play/Stop, Open link, Copy link) control it. Playing elements stay mounted when culled or when the scene canvas is shown; deleting stops them (pruned like the selection), and switching page stops all.
+- **Creating:** paste a link on the board, drop a dragged link on the canvas, or use Insert → Media (popover with validation).
+- **Elsewhere:** static SVG/PNG export, thumbnails and the scene canvas draw the poster; media can be @-mentioned by title, and Markdown export writes those mentions as `[title](url)`; a11y name "media".
+- **CSP:** `frame-src https://www.youtube-nocookie.com https://player.vimeo.com; media-src 'self' blob: https:`. `connect-src` stays `'self'`.
+- `00-architecture.md` updated: summary, §5 type and rules (schema 5, media behaviour, CSP), §9 registry note.
+
+**Deviations:**
+- Interaction reuses the existing editing mode (`selection.editingId`) instead of a separate "interacting" state: keys already go to the edited element, and Escape and outside clicks already end it.
+- Markdown export passes a `link` lookup to `docToMarkdown` (held for the duration of the synchronous conversion), so other callers are unchanged.
+- The e2e video fixture (`tests/e2e/fixtures/sample.webm`, 5.6 KB, 2 s) was recorded with Chromium's MediaRecorder; there's no ffmpeg here.
+- An old preview server was still serving stale `_headers` during one e2e run; all preview servers were stopped and the run repeated.
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (770 unit tests; new `parseMediaUrl.test.ts` (all URL forms, start times, rejections), `media.test.ts` (creation as one undo step, audio size, schema rules, playback pruning, poster text, Markdown links); `staticSvg.test.ts` covers media and checks the poster never references the link; the connectable matrix includes media) · pnpm test:e2e ✅ (172; new `media.spec.ts`, network-free via routes: paste a YouTube link → poster with no third-party request → double-click → iframe with the nocookie embed URL → Escape keeps it playing → Stop → poster → undo; Insert → Media validation → a `.webm` link plays (Enter), stays mounted 5,000 px off screen, stops on delete; switching page stops playback; `csp.spec.ts` asserts the new directives) · screenshots of video/audio posters and a playing video reviewed.

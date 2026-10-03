@@ -14,12 +14,27 @@ export interface DocNode {
 	marks?: DocMark[];
 }
 
-export function docToMarkdown(doc: DocNode, opts: { title?: string } = {}): string {
+// The current conversion's link lookup for mentions (conversion is synchronous).
+let mentionLink: ((id: string) => string | null) | null = null;
+
+/**
+ * `link` gives a URL for a mentioned element (a media element's link); such mentions become
+ * `[label](url)` instead of `@label`.
+ */
+export function docToMarkdown(
+	doc: DocNode,
+	opts: { title?: string; link?: (id: string) => string | null } = {}
+): string {
 	const parts: string[] = [];
 	const title = opts.title?.trim();
 	if (title) parts.push(`# ${escapeInline(title)}`);
-	const body = blocks(doc.content ?? []);
-	if (body) parts.push(body);
+	mentionLink = opts.link ?? null;
+	try {
+		const body = blocks(doc.content ?? []);
+		if (body) parts.push(body);
+	} finally {
+		mentionLink = null;
+	}
 	return parts.length ? `${parts.join('\n\n')}\n` : '';
 }
 
@@ -129,10 +144,15 @@ function inline(nodes: DocNode[]): string {
 	return merged.map(inlineNode).join('');
 }
 
+/** A URL usable as a `[text](url)` target: spaces and parentheses percent-encoded. */
+const linkTarget = (url: string) => url.replace(/[()\s]/g, (c) => encodeURIComponent(c));
+
 function inlineNode(node: DocNode): string {
 	if (node.type === 'hardBreak') return '  \n';
 	if (node.type === 'mention') {
 		const label = node.attrs?.label ?? node.attrs?.id ?? '';
+		const url = mentionLink?.(String(node.attrs?.id ?? ''));
+		if (url) return `[${escapeInline(String(label))}](${linkTarget(url)})`;
 		return `@${escapeInline(String(label))}`;
 	}
 	if (node.type !== 'text') return '';
@@ -151,7 +171,7 @@ function withMarks(text: string, marks: DocMark[]): string {
 	}
 	const link = has('link');
 	if (link && typeof link.attrs?.href === 'string')
-		out = `[${out}](${link.attrs.href.replace(/[()\s]/g, (c) => encodeURIComponent(c))})`;
+		out = `[${out}](${linkTarget(link.attrs.href)})`;
 	return lead + out + trail;
 }
 

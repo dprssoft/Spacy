@@ -57,7 +57,8 @@ export const STYLE_OPTIONS: Record<ElementType, readonly StyleOption[]> = {
 	sketch: ['opacity'],
 	frame: ['fill', 'fillStyle', 'stroke', 'radius'],
 	doccard: ['fill', 'stroke', 'radius', 'shadow', 'fontSize', 'fontFamily'],
-	connector: ['stroke', 'strokeWidth', 'dash', 'opacity', 'routing', 'markers', 'labelBackground']
+	connector: ['stroke', 'strokeWidth', 'dash', 'opacity', 'routing', 'markers', 'labelBackground'],
+	media: ['radius', 'shadow']
 };
 
 export const MIXED: unique symbol = Symbol('mixed');

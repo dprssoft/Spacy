@@ -90,6 +90,7 @@ export class PagesState {
 	#show(pageId: string): void {
 		const { doc, store, selection, tools, editing, viewport, preview, id } = this.#ctx;
 		editing.end();
+		this.#ctx.playback.stopAll();
 		tools.tool.onCancel();
 		selection.clear();
 		selection.hoverId = null;

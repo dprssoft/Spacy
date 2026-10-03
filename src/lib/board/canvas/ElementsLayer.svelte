@@ -9,7 +9,7 @@
 	import { useSceneCanvas } from '../render/canvasScene';
 	import SceneCanvas from './SceneCanvas.svelte';
 
-	const { store, viewport, selection } = getBoard();
+	const { store, viewport, selection, playback } = getBoard();
 	// Zoomed far out over many elements, one canvas draws them (DOM painting is the bottleneck).
 
 	// Culling: only elements near the visible area are in the DOM. Recomputed at most once per frame.
@@ -61,8 +61,11 @@
 	});
 
 	// Selected and edited elements stay mounted even when scrolled out of view.
+	// Edited and playing elements are always live DOM views (playing media keeps its sound).
 	const show = (id: string) =>
-		selection.editingId === id || (!viewport.sceneCanvas && (visible.has(id) || selection.has(id)));
+		selection.editingId === id ||
+		playback.playing.has(id) ||
+		(!viewport.sceneCanvas && (visible.has(id) || selection.has(id)));
 	const frames = $derived(store.frameOrder.filter(show));
 	const others = $derived(store.order.filter(show));
 </script>

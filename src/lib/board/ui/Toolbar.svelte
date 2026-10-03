@@ -24,6 +24,7 @@
 	import DocRibbon from '../doccards/DocRibbon.svelte';
 	import { button, caption, groupBox } from './ribbon';
 	import { rovingTabindex } from './rovingTabindex';
+	import MediaLinkPopover from './MediaLinkPopover.svelte';
 	import SketchRibbon from './SketchRibbon.svelte';
 	import { templateGallery } from './templateGalleryState.svelte';
 
@@ -194,6 +195,7 @@
 					{/if}
 				{/each}
 				{#if GROUP_NAMES[gi] === 'Insert'}
+					<MediaLinkPopover {button} {tip} />
 					<Tooltip.Root>
 						<Tooltip.Trigger
 							class={button}

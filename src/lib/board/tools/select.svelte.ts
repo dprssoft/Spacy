@@ -476,6 +476,12 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				ctx.tools.setTool('sketch');
 				return;
 			}
+			if (el?.type === 'media') {
+				// Play it and hand the pointer to the player (its own controls).
+				ctx.playback.play(el.id);
+				ctx.editing.start(el.id);
+				return;
+			}
 			if (el && !el.locked && definitionOf(el).editableText) {
 				const n = e.native;
 				ctx.editing.start(el.id, { at: { x: n.clientX, y: n.clientY } });
@@ -494,6 +500,11 @@ export function createSelectTool(ctx: BoardContext): Tool {
 			if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return false;
 			const id = selection.single;
 			const el = id ? store.get(id) : undefined;
+			if (el?.type === 'media') {
+				ctx.playback.play(el.id);
+				ctx.editing.start(el.id);
+				return true;
+			}
 			if (!el || el.locked || !definitionOf(el).editableText) return false;
 			ctx.editing.start(el.id);
 			return true;
