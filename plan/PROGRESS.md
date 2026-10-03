@@ -832,3 +832,36 @@ Requested by the human: "more fonts and overall colors (for everything)". Answer
 **Dependencies added:** `@fontsource-variable/{inter, montserrat, oswald, comfortaa, lora, roboto-slab, playfair-display, jetbrains-mono, caveat}` and `@fontsource/pacifico`, all 5.3.0 (OFL-1.1; Roboto Slab Apache-2.0). Only the 30 imported files ship.
 
 **Verification:** unit tests (`fonts.test.ts`: unique ids, a file per subset for every bundled font, fallbacks, doc card rules; `palette.test.ts`: full rows, unique values and names, original colors kept under their names, hex normalizing; `recentColors.test.ts`; `formatting.test.ts`: hex colors applied, read back and rejected when not hex, every catalog font; `staticSvg.test.ts`: per-text font-family and embedded rules; `schema.test.ts`: font family kept, optional, length-limited) · e2e `fonts-colors.spec.ts` (bundled font on canvas text incl. Cyrillic, persists after reload; hex fill, palette shade, Recent offered for a sticky; doc card font and hex color from the ribbon; sketch "More colors"; SVG export embeds only the fonts in use) · pnpm verify ✅ (659 unit tests) · pnpm test:e2e ✅ (161) · `fonts-colors` + `doc-format` 40/40 with `--repeat-each=5`.
+
+## Extra — Optimization phase 0: measurements — 2026-10-03
+Requested by the human: an optimization plan, then "phase 0" (measure the cases step 30 didn't).
+
+**Summary:**
+- `tests/e2e/perf-bench.spec.ts`, run with `pnpm bench` (skipped in `test:e2e`). It runs on a 3,000-element mixed board, one pointer move per frame for 60 frames, and records frame times, DevTools main-thread metrics, instrumented app time and Y.Doc updates. It prints a table; `PROFILE=1` also saves a `.cpuprofile` per scenario in `test-results/`.
+- `timed()` in `dev/testHooks.ts` (a no-op unless test hooks are on), around `BoardStore` change handling (`store.apply`), element reads (`store.read`) and culling (`layer.cull`).
+
+**Results** (headless Chromium, software rendering, this machine; two runs agreed within 1 fps; per-frame values in ms):
+
+| Scenario | fps | p95 | script | task | store.apply | Y updates / KB |
+|---|---|---|---|---|---|---|
+| Pan @ 100 % | 60 | 16.7 | 0.4 | 4 | – | – |
+| Pan @ 50 % | 60 | 16.7 | 0.4 | 9.4 | – | – |
+| Pan @ 10 % (all visible) | 29 | 66.7 | 0.5 | 31 | – | – |
+| Drag 1 of 3k | 59.5 | 16.7 | 1.6 | 5 | 0.1 | 56 / 3 |
+| Drag 100 selected @ 50 % | 36 | 50 | 7.5 | 19 | 2.0 | 58 / 182 |
+| **Drag 300 selected @ 50 %** | **27** | 83 | 15.8 | 30 | 4.4 | 58 / 557 |
+| Frame + 200 children @ 35 % | 58 | 16.8 | 6.9 | 9.8 | 1.8 | 60 / 434 |
+| Remote tab, 300 dragged elsewhere | 52 | 33 | 5.3 | 9.8 | 2.6 | 58 / 537 |
+
+**Findings:**
+- **Dragging many elements is the new weak spot**: it scales with the selection (300 → 27 fps). A CPU profile of the 300 drag (unminified build) splits the JS roughly 30 % `updateElements`, 27 % `BoardStore.#apply`, 36 % Svelte updates. The rest of each frame is the browser painting.
+- **zod runs three times per moved element per frame**: `updateElements` parses the current element and the patched result, then the store parses it again when it reads the change. Together that's about a quarter of the drag's JS time.
+- Svelte work per moved element: `ElementView`'s style string, `ShapeView`'s path derived again (only x/y changed), connector geometry, and one selection outline per selected element.
+- Moving a frame with 200 children (58 fps), a remote tab following a 300-element drag (52 fps) and culling (≤ 0.1 ms/frame) are fine.
+- Storage: a one-second drag of 300 elements writes 58 Y updates (557 KB) to IndexedDB and the tab channel. The receiving tab handles that in ~5 ms of script per frame, so throttling it isn't worth doing yet.
+- Pan with everything visible at 10 % zoom: 29 fps (step 30 recorded 33 with a different pacing method). It's still browser painting; app script is 0.5 ms/frame.
+
+**Follow-ups (for phases 2–3 of the plan):** skip the double zod parse for local patches in `updateElements` and the store's re-parse of LOCAL changes; keep ShapeView/ElementView work independent of x/y; then re-run `pnpm bench`.
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (659 unit tests) · `perf-guard` + `tabs-sync` e2e ✅ · `pnpm bench` ✅ (two runs)

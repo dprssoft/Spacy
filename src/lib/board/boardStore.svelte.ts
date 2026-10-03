@@ -1,5 +1,6 @@
 import { SvelteMap } from 'svelte/reactivity';
 import type * as Y from 'yjs';
+import { timed } from '$lib/dev/testHooks';
 import { getElementsMap, readElement, type ElementYMap } from '$lib/model/doc';
 import type { Element, Rect } from '$lib/model/types';
 import { compareZ } from '$lib/model/zorder';
@@ -43,7 +44,7 @@ export class BoardStore {
 				if (typeof id === 'string') changed.add(id);
 			}
 		}
-		this.#apply(changed);
+		timed('store.apply', () => this.#apply(changed));
 	};
 
 	constructor(doc: Y.Doc) {
@@ -108,7 +109,7 @@ export class BoardStore {
 		const touched: string[] = [];
 		for (const id of ids) {
 			const ymap = this.#map.get(id);
-			const next = ymap ? readElement(ymap) : null;
+			const next = ymap ? timed('store.read', () => readElement(ymap)) : null;
 			const prev = this.elements.get(id);
 			this.connectors.remove(prev);
 			if (next) {
