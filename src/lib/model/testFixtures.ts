@@ -79,6 +79,17 @@ export const samples: { [T in ElementType]: (id?: string, z?: string) => Element
 		markerStart: 'none',
 		markerEnd: 'arrow',
 		label: { text: 'yes', t: 0.5, background: true }
+	}),
+	media: (id = 'media1', z = 'a8') => ({
+		...base('media', id, z),
+		type: 'media',
+		url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+		provider: 'youtube',
+		mediaId: 'dQw4w9WgXcQ',
+		start: 0,
+		end: null,
+		loop: false,
+		title: 'YouTube video'
 	})
 };
 

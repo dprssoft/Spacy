@@ -73,10 +73,10 @@ export interface MediaElement extends BaseElement {
   - `csp.spec.ts`: the new directives are present.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] No request to a third-party host happens before pressing play (checked in e2e with `page.on('request')`)
-- [ ] Playback survives panning, zooming and leaving interaction; stops on delete, page switch and board close
-- [ ] `00-architecture.md` updated (types, schema version 5, CSP)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] No request to a third-party host happens before pressing play (checked in e2e with `page.on('request')`)
+- [x] Playback survives panning, zooming and leaving interaction; stops on delete, page switch and board close
+- [x] `00-architecture.md` updated (types, schema version 5, CSP)
 
 ## Out of scope
 Our own play controls (step 36: this step uses the providers' and the browser's built-in controls), local media files stored on the board (dropped from the plan), thumbnails from providers, other providers (Spotify, SoundCloud, Loom), synced playback between tabs, playlists.

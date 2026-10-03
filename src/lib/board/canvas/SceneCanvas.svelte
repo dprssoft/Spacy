@@ -64,11 +64,12 @@
 		if (node.height !== h) node.height = h;
 		const c = node.getContext('2d');
 		if (!c) return;
-		// The edited element is a live DOM view above the canvas.
+		// Edited and playing elements are live DOM views above the canvas.
 		// A throwaway lookup per draw.
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		const near = new Set(store.index.search(view));
 		near.delete(selection.editingId ?? '');
+		for (const id of ctx.playback.playing) near.delete(id);
 		const els: Element[] = [];
 		for (const order of [store.frameOrder, store.order])
 			for (const id of order) {
@@ -112,6 +113,7 @@
 			preview.erasing.size
 		];
 		void selection.editingId;
+		void ctx.playback.playing.size;
 		const node = canvas;
 		if (node) untrack(() => draw(node));
 	});

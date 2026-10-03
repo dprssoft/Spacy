@@ -7,6 +7,8 @@ This document is the contract every step builds on. Steps may refine details, bu
 - **Whiteboard first:** infinite canvas, pan/zoom, freehand pen, shapes, sticky notes, text, images, frames.
 - **Diagram add-on:** every object can be connected by connectors that stay attached (ports, floating, or fixed anchors); straight / elbow / curved routing; arrowheads; labels; basic styling; quick-create; small flowchart shape library.
 - **Doc cards add-on:** rich-text cards on the canvas (headings, lists, checklists, quotes, code, links), full-page focus mode, `@`-mentions of canvas objects, Markdown export.
+- **Media:** YouTube, Vimeo and audio/video links play in place on the board (click-to-play: nothing is requested from a provider before play).
+- **Templates:** a gallery of built-in layouts (kanban, retrospective, SWOT, mind map…) for new boards or inserted into the current one.
 - **Start page:** Figma-like home with "New board", templates, Recent / Starred / All / Trash, search, sort, grid/list, thumbnails.
 - **No backend.** Data lives in IndexedDB. Sharing = `.smthng` file export/import + PNG/SVG/Markdown export. Installable, offline-capable PWA.
 - Real-time multi-user collaboration is **not** in scope, but the data layer (Yjs) is chosen so a sync server can be added later by changing only `openBoard()`.
@@ -98,7 +100,7 @@ export type Point = { x: number; y: number };
 export type Rect = { x: number; y: number; w: number; h: number };
 
 export type ElementType =
-  | 'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'sketch' | 'frame' | 'doccard' | 'connector';
+  | 'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'sketch' | 'frame' | 'doccard' | 'connector' | 'media';
 
 export type ShapeKind =
   | 'rect' | 'ellipse' | 'diamond'                       // basic (toolbar)
@@ -149,6 +151,18 @@ export interface StrokeElement  extends BaseElement { type: 'stroke';  points: n
 export interface FrameElement   extends BaseElement { type: 'frame';   title: string }
 export interface DocCardElement extends BaseElement { type: 'doccard'; title: string; collapsed: boolean; expandedH: number }
 
+export type MediaProvider = 'youtube' | 'vimeo' | 'video' | 'audio';
+export interface MediaElement extends BaseElement {   // schema version 5
+  type: 'media';
+  url: string;              // https only, as entered; shown and exported, never embedded directly
+  provider: MediaProvider;  // parsed from the URL on creation (board/media/parseMediaUrl.ts)
+  mediaId: string | null;   // YouTube/Vimeo id ([\w-]{1,64}); embeds are built from it; null for files
+  start: number;            // seconds
+  end: number | null;       // seconds; play up to here (a clip); null = to the end
+  loop: boolean;
+  title: string;            // poster label, ≤ 200 chars
+}
+
 export type Port = 'n' | 'e' | 's' | 'w';
 
 export type Endpoint =
@@ -173,7 +187,7 @@ export interface ConnectorElement extends BaseElement {
 
 export type Element =
   | ShapeElement | StickyElement | TextElement | ImageElement
-  | StrokeElement | FrameElement | DocCardElement | ConnectorElement;
+  | StrokeElement | FrameElement | DocCardElement | ConnectorElement | MediaElement;
 ```
 
 ### Y.Doc layout
@@ -198,7 +212,8 @@ Rules:
 - Frames render beneath all non-frame elements (own layer); `z` orders frames among themselves.
 - Deleting a doccard deletes its `docs` entry in the same transaction.
 - Deleting an element converts endpoints of connectors attached to it into `free` endpoints at their current resolved position, in the same transaction (step 20).
-- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards).
+- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view).
+- Media (`src/lib/board/media`): which elements are playing is per-tab state (`PlaybackState` in the board context), never stored. A poster is shown until play; playing elements stay mounted when culled or when the scene canvas is shown; page switches stop playback. Double-click / Enter plays and hands the pointer to the player (the editing mode, like doc cards); Escape or a click elsewhere leaves it while playback continues. Exports, thumbnails and the scene canvas draw the poster. CSP: `frame-src https://www.youtube-nocookie.com https://player.vimeo.com; media-src 'self' blob: https:` — `connect-src` stays `'self'` (no oEmbed or thumbnail fetching).
 - Fonts (`src/lib/fonts`): `catalog.ts` lists the fonts (id, label, category, CSS stack); 10 are bundled from `@fontsource*` packages (Latin, Latin Extended and Cyrillic woff2 subsets, ~1 MB in all, precached for offline use) and registered with the `FontFace` API under `SMTHNG <name>` families, so the browser downloads a subset only when text uses it. Canvas text stores the id in `style.font.family` (optional; no schema bump: an older app shows the default font); doc card text uses the `fontFamily` mark. Exports embed the files of the fonts they use as data URLs.
 - Doc card text formatting (schema version 4): underline, `textColor`, `highlight`, `fontFamily` and `fontSize` marks and an `align` attribute on paragraphs and headings. The marks hold ids from fixed lists (`doccards/formatOptions.ts`), rendered as `data-*` attributes and styled in `prose.css`; text color and highlight also take a `#rrggbb` value (`data-*="custom"` plus a CSS variable in the style attribute). Anything else is dropped on parse. The bump matters: an older editor deletes text carrying marks it doesn't know.
 - Sketches (schema version 3): `SketchElement { type: 'sketch'; bx; by; nw; nh }` shows the rectangle `(bx, by, nw, nh)` of its stroke space stretched onto its box. Adding a stroke appends to `sketches[id]` and grows that rectangle and the box together (one transaction, one undo step), so moving or resizing never rewrites stroke data. `sketches` entries are created, deleted, copied and undone with their element, like `docs`.
@@ -281,7 +296,7 @@ export interface ElementDefinition<E extends Element = Element> {
   resizable: boolean;
   rotatable: boolean;
   keepAspect: boolean;                         // default aspect lock on resize (images)
-  editableText: boolean;                       // double-click → text editing
+  editableText: boolean;                       // double-click → text editing (media: double-click → play)
   styleOptions: StyleOption[];                 // which popover controls apply (step 17)
 }
 ```

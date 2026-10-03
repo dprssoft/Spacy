@@ -31,6 +31,10 @@
 	const hasSelection = $derived(open && ctx.selection.size > 0);
 	const allLocked = $derived(open && selectedElements(ctx).every((el) => el.locked));
 	const stackFrame = $derived(open ? stackableFrame(ctx) : null);
+	const media = $derived.by(() => {
+		const el = open && ctx.selection.single ? ctx.store.get(ctx.selection.single) : undefined;
+		return el?.type === 'media' ? el : null;
+	});
 	const docCard = $derived.by(() => {
 		const id = open ? ctx.selection.single : null;
 		return id && ctx.store.get(id)?.type === 'doccard' ? id : null;
@@ -95,6 +99,16 @@
 				)}
 				<ContextMenu.Separator class={sep} />
 				{@render entry('Export selection…', null, () => exportDialog.show('png', 'selection'))}
+				{#if media}
+					<ContextMenu.Separator class={sep} />
+					{@render entry(ctx.playback.playing.has(media.id) ? 'Stop' : 'Play', null, () =>
+						ctx.playback.toggle(media.id)
+					)}
+					{@render entry('Open link', null, () =>
+						window.open(media.url, '_blank', 'noopener,noreferrer')
+					)}
+					{@render entry('Copy link', null, () => void navigator.clipboard?.writeText(media.url))}
+				{/if}
 				{#if docCard}
 					<ContextMenu.Separator class={sep} />
 					{@render entry('Copy as Markdown', null, () => copyMarkdown(ctx, docCard))}

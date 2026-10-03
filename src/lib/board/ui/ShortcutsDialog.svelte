@@ -11,7 +11,11 @@
 	const EXTRA: { group: ShortcutGroup; label: string; keys: string }[] = [
 		{ group: 'Tools', label: 'Select the next / previous object', keys: 'Tab' },
 		{ group: 'View', label: 'Pan', keys: 'Space+drag' },
-		{ group: 'Edit', label: 'Edit text of the selected object', keys: formatKeys('Enter') },
+		{
+			group: 'Edit',
+			label: 'Edit text of the selected object, or play media',
+			keys: formatKeys('Enter')
+		},
 		{ group: 'Edit', label: 'Move the selection (Shift: 10 px)', keys: 'Arrows' }
 	];
 

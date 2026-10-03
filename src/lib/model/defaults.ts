@@ -40,8 +40,10 @@ export const DEFAULT_SIZES: Record<ElementType, { w: number; h: number }> = {
 	sketch: { w: 0, h: 0 },
 	frame: { w: 800, h: 600 },
 	doccard: { w: 360, h: 280 },
-	connector: { w: 0, h: 0 }
+	connector: { w: 0, h: 0 },
+	media: { w: 480, h: 270 } // video; audio uses MEDIA_AUDIO_SIZE
 };
+export const MEDIA_AUDIO_SIZE = { w: 360, h: 96 };
 
 export const CONNECTOR_STUB = 20;
 export const DOC_CARD_HEADER_H = 40;
@@ -86,7 +88,8 @@ const TYPE_TWEAKS: Record<ElementType, StyleTweak> = {
 		shadow: true,
 		font: { align: 'l', valign: 't', size: 's' }
 	},
-	connector: { fill: 'transparent', fillStyle: 'none' }
+	connector: { fill: 'transparent', fillStyle: 'none' },
+	media: { fill: '#18181b', stroke: 'transparent', radius: 'sm', shadow: true }
 };
 
 /** The built-in style for new elements of a type (user defaults are layered on top in step 18). */

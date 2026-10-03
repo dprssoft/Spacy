@@ -27,6 +27,7 @@
 	import ColorSwatches from './controls/ColorSwatches.svelte';
 	import FontList from './controls/FontList.svelte';
 	import PanelButton from './controls/PanelButton.svelte';
+	import MediaPlayButton from './MediaPlayButton.svelte';
 	import Segmented from './controls/Segmented.svelte';
 	import { BASIC_KINDS, shapeIconPath } from './controls/shapeIcons';
 	import Slider from './controls/Slider.svelte';
@@ -122,8 +123,12 @@
 		stroke: 'drawings',
 		frame: 'frames',
 		doccard: 'doc cards',
-		connector: 'connectors'
+		connector: 'connectors',
+		media: 'media'
 	};
+	const mediaId = $derived(
+		editable.length === 1 && editable[0]!.type === 'media' ? editable[0]!.id : null
+	);
 	let defaultsVersion = $state(0);
 	const customDefault = $derived.by(() => {
 		void defaultsVersion;
@@ -143,6 +148,9 @@
 		style:left="{pos.left}px"
 		style:top="{pos.top}px"
 	>
+		{#if mediaId}
+			<MediaPlayButton id={mediaId} />
+		{/if}
 		{#if hasQuick}
 			<PanelButton label="Quick styles" testId="style-quick">
 				{#snippet trigger()}<Palette class="size-4" aria-hidden="true" />{/snippet}

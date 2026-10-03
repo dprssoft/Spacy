@@ -42,6 +42,7 @@
 	import { HandleRegistry } from './tools/handles';
 	import { isTypingTarget, ShortcutRegistry } from './tools/shortcuts';
 	import { ToolManager } from './tools/toolManager.svelte';
+	import { PlaybackState } from './media/playback.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
 	import { templateGallery } from './ui/templateGalleryState.svelte';
 	import LiveAnnouncer from './ui/LiveAnnouncer.svelte';
@@ -73,7 +74,8 @@
 		preview: new PreviewState(),
 		assets: new AssetUrlCache(),
 		prefs: new BoardPrefs(),
-		sketch: new SketchSettings()
+		sketch: new SketchSettings(),
+		playback: new PlaybackState()
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);
@@ -155,6 +157,7 @@
 	$effect(() => {
 		void ctx.store.version;
 		ctx.selection.prune((id) => ctx.store.elements.has(id));
+		ctx.playback.prune((id) => ctx.store.elements.has(id));
 	});
 
 	/** Clipboard events belong to the board unless focus is in a text field or floating UI. */

@@ -210,6 +210,31 @@ export class SceneRenderer {
 				}
 				return;
 			}
+			case 'media': {
+				c.fillStyle = s.fill;
+				c.beginPath();
+				c.roundRect(0, 0, el.w, el.h, radiusPx(s));
+				c.fill();
+				const audio = el.provider === 'audio';
+				const [cx, cy, r] = audio ? [32, el.h / 2, 20] : [el.w / 2, (el.h - 40) / 2, 28];
+				const alpha = c.globalAlpha;
+				c.globalAlpha = alpha * 0.15;
+				c.fillStyle = '#ffffff';
+				c.beginPath();
+				c.arc(cx, cy, r, 0, Math.PI * 2);
+				c.fill();
+				c.globalAlpha = alpha;
+				c.beginPath();
+				c.moveTo(cx - r * 0.3, cy - r * 0.45);
+				c.lineTo(cx + r * 0.5, cy);
+				c.lineTo(cx - r * 0.3, cy + r * 0.45);
+				c.closePath();
+				c.fill();
+				const x = audio ? 64 : 12;
+				const y = audio ? el.h / 2 - 6 : el.h - 34;
+				this.#line(c, el.id, el.title, x, y, el.w - x - 12, 14, 500, '#ffffff');
+				return;
+			}
 			case 'doccard': {
 				const path = insetRect(el.w, el.h, s);
 				fill(c, s, path);

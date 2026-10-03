@@ -21,6 +21,7 @@ import { isLineArt, shapePath } from '../elements/shape/paths';
 import { strokeSvgPath } from '../elements/stroke/strokePath';
 import { strokePaint, type SketchStroke } from '../sketch/brushes';
 import { expandRect } from '../engine/geometry';
+import { posterSubtitle } from '../media/poster';
 import { unionBounds } from './bounds';
 import { wrapText, type FontSpec } from './wrapText';
 
@@ -168,7 +169,26 @@ class Renderer {
 				return this.docCard(el);
 			case 'connector':
 				return this.connector(el);
+			case 'media':
+				return this.media(el);
 		}
+	}
+
+	/** A media element's poster (exports never play anything). */
+	media(el: Extract<Element, { type: 'media' }>): string {
+		const r = RADIUS_PX[el.style.radius];
+		const card = `<rect width="${n(el.w)}" height="${n(el.h)}" rx="${r}" fill="${escapeXml(el.style.fill)}"/>`;
+		const audio = el.provider === 'audio';
+		const play = (cx: number, cy: number, rad: number) =>
+			`<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(rad)}" fill="#ffffff" fill-opacity="0.15"/>` +
+			`<path d="M${n(cx - rad * 0.3)} ${n(cy - rad * 0.45)} L${n(cx + rad * 0.5)} ${n(cy)} L${n(cx - rad * 0.3)} ${n(cy + rad * 0.45)} Z" fill="#ffffff"/>`;
+		const textX = audio ? 64 : 12;
+		const maxW = Math.max(20, el.w - textX - 12);
+		const titleY = audio ? el.h / 2 - 2 : el.h - 30;
+		const lines =
+			`<text x="${textX}" y="${n(titleY)}" font-size="14" font-weight="500" fill="#ffffff">${escapeXml(this.fit(el.title, 14, maxW))}</text>` +
+			`<text x="${textX}" y="${n(titleY + 17)}" font-size="12" fill="#ffffff" fill-opacity="0.7">${escapeXml(this.fit(posterSubtitle(el), 12, maxW))}</text>`;
+		return card + (audio ? play(32, el.h / 2, 20) : play(el.w / 2, (el.h - 40) / 2, 28)) + lines;
 	}
 
 	async docCard(el: Extract<Element, { type: 'doccard' }>): Promise<string> {

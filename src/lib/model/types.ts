@@ -4,7 +4,16 @@ export type Point = { x: number; y: number };
 export type Rect = { x: number; y: number; w: number; h: number };
 
 export type ElementType =
-	'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'sketch' | 'frame' | 'doccard' | 'connector';
+	| 'shape'
+	| 'sticky'
+	| 'text'
+	| 'image'
+	| 'stroke'
+	| 'sketch'
+	| 'frame'
+	| 'doccard'
+	| 'connector'
+	| 'media';
 
 export type ShapeKind =
 	| 'rect'
@@ -107,6 +116,22 @@ export interface DocCardElement extends BaseElement {
 	expandedH: number;
 }
 
+export type MediaProvider = 'youtube' | 'vimeo' | 'video' | 'audio';
+/**
+ * A link that plays on the board (schema version 5). Nothing is fetched from the provider until
+ * the user presses play; embeds are built from `mediaId`, never from `url`.
+ */
+export interface MediaElement extends BaseElement {
+	type: 'media';
+	url: string; // what the user entered (https only), shown and exported
+	provider: MediaProvider; // parsed once from the URL when created
+	mediaId: string | null; // provider video id (youtube/vimeo); null for files
+	start: number; // seconds (0 = from the start)
+	end: number | null; // seconds; play only up to here. null = to the end
+	loop: boolean; // restart at `start` at `end` or the end
+	title: string; // label on the poster
+}
+
 export type Port = 'n' | 'e' | 's' | 'w';
 
 export type Endpoint =
@@ -138,7 +163,8 @@ export type Element =
 	| SketchElement
 	| FrameElement
 	| DocCardElement
-	| ConnectorElement;
+	| ConnectorElement
+	| MediaElement;
 
 // Helpers for working with the Element union (not part of the stored model).
 export type ElementOf<T extends ElementType> = Extract<Element, { type: T }>;

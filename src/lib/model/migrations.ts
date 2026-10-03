@@ -2,7 +2,7 @@ import type * as Y from 'yjs';
 import { getMeta } from './doc';
 import { MIGRATION } from './origins';
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 /** migrations[n] upgrades a doc from version n-1 to n. Version 1 is the initial schema. */
 export const migrations: Record<number, (doc: Y.Doc) => void> = {
@@ -16,7 +16,10 @@ export const migrations: Record<number, (doc: Y.Doc) => void> = {
 	// 4: doc card text formatting (underline, color, highlight, font, size as marks; alignment as
 	// a block attribute). Nothing to convert; an older editor deletes text whose marks it doesn't
 	// know, so older versions must not open the board.
-	4: () => {}
+	4: () => {},
+	// 5: media elements (links that play on the board). Nothing to convert; older versions would
+	// drop the unknown element type from their view, so they must not open the board.
+	5: () => {}
 };
 
 export class NewerSchemaError extends Error {
