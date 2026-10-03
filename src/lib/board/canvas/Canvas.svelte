@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { GRID_SIZE } from '$lib/model/defaults';
 	import { debounce } from '$lib/shared/debounce';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
 	import { cycleSelection } from '../a11y/keyboard';
@@ -11,6 +10,8 @@
 	import { createShapeAt } from '../tools/create';
 	import { syncFrameMembership } from '../frameMembership';
 	import { pointerRouter } from '../tools/pointerRouter';
+	import { theme } from '$lib/shared/theme.svelte';
+	import { gridGap, gridTileSize, gridTileUrl } from './grid';
 	import { viewportInput } from './viewportInput';
 
 	let {
@@ -115,8 +116,24 @@
 		else ctx.selection.clear();
 	}
 
-	const gridSize = $derived(
-		GRID_SIZE * viewport.zoom < 8 ? GRID_SIZE * 4 * viewport.zoom : GRID_SIZE * viewport.zoom
+	const gridSize = $derived(gridGap(viewport.zoom));
+
+	// The dot color comes from the theme's CSS variable, read once per theme (not per pan). Read
+	// again a frame later too: the theme attribute on <html> may update after this effect.
+	let dotColor = $state('');
+	$effect(() => {
+		void theme.resolved;
+		const node = container;
+		if (!node) return;
+		const read = () => (dotColor = getComputedStyle(node).getPropertyValue('--canvas-dot').trim());
+		read();
+		const raf = requestAnimationFrame(read);
+		return () => cancelAnimationFrame(raf);
+	});
+	const gridImage = $derived(
+		ctx.prefs.grid && dotColor && !viewport.sceneCanvas
+			? gridTileUrl(gridTileSize(gridSize), dotColor)
+			: undefined
 	);
 </script>
 
@@ -133,9 +150,7 @@
 	class="relative h-full w-full touch-none overflow-hidden overscroll-none outline-none select-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-inset"
 	{@attach pointerRouter(ctx)}
 	style:cursor={panning ? 'grabbing' : spaceHeld ? 'grab' : ctx.tools.tool.cursor}
-	style:background-image={ctx.prefs.grid
-		? 'radial-gradient(var(--canvas-dot) 1px, transparent 1px)'
-		: undefined}
+	style:background-image={gridImage}
 	style:background-size="{gridSize}px {gridSize}px"
 	style:background-position="{viewport.x}px {viewport.y}px"
 	{ondragover}

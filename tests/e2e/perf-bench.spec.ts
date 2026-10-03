@@ -230,7 +230,7 @@ async function selectAroundOrigin(page: Page, n: number): Promise<number> {
 
 test('pan', async ({ page }) => {
 	await openPerfBoard(page);
-	for (const zoom of [1, 0.5, 0.1]) {
+	for (const zoom of [1, 0.5, 0.25, 0.1]) {
 		await setView(page, { x: 0, y: 0 }, zoom);
 		await measure(`pan @ ${zoom * 100}%`, page, async () => {
 			for (let i = 0; i < FRAMES; i++) {
@@ -255,14 +255,30 @@ test('drag 1 of 3k', async ({ page }) => {
 	await measure('drag 1 of 3k @ 100%', page, () => drag(page, from));
 });
 
-for (const n of [100, 300]) {
-	test(`drag ${n} selected`, async ({ page }) => {
+for (const [n, zoom] of [
+	[100, 0.5],
+	[300, 0.5],
+	[300, 0.2]
+] as const) {
+	test(`drag ${n} selected @ ${zoom * 100}%`, async ({ page }) => {
 		await openPerfBoard(page);
-		await setView(page, { x: 0, y: 0 }, 0.5);
+		await setView(page, { x: 0, y: 0 }, zoom);
 		const count = await selectAroundOrigin(page, n - 1);
 		await nextFrame(page);
-		const from = await centerOf(page, '[data-element-id="grab"]');
-		await measure(`drag ${count} selected @ 50%`, page, () => drag(page, from));
+		// The grab handle's screen position (it may be drawn on the scene canvas, not in the DOM).
+		const from = await page.evaluate(() => {
+			const { viewport, store } = window.__smthng!.ctx;
+			const g = store.get('grab')!;
+			const r = document.querySelector('[data-testid="canvas"]')!.getBoundingClientRect();
+			const z = viewport.zoom;
+			return {
+				x: r.x + viewport.x + (g.x + g.w / 2) * z,
+				y: r.y + viewport.y + (g.y + g.h / 2) * z
+			};
+		});
+		await measure(`drag ${count} selected @ ${zoom * 100}%`, page, () => drag(page, from));
+		const moved = await page.evaluate(() => window.__smthng!.ctx.store.get('grab')!.x);
+		if (moved === -80) throw new Error('the drag did not move the selection');
 	});
 }
 

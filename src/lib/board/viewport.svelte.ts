@@ -19,6 +19,8 @@ export class ViewportState {
 	y = $state(0);
 	zoom = $state(1);
 	size = $state<Size>({ w: 0, h: 0 });
+	/** Elements (and the grid) are drawn on one canvas: zoomed far out over many elements. */
+	sceneCanvas = $state(false);
 
 	#animation = 0;
 
