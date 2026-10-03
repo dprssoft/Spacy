@@ -1,6 +1,8 @@
 import type { ViewportState } from '../viewport.svelte';
 
 export interface ViewportInputOptions {
+	/** When true, Space isn't taken for panning (a playing media element uses it to play/pause). */
+	spaceTaken?: () => boolean;
 	/** Called when hand-panning starts/stops (for the cursor). */
 	onPanningChange?(panning: boolean, spaceHeld: boolean): void;
 }
@@ -49,7 +51,7 @@ export function viewportInput(viewport: ViewportState, opts: ViewportInputOption
 		const notify = () => opts.onPanningChange?.(panPointer !== null, spaceHeld);
 
 		const onKeyDown = (e: KeyboardEvent) => {
-			if (e.code === 'Space' && !e.repeat && !isTypingTarget(e.target)) {
+			if (e.code === 'Space' && !e.repeat && !isTypingTarget(e.target) && !opts.spaceTaken?.()) {
 				e.preventDefault();
 				spaceHeld = true;
 				notify();

@@ -57,7 +57,7 @@ test('a pasted YouTube link becomes a poster, plays in place, and keeps playing 
 	const frame = media(page).locator('iframe');
 	await expect(frame).toHaveAttribute(
 		'src',
-		`https://www.youtube-nocookie.com/embed/${YT}?autoplay=1&rel=0&playsinline=1&start=42`
+		`https://www.youtube-nocookie.com/embed/${YT}?autoplay=1&rel=0&playsinline=1&start=42&controls=0&enablejsapi=1&origin=http%3A%2F%2Flocalhost%3A4173`
 	);
 
 	// Leaving interaction keeps it playing; Stop returns to the poster.

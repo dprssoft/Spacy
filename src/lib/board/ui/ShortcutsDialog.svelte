@@ -6,7 +6,7 @@
 	import { help } from './helpState.svelte';
 
 	const ctx = getBoard();
-	const GROUPS: ShortcutGroup[] = ['Tools', 'Edit', 'View', 'Arrange', 'Diagram', 'Doc'];
+	const GROUPS: ShortcutGroup[] = ['Tools', 'Edit', 'View', 'Arrange', 'Diagram', 'Doc', 'Media'];
 	// Gestures that aren't key bindings but belong in the list.
 	const EXTRA: { group: ShortcutGroup; label: string; keys: string }[] = [
 		{ group: 'Tools', label: 'Select the next / previous object', keys: 'Tab' },
@@ -16,7 +16,18 @@
 			label: 'Edit text of the selected object, or play media',
 			keys: formatKeys('Enter')
 		},
-		{ group: 'Edit', label: 'Move the selection (Shift: 10 px)', keys: 'Arrows' }
+		{ group: 'Edit', label: 'Move the selection (Shift: 10 px)', keys: 'Arrows' },
+		// Media keys apply to the selected media while it plays, or while using its player.
+		{ group: 'Media', label: 'Play / pause', keys: 'Space  /  K' },
+		{ group: 'Media', label: 'Back / forward 10 s', keys: 'J  /  L' },
+		{ group: 'Media', label: 'Back / forward 5 s', keys: '←  /  →' },
+		{ group: 'Media', label: 'Volume', keys: '↑  /  ↓' },
+		{ group: 'Media', label: 'Mute', keys: 'M' },
+		{ group: 'Media', label: 'Full screen', keys: 'F' },
+		{ group: 'Media', label: 'Slower / faster', keys: '<  /  >' },
+		{ group: 'Media', label: 'Jump to 0–90 %', keys: '0–9' },
+		{ group: 'Media', label: 'Clip start / end', keys: 'Home  /  End' },
+		{ group: 'Media', label: 'Loop', keys: 'Shift+L' }
 	];
 
 	let query = $state('');

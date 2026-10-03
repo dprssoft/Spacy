@@ -1,6 +1,6 @@
 import type { BoardContext } from '../context';
 
-export type ShortcutGroup = 'Tools' | 'Edit' | 'View' | 'Arrange' | 'Diagram' | 'Doc';
+export type ShortcutGroup = 'Tools' | 'Edit' | 'View' | 'Arrange' | 'Diagram' | 'Doc' | 'Media';
 
 export interface Shortcut {
 	id: string;

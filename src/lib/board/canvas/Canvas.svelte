@@ -7,6 +7,7 @@
 	import { centeredOrigin, fitRect, screenToWorld } from '../engine/viewport';
 	import { canImport, importFiles } from '../files/importFiles';
 	import { createMedia, droppedMediaLink } from '../media/createMedia';
+	import { mediaKeyTarget } from '../media/keys';
 	import { SHAPE_DRAG_TYPE, SHAPE_KINDS } from '../elements/shape/paths';
 	import { createShapeAt } from '../tools/create';
 	import { syncFrameMembership } from '../frameMembership';
@@ -160,6 +161,7 @@
 <div
 	bind:this={container}
 	{@attach viewportInput(viewport, {
+		spaceTaken: () => mediaKeyTarget(ctx) !== null,
 		onPanningChange: (p, s) => {
 			panning = p;
 			spaceHeld = s;

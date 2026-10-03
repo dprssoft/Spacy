@@ -97,6 +97,15 @@ describe('helpers', () => {
 		expect(parseTime(null)).toBe(0);
 	});
 
+	it('embedUrl turns on the message API and hides controls unless falling back', () => {
+		expect(embedUrl('youtube', ID, 0, { controls: false, origin: 'https://app.example' })).toBe(
+			`https://www.youtube-nocookie.com/embed/${ID}?autoplay=1&rel=0&playsinline=1&controls=0&enablejsapi=1&origin=https%3A%2F%2Fapp.example`
+		);
+		expect(embedUrl('vimeo', '123', 0, { controls: false })).toBe(
+			'https://player.vimeo.com/video/123?dnt=1&autoplay=1&controls=0'
+		);
+	});
+
 	it('embedUrl builds player URLs from the id only', () => {
 		expect(embedUrl('youtube', ID, 0)).toBe(
 			`https://www.youtube-nocookie.com/embed/${ID}?autoplay=1&rel=0&playsinline=1`

@@ -339,6 +339,17 @@ export interface Connectable<E extends Element = Element> {
 export const boxConnectable: Connectable;           // default: rotated bounding box
 ```
 
+### Media controller (`src/lib/board/media/controller.ts`)
+```ts
+interface MediaController {
+  readonly state: { playing; time; duration; buffered; volume; muted; rate; ready; fallback; ended; error };
+  readonly can: { rate: boolean; pip: boolean; captions: boolean };
+  play(); pause(); seek(s); setVolume(v); setMuted(m); setRate(r);
+  subscribe(fn): () => void; destroy();
+}
+```
+Adapters: `NativeController` (`<video>`/`<audio>`), `YouTubeController` and `VimeoController` (postMessage only — no provider script runs in the page; messages are accepted only from that iframe's window and the provider's origin; no answer within 4 s → `fallback`: the iframe reloads with the provider's own controls). `PlaybackState` holds one controller per playing element; `runSession` applies the personal volume/speed (`localPrefs` `smthng:media`, never on the board) and enforces the clip (`start`/`end`/`loop`, stored on the element). The controls bar renders in the screen-space overlay (inside the player when it's fullscreen). Starting one media pauses the others unless the "Play one media at a time" setting is off.
+
 ### Board context (`src/lib/board/context.ts`)
 Svelte context object created in `BoardPage.svelte`, grows over steps:
 `{ id, doc, undo, store, viewport, selection, tools, commands, prefs }`. Access with `getBoard()`.
@@ -377,6 +388,10 @@ Imports always create new board ids and new asset ids (remapped in the doc).
 | Mod+' | Toggle grid snap | Mod+Enter | Open doc card in focus mode |
 | Enter | Edit text / doc card | Escape | Cancel / deselect / exit edit |
 | Arrows (+Shift) | Nudge 1px (10px) | ? | Shortcuts dialog |
+| Shift+T | Insert template | | |
+
+**Media keys** apply to the selected media element while it plays, or while its player is in use; then they take precedence over tool keys, arrow nudging and Space-panning:
+Space / K play-pause · J / L ∓10 s · ← / → ∓5 s · ↑ / ↓ volume · M mute · F full screen · `<` / `>` speed · 0–9 jump to 0–90 % · Home / End clip start / end · Shift+L loop. Enter on a selected media element starts it.
 
 Shortcuts are ignored while focus is in `input`, `textarea`, `select`, or `[contenteditable]` (except Escape handling defined per step).
 
