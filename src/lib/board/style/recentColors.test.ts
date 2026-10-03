@@ -1,4 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+// The first import compiles the module (seconds under a busy full run); do it outside the tests'
+// time limit. Each test still loads a fresh copy after resetModules.
+beforeAll(async () => {
+	await import('./recentColors.svelte');
+}, 30_000);
 
 beforeEach(() => {
 	localStorage.clear();

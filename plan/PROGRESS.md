@@ -938,3 +938,20 @@ Requested by the human: "can we add drag&drop for txt, gifs, webp, md, docx?". G
 
 **Dependencies added:** `marked@18.0.14` (MIT): the Markdown parser, in the lazily loaded import chunk (15.6 KB gzipped together with the importer). `mammoth` was the alternative for `.docx`, but it adds about 170 KB gzipped, so `.docx` uses the small converter instead.
 **Verification:** pnpm verify ✅ (682 unit tests; new `docx.test.ts` on hand-built zips with stored and deflated entries, and `importDocs.test.ts`) · pnpm test:e2e ✅ (165; new `file-drop.spec.ts`: Markdown → formatted card with checklist, one undo step; `.txt` + a real `.docx` fixture → two selected cards, unsupported file ignored; a fake `.docx` shows an error).
+
+## Step 33 — Insertable templates — 2026-10-03
+**Summary:**
+- `templates/insert.ts` (lazy): `insertTemplate(ctx, t)` builds the template into a temporary doc, clones it with new ids, centered on the view, and adds it with `createWithContent`: one LOCAL transaction (one undo step), doc card contents and sketch strokes copied, frame membership synced, everything selected. The bounds include connectors (via their geometry). When the template doesn't fit the view, the view zooms out to it (`viewport.fit`).
+- `Template` gained `category`, `keywords` and `featured`, and `searchTemplates` matches every word.
+- `shared/ui/TemplateGallery.svelte`: a dialog with search, category chips, a preview grid (rendered on first open, cached per session) and arrow-key navigation. It's used by the board (Insert → Templates button, Shift+T, "Insert template" in the shortcuts help) and by the start page ("More templates", which creates a board). The start page row shows featured templates only; "More templates" appears once there are non-featured ones (step 34).
+- The gallery and the insert code load on first open (dynamic imports, checked in the build output).
+
+**Deviations:**
+- No new `insertElements` was extracted from `pastePayload`: `commands/edit.ts` already had `createWithContent`, which does exactly that.
+- The "zooms out" unit test spies on `viewport.fit`; jsdom's animation frames don't advance the eased animation.
+- Two existing tests were flaky under the heavier full run and are fixed without changing what they check:
+  - `recentColors.test.ts`: the module's first import (compilation) now happens in `beforeAll`, outside the 5 s test limit.
+  - `doccard.spec.ts` "markdown shortcuts": the second tab's 1 s window included loading the board and the lazy editor. It now waits for that editor, then checks syncing within 1 s (2/5 failures before, 8/8 passes after).
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (689 unit tests; new `insert.test.ts`: every template inserts as consistent new elements that are selected and undone in one step; centered; doc card text copied; two inserts are independent; fit only when too big; search) · pnpm test:e2e ✅ (166; new in `templates.spec.ts`: toolbar → gallery → search "brain" → insert → selected; one Ctrl+Z removes it; Shift+T opens the gallery).

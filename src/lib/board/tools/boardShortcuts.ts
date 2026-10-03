@@ -2,6 +2,7 @@ import type { ShapeKind } from '$lib/model/types';
 import { createAtCenter, CREATION_TOOLS } from '../a11y/keyboard';
 import type { BoardContext } from '../context';
 import { help } from '../ui/helpState.svelte';
+import { templateGallery } from '../ui/templateGalleryState.svelte';
 import { nextZoomStep, zoomAt } from '../engine/viewport';
 import { openImagePicker } from '../images/importImages';
 import type { Shortcut } from './shortcuts';
@@ -65,6 +66,13 @@ export const toolShortcuts: Shortcut[] = [
 		label: 'Insert image',
 		group: 'Tools',
 		run: openImagePicker
+	},
+	{
+		id: 'tool.templates',
+		keys: ['Shift+T'],
+		label: 'Insert template',
+		group: 'Tools',
+		run: () => (templateGallery.open = true)
 	},
 	{
 		id: 'escape',
