@@ -139,6 +139,17 @@
 		})
 	);
 
+	// One path for every selected element's outline: a polygon each re-rendered hundreds of
+	// elements per frame while dragging a big selection.
+	const memberOutlines = $derived(
+		selected.length > 1
+			? selected
+					.filter((el) => el.type !== 'connector')
+					.map((el) => `M${outline(el)}Z`)
+					.join('')
+			: ''
+	);
+
 	const rotationDeg = $derived(box ? (box.rotation * 180) / Math.PI : 0);
 </script>
 
@@ -152,12 +163,8 @@
 			stroke-width="1.5"
 		/>
 	{/if}
-	{#if selected.length > 1}
-		{#each selected as el (el.id)}
-			{#if el.type !== 'connector'}
-				<polygon points={outline(el)} fill="none" stroke="var(--selection)" stroke-width="1" />
-			{/if}
-		{/each}
+	{#if memberOutlines}
+		<path d={memberOutlines} fill="none" stroke="var(--selection)" stroke-width="1" />
 	{/if}
 	{#if box && !selection.editingId}
 		<polygon points={boxPolygon} fill="none" stroke="var(--selection)" stroke-width="1.5" />

@@ -11,11 +11,12 @@
 		valignToJustify
 	} from '../common';
 	import type { ElementViewProps } from '../registry';
-	import { isLineArt, shapePath } from './paths';
+	import { isLineArt, shapePathMemo } from './paths';
 
 	let { el, editing }: ElementViewProps<ShapeElement> = $props();
 
-	const d = $derived(shapePath(el.kind, el.w, el.h, radiusPx(el.style), el.style.strokeWidth / 2));
+	const pathFor = shapePathMemo();
+	const d = $derived(pathFor(el.kind, el.w, el.h, radiusPx(el.style), el.style.strokeWidth / 2));
 </script>
 
 <svg width={el.w} height={el.h} class="absolute inset-0 overflow-visible" aria-hidden="true">

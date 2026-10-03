@@ -29,9 +29,23 @@ export const getDocsMap = (doc: Y.Doc): Y.Map<Y.XmlFragment> => doc.getMap('docs
 /** Brush strokes of sketch elements: one append-only array of plain stroke objects per sketch. */
 export const getSketchesMap = (doc: Y.Doc): Y.Map<Y.Array<unknown>> => doc.getMap('sketches');
 
+// Elements as validated by the write that just stored them. Observers of that transaction (the
+// board store) read them without validating the same data again; ops forget them as soon as the
+// transaction ends, so a later change from elsewhere is always read from the Y.Map.
+const justWritten = new WeakMap<ElementYMap, Element>();
+
+/** Marks `el` as exactly what `ymap` holds, until `forgetWritten`. */
+export function rememberWritten(ymap: ElementYMap, el: Element): void {
+	justWritten.set(ymap, el);
+}
+
+export function forgetWritten(ymap: ElementYMap): void {
+	justWritten.delete(ymap);
+}
+
 /** Plain snapshot of a stored element; null if the stored data is invalid. */
 export function readElement(ymap: ElementYMap): Element | null {
-	return parseElement(ymap.toJSON());
+	return justWritten.get(ymap) ?? parseElement(ymap.toJSON());
 }
 
 /** One Y.Map key per top-level field. Object/array fields are stored as plain JSON values. */
