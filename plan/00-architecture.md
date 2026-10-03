@@ -14,7 +14,7 @@ This document is the contract every step builds on. Steps may refine details, bu
 - Real-time multi-user collaboration is **not** in scope, but the data layer (Yjs) is chosen so a sync server can be added later by changing only `openBoard()`.
 
 ### Non-goals (do not build)
-Accounts, server sync, comments, version history, UML/BPMN libraries, auto-layout, swimlanes, gradients, user-uploaded fonts (a fixed set of 10 bundled open-licence fonts plus system stacks is offered), custom shape editor, frame clipping, nested frames, nested groups, connector-to-connector junctions, line jumps, page/print layout, tables/images inside doc cards, suggestion mode, mobile editing (mobile/touch: view + basic pan/zoom only).
+Accounts, server sync, comments, version history, UML/BPMN libraries, auto-layout, swimlanes, gradients, user-uploaded fonts (a fixed set of 10 bundled open-licence fonts plus system stacks is offered), custom shape editor, frame clipping, nested frames, nested groups, connector-to-connector junctions, line jumps, page/print layout, tables/images inside doc cards, suggestion mode. (Mobile editing was a non-goal until steps 37–38: phones and tablets are now supported for viewing and editing.)
 
 ## 2. Tech stack
 
