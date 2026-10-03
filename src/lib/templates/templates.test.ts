@@ -5,6 +5,7 @@ import { parseElement } from '$lib/model/schema';
 import { TEMPLATE } from '$lib/model/origins';
 import { docToMarkdown } from '$lib/board/doccards/markdown';
 import { fragmentToJSON } from '$lib/board/doccards/fragmentJson';
+import type { Element } from '$lib/model/types';
 import { templates } from './index';
 
 async function built(id: string) {
@@ -39,6 +40,23 @@ describe.each(templates.map((t) => t.id))('template %s', (id) => {
 			}
 		}
 	});
+
+	it('is tidy: no overlapping stickies in a frame, no overlapping frames, a sensible size', async () => {
+		const els = listElements((await built(id)).doc).filter((e) => e.type !== 'connector');
+		const overlap = (a: Element, b: Element) =>
+			a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+		const pairs = (list: Element[]) =>
+			list.flatMap((a, i) => list.slice(i + 1).map((b) => [a, b] as const));
+		const stickies = els.filter((e) => e.type === 'sticky' && e.parentId);
+		for (const [a, b] of pairs(stickies))
+			if (a.parentId === b.parentId) expect(overlap(a, b), `${a.id} / ${b.id}`).toBe(false);
+		for (const [a, b] of pairs(els.filter((e) => e.type === 'frame')))
+			expect(overlap(a, b), `${a.id} / ${b.id}`).toBe(false);
+		const minX = Math.min(...els.map((e) => e.x));
+		const minY = Math.min(...els.map((e) => e.y));
+		expect(Math.max(...els.map((e) => e.x + e.w)) - minX).toBeLessThanOrEqual(4000);
+		expect(Math.max(...els.map((e) => e.y + e.h)) - minY).toBeLessThanOrEqual(3000);
+	});
 });
 
 describe('template content', () => {
@@ -60,6 +78,36 @@ describe('template content', () => {
 		const stickies = els.filter((e) => e.type === 'sticky');
 		expect(new Set(stickies.map((s) => s.color)).size).toBe(6);
 		expect(els.filter((e) => e.type === 'connector')).toHaveLength(6);
+	});
+
+	it('kanban: three columns with 3 / 2 / 1 cards inside', async () => {
+		const els = listElements((await built('kanban')).doc);
+		const frames = els.filter((e) => e.type === 'frame');
+		expect(frames.map((f) => (f as { title: string }).title)).toEqual([
+			'To do',
+			'In progress',
+			'Done'
+		]);
+		const count = (f: Element) =>
+			els.filter((e) => e.type === 'sticky' && e.parentId === f.id).length;
+		expect(frames.map(count)).toEqual([3, 2, 1]);
+	});
+
+	it('business model canvas: the nine blocks', async () => {
+		const frames = listElements((await built('business-model-canvas')).doc).filter(
+			(e) => e.type === 'frame'
+		);
+		expect(frames).toHaveLength(9);
+	});
+
+	it('weekly planner: five days and a notes card with a checklist', async () => {
+		const { doc } = await built('weekly-planner');
+		const els = listElements(doc);
+		expect(els.filter((e) => e.type === 'frame')).toHaveLength(5);
+		const card = els.find((e) => e.type === 'doccard')!;
+		expect(docToMarkdown(fragmentToJSON(getDocsMap(doc).get(card.id)!))).toContain(
+			'- [ ] Top priority'
+		);
 	});
 
 	it('meeting notes: the doc card has the agenda and action items', async () => {

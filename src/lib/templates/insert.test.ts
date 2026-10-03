@@ -83,7 +83,11 @@ describe('searchTemplates', () => {
 	it('matches every word against name, description, category and keywords', () => {
 		expect(searchTemplates('flow').map((t) => t.id)).toEqual(['flowchart']);
 		expect(searchTemplates('agenda minutes').map((t) => t.id)).toEqual(['meeting-notes']);
-		expect(searchTemplates('', 'Workshops').map((t) => t.id)).toEqual(['brainstorm']);
+		expect(searchTemplates('', 'Workshops').map((t) => t.id)).toEqual([
+			'retrospective',
+			'brainstorm'
+		]);
+		expect(searchTemplates('KANBAN todo').map((t) => t.id)).toEqual(['kanban']);
 		expect(searchTemplates('nothing-like-this')).toEqual([]);
 	});
 });

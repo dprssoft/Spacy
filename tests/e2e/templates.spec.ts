@@ -61,3 +61,69 @@ test('a template is inserted into the open board from the gallery, as one undo s
 	await page.keyboard.press('Escape');
 	await expect(dialog).toBeHidden();
 });
+
+test('kanban: cards move between columns and "Stack contents" tidies a column', async ({
+	page
+}) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	await waitForInitialView(page);
+	await page.keyboard.press('Shift+T');
+	await page.getByRole('button', { name: 'Kanban template' }).click();
+	await expect(page.locator('[data-type=frame]')).toHaveCount(3);
+
+	type El = {
+		id: string;
+		type: string;
+		title?: string;
+		text?: string;
+		parentId: string | null;
+		x: number;
+		y: number;
+	};
+	const list = () => page.evaluate(() => window.__smthng!.list() as unknown as El[]);
+	const els = await list();
+	const done = els.find((e) => e.title === 'Done')!;
+	const task = els.find((e) => e.text === 'Task 3')!;
+
+	// Drag "Task 3" into the Done column, below its card.
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('Escape');
+	const from = (await page.locator(`[data-element-id="${task.id}"]`).boundingBox())!;
+	const target = (await page.locator(`[data-element-id="${done.id}"]`).boundingBox())!;
+	await page.mouse.move(from.x + 20, from.y + 20);
+	await page.mouse.down();
+	await page.mouse.move(target.x + 40, target.y + target.height - 120, { steps: 10 });
+	await page.mouse.up();
+	await expect
+		.poll(async () => (await list()).find((e) => e.id === task.id)!.parentId)
+		.toBe(done.id);
+
+	// Stack the Done column: the moved card goes right under the existing one.
+	await page.keyboard.press('Escape');
+	await page.mouse.click(target.x + 4, target.y - 10); // the frame title selects the frame
+	await page.mouse.click(target.x + 4, target.y - 10, { button: 'right' });
+	await page.getByRole('menuitem', { name: 'Stack contents' }).click();
+	await expect
+		.poll(async () => {
+			const now = await list();
+			const cards = now.filter((e) => e.parentId === done.id).sort((a, b) => a.y - b.y);
+			return cards.map((c) => [c.x - done.x, c.text]);
+		})
+		.toEqual([
+			[16, 'Task'],
+			[16, 'Task 3']
+		]);
+});
+
+test('"More templates" on the start page creates a board from any template', async ({ page }) => {
+	await page.goto('/');
+	await page.getByRole('button', { name: 'More templates' }).click();
+	const dialog = page.getByRole('dialog', { name: 'New board from a template' });
+	await dialog.getByRole('button', { name: 'Strategy' }).click();
+	await dialog.getByRole('button', { name: 'SWOT analysis template' }).click();
+	await page.waitForURL(/\/board\//);
+	await expect(page.locator('[data-type=frame]')).toHaveCount(4);
+	await expect(page.getByRole('button', { name: /Rename board: SWOT analysis/ })).toBeVisible();
+});

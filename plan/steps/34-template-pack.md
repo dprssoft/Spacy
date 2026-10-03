@@ -35,9 +35,9 @@ Nine more templates, built from existing elements only (frames, stickies, shapes
 - Visual snapshot of the gallery (one per template preview is overkill: one grid screenshot).
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Every template looks tidy in light and dark mode (screenshots noted in PROGRESS)
-- [ ] Each template module is its own lazy chunk
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Every template looks tidy in light and dark mode (screenshots noted in PROGRESS)
+- [x] Each template module is its own lazy chunk
 
 ## Out of scope
 Smart widgets with automatic layout (a kanban that re-stacks itself while you drag): that needs a new element type and is a non-goal today.

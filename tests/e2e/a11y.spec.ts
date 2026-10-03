@@ -16,7 +16,7 @@ async function violations(page: Page): Promise<string[]> {
 
 test('the empty start page', async ({ page }) => {
 	await page.goto('/');
-	await expect(page.locator('[data-template] img')).toHaveCount(3);
+	await expect(page.locator('[data-template] img')).toHaveCount(4);
 	expect(await violations(page)).toEqual([]);
 });
 

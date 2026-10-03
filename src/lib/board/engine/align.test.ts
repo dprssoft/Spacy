@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { align, distribute, matchSize } from './align';
+import { align, distribute, matchSize, stackInFrame, STACK_GAP, STACK_PADDING } from './align';
 import { snapMove, snapPoint, snapToGrid } from './snapping';
 
 const items = [
@@ -106,5 +106,39 @@ describe('snapping', () => {
 		expect(snapToGrid(37, 24)).toBe(48);
 		expect(snapToGrid(-13, 24)).toBe(-24);
 		expect(snapToGrid(11, 24)).toBe(0);
+	});
+});
+
+describe('stackInFrame', () => {
+	const frame = { x: 100, y: 100, w: 300, h: 400 };
+	it('stacks in reading order at the padding, a gap apart, keeping sizes', () => {
+		const items = [
+			{ id: 'low', box: { x: 250, y: 300, w: 100, h: 60 } },
+			{ id: 'top', box: { x: 180, y: 120, w: 120, h: 80 } },
+			{ id: 'topRight', box: { x: 300, y: 120, w: 50, h: 50 } }
+		];
+		const { shifts, frameH } = stackInFrame(frame, items);
+		expect(shifts.map((s) => s.id)).toEqual(['top', 'topRight', 'low']);
+		const placed = shifts.map((s) => {
+			const b = items.find((i) => i.id === s.id)!.box;
+			return { x: b.x + s.dx, y: b.y + s.dy };
+		});
+		const p = STACK_PADDING;
+		const g = STACK_GAP;
+		expect(placed).toEqual([
+			{ x: 100 + p, y: 100 + p },
+			{ x: 100 + p, y: 100 + p + 80 + g },
+			{ x: 100 + p, y: 100 + p + 80 + g + 50 + g }
+		]);
+		expect(frameH).toBe(400);
+	});
+
+	it('grows the frame when the stack is taller, and handles no items', () => {
+		const tall = Array.from({ length: 5 }, (_, i) => ({
+			id: `s${i}`,
+			box: { x: 0, y: i, w: 50, h: 100 }
+		}));
+		expect(stackInFrame(frame, tall).frameH).toBe(STACK_PADDING * 2 + 5 * 100 + 4 * STACK_GAP);
+		expect(stackInFrame(frame, [])).toEqual({ shifts: [], frameH: 400 });
 	});
 });

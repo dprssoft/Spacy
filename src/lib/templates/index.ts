@@ -27,6 +27,87 @@ export interface Template {
 
 export const templates: Template[] = [
 	{
+		id: 'kanban',
+		name: 'Kanban',
+		description: 'To do, in progress and done, with starter cards',
+		category: 'Planning',
+		keywords: ['board', 'tasks', 'agile', 'scrum', 'todo', 'sprint'],
+		featured: true,
+		build: async (doc) => (await import('./kanban')).buildKanban(doc)
+	},
+	{
+		id: 'retrospective',
+		name: 'Retrospective',
+		description: 'What went well, what to improve, and actions',
+		category: 'Workshops',
+		keywords: ['retro', 'sprint', 'review', 'feedback', 'agile'],
+		featured: false,
+		build: async (doc) => (await import('./retrospective')).buildRetrospective(doc)
+	},
+	{
+		id: 'swot',
+		name: 'SWOT analysis',
+		description: 'Strengths, weaknesses, opportunities and threats',
+		category: 'Strategy',
+		keywords: ['analysis', 'strategy', 'matrix', 'planning'],
+		featured: false,
+		build: async (doc) => (await import('./swot')).buildSwot(doc)
+	},
+	{
+		id: 'eisenhower',
+		name: 'Eisenhower matrix',
+		description: 'Sort tasks by urgency and importance',
+		category: 'Planning',
+		keywords: ['priorities', 'urgent', 'important', 'matrix', '2x2'],
+		featured: false,
+		build: async (doc) => (await import('./eisenhower')).buildEisenhower(doc)
+	},
+	{
+		id: 'mind-map',
+		name: 'Mind map',
+		description: 'A main idea with branches and sub-ideas',
+		category: 'Diagrams',
+		keywords: ['mindmap', 'ideas', 'branches', 'tree'],
+		featured: false,
+		build: async (doc) => (await import('./mindMap')).buildMindMap(doc)
+	},
+	{
+		id: 'timeline',
+		name: 'Timeline',
+		description: 'A roadmap by quarter with milestones',
+		category: 'Planning',
+		keywords: ['roadmap', 'quarters', 'milestones', 'schedule', 'plan'],
+		featured: false,
+		build: async (doc) => (await import('./timeline')).buildTimeline(doc)
+	},
+	{
+		id: 'journey-map',
+		name: 'User journey map',
+		description: 'Stages against actions, thoughts, feelings and opportunities',
+		category: 'Strategy',
+		keywords: ['customer', 'ux', 'experience', 'research', 'journey'],
+		featured: false,
+		build: async (doc) => (await import('./journeyMap')).buildJourneyMap(doc)
+	},
+	{
+		id: 'business-model-canvas',
+		name: 'Business model canvas',
+		description: 'The nine building blocks of a business model',
+		category: 'Strategy',
+		keywords: ['bmc', 'startup', 'business', 'model', 'lean'],
+		featured: false,
+		build: async (doc) => (await import('./businessModelCanvas')).buildBusinessModelCanvas(doc)
+	},
+	{
+		id: 'weekly-planner',
+		name: 'Weekly planner',
+		description: 'Monday to Friday, plus notes for the week',
+		category: 'Planning',
+		keywords: ['week', 'calendar', 'days', 'schedule', 'plan'],
+		featured: false,
+		build: async (doc) => (await import('./weeklyPlanner')).buildWeeklyPlanner(doc)
+	},
+	{
 		id: 'flowchart',
 		name: 'Flowchart',
 		description: 'Start, steps and a decision, already connected',
