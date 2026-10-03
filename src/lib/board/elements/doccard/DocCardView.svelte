@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { fontStack } from '$lib/fonts/catalog';
+	import { watchEditorStats, type LiveStats } from '../../writing/editorStats';
+	import { formatStats } from '../../writing/wordCount';
 	import { FONT_SIZE_PX } from '$lib/model/defaults';
 	import { getDocsMap } from '$lib/model/doc';
 	import type { DocCardElement, Point } from '$lib/model/types';
@@ -185,6 +187,17 @@
 			: body.scrollTop > 0;
 		if (e.deltaY !== 0 && canScroll) e.stopPropagation();
 	}
+
+	// While writing in the card: its word count (and the selection's), updated as you type.
+	let stats = $state<LiveStats | null>(null);
+	$effect(() => {
+		const ed = editor;
+		if (part !== 'body' || !ed) {
+			stats = null;
+			return;
+		}
+		return watchEditorStats(ed, (st) => (stats = st));
+	});
 </script>
 
 <div
@@ -214,6 +227,16 @@
 			data-doccard-body
 			style:font-family={fontStack(el.style.font.family)}
 		></div>
+		{#if stats}
+			<div
+				class="pointer-events-none absolute right-2 bottom-1.5 rounded bg-surface/85 px-1.5 text-[11px] text-muted tabular-nums"
+				data-doccard-count
+			>
+				{stats.selectionWords
+					? `${stats.selectionWords.toLocaleString('en')} of ${formatStats(stats.words)}`
+					: formatStats(stats.words)}
+			</div>
+		{/if}
 	{:else if !el.collapsed}
 		<div class="flex flex-1 flex-col gap-3 px-4 py-4" data-doccard-preview aria-hidden="true">
 			{#each ['70%', '95%', '55%'] as width (width)}

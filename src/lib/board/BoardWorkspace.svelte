@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';
@@ -48,6 +49,7 @@
 	import { layout } from '$lib/shared/layout.svelte';
 	import MediaOverlay from './media/MediaOverlay.svelte';
 	import { PlaybackState } from './media/playback.svelte';
+	import { BoardWordStats } from './writing/boardStats.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
 	import { templateGallery } from './ui/templateGalleryState.svelte';
 	import LiveAnnouncer from './ui/LiveAnnouncer.svelte';
@@ -87,6 +89,8 @@
 	// Before the store is used: it decides which page's elements the store shows.
 	ctx.pages = new PagesState(ctx);
 	ctx.store.rebind();
+	ctx.words = new BoardWordStats(ctx.doc, ctx.store);
+	onDestroy(() => ctx.words.destroy());
 	ctx.shortcuts.register([
 		...toolShortcuts,
 		...viewShortcuts,

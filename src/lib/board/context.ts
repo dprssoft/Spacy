@@ -7,6 +7,7 @@ import type { TextEditing } from './editing';
 import type { AssetUrlCache } from './images/assetUrls';
 import type { PreviewState } from './preview.svelte';
 import type { PlaybackState } from './media/playback.svelte';
+import type { BoardWordStats } from './writing/boardStats.svelte';
 import type { PagesState } from './pages.svelte';
 import type { BoardPrefs } from './prefs.svelte';
 import type { SelectionState } from './selection.svelte';
@@ -36,6 +37,7 @@ export interface BoardContext {
 	prefs: BoardPrefs;
 	pages: PagesState;
 	playback: PlaybackState;
+	words: BoardWordStats;
 	sketch: SketchSettings;
 }
 

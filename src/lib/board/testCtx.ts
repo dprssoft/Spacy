@@ -8,6 +8,7 @@ import { installConnectorHooks } from './diagram/ops';
 import { TextEditing } from './editing';
 import { PlaybackState } from './media/playback.svelte';
 import { PagesState } from './pages.svelte';
+import { BoardWordStats } from './writing/boardStats.svelte';
 import { BoardPrefs } from './prefs.svelte';
 import { PreviewState } from './preview.svelte';
 import { SelectionState } from './selection.svelte';
@@ -37,5 +38,6 @@ export function testCtx(id = 'board-1', doc = new Y.Doc()): BoardContext {
 	} as unknown as BoardContext;
 	ctx.editing = new TextEditing(ctx);
 	ctx.pages = new PagesState(ctx);
+	ctx.words = new BoardWordStats(doc, ctx.store);
 	return ctx;
 }

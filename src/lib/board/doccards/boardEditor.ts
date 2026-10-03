@@ -1,3 +1,4 @@
+import { CurrentBlock } from './currentBlock';
 import FileText from '@lucide/svelte/icons/file-text';
 import Frame from '@lucide/svelte/icons/frame';
 import Heading1 from '@lucide/svelte/icons/heading-1';
@@ -46,6 +47,7 @@ export function createBoardDocEditor(
 	return createDocEditor({
 		...opts,
 		extra: [
+			CurrentBlock,
 			slashExtension(
 				suggestionRenderer<SlashItem>('Commands', (i) => ({
 					label: i.title,
