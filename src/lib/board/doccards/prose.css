@@ -233,3 +233,12 @@
 [data-doccard-body] {
 	color-scheme: light;
 }
+
+/* Focus mode "focus paragraph": everything but the caret's block fades. */
+.focus-paragraph .ProseMirror > * {
+	opacity: 0.35;
+	transition: opacity 0.15s;
+}
+.focus-paragraph .ProseMirror > .is-current {
+	opacity: 1;
+}

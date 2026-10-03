@@ -28,9 +28,9 @@ Writers always know how much they've written: live word and character counts and
 - e2e `writing-stats.spec.ts`: type in a doc card → footer count; select two words → "2 of N"; status bar totals for a selection of two cards; focus mode counter; each focus option toggles (typewriter: caret line near 40 % after typing 30 lines; focus paragraph: other paragraphs dimmed; hide interface: header hidden, back on mouse move) and persists after a reload.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Typing in a 20,000-word card stays responsive (no counting on every keystroke; measured)
-- [ ] All focus options are off by default
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Typing in a 20,000-word card stays responsive (no counting on every keystroke; measured)
+- [x] All focus options are off by default
 
 ## Out of scope
 Writing goals, streaks and timers (not requested).

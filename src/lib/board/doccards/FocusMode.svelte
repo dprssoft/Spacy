@@ -18,6 +18,10 @@
 	import { loadBoardEditor, type BoardEditorModule } from './lazy';
 	import './prose.css';
 	import { isSuggestionKey } from './suggestionPopup.svelte';
+	import FocusCounter from './FocusCounter.svelte';
+	import FocusViewMenu from './FocusViewMenu.svelte';
+	import { watchEditorStats, type LiveStats } from '../writing/editorStats';
+	import { focusPrefs, SIZE_PX, WIDTH_CH } from '../writing/focusPrefs.svelte';
 
 	let { card }: { card: DocCardElement } = $props();
 
@@ -115,6 +119,61 @@
 		if (target) jumpToElement(ctx, target);
 	}
 
+	// --- Writing aids (step 39), all optional -----------------------------------------------
+	const prefs = $derived(focusPrefs.value);
+	let stats = $state<LiveStats | null>(null);
+	$effect(() => {
+		const ed = editor;
+		if (!ed) return;
+		return watchEditorStats(ed, (st) => (stats = st));
+	});
+
+	// Typewriter scrolling: the caret's line stays at 40 % of the writing area's height.
+	let scroller = $state<HTMLDivElement>();
+	$effect(() => {
+		const ed = editor;
+		const box = scroller;
+		if (!ed || !box || !prefs.typewriter) return;
+		const center = () => {
+			if (ed.isDestroyed) return;
+			const caret = ed.view.coordsAtPos(ed.state.selection.head);
+			const r = box.getBoundingClientRect();
+			box.scrollTop += caret.top - (r.top + r.height * 0.4);
+		};
+		ed.on('selectionUpdate', center);
+		ed.on('update', center);
+		center();
+		return () => {
+			ed.off('selectionUpdate', center);
+			ed.off('update', center);
+		};
+	});
+
+	// Hide interface: only the text stays; the bars come back on mouse movement or a tap.
+	let chromeVisible = $state(true);
+	$effect(() => {
+		if (!prefs.hideUi) {
+			chromeVisible = true;
+			return;
+		}
+		let timer = setTimeout(() => (chromeVisible = false), 2000);
+		const wake = () => {
+			chromeVisible = true;
+			clearTimeout(timer);
+			timer = setTimeout(() => (chromeVisible = false), 2000);
+		};
+		window.addEventListener('pointermove', wake);
+		window.addEventListener('pointerdown', wake);
+		return () => {
+			clearTimeout(timer);
+			window.removeEventListener('pointermove', wake);
+			window.removeEventListener('pointerdown', wake);
+		};
+	});
+	const chrome = $derived(
+		chromeVisible ? 'transition-opacity' : 'pointer-events-none opacity-0 transition-opacity'
+	);
+
 	const iconButton =
 		'inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
 </script>
@@ -130,7 +189,10 @@
 	data-focus-mode
 	class="fixed inset-0 z-50 flex flex-col bg-surface text-text"
 >
-	<header class="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
+	<header
+		class="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3 {chrome}"
+		data-focus-header
+	>
 		<button type="button" class={iconButton} onclick={close}>
 			<ArrowLeft class="size-4" aria-hidden="true" />Board
 		</button>
@@ -156,6 +218,7 @@
 				</button>
 			{/if}
 		</div>
+		<FocusViewMenu class={iconButton} />
 		<DocCardMenu cardId={id} class={iconButton} />
 		<button type="button" class={iconButton} aria-label="Close focus mode" onclick={close}>
 			<X class="size-4" aria-hidden="true" />
@@ -167,21 +230,30 @@
 			aria-label="Formatting"
 			aria-orientation="horizontal"
 			{@attach rovingTabindex()}
-			class="flex shrink-0 items-stretch justify-center overflow-x-auto border-b border-border px-1"
+			class="flex shrink-0 items-stretch justify-center overflow-x-auto border-b border-border px-1 {chrome}"
 		>
 			<DocRibbon {editor} />
 		</div>
 	{/if}
-	<div class="min-h-0 flex-1 overflow-y-auto">
+	<div
+		bind:this={scroller}
+		class="min-h-0 flex-1 overflow-y-auto"
+		class:focus-paragraph={prefs.focusParagraph}
+	>
 		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (mention chips are links for the pointer; the editor handles keys) -->
 		<div
 			bind:this={body}
-			class="doc-prose mx-auto max-w-[760px] px-6 py-10"
-			style:font-size="17px"
-			style:font-family={fontStack(card.style.font.family)}
+			class="doc-prose mx-auto px-6 py-10"
+			class:pb-[50vh]={prefs.typewriter}
+			style:max-width="{WIDTH_CH[prefs.width]}ch"
+			style:font-size="{SIZE_PX[prefs.size]}px"
+			style:font-family={fontStack(prefs.font === 'serif' ? 'lora' : card.style.font.family)}
 			data-focus-body
 			{onclick}
 		></div>
+	</div>
+	<div class="absolute right-3 bottom-3 {chrome}">
+		<FocusCounter {stats} />
 	</div>
 	<div class="hidden"><BubbleMenu {editor} bind:element={menu} /></div>
 </div>
