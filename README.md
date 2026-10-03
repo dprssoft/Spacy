@@ -14,7 +14,7 @@ There is no backend and no account.
 - **Whiteboard:** infinite canvas, shapes, sticky notes, text, pen, images, frames; select, move, resize, rotate, group, lock; undo and redo; copy and paste.
 - **Styling:** contextual style popover, quick styles, align and distribute, smart guides, snap to grid.
 - **Diagrams:** straight, elbow and curved connectors, seven end markers, labels, manual bends, a flowchart shape library, quick-create of connected shapes.
-- **Doc cards:** headings, lists, checklists, quotes, code, links; focus mode; `/` commands; `@` mentions of canvas objects; Markdown export.
+- **Doc cards:** headings, lists, checklists, quotes, code, links; fonts, sizes, colors, highlights and alignment from a Word-like ribbon; focus mode; `/` commands; `@` mentions of canvas objects; Markdown export.
 - **Sharing:** PNG and SVG export, `.smthng` board files, full backup and restore, templates.
 - **Everywhere:** installable, works offline, light and dark themes, keyboard-only use, screen reader announcements. Press `?` on a board for the shortcut list.
 

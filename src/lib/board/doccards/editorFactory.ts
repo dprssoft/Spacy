@@ -6,6 +6,7 @@ import { TaskItem, TaskList } from '@tiptap/extension-list';
 import { Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import type * as Y from 'yjs';
+import { formatExtensions } from './formatting';
 import { isSafeLink } from './links';
 
 export { isSafeLink };
@@ -41,7 +42,6 @@ export function docExtensions(fragment: Y.XmlFragment, opts: DocExtensionOptions
 			heading: { levels: [1, 2, 3] },
 			// Collaboration brings its own (Yjs) undo; ProseMirror history would fight it.
 			undoRedo: false,
-			underline: false,
 			link: {
 				openOnClick: false,
 				autolink: true,
@@ -52,6 +52,7 @@ export function docExtensions(fragment: Y.XmlFragment, opts: DocExtensionOptions
 		}),
 		TaskList,
 		TaskItem.configure({ nested: true }),
+		...formatExtensions(),
 		Placeholder.configure({ placeholder: opts.placeholder ?? 'Write something…' }),
 		Collaboration.configure({ fragment }),
 		...bubble,

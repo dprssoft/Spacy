@@ -19,6 +19,9 @@
 	import { getBoard } from '../context';
 	import { openImagePicker } from '../images/importImages';
 	import type { ToolId } from '../tools/types';
+	import { activeDocEditor } from '../doccards/activeEditor.svelte';
+	import DocRibbon from '../doccards/DocRibbon.svelte';
+	import { button, caption, groupBox } from './ribbon';
 	import { rovingTabindex } from './rovingTabindex';
 	import SketchRibbon from './SketchRibbon.svelte';
 
@@ -58,11 +61,6 @@
 
 	// Ribbon groups, in the order of `groups`.
 	const GROUP_NAMES = ['Select', 'Draw', 'Insert'];
-	const groupBox =
-		'flex shrink-0 flex-col items-center justify-center gap-1 border-r border-border px-2 py-1.5 last:border-r-0';
-	const caption = 'text-[10px] leading-none text-muted select-none';
-	const button =
-		'relative inline-flex size-8 pointer-coarse:size-11 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none aria-pressed:bg-accent/15 aria-pressed:text-accent aria-disabled:cursor-not-allowed aria-disabled:opacity-35 aria-disabled:hover:bg-transparent';
 	const tip = 'z-50 rounded-md bg-text px-2 py-1 text-xs font-medium text-bg shadow-md';
 	const menuItem =
 		'flex h-8 cursor-default items-center gap-2 rounded-md px-2 text-sm outline-none select-none data-[highlighted]:bg-surface-2';
@@ -217,5 +215,8 @@
 	</div>
 	{#if tools.current === 'sketch'}
 		<SketchRibbon {groupBox} {caption} {button} />
+	{/if}
+	{#if activeDocEditor.current}
+		<DocRibbon editor={activeDocEditor.current} />
 	{/if}
 </div>

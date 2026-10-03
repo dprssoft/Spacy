@@ -32,6 +32,7 @@ export const docShortcuts: Shortcut[] = [
 	},
 	editorKey('bold', 'Mod+B', 'Bold'),
 	editorKey('italic', 'Mod+I', 'Italic'),
+	editorKey('underline', 'Mod+U', 'Underline'),
 	editorKey('strike', 'Mod+Shift+X', 'Strikethrough'),
 	editorKey('code', 'Mod+E', 'Inline code')
 ];

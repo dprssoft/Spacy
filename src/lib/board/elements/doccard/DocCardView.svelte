@@ -4,6 +4,7 @@
 	import { getDocsMap } from '$lib/model/doc';
 	import type { DocCardElement, Point } from '$lib/model/types';
 	import { getBoard } from '../../context';
+	import { activeDocEditor } from '../../doccards/activeEditor.svelte';
 	import BubbleMenu from '../../doccards/BubbleMenu.svelte';
 	import type { Editor } from '../../doccards/editorFactory';
 	import { openFocus } from '../../doccards/focus';
@@ -86,10 +87,12 @@
 		editor = ed;
 		// The editor itself is the interactive element (role textbox); listen on its container.
 		node.addEventListener('keydown', onkeydown);
+		node.addEventListener('keydown', onOpenKey, true);
 		node.addEventListener('wheel', onwheel);
 		node.addEventListener('click', onclick);
 		return () => {
 			node.removeEventListener('keydown', onkeydown);
+			node.removeEventListener('keydown', onOpenKey, true);
 			node.removeEventListener('wheel', onwheel);
 			node.removeEventListener('click', onclick);
 			editor = null;
@@ -120,6 +123,16 @@
 		});
 	});
 
+	// The ribbon shows the formatting controls of the card being edited.
+	$effect(() => {
+		const ed = editor;
+		if (part !== 'body' || !ed) return;
+		activeDocEditor.current = ed;
+		return () => {
+			if (activeDocEditor.current === ed) activeDocEditor.current = null;
+		};
+	});
+
 	// Mention chips of deleted objects are struck through.
 	$effect(() => {
 		void ctx.store.elements.size;
@@ -145,11 +158,16 @@
 			e.preventDefault();
 			e.stopPropagation();
 			ctx.editing.end();
-		} else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-			e.preventDefault();
-			ctx.editing.end();
-			openFocus(ctx.id, id);
 		}
+	}
+
+	/** Mod+Enter opens focus mode. Before the editor sees it: there it inserts a line break. */
+	function onOpenKey(e: KeyboardEvent) {
+		if (e.key !== 'Enter' || !(e.ctrlKey || e.metaKey) || isSuggestionKey(e)) return;
+		e.preventDefault();
+		e.stopPropagation();
+		ctx.editing.end();
+		openFocus(ctx.id, id);
 	}
 
 	function onclick(e: MouseEvent) {

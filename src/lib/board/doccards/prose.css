@@ -124,6 +124,107 @@
 	color: var(--accent);
 }
 
+/* Character and paragraph formatting: content stores ids (formatOptions.ts), the look is here.
+   `.doc-format` is the formatting menus, which preview the same choices. The colors are mid-tones
+   that read on a white card and on the dark focus mode alike. */
+:is(.doc-prose, .doc-format) {
+	--doc-gray: #6b7280;
+	--doc-red: #dc2626;
+	--doc-orange: #ea580c;
+	--doc-yellow: #eab308;
+	--doc-green: #16a34a;
+	--doc-teal: #0d9488;
+	--doc-blue: #2563eb;
+	--doc-violet: #7c3aed;
+	--doc-pink: #db2777;
+}
+/* Focus mode follows the theme: on its dark page the text colors are lighter. */
+[data-theme='dark'] [data-focus-body] {
+	--doc-gray: #9ca3af;
+	--doc-red: #f87171;
+	--doc-orange: #fb923c;
+	--doc-green: #4ade80;
+	--doc-teal: #2dd4bf;
+	--doc-blue: #60a5fa;
+	--doc-violet: #a78bfa;
+	--doc-pink: #f472b6;
+}
+.doc-prose [data-color='gray'] {
+	color: var(--doc-gray);
+}
+.doc-prose [data-color='red'] {
+	color: var(--doc-red);
+}
+.doc-prose [data-color='orange'] {
+	color: var(--doc-orange);
+}
+.doc-prose [data-color='green'] {
+	color: var(--doc-green);
+}
+.doc-prose [data-color='teal'] {
+	color: var(--doc-teal);
+}
+.doc-prose [data-color='blue'] {
+	color: var(--doc-blue);
+}
+.doc-prose [data-color='violet'] {
+	color: var(--doc-violet);
+}
+.doc-prose [data-color='pink'] {
+	color: var(--doc-pink);
+}
+.doc-prose [data-highlight] {
+	background: color-mix(in srgb, var(--doc-highlight) 35%, transparent);
+}
+.doc-prose [data-highlight='yellow'] {
+	--doc-highlight: var(--doc-yellow);
+}
+.doc-prose [data-highlight='orange'] {
+	--doc-highlight: var(--doc-orange);
+}
+.doc-prose [data-highlight='green'] {
+	--doc-highlight: var(--doc-green);
+}
+.doc-prose [data-highlight='teal'] {
+	--doc-highlight: var(--doc-teal);
+}
+.doc-prose [data-highlight='blue'] {
+	--doc-highlight: var(--doc-blue);
+}
+.doc-prose [data-highlight='violet'] {
+	--doc-highlight: var(--doc-violet);
+}
+.doc-prose [data-highlight='pink'] {
+	--doc-highlight: var(--doc-pink);
+}
+:is(.doc-prose, .doc-format) [data-font='serif'] {
+	font-family: Georgia, Cambria, 'Times New Roman', Times, serif;
+}
+:is(.doc-prose, .doc-format) [data-font='mono'] {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.doc-prose [data-size='small'] {
+	font-size: 0.85em;
+}
+.doc-prose [data-size='large'] {
+	font-size: 1.25em;
+}
+.doc-prose [data-size='huge'] {
+	font-size: 1.6em;
+}
+.doc-prose [data-align='center'] {
+	text-align: center;
+}
+.doc-prose [data-align='right'] {
+	text-align: right;
+}
+.doc-prose [data-align='justify'] {
+	text-align: justify;
+}
+.doc-prose u {
+	text-underline-offset: 2px;
+}
+
 /* Canvas cards keep their authored (light by default) fill in dark mode: native controls inside
    them must not switch to the dark scheme. Focus mode follows the theme. */
 [data-doccard-body] {

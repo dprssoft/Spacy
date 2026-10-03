@@ -7,8 +7,10 @@
 	import type { DocCardElement } from '$lib/model/types';
 	import InlineEditable from '$lib/shared/ui/InlineEditable.svelte';
 	import { getBoard } from '../context';
+	import { rovingTabindex } from '../ui/rovingTabindex';
 	import BubbleMenu from './BubbleMenu.svelte';
 	import DocCardMenu from './DocCardMenu.svelte';
+	import DocRibbon from './DocRibbon.svelte';
 	import type { Editor } from './editorFactory';
 	import { closeFocus } from './focus';
 	import { jumpToElement, mentionAt } from './jumpTo';
@@ -158,6 +160,17 @@
 			<X class="size-4" aria-hidden="true" />
 		</button>
 	</header>
+	{#if editor}
+		<div
+			role="toolbar"
+			aria-label="Formatting"
+			aria-orientation="horizontal"
+			{@attach rovingTabindex()}
+			class="flex shrink-0 items-stretch justify-center overflow-x-auto border-b border-border px-1"
+		>
+			<DocRibbon {editor} />
+		</div>
+	{/if}
 	<div class="min-h-0 flex-1 overflow-y-auto">
 		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (mention chips are links for the pointer; the editor handles keys) -->
 		<div

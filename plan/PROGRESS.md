@@ -786,3 +786,23 @@ Requested by the human: "make dragging big doc cards faster". Measured before: a
 **Measured after:** 17 ms per frame (60 fps) at 1M and at 5M characters. Leaving editing also got faster (279 → 188 ms at 1M). Typing and reopening are unchanged (30 ms per key and 2.3 s at 1M).
 
 **Verification:** `perf-guard.spec.ts`: after Escape no selection is left inside the card. pnpm verify ✅.
+
+## Extra — Word-like formatting for doc cards — 2026-10-03
+Requested by the human: "in doc cards make text editing more versatile (when editing doc - show ms word like menu to edit text, not much, but colors, styles, aligning, font etc)".
+
+**Summary:**
+- `DocRibbon.svelte`: three ribbon groups. Style (Normal text, Heading 1–3, Quote, Code block); Font (font, size, bold, italic, underline, strikethrough, text color, highlight, clear formatting); Paragraph (bullet, numbered and checklist, align left/center/right/justify). The Toolbar shows them while a canvas card's body is edited (`activeDocEditor`, set by `DocCardView`); focus mode shows them in a toolbar under its header.
+- Content (`formatting.ts`, schema version 4): underline from the starter kit, plus one mark per property (`textColor`, `highlight`, `fontFamily`, `fontSize`) holding an id from `formatOptions.ts`, and an `align` attribute on paragraphs and headings (left is not stored). They render as `data-*` attributes only; `prose.css` gives the look. No inline styles, nothing unchecked reaches CSS, pasted or imported values off the lists are dropped, and colors can follow the theme (lighter text colors in dark focus mode; canvas cards stay light).
+- Fonts are system stacks (default, serif, monospace), nothing is downloaded. Sizes are relative to the card's font size (small, large, huge).
+- `formatCommands.ts` reads and applies the formatting with type-only TipTap imports, so the ribbon doesn't pull the lazy editor chunk into the board bundle. Changing the style of several blocks keeps each block's alignment and skips empty lines (the stock commands drop alignment on multi-block selections).
+- Menus give the focus back to the text synchronously when they close (`commands.focus()` waits a frame, and a key pressed before it went to the toolbar).
+- The color marks wrap bold/underline/strike (priority 150), so underlines and strike lines take the text color.
+
+**Bug fixed on the way:** Ctrl/⌘+Enter in an edited card opened focus mode *and* inserted a hard break into the text (TipTap's hard-break shortcut). The card now takes the key in the capture phase, before the editor.
+
+**Deviations / notes:**
+- Schema version 4 (no data moves): an older app would delete text with the new marks (y-prosemirror drops text whose marks it can't build), so it must not open these boards.
+- Markdown export and PNG/SVG export keep the text but not the colors, fonts, sizes, underline or alignment (Markdown has no syntax for them; the static renderer draws plain lines).
+- No new dependencies: the marks are small custom TipTap extensions instead of `@tiptap/extension-text-style` / `-text-align`, which write inline styles with arbitrary values.
+
+**Verification:** unit tests (`formatting.test.ts`: every choice as a data attribute, replace and reset, values off the list ignored when applied or pasted, several marks from one span, mark nesting, clear formatting, alignment incl. pasted `text-align`, block style switching, multi-block alignment kept, Yjs round trip and sync, Markdown keeps plain text, prose.css styles every id) · e2e `doc-format.spec.ts` (ribbon only while editing, every control keeps editing and focus, formatting persists after reload, caret formatting applies to typed text, clear formatting, focus mode toolbar, Escape closes a menu but not focus mode, Ctrl+Enter adds no line break). pnpm verify ✅ (647 unit tests) · pnpm test:e2e ✅ (156) · `doc-format.spec.ts` 30/30 with `--repeat-each=10`. The focus-mode test first failed 2 in 24 runs: a key typed about 4 ms after End (after Select all) replaced the text because the editor hadn't read the collapsed selection yet. Only a script types that fast; the test now waits for the caret.
