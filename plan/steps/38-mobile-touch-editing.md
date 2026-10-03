@@ -29,10 +29,10 @@ Everything you can edit with a mouse and keyboard can be edited on a phone or ta
 - axe on the bottom sheet and the compact bars.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` (chromium + mobile) pass
-- [ ] Every desktop editing action has a touch path (checked against the shortcuts list and context menu)
-- [ ] Screenshots of editing on phone size (sheet open, keyboard-sized viewport, media controls) reviewed
-- [ ] `00-architecture.md` §8 (touch input) and §11 (gestures) updated
+- [x] `pnpm verify` and `pnpm test:e2e` (chromium + mobile) pass
+- [x] Every desktop editing action has a touch path (checked against the shortcuts list and context menu)
+- [x] Screenshots of editing on phone size (sheet open, keyboard-sized viewport, media controls) reviewed
+- [x] `00-architecture.md` §8 (touch input) and §11 (gestures) updated
 
 ## Out of scope
 Native apps, offline sync between devices, Apple Pencil hover, haptics.

@@ -13,7 +13,8 @@
 
 	// Touch and pen need bigger targets: 14 px handles instead of 8.
 	const COARSE = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-	const HANDLE_HIT_RADIUS = COARSE ? 14 : 7;
+	// Fingers get 44 px hit areas; the rotate handle sits further out so it isn't a resize miss.
+	const HANDLE_HIT_RADIUS = COARSE ? 22 : 7;
 	/** Half the side of a square handle / radius of a round one. */
 	const H = COARSE ? 7 : 4;
 	const R = COARSE ? 8 : 5;
@@ -37,7 +38,11 @@
 	const showHandles = $derived(
 		tools.current === 'select' && !selection.editingId && !selection.marquee && box !== null
 	);
-	const handles = $derived(showHandles && box ? selectionHandles(box, toScreen, opts) : []);
+	const handles = $derived(
+		showHandles && box
+			? selectionHandles(box, toScreen, { ...opts, rotateOffset: COARSE ? 70 : undefined })
+			: []
+	);
 	const boxPolygon = $derived(
 		box
 			? rectCorners(box, box.rotation)

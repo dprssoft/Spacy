@@ -1037,3 +1037,20 @@ Requested by the human: "steps 37, 38 and button to return to canvas origin poin
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (793 unit tests; new `touchGestures.test.ts`) · pnpm test:e2e ✅ (191 = desktop + mobile; new `mobile-layout.spec.ts` at 360 and 412 px: no sideways overflow on the start page, a board and the gallery, every action reachable and ≥ 44 px, toolbar below the canvas, title keeps room, the Insert menu holds the secondary tools / media / templates, Back to origin; `mobile-gestures.spec.ts`: one-finger pan selects nothing, drag on an element moves it, a pinch starting on an element zooms and moves nothing, long-press marquee, double-tap edits, tap clears) · desktop visual baselines unchanged · screenshots at 360 (light), 390 (dark), 412 (light) of the start page, a board and the Insert menu reviewed.
+
+## Step 38 — Touch editing — 2026-10-03
+**Summary:**
+- **Long-press menus** (`pointerRouter.ts`): holding still on an element for 500 ms drops the move it started, selects it and opens the canvas context menu at the finger (a synthetic `contextmenu`, since iOS fires none). A still long-press on empty canvas opens the canvas menu; moving after the hold still draws a marquee. The browser's own long-press `contextmenu` (Android) is swallowed so the menu doesn't open twice. Menu rows are 44 px on touch.
+- **Style bottom sheet:** on phones the style bar docks at the bottom of the canvas, and `PanelButton` opens its panel as a bottom sheet (bits-ui Dialog, drag handle: swipe down 60 px to close, ≤ 60 % of the height, scrollable, safe-area padding). Desktop and tablets keep the popovers.
+- **On-screen keyboard** (`shared/keyboard.svelte.ts`, from `visualViewport`; `__smthng.keyboard(px)` simulates one in tests): while editing on a phone the tools hide, a doc card's formatting row docks right above the keyboard (fixed, scrollable), and `keepEditingVisible` pans the board so the edited element (or, in a doc card, the caret's line) stays visible, re-checked on `selectionchange`. `keepInView` is pure and unit-tested. Doc cards already had an "open in focus mode" button in their header for full-screen writing.
+- **Palm rejection** (`palmRejected`, pure): pen, sketch and eraser ignore fingers while a stylus is down and for 1 s after; pinch still works.
+- **Touch sizes:** handle hit areas 44 px (radius 22) for resize, rotate, endpoints and bends; the rotate handle sits 70 px out; quick-create "+" buttons are 36 px at 30 px out (clear of it); media controls 44 px, compact on phones but keeping the seek bar (Slower/Faster move into More); the volume slider is horizontal on touch.
+- Text selection inside editors was already safe: editors are `data-interactive` while editing, so the canvas gestures (and the touch `preventDefault`) never see them.
+- `00-architecture.md` §11: touch editing.
+
+**Deviations:**
+- "Open full screen" for doc cards: the existing header button (focus mode) covers it; no second button.
+- The doc ribbon keeps its group captions when docked (it's one scrollable row already).
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (795 unit tests; new `keyboard.test.ts`, palm rejection in `touchGestures.test.ts`) · pnpm test:e2e ✅ (197 = desktop + mobile; new `mobile-editing.spec.ts`: long-press a shape → menu (44 px rows) → Duplicate; still long-press on empty canvas → Paste / Select all; tap → docked style bar → Fill sheet (full width, axe-clean) → color applied → swipe closes; double-tap with a simulated 320 px keyboard → the element moves above it, typing saved, tools back after; one finger draws with the pen; right after a stylus a palm draws nothing, and fingers draw again after a second; media controls 44 px with a seek bar, tap pauses, axe-clean) · the palm test was checked by disabling palm rejection: it fails · screenshots (selection handles, sheet, doc card editing with the keyboard) reviewed.

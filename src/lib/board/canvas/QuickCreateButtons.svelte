@@ -12,7 +12,9 @@
 
 	const ctx = getBoard();
 	const { selection, store, viewport, tools } = ctx;
-	const OFFSET_PX = 22;
+	// Touch: further out (bigger buttons), still inside the rotate handle (70 px).
+	const OFFSET_PX =
+		typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches ? 30 : 22;
 
 	const usable = (el: Element | undefined): el is Element =>
 		!!el && el.type !== 'connector' && !el.locked && !!definitionOf(el).connectable;
@@ -165,7 +167,7 @@
 		data-quick-create={b.port}
 		aria-label="Add connected element {LABELS[b.port]}"
 		title="Drag to connect to another object · Click to add a connected copy · Shift+click to choose its type"
-		class="pointer-events-auto absolute flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent text-accent-contrast opacity-70 shadow transition hover:scale-110 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none"
+		class="pointer-events-auto absolute flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent text-accent-contrast opacity-70 shadow transition hover:scale-110 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none pointer-coarse:size-9"
 		class:invisible={drag?.gesture != null}
 		style:left="{b.x}px"
 		style:top="{b.y}px"
@@ -175,7 +177,7 @@
 		onpointercancel={oncancel}
 		onclick={(e) => onclick(e, b)}
 	>
-		<Plus class="size-3.5" aria-hidden="true" />
+		<Plus class="size-3.5 pointer-coarse:size-5" aria-hidden="true" />
 	</button>
 {/each}
 

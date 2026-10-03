@@ -3,7 +3,15 @@ import { hitElement } from '../engine/hitTest';
 import { groupOf } from '../selectionInfo';
 import { screenToWorld } from '../engine/viewport';
 import { GESTURE_CANCEL } from '../canvas/viewportInput';
-import { isDoubleTap, isQuickTap, LONG_PRESS_MS, TouchPress, type Tap } from './touchGestures';
+import {
+	isDoubleTap,
+	isQuickTap,
+	LONG_PRESS_MS,
+	palmRejected,
+	TAP_SLOP,
+	TouchPress,
+	type Tap
+} from './touchGestures';
 import type { CanvasPointerEvent } from './types';
 
 const HIT_TOLERANCE_PX = 6;
@@ -26,10 +34,30 @@ export function pointerRouter(ctx: BoardContext) {
 		let tapDown: Tap | null = null;
 		let lastTap: Tap | null = null;
 		let touchDoubleAt = -Infinity;
+		// Long-press on an element opens its context menu (step 38).
+		let elementPress: { gesture: TouchPress; client: { x: number; y: number } } | null = null;
+		let elementTimer = 0;
+		let lastTouchAt = -Infinity;
+		// Palm rejection: a stylus is down, or when it was last used.
+		let penDown = false;
+		let penAt = -Infinity;
 		const clearPress = () => {
 			clearTimeout(pressTimer);
+			clearTimeout(elementTimer);
 			press = null;
+			elementPress = null;
 		};
+		/** Opens the canvas context menu at a point (iOS fires no contextmenu on long-press). */
+		const openMenuAt = (client: { x: number; y: number }) =>
+			node.dispatchEvent(
+				new MouseEvent('contextmenu', {
+					bubbles: true,
+					cancelable: true,
+					clientX: client.x,
+					clientY: client.y,
+					button: 2
+				})
+			);
 
 		const toCanvasEvent = (e: PointerEvent | MouseEvent, withHit: boolean): CanvasPointerEvent => {
 			const r = node.getBoundingClientRect();
@@ -68,6 +96,8 @@ export function pointerRouter(ctx: BoardContext) {
 		const onPointerDown = (e: PointerEvent) => {
 			if (e.defaultPrevented || fromUi(e) || e.button !== 0 || !e.isPrimary) return;
 			if (active !== null) return;
+			if (e.pointerType === 'pen') penDown = true;
+			if (palmRejected(ctx.tools.current, e.pointerType, penDown, e.timeStamp - penAt)) return;
 			node.focus({ preventScroll: true });
 			// No emulated mouse events after a touch: their mousedown would steal focus from an
 			// editor a double-tap just opened.
@@ -75,7 +105,25 @@ export function pointerRouter(ctx: BoardContext) {
 			active = e.pointerId;
 			node.setPointerCapture(e.pointerId);
 			const ce = toCanvasEvent(e, true);
-			if (e.pointerType === 'touch') tapDown = { at: ce.screen, t: e.timeStamp };
+			if (e.pointerType === 'touch') {
+				tapDown = { at: ce.screen, t: e.timeStamp };
+				lastTouchAt = e.timeStamp;
+			}
+			if (e.pointerType === 'touch' && ctx.tools.current === 'select' && ce.hit.elementId) {
+				const gesture = new TouchPress(ce.screen, e.timeStamp);
+				const client = { x: e.clientX, y: e.clientY };
+				elementPress = { gesture, client };
+				elementTimer = window.setTimeout(() => {
+					if (elementPress?.gesture !== gesture || !gesture.hold(gesture.t0 + LONG_PRESS_MS))
+						return;
+					// Hold still on an element: drop the move it started and show its menu.
+					ctx.tools.tool.onCancel();
+					if (active !== null && node.hasPointerCapture(active)) node.releasePointerCapture(active);
+					active = null;
+					elementPress = null;
+					openMenuAt(client);
+				}, LONG_PRESS_MS);
+			}
 			if (
 				e.pointerType === 'touch' &&
 				ctx.tools.current === 'select' &&
@@ -105,6 +153,10 @@ export function pointerRouter(ctx: BoardContext) {
 			}
 			if (e.pointerId !== active) return;
 			const ce = toCanvasEvent(e, false);
+			if (elementPress && elementPress.gesture.move(ce.screen) === 'pan') {
+				clearTimeout(elementTimer);
+				elementPress = null;
+			}
 			if (press) {
 				const phase = press.gesture.move(ce.screen);
 				if (phase === 'pan') {
@@ -119,12 +171,25 @@ export function pointerRouter(ctx: BoardContext) {
 		};
 
 		const onPointerUp = (e: PointerEvent) => {
+			if (e.pointerType === 'pen') {
+				penDown = false;
+				penAt = e.timeStamp;
+			}
 			if (e.pointerId !== active) return;
 			const ce = toCanvasEvent(e, true);
 			active = null;
 			const p = press;
 			clearPress();
 			if (p && p.gesture.phase === 'pan') return;
+			// A long-press on empty canvas that didn't move: the canvas menu instead of a marquee.
+			if (
+				p?.gesture.phase === 'longpress' &&
+				Math.hypot(ce.screen.x - p.gesture.start.x, ce.screen.y - p.gesture.start.y) <= TAP_SLOP
+			) {
+				ctx.tools.tool.onCancel();
+				openMenuAt({ x: e.clientX, y: e.clientY });
+				return;
+			}
 			if (p && p.gesture.isTap(ce.screen)) ctx.tools.tool.onPointerDown(p.down);
 			ctx.tools.tool.onPointerUp(ce);
 			// A double-tap is a double-click (edit text, play media…).
@@ -164,6 +229,12 @@ export function pointerRouter(ctx: BoardContext) {
 		// Right-click acts on what's under the cursor: select it first (the menu opens afterwards).
 		const onContextMenu = (e: MouseEvent) => {
 			if (fromUi(e)) return;
+			// Android's own long-press menu event: ours (untrusted, dispatched above) is the one shown.
+			if (e.isTrusted && e.timeStamp - lastTouchAt < 1000) {
+				e.preventDefault();
+				e.stopPropagation();
+				return;
+			}
 			const ce = toCanvasEvent(e, true);
 			ctx.pointer = ce.world;
 			const id = ce.hit.elementId;

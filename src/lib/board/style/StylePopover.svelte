@@ -28,6 +28,7 @@
 	import FontList from './controls/FontList.svelte';
 	import PanelButton from './controls/PanelButton.svelte';
 	import MediaPlayButton from './MediaPlayButton.svelte';
+	import { layout } from '$lib/shared/layout.svelte';
 	import Segmented from './controls/Segmented.svelte';
 	import { BASIC_KINDS, shapeIconPath } from './controls/shapeIcons';
 	import Slider from './controls/Slider.svelte';
@@ -83,6 +84,12 @@
 		const b = unionRects(rects);
 		if (!b) return null;
 		void [viewport.x, viewport.y, viewport.zoom];
+		// Phones: docked at the bottom of the canvas, above the toolbar (panels open as sheets).
+		if (layout.compact)
+			return {
+				left: Math.max(EDGE, (viewport.size.w - barW) / 2),
+				top: viewport.size.h - barH - EDGE
+			};
 		const tl = worldToScreen(viewport.vp, { x: b.x, y: b.y });
 		const br = worldToScreen(viewport.vp, { x: b.x + b.w, y: b.y + b.h });
 		let top = tl.y - ABOVE_GAP - barH;
