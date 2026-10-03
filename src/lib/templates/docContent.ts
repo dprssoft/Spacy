@@ -8,7 +8,9 @@ import { docExtensions } from '$lib/board/doccards/editorFactory';
 import type { DocNode } from '$lib/board/doccards/markdown';
 
 let schema: Schema | null = null;
-const docSchema = () => (schema ??= getSchema(docExtensions(new Y.Doc().getXmlFragment('schema'))));
+/** The doc card schema (built once). */
+export const docSchema = () =>
+	(schema ??= getSchema(docExtensions(new Y.Doc().getXmlFragment('schema'))));
 
 /** Writes editor JSON into a doc card fragment (which must already be in a Y.Doc). */
 export function setDocContent(fragment: Y.XmlFragment, json: DocNode): void {
