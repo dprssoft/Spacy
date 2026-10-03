@@ -28,5 +28,5 @@ test('boards and the start page work offline after the first visit', async ({ pa
 	await page.goto('/');
 	await expect(page.locator(`article[data-board-id="${id}"]`)).toBeVisible();
 	// Lazy chunks are precached too: template previews render offline.
-	await expect(page.locator('[data-template] img')).toHaveCount(3);
+	await expect(page.locator('[data-template] img')).toHaveCount(4);
 });

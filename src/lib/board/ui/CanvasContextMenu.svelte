@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ContextMenu } from 'bits-ui';
 	import type { Snippet } from 'svelte';
+	import { stackableFrame, stackContents } from '../commands/arrange';
 	import { copyToClipboard, pasteFromClipboard } from '../commands/clipboard';
 	import {
 		canGroup,
@@ -29,6 +30,7 @@
 	let open = $state(false);
 	const hasSelection = $derived(open && ctx.selection.size > 0);
 	const allLocked = $derived(open && selectedElements(ctx).every((el) => el.locked));
+	const stackFrame = $derived(open ? stackableFrame(ctx) : null);
 	const docCard = $derived.by(() => {
 		const id = open ? ctx.selection.single : null;
 		return id && ctx.store.get(id)?.type === 'doccard' ? id : null;
@@ -84,6 +86,9 @@
 								.map((el) => ({ id: el.id, patch: { waypoints: [] } }))
 						)
 					)}
+				{/if}
+				{#if stackFrame}
+					{@render entry('Stack contents', null, () => stackContents(ctx, stackFrame))}
 				{/if}
 				{@render entry('Select connected', 'Mod+Shift+A', () =>
 					ctx.selection.set(connectedComponent(ctx, ctx.selection.ids))

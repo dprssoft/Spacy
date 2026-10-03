@@ -29,6 +29,24 @@ const styled = (type: Element['type'], patch: StylePatch = {}): Style => {
 	return { ...base, ...patch, font: { ...base.font, ...patch.font } };
 };
 
+/** Frame tints: a pastel at 25 % (readable in light and dark), outlined in a deeper shade. */
+export const TINTS = {
+	green: { fill: '#8ce99a', stroke: '#40c057' },
+	red: { fill: '#ffa8a8', stroke: '#fa5252' },
+	blue: { fill: '#74c0fc', stroke: '#228be6' },
+	yellow: { fill: '#ffe066', stroke: '#fab005' },
+	violet: { fill: '#b197fc', stroke: '#7950f2' },
+	orange: { fill: '#ffc078', stroke: '#fd7e14' },
+	teal: { fill: '#63e6be', stroke: '#12b886' },
+	gray: { fill: '#dee2e6', stroke: '#868e96' }
+} as const;
+export type Tint = keyof typeof TINTS;
+
+function tintStyle(tint: string | undefined): StylePatch {
+	const t = tint ? TINTS[tint as Tint] : undefined;
+	return t ? { fill: t.fill, fillStyle: 'semi', stroke: t.stroke } : {};
+}
+
 /** Collects template elements (ids, styles, parents) and writes them in one TEMPLATE transaction. */
 export class TemplateBuilder {
 	readonly elements: NewElement[] = [];
@@ -53,8 +71,30 @@ export class TemplateBuilder {
 		return el;
 	}
 
-	frame(title: string, r: Rect): New<FrameElement> {
-		return this.#add({ ...this.#base('frame', r, styled('frame')), type: 'frame', title });
+	frame(title: string, r: Rect, style: StylePatch = {}): New<FrameElement> {
+		return this.#add({ ...this.#base('frame', r, styled('frame', style)), type: 'frame', title });
+	}
+
+	/** Frames side by side (`cols` per row), each `size`, `gap` apart, starting at `at`. */
+	frameGrid(
+		titles: readonly string[],
+		at: { x: number; y: number },
+		size: { w: number; h: number },
+		opts: { gap?: number; cols?: number; tints?: readonly string[] } = {}
+	): New<FrameElement>[] {
+		const gap = opts.gap ?? 40;
+		const cols = opts.cols ?? titles.length;
+		return titles.map((title, i) =>
+			this.frame(
+				title,
+				{
+					x: at.x + (i % cols) * (size.w + gap),
+					y: at.y + Math.floor(i / cols) * (size.h + gap),
+					...size
+				},
+				tintStyle(opts.tints?.[i % opts.tints.length])
+			)
+		);
 	}
 
 	shape(

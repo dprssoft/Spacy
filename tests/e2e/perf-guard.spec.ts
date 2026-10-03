@@ -70,7 +70,7 @@ test('zoomed far out over many elements, the board is drawn on one canvas', asyn
 
 test('the start page loads no rich-text editor code', async ({ page }) => {
 	await page.goto('/');
-	await expect(page.locator('[data-template] img')).toHaveCount(3); // previews are built too
+	await expect(page.locator('[data-template] img')).toHaveCount(4); // the featured templates' previews are built too
 	const scripts = await page.evaluate(() =>
 		performance
 			.getEntriesByType('resource')

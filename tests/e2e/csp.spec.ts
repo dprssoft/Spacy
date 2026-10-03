@@ -21,7 +21,7 @@ test('the app runs under its Content-Security-Policy without violations', async 
 
 	// Exercise the heavy paths: template previews (SVG data URLs), a doc card editor (injected
 	// styles), the export preview (blob URLs) and the service worker.
-	await expect(page.locator('[data-template] img')).toHaveCount(3);
+	await expect(page.locator('[data-template] img')).toHaveCount(4); // the featured templates
 	await page.getByRole('button', { name: 'Meeting notes template' }).click();
 	await page.waitForURL(/\/board\//);
 	await expect(page.locator('[data-doccard-body] h1')).toHaveText('Meeting notes');

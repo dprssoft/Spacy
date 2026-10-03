@@ -116,7 +116,7 @@
 			<div
 				bind:this={grid}
 				onkeydown={onGridKeydown}
-				class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 overflow-y-auto p-5"
+				class="grid min-h-0 auto-rows-max grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 overflow-y-auto p-5"
 			>
 				{#each shown as t (t.id)}
 					<button
@@ -124,9 +124,9 @@
 						data-template-card={t.id}
 						aria-label="{t.name} template"
 						onclick={() => pick(t)}
-						class="flex aspect-[16/11] flex-col overflow-hidden rounded-xl border border-border bg-surface text-left transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+						class="flex flex-col overflow-hidden rounded-xl border border-border bg-surface text-left transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
 					>
-						<div class="min-h-0 flex-1 bg-white">
+						<div class="h-32 shrink-0 bg-white">
 							{#if previews[t.id]}
 								<img
 									src={previews[t.id]}

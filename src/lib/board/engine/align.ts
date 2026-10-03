@@ -70,3 +70,26 @@ export function matchSize(
 		h: dim === 'w' ? i.h : maxH
 	}));
 }
+
+export const STACK_PADDING = 16;
+export const STACK_GAP = 12;
+
+/**
+ * Stacks boxes in a column inside `frame`: in reading order (top, then left), left-aligned at the
+ * frame's padding, `STACK_GAP` apart. Returns the shifts and the frame height that holds them all
+ * (never less than the current height).
+ */
+export function stackInFrame(
+	frame: Rect,
+	items: readonly Boxed[]
+): { shifts: Shift[]; frameH: number } {
+	const sorted = [...items].sort((a, b) => a.box.y - b.box.y || a.box.x - b.box.x);
+	let y = frame.y + STACK_PADDING;
+	const shifts = sorted.map(({ id, box }) => {
+		const shift = { id, dx: frame.x + STACK_PADDING - box.x, dy: y - box.y };
+		y += box.h + STACK_GAP;
+		return shift;
+	});
+	const needed = sorted.length ? y - STACK_GAP + STACK_PADDING - frame.y : 0;
+	return { shifts, frameH: Math.max(frame.h, needed) };
+}

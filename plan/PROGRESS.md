@@ -955,3 +955,20 @@ Requested by the human: "can we add drag&drop for txt, gifs, webp, md, docx?". G
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (689 unit tests; new `insert.test.ts`: every template inserts as consistent new elements that are selected and undone in one step; centered; doc card text copied; two inserts are independent; fit only when too big; search) · pnpm test:e2e ✅ (166; new in `templates.spec.ts`: toolbar → gallery → search "brain" → insert → selected; one Ctrl+Z removes it; Shift+T opens the gallery).
+
+## Step 34 — Template pack (kanban and friends) — 2026-10-03
+**Summary:**
+- Nine templates, each its own lazy module and chunk: **Kanban** (featured), Retrospective, SWOT analysis, Eisenhower matrix, Mind map, Timeline, User journey map, Business model canvas, Weekly planner (with a "Notes" doc card checklist). They're built from frames, stickies, shapes, text, doc cards and connectors only.
+- `TemplateBuilder`: `frame()` takes a style, `frameGrid()` lays out rows/columns of frames, and `TINTS` gives frames a pastel at 25 % with a deeper outline, readable in light and dark mode.
+- **"Stack contents"** (canvas context menu, for a single selected frame with unlocked children): `stackInFrame` (pure, `engine/align.ts`) stacks the children in reading order at 16 px padding, 12 px apart, and grows the frame when they don't fit (so none of them leaves the frame). One undo step. It never runs by itself.
+- The start page shows 4 featured templates (Kanban, Flowchart, Brainstorm, Meeting notes) and a "More templates" card that opens the gallery.
+
+**Deviations:**
+- "Stack contents" is in the context menu only (no shortcut); the Arrange panel is for multi-selections.
+- The User journey map is one frame with text headers and stickies in the cells (nested frames are a non-goal); the Business model canvas is nine side-by-side frames.
+- The timeline's line is a thin filled rectangle with circle markers; milestones connect with straight connectors, and each quarter label sits on the side without a connector.
+- Gallery fix found by screenshots: grid rows now use `max-content`. Cards with `overflow: hidden` could be squeezed by the dialog's height and hid their names.
+- e2e and a11y tests that counted 3 template previews on the start page now expect 4 (the featured set grew; intended).
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (726 unit tests; `templates.test.ts` now also checks for every template: no overlapping stickies within a frame, no overlapping frames, fits in 4,000 × 3,000; content checks for kanban, the business model canvas and the weekly planner; `align.test.ts` / `arrange.test.ts` for stacking) · pnpm test:e2e ✅ (169; new: insert Kanban → drag a card to Done → its frame changes → "Stack contents" stacks it under the existing card; "More templates" → Strategy → SWOT creates a board; visual baseline of the gallery) · screenshots of the gallery (light/dark) and of Kanban (light/dark), Mind map, Timeline, User journey map, Business model canvas and Eisenhower matrix reviewed.
