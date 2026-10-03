@@ -9,6 +9,7 @@
 	import { backupAll, importFiles } from './fileActions';
 	import { formatBytes } from './formatBytes';
 	import { readMediaPrefs, writeMediaPrefs } from '$lib/board/media/mediaPrefs';
+	import { fullscreen } from '$lib/shared/fullscreen.svelte';
 
 	let { class: className = '' }: { class?: string } = $props();
 
@@ -76,6 +77,11 @@
 			{#if pwa.canInstall}
 				<DropdownMenu.Item class={item} onSelect={() => pwa.install()}
 					>Install app</DropdownMenu.Item
+				>
+			{/if}
+			{#if fullscreen.supported}
+				<DropdownMenu.Item class={item} onSelect={() => fullscreen.toggle()}
+					>{fullscreen.active ? 'Exit full screen' : 'Full screen'}</DropdownMenu.Item
 				>
 			{/if}
 			<DropdownMenu.Item class={item} onSelect={() => backupAll()}

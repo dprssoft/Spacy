@@ -2,9 +2,12 @@
 	import { DropdownMenu } from 'bits-ui';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Download from '@lucide/svelte/icons/download';
+	import Maximize from '@lucide/svelte/icons/maximize';
+	import Minimize from '@lucide/svelte/icons/minimize';
 	import Redo2 from '@lucide/svelte/icons/redo-2';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import { resolve } from '$app/paths';
+	import { fullscreen } from '$lib/shared/fullscreen.svelte';
 	import InlineEditable from '$lib/shared/ui/InlineEditable.svelte';
 	import Logo from '$lib/shared/ui/Logo.svelte';
 	import SettingsMenu from '$lib/home/SettingsMenu.svelte';
@@ -118,6 +121,23 @@
 				</DropdownMenu.Content>
 			</DropdownMenu.Portal>
 		</DropdownMenu.Root>
+		{#if fullscreen.supported}
+			<!-- On phones it's in Settings (no room here). -->
+			<button
+				type="button"
+				class="{iconButton} max-sm:hidden"
+				aria-label={fullscreen.active ? 'Exit full screen' : 'Full screen'}
+				aria-keyshortcuts="Shift+F"
+				title="{fullscreen.active ? 'Exit full screen' : 'Full screen'} (Shift+F)"
+				data-testid="fullscreen"
+				onclick={() => fullscreen.toggle()}
+			>
+				{#if fullscreen.active}<Minimize class="size-4" aria-hidden="true" />{:else}<Maximize
+						class="size-4"
+						aria-hidden="true"
+					/>{/if}
+			</button>
+		{/if}
 		<!-- On phones the theme is in Settings. -->
 		<div class="contents max-sm:hidden"><ThemeToggle /></div>
 		<SettingsMenu

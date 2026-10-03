@@ -72,3 +72,16 @@ test('space + drag pans the canvas', async ({ page }) => {
 	expect(after.x - before.x).toBeCloseTo(100, 0);
 	expect(after.y - before.y).toBeCloseTo(50, 0);
 });
+
+test('full screen: the top bar button and Shift+F toggle it', async ({ page }) => {
+	await createBoard(page);
+	const button = page.getByTestId('fullscreen');
+	await expect(button).toHaveAccessibleName('Full screen');
+	await button.click();
+	await expect.poll(() => page.evaluate(() => document.fullscreenElement !== null)).toBe(true);
+	await expect(button).toHaveAccessibleName('Exit full screen');
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('Shift+F');
+	await expect.poll(() => page.evaluate(() => document.fullscreenElement !== null)).toBe(false);
+	await expect(button).toHaveAccessibleName('Full screen');
+});
