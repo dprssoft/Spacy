@@ -15,7 +15,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | M5: Doc cards | 25 | Rich text on the canvas, focus mode, mentions, Markdown export |
 | M6: Sharing | 28 | PNG/SVG export, thumbnails, `.smthng` import/export, backup, templates |
 | M7: v1.0 | 32 | PWA, performance, accessibility, full E2E, deploy |
-| M8: Extensions | 36 | Insert templates (kanban, retro, SWOT…) into any board; play YouTube, Vimeo, audio and video on the board |
+| M8: Extensions | 36 | Insert templates (kanban, retro, SWOT…) into any board; play YouTube, Vimeo, audio and video on the board with rich controls |
 
 ## Steps
 
@@ -56,7 +56,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [ ] | 33 | [Insertable templates](./steps/33-insertable-templates.md) | I. Extensions | 28 | 1d |
 | [ ] | 34 | [Template pack (kanban and friends)](./steps/34-template-pack.md) | I | 33 | 2d |
 | [ ] | 35 | [Media element](./steps/35-media-element.md) ⚠ needs approval (data model, CSP) | I | 31 | 2.5d |
-| [ ] | 36 | [Local media files](./steps/36-local-media-files.md) (optional) ⚠ needs approval | I | 35 | 1d |
+| [ ] | 36 | [Rich media controls](./steps/36-rich-media-controls.md) | I | 35 | 2.5d |
 
 Total is about 46 working days for one developer, or about 11–12 weeks with a buffer.
 
