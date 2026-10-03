@@ -5,11 +5,12 @@
 	import { visibleWorldRect } from '../engine/viewport';
 	import { createMedia } from '../media/createMedia';
 	import { parseMediaUrl } from '../media/parseMediaUrl';
+	import { layout } from '$lib/shared/layout.svelte';
+	import { mediaPrompt } from './mediaPromptState.svelte';
 
 	let { button, tip }: { button: string; tip: string } = $props();
 
 	const ctx = getBoard();
-	let open = $state(false);
 	let url = $state('');
 	let touched = $state(false);
 
@@ -17,7 +18,7 @@
 	const showError = $derived(touched && url.trim() !== '' && !valid);
 
 	$effect(() => {
-		if (!open) {
+		if (!mediaPrompt.open) {
 			url = '';
 			touched = false;
 		}
@@ -28,17 +29,23 @@
 		touched = true;
 		if (!valid) return;
 		const v = visibleWorldRect(ctx.viewport.vp, ctx.viewport.size);
-		if (createMedia(ctx, url, { x: v.x + v.w / 2, y: v.y + v.h / 2 })) open = false;
+		if (createMedia(ctx, url, { x: v.x + v.w / 2, y: v.y + v.h / 2 })) mediaPrompt.open = false;
 	}
 </script>
 
-<Popover.Root bind:open>
+<Popover.Root bind:open={mediaPrompt.open}>
 	<Tooltip.Root>
 		<Tooltip.Trigger>
 			{#snippet child({ props: tipProps })}
 				<Popover.Trigger {...tipProps}>
 					{#snippet child({ props })}
-						<button {...props} type="button" class={button} aria-label="Media" data-tool="media">
+						<button
+							{...props}
+							type="button"
+							class="{button} max-sm:hidden"
+							aria-label="Media"
+							data-tool="media"
+						>
 							<Clapperboard class="size-[18px]" aria-hidden="true" />
 						</button>
 					{/snippet}
@@ -56,8 +63,9 @@
 			align="start"
 			sideOffset={8}
 			collisionPadding={8}
+			customAnchor={layout.compact ? '[data-insert-menu]' : null}
 			data-interactive
-			class="z-50 w-80 rounded-xl border border-border bg-surface p-3 shadow-lg"
+			class="z-50 w-80 max-w-[calc(100vw-16px)] rounded-xl border border-border bg-surface p-3 shadow-lg"
 		>
 			<form onsubmit={add} class="flex flex-col gap-2">
 				<label for="media-url" class="text-sm font-medium">Media link</label>

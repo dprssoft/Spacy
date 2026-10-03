@@ -25,15 +25,17 @@
 	}
 
 	const iconButton =
-		'inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
+		'inline-flex size-9 pointer-coarse:size-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
 </script>
 
 <svelte:window onkeydown={onWindowKeydown} />
 
-<header class="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface px-4">
+<header
+	class="flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-4 border-b border-border bg-surface px-4 pt-[env(safe-area-inset-top)] max-sm:gap-2 max-sm:px-2"
+>
 	<div class="flex shrink-0 items-center gap-2 md:w-52">
 		<Logo class="size-7" />
-		<h1 class="text-[15px] font-semibold tracking-tight">SMTHNG</h1>
+		<h1 class="text-[15px] font-semibold tracking-tight max-sm:sr-only">SMTHNG</h1>
 	</div>
 
 	<div class="relative max-w-md min-w-0 flex-1">
@@ -72,9 +74,10 @@
 		{/if}
 	</div>
 
-	<div class="ml-auto flex items-center gap-1">
+	<div class="ml-auto flex shrink-0 items-center gap-1 max-sm:gap-0">
 		<ImportButton class={iconButton} />
-		<ThemeToggle />
+		<!-- On phones the theme is in Settings. -->
+		<div class="contents max-sm:hidden"><ThemeToggle /></div>
 		<SettingsMenu class={iconButton} />
 	</div>
 </header>

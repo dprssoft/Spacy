@@ -6,6 +6,8 @@
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Frame from '@lucide/svelte/icons/frame';
 	import LayoutTemplate from '@lucide/svelte/icons/layout-template';
+	import Clapperboard from '@lucide/svelte/icons/clapperboard';
+	import Plus from '@lucide/svelte/icons/plus';
 	import Hand from '@lucide/svelte/icons/hand';
 	import ImageIcon from '@lucide/svelte/icons/image';
 	import Lock from '@lucide/svelte/icons/lock';
@@ -27,6 +29,7 @@
 	import MediaLinkPopover from './MediaLinkPopover.svelte';
 	import SketchRibbon from './SketchRibbon.svelte';
 	import { templateGallery } from './templateGalleryState.svelte';
+	import { mediaPrompt } from './mediaPromptState.svelte';
 
 	const ctx = getBoard();
 	const { tools } = ctx;
@@ -34,7 +37,8 @@
 	const actions: Partial<Record<ToolId, () => void>> = { image: () => openImagePicker(ctx) };
 
 	type IconComponent = typeof Square;
-	type Item = { id: ToolId; label: string; keys: string; icon: IconComponent };
+	/** `secondary`: on phones it moves into the Insert menu. */
+	type Item = { id: ToolId; label: string; keys: string; icon: IconComponent; secondary?: boolean };
 	const groups: Item[][] = [
 		[
 			{ id: 'select', label: 'Select', keys: 'V', icon: MousePointer2 },
@@ -42,18 +46,18 @@
 		],
 		[
 			{ id: 'pen', label: 'Pen', keys: 'P', icon: Pencil },
-			{ id: 'sketch', label: 'Sketch', keys: 'B', icon: Brush },
-			{ id: 'eraser', label: 'Eraser', keys: 'E', icon: Eraser }
+			{ id: 'sketch', label: 'Sketch', keys: 'B', icon: Brush, secondary: true },
+			{ id: 'eraser', label: 'Eraser', keys: 'E', icon: Eraser, secondary: true }
 		],
 		[
 			// 'shape' is rendered as a flyout (below); listed here to keep the order.
 			{ id: 'shape', label: 'Shapes', keys: 'R', icon: Square },
-			{ id: 'connector', label: 'Connector', keys: 'A', icon: ArrowUpRight },
+			{ id: 'connector', label: 'Connector', keys: 'A', icon: ArrowUpRight, secondary: true },
 			{ id: 'text', label: 'Text', keys: 'T', icon: Type },
 			{ id: 'sticky', label: 'Sticky note', keys: 'S', icon: StickyNote },
-			{ id: 'doccard', label: 'Doc card', keys: 'N', icon: FileText },
-			{ id: 'frame', label: 'Frame', keys: 'F', icon: Frame },
-			{ id: 'image', label: 'Image', keys: 'Ctrl+Shift+I', icon: ImageIcon }
+			{ id: 'doccard', label: 'Doc card', keys: 'N', icon: FileText, secondary: true },
+			{ id: 'frame', label: 'Frame', keys: 'F', icon: Frame, secondary: true },
+			{ id: 'image', label: 'Image', keys: 'Ctrl+Shift+I', icon: ImageIcon, secondary: true }
 		]
 	];
 
@@ -85,7 +89,7 @@
 	aria-orientation="horizontal"
 	{@attach rovingTabindex()}
 	data-interactive
-	class="flex shrink-0 items-stretch overflow-x-auto border-b border-border bg-surface px-1"
+	class="flex shrink-0 items-stretch overflow-x-auto border-b border-border bg-surface px-1 max-sm:order-last max-sm:border-t max-sm:border-b-0 max-sm:pb-[env(safe-area-inset-bottom)]"
 >
 	{#each groups as group, gi (gi)}
 		<div role="group" aria-label={GROUP_NAMES[gi]} class={groupBox}>
@@ -178,7 +182,7 @@
 						{@const Icon = item.icon}
 						<Tooltip.Root>
 							<Tooltip.Trigger
-								class={button}
+								class="{button} {item.secondary ? 'max-sm:hidden' : ''}"
 								aria-label="{item.label} ({item.keys})"
 								aria-keyshortcuts={item.keys}
 								data-tool={item.id}
@@ -198,7 +202,7 @@
 					<MediaLinkPopover {button} {tip} />
 					<Tooltip.Root>
 						<Tooltip.Trigger
-							class={button}
+							class="{button} max-sm:hidden"
 							aria-label="Templates (Shift+T)"
 							aria-keyshortcuts="Shift+T"
 							aria-haspopup="dialog"
@@ -209,12 +213,47 @@
 						</Tooltip.Trigger>
 						{@render tooltip('Templates — Shift+T')}
 					</Tooltip.Root>
+					<!-- Phones: the secondary tools live in one menu. -->
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger
+							class="{button} sm:hidden"
+							aria-label="Insert more"
+							data-insert-menu
+						>
+							<Plus class="size-[18px]" aria-hidden="true" />
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Portal>
+							<DropdownMenu.Content
+								side="top"
+								align="end"
+								sideOffset={6}
+								data-interactive
+								class="z-50 min-w-52 rounded-lg border border-border bg-surface p-1 shadow-lg"
+							>
+								{#each groups.flat().filter((i) => i.secondary) as it (it.id)}
+									{@const Icon = it.icon}
+									<DropdownMenu.Item
+										class={menuItem}
+										onSelect={() => (actions[it.id] ? actions[it.id]!() : select(it.id))}
+									>
+										<Icon class="size-4" aria-hidden="true" />{it.label}
+									</DropdownMenu.Item>
+								{/each}
+								<DropdownMenu.Item class={menuItem} onSelect={() => (mediaPrompt.open = true)}>
+									<Clapperboard class="size-4" aria-hidden="true" />Media…
+								</DropdownMenu.Item>
+								<DropdownMenu.Item class={menuItem} onSelect={() => (templateGallery.open = true)}>
+									<LayoutTemplate class="size-4" aria-hidden="true" />Templates…
+								</DropdownMenu.Item>
+							</DropdownMenu.Content>
+						</DropdownMenu.Portal>
+					</DropdownMenu.Root>
 				{/if}
 			</div>
-			<span class={caption} aria-hidden="true">{GROUP_NAMES[gi]}</span>
+			<span class="{caption} max-sm:hidden" aria-hidden="true">{GROUP_NAMES[gi]}</span>
 		</div>
 	{/each}
-	<div role="group" aria-label="Options" class={groupBox}>
+	<div role="group" aria-label="Options" class="{groupBox} max-sm:hidden">
 		<Tooltip.Root>
 			<Tooltip.Trigger
 				class={button}

@@ -96,6 +96,13 @@ export const viewShortcuts: Shortcut[] = [
 		run: (ctx) => ctx.viewport.fit(ctx.store.contentBounds())
 	},
 	{
+		id: 'view.origin',
+		keys: ['Home'],
+		label: 'Back to origin',
+		group: 'View',
+		run: (ctx) => ctx.viewport.fit(null)
+	},
+	{
 		id: 'view.100',
 		keys: ['Shift+0', 'Mod+0'],
 		label: 'Zoom to 100%',

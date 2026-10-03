@@ -22,17 +22,19 @@
 	const ctx = getBoard();
 	const { history } = ctx;
 	const iconButton =
-		'inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-35 disabled:hover:bg-transparent';
+		'inline-flex size-8 pointer-coarse:size-11 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-35 disabled:hover:bg-transparent';
 
 	const item =
 		'flex h-8 cursor-default items-center rounded-md px-2 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-surface-2';
 </script>
 
-<header class="flex h-11 shrink-0 items-center gap-2 border-b border-border bg-surface-2 px-2">
+<header
+	class="flex h-[calc(2.75rem+env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b border-border bg-surface-2 px-2 pt-[env(safe-area-inset-top)] max-sm:gap-0.5 max-sm:px-1"
+>
 	<a
 		href={resolve('/')}
 		aria-label="Back to boards"
-		class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+		class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none pointer-coarse:size-11"
 	>
 		<Logo class="size-6" />
 	</a>
@@ -59,7 +61,7 @@
 		{/if}
 	</div>
 
-	<div class="ml-2 flex items-center">
+	<div class="ml-2 flex shrink-0 items-center max-sm:ml-0">
 		<button
 			type="button"
 			class={iconButton}
@@ -82,15 +84,15 @@
 		</button>
 	</div>
 
-	<div class="ml-auto flex items-center gap-1">
+	<div class="ml-auto flex shrink-0 items-center gap-1 max-sm:gap-0">
 		<SaveIndicator />
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger
-				class="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+				class="inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-sm font-medium hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none max-sm:px-2 pointer-coarse:h-11 pointer-coarse:min-w-11"
 			>
 				<Download class="size-4" aria-hidden="true" />
-				Export
-				<ChevronDown class="size-3.5 text-muted" aria-hidden="true" />
+				<span class="max-sm:sr-only">Export</span>
+				<ChevronDown class="size-3.5 text-muted max-sm:hidden" aria-hidden="true" />
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Portal>
 				<DropdownMenu.Content
@@ -116,9 +118,10 @@
 				</DropdownMenu.Content>
 			</DropdownMenu.Portal>
 		</DropdownMenu.Root>
-		<ThemeToggle />
+		<!-- On phones the theme is in Settings. -->
+		<div class="contents max-sm:hidden"><ThemeToggle /></div>
 		<SettingsMenu
-			class="inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+			class="inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none pointer-coarse:size-11"
 		/>
 	</div>
 </header>

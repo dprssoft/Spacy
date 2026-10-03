@@ -30,10 +30,10 @@
 	>
 		{#if saving}
 			<LoaderCircle class="size-3.5 animate-spin" aria-hidden="true" />
-			<span aria-live="polite">Saving…</span>
+			<span aria-live="polite" class="max-sm:sr-only">Saving…</span>
 		{:else}
 			<CloudCheck class="size-3.5" aria-hidden="true" />
-			<span aria-live="polite">Saved locally</span>
+			<span aria-live="polite" class="max-sm:sr-only">Saved locally</span>
 		{/if}
 	</Tooltip.Trigger>
 	<Tooltip.Portal>

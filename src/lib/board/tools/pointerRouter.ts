@@ -2,6 +2,8 @@ import type { BoardContext } from '../context';
 import { hitElement } from '../engine/hitTest';
 import { groupOf } from '../selectionInfo';
 import { screenToWorld } from '../engine/viewport';
+import { GESTURE_CANCEL } from '../canvas/viewportInput';
+import { isDoubleTap, isQuickTap, LONG_PRESS_MS, TouchPress, type Tap } from './touchGestures';
 import type { CanvasPointerEvent } from './types';
 
 const HIT_TOLERANCE_PX = 6;
@@ -13,6 +15,21 @@ const HIT_TOLERANCE_PX = 6;
 export function pointerRouter(ctx: BoardContext) {
 	return (node: HTMLElement) => {
 		let active: number | null = null;
+		// Fingers (step 37): on empty canvas with Select, one finger pans, a long-press starts a
+		// marquee, a tap clears the selection; double-taps act as double-clicks.
+		let press: {
+			gesture: TouchPress;
+			down: CanvasPointerEvent;
+			last: { x: number; y: number };
+		} | null = null;
+		let pressTimer = 0;
+		let tapDown: Tap | null = null;
+		let lastTap: Tap | null = null;
+		let touchDoubleAt = -Infinity;
+		const clearPress = () => {
+			clearTimeout(pressTimer);
+			press = null;
+		};
 
 		const toCanvasEvent = (e: PointerEvent | MouseEvent, withHit: boolean): CanvasPointerEvent => {
 			const r = node.getBoundingClientRect();
@@ -52,9 +69,28 @@ export function pointerRouter(ctx: BoardContext) {
 			if (e.defaultPrevented || fromUi(e) || e.button !== 0 || !e.isPrimary) return;
 			if (active !== null) return;
 			node.focus({ preventScroll: true });
+			// No emulated mouse events after a touch: their mousedown would steal focus from an
+			// editor a double-tap just opened.
+			if (e.pointerType === 'touch') e.preventDefault();
 			active = e.pointerId;
 			node.setPointerCapture(e.pointerId);
-			ctx.tools.tool.onPointerDown(toCanvasEvent(e, true));
+			const ce = toCanvasEvent(e, true);
+			if (e.pointerType === 'touch') tapDown = { at: ce.screen, t: e.timeStamp };
+			if (
+				e.pointerType === 'touch' &&
+				ctx.tools.current === 'select' &&
+				!ce.hit.elementId &&
+				!ce.hit.handle
+			) {
+				const gesture = new TouchPress(ce.screen, e.timeStamp);
+				press = { gesture, down: ce, last: ce.screen };
+				pressTimer = window.setTimeout(() => {
+					if (press?.gesture === gesture && gesture.hold(gesture.t0 + LONG_PRESS_MS))
+						ctx.tools.tool.onPointerDown(press.down);
+				}, LONG_PRESS_MS);
+				return;
+			}
+			ctx.tools.tool.onPointerDown(ce);
 		};
 
 		const onPointerMove = (e: PointerEvent) => {
@@ -68,18 +104,55 @@ export function pointerRouter(ctx: BoardContext) {
 				return;
 			}
 			if (e.pointerId !== active) return;
-			ctx.tools.tool.onPointerMove(toCanvasEvent(e, false));
+			const ce = toCanvasEvent(e, false);
+			if (press) {
+				const phase = press.gesture.move(ce.screen);
+				if (phase === 'pan') {
+					clearTimeout(pressTimer);
+					ctx.viewport.panBy(ce.screen.x - press.last.x, ce.screen.y - press.last.y);
+					press.last = ce.screen;
+					return;
+				}
+				if (phase === 'pending') return;
+			}
+			ctx.tools.tool.onPointerMove(ce);
 		};
 
 		const onPointerUp = (e: PointerEvent) => {
 			if (e.pointerId !== active) return;
 			const ce = toCanvasEvent(e, true);
 			active = null;
+			const p = press;
+			clearPress();
+			if (p && p.gesture.phase === 'pan') return;
+			if (p && p.gesture.isTap(ce.screen)) ctx.tools.tool.onPointerDown(p.down);
 			ctx.tools.tool.onPointerUp(ce);
+			// A double-tap is a double-click (edit text, play media…).
+			if (e.pointerType !== 'touch' || !tapDown) return;
+			const up = { at: ce.screen, t: e.timeStamp };
+			if (!isQuickTap(tapDown, up)) {
+				lastTap = null;
+				return;
+			}
+			if (isDoubleTap(lastTap, up)) {
+				lastTap = null;
+				touchDoubleAt = e.timeStamp;
+				ctx.tools.tool.onDoubleClick?.(ce);
+			} else lastTap = up;
 		};
 
 		const onPointerCancel = (e: PointerEvent) => {
 			if (e.pointerId !== active) return;
+			active = null;
+			clearPress();
+			ctx.tools.tool.onCancel();
+		};
+
+		// A pinch started: whatever the first finger began is dropped (nothing moves or selects).
+		const onGestureCancel = () => {
+			clearPress();
+			lastTap = tapDown = null;
+			if (active === null) return;
 			active = null;
 			ctx.tools.tool.onCancel();
 		};
@@ -104,6 +177,8 @@ export function pointerRouter(ctx: BoardContext) {
 
 		const onDoubleClick = (e: MouseEvent) => {
 			if (fromUi(e)) return;
+			// Touch double-taps are handled above; don't act on the browser's copy of one.
+			if (e.timeStamp - touchDoubleAt < 600) return;
 			ctx.tools.tool.onDoubleClick?.(toCanvasEvent(e, true));
 		};
 
@@ -115,7 +190,10 @@ export function pointerRouter(ctx: BoardContext) {
 		node.addEventListener('pointerleave', onPointerLeave);
 		node.addEventListener('dblclick', onDoubleClick);
 		node.addEventListener('contextmenu', onContextMenu);
+		node.addEventListener(GESTURE_CANCEL, onGestureCancel);
 		return () => {
+			clearPress();
+			node.removeEventListener(GESTURE_CANCEL, onGestureCancel);
 			node.removeEventListener('contextmenu', onContextMenu);
 			node.removeEventListener('pointerdown', onPointerDown);
 			node.removeEventListener('pointermove', onPointerMove);

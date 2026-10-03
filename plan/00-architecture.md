@@ -388,10 +388,12 @@ Imports always create new board ids and new asset ids (remapped in the doc).
 | Mod+' | Toggle grid snap | Mod+Enter | Open doc card in focus mode |
 | Enter | Edit text / doc card | Escape | Cancel / deselect / exit edit |
 | Arrows (+Shift) | Nudge 1px (10px) | ? | Shortcuts dialog |
-| Shift+T | Insert template | | |
+| Shift+T | Insert template | Home | Back to origin (100 %) |
 
 **Media keys** apply to the selected media element while it plays, or while its player is in use; then they take precedence over tool keys, arrow nudging and Space-panning:
 Space / K play-pause · J / L ∓10 s · ← / → ∓5 s · ↑ / ↓ volume · M mute · F full screen · `<` / `>` speed · 0–9 jump to 0–90 % · Home / End clip start / end · Shift+L loop. Enter on a selected media element starts it.
+
+**Touch** (phones and tablets; `tools/touchGestures.ts`, `pointerRouter.ts`, `viewportInput.ts`): one finger on empty canvas pans (Select tool); on an element it selects/moves; long-press (500 ms) then drag draws a marquee; tap on empty canvas clears the selection; double-tap = double-click; two fingers pinch-zoom and pan, and a pinch cancels whatever the first finger started (`smthng:gesturecancel`). Touch `pointerdown`s are `preventDefault`ed so no emulated mouse events follow. Layout: below 640 px (`layout.compact`, `max-sm:`) the board's toolbar is a bottom bar with secondary tools in an "Insert more" menu, the top bar is icon-only, and touch targets are ≥ 44 px under `(pointer: coarse)`.
 
 Shortcuts are ignored while focus is in `input`, `textarea`, `select`, or `[contenteditable]` (except Escape handling defined per step).
 

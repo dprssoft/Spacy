@@ -40,9 +40,9 @@ On a phone (360–430 px wide) the start page and the board fit the screen witho
 - Desktop e2e suite unchanged and green; visual baselines unchanged on desktop.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` (chromium + mobile) pass
-- [ ] Screenshots at 360, 390 and 412 px (light and dark) of the start page, a board and the gallery reviewed and noted in PROGRESS
-- [ ] Desktop layout and behaviour unchanged
+- [x] `pnpm verify` and `pnpm test:e2e` (chromium + mobile) pass
+- [x] Screenshots at 360, 390 and 412 px (light and dark) of the start page, a board and the gallery reviewed and noted in PROGRESS
+- [x] Desktop layout and behaviour unchanged
 
 ## Out of scope
 Touch editing UI (step 38): context menu, style sheet, keyboard handling, media controls on touch.
