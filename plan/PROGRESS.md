@@ -865,3 +865,29 @@ Requested by the human: an optimization plan, then "phase 0" (measure the cases 
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (659 unit tests) · `perf-guard` + `tabs-sync` e2e ✅ · `pnpm bench` ✅ (two runs)
+
+## Extra — Optimization phase 1: canvas rendering when zoomed far out — 2026-10-03
+Approved by the human ("phase 1"; step 30 had left a canvas renderer out of scope until approved).
+
+**Summary:**
+- `render/canvasScene.ts` (`SceneRenderer`): Canvas 2D drawing of every element type (shapes, stickies, text, images, strokes, sketches, frames, doc cards, connectors with markers and labels). Paths are cached per element and rebuilt only when their shape changes; sketches are cached as small bitmaps. Text is drawn with real glyphs while it's at least 4 px on screen, and as bars ("greeked") below that.
+- `canvas/SceneCanvas.svelte`: one canvas covering the view, placed in world space so the world transform maps it 1:1 to the screen. It redraws in the same update as the DOM, so it never lags a pan.
+- `ElementsLayer` switches to the canvas when zoom < 30 % **and** at least 400 elements are near the view (`useSceneCanvas`, with hysteresis on the count). Sparse boards keep DOM rendering at any zoom. The edited element stays a DOM view above the canvas.
+- Grid: the CSS `radial-gradient` dots became a small SVG tile image (power-of-two sizes, `canvas/grid.ts`). While the scene canvas is shown, it paints the grid itself and the CSS grid is off (one layer composites faster).
+
+**Results** (`pnpm bench`, headless Chromium, software rendering):
+
+| Scenario | Before | After |
+|---|---|---|
+| Pan @ 25 % (3k mixed) | DOM, ~1,100 nodes | 60 fps |
+| Pan @ 10 % (3k mixed) | 29 fps, 31 ms main thread/frame | 35–42 fps, 10 ms main thread/frame |
+| Drag 300 selected @ 20 % | — | 30–37 fps |
+| Other scenarios | unchanged within noise | |
+
+**Deviations / notes:**
+- At 10 % the main thread is mostly idle now. What remains is raster/compositing in the software renderer. The dot grid alone costs about a third of the frame rate there (in-page loop: 42 fps with the grid, 60 without). Neither a separate grid canvas nor an inline SVG `<pattern>` was faster (measured, reverted). Not measured on a real GPU.
+- The canvas has no element shadows, and connector labels sit at their route position without wrapping.
+- `ViewportState.sceneCanvas` tells the canvas background to drop its grid while the scene canvas is shown.
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (666 unit tests; new `canvasScene.test.ts`, `grid.test.ts`) · pnpm test:e2e ✅ (162; new in `perf-guard.spec.ts`: a 3k board at 10 % is one painted canvas with no element DOM, and back to DOM at 100 %) · screenshots compared at 31 % (DOM) and 29 % (canvas).

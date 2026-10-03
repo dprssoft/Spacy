@@ -6,8 +6,11 @@
 	import { expandRectRatio } from '../engine/geometry';
 	import { visibleWorldRect } from '../engine/viewport';
 	import { measureBoardOpen } from '../openTiming';
+	import { useSceneCanvas } from '../render/canvasScene';
+	import SceneCanvas from './SceneCanvas.svelte';
 
 	const { store, viewport, selection } = getBoard();
+	// Zoomed far out over many elements, one canvas draws them (DOM painting is the bottleneck).
 
 	// Culling: only elements near the visible area are in the DOM. Recomputed at most once per frame.
 	let visible = $state<ReadonlySet<string>>(new Set());
@@ -39,6 +42,7 @@
 		const ids = store.index.search(rect);
 		// Same ids as before (e.g. everything is visible): keep the set, skip the re-render.
 		if (ids.length !== visible.size || ids.some((id) => !visible.has(id))) visible = new Set(ids);
+		viewport.sceneCanvas = useSceneCanvas(viewport.sceneCanvas, viewport.zoom, ids.length);
 		if (!measured && viewport.size.w > 0) {
 			measured = true;
 			// After the frame that paints the first visible elements.
@@ -51,14 +55,21 @@
 		void [viewport.x, viewport.y, viewport.zoom, viewport.size, store.version];
 		if (!frame) frame = requestAnimationFrame(() => timed('layer.cull', recompute));
 	});
-	$effect(() => () => cancelAnimationFrame(frame));
+	$effect(() => () => {
+		cancelAnimationFrame(frame);
+		viewport.sceneCanvas = false;
+	});
 
 	// Selected and edited elements stay mounted even when scrolled out of view.
-	const show = (id: string) => visible.has(id) || selection.has(id) || selection.editingId === id;
+	const show = (id: string) =>
+		selection.editingId === id || (!viewport.sceneCanvas && (visible.has(id) || selection.has(id)));
 	const frames = $derived(store.frameOrder.filter(show));
 	const others = $derived(store.order.filter(show));
 </script>
 
+{#if viewport.sceneCanvas}
+	<SceneCanvas />
+{/if}
 {#each frames as id (id)}
 	<ElementView {id} />
 {/each}

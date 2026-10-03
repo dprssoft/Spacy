@@ -39,6 +39,35 @@ test('dragging one element re-renders only that element', async ({ page }) => {
 	expect(others).toEqual([]);
 });
 
+test('zoomed far out over many elements, the board is drawn on one canvas', async ({ page }) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	expect(await page.evaluate(() => window.__smthng!.perf(3000))).toBe(3000);
+	const zoom = (z: number) =>
+		page.evaluate((z) => {
+			const v = window.__smthng!.ctx.viewport;
+			v.set({ zoom: z, x: v.size.w / 2, y: v.size.h / 2 });
+		}, z);
+
+	await zoom(0.1);
+	await expect(page.getByTestId('scene-canvas')).toBeVisible();
+	await expect(page.locator('[data-element-id]')).toHaveCount(0);
+	// Something is drawn on it.
+	const painted = await page.getByTestId('scene-canvas').evaluate((c) => {
+		const canvas = c as HTMLCanvasElement;
+		const data = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
+		let n = 0;
+		for (let i = 3; i < data.length; i += 4) if (data[i]! > 0) n++;
+		return n;
+	});
+	expect(painted).toBeGreaterThan(1000);
+
+	await zoom(1);
+	await expect(page.getByTestId('scene-canvas')).toHaveCount(0);
+	await expect(page.locator('[data-element-id]').first()).toBeVisible();
+});
+
 test('the start page loads no rich-text editor code', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('[data-template] img')).toHaveCount(3); // previews are built too
