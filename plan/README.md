@@ -16,6 +16,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | M6: Sharing | 28 | PNG/SVG export, thumbnails, `.smthng` import/export, backup, templates |
 | M7: v1.0 | 32 | PWA, performance, accessibility, full E2E, deploy |
 | M8: Extensions | 36 | Insert templates (kanban, retro, SWOT…) into any board; play YouTube, Vimeo, audio and video on the board with rich controls |
+| M9: Mobile | 38 | Use and edit boards on phones and tablets: fitted layout, finger gestures, long-press menu, style sheet, keyboard-aware editing |
 
 ## Steps
 
@@ -57,6 +58,8 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 34 | [Template pack (kanban and friends)](./steps/34-template-pack.md) | I | 33 | 2d |
 | [x] | 35 | [Media element](./steps/35-media-element.md) | I | 31 | 2.5d |
 | [x] | 36 | [Rich media controls](./steps/36-rich-media-controls.md) | I | 35 | 2.5d |
+| [ ] | 37 | [Mobile layout and touch navigation](./steps/37-mobile-layout-touch-navigation.md) | J. Mobile | 36 | 1.5d |
+| [ ] | 38 | [Touch editing](./steps/38-mobile-touch-editing.md) | J | 37 | 1.5d |
 
 Total is about 46 working days for one developer, or about 11–12 weeks with a buffer.
 
