@@ -5,6 +5,7 @@
 	import Eraser from '@lucide/svelte/icons/eraser';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Frame from '@lucide/svelte/icons/frame';
+	import LayoutTemplate from '@lucide/svelte/icons/layout-template';
 	import Hand from '@lucide/svelte/icons/hand';
 	import ImageIcon from '@lucide/svelte/icons/image';
 	import Lock from '@lucide/svelte/icons/lock';
@@ -24,6 +25,7 @@
 	import { button, caption, groupBox } from './ribbon';
 	import { rovingTabindex } from './rovingTabindex';
 	import SketchRibbon from './SketchRibbon.svelte';
+	import { templateGallery } from './templateGalleryState.svelte';
 
 	const ctx = getBoard();
 	const { tools } = ctx;
@@ -191,6 +193,21 @@
 						</Tooltip.Root>
 					{/if}
 				{/each}
+				{#if GROUP_NAMES[gi] === 'Insert'}
+					<Tooltip.Root>
+						<Tooltip.Trigger
+							class={button}
+							aria-label="Templates (Shift+T)"
+							aria-keyshortcuts="Shift+T"
+							aria-haspopup="dialog"
+							data-tool="templates"
+							onclick={() => (templateGallery.open = true)}
+						>
+							<LayoutTemplate class="size-[18px]" aria-hidden="true" />
+						</Tooltip.Trigger>
+						{@render tooltip('Templates — Shift+T')}
+					</Tooltip.Root>
+				{/if}
 			</div>
 			<span class={caption} aria-hidden="true">{GROUP_NAMES[gi]}</span>
 		</div>

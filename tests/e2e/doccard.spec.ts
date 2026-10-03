@@ -30,6 +30,8 @@ test('type with markdown shortcuts; the content persists and syncs to another ta
 	await placeCard(page);
 	const other = await context.newPage();
 	await other.goto(url);
+	// The 1 s limit below is for syncing, not for the other tab's loading (its editor is lazy).
+	await expect(other.locator('[data-doccard-body] .ProseMirror')).toBeVisible();
 	await page.keyboard.type('# Plan');
 	await page.keyboard.press('Enter');
 	await page.keyboard.type('- item');

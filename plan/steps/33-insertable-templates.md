@@ -31,9 +31,9 @@ Any template can be added to the board you're working on, not only used to start
 - `tests/e2e/templates.spec.ts` (extend): open the gallery from the toolbar, search "brain", insert → elements appear centered and selected; Ctrl+Z removes them; "More templates" on the start page creates a board.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] A template inserted at any zoom ends up fully visible
-- [ ] The board's initial JS doesn't include template builders or previews (check the build chunks)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] A template inserted at any zoom ends up fully visible
+- [x] The board's initial JS doesn't include template builders or previews (check the build chunks)
 
 ## Out of scope
 New templates (step 34). User-saved templates ("Save selection as template").

@@ -43,6 +43,7 @@
 	import { isTypingTarget, ShortcutRegistry } from './tools/shortcuts';
 	import { ToolManager } from './tools/toolManager.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
+	import { templateGallery } from './ui/templateGalleryState.svelte';
 	import LiveAnnouncer from './ui/LiveAnnouncer.svelte';
 	import Onboarding from './ui/Onboarding.svelte';
 	import ShortcutsDialog from './ui/ShortcutsDialog.svelte';
@@ -142,6 +143,11 @@
 
 	// The export dialog (and the static renderer behind it) loads the first time it's opened.
 	let exportDialogWanted = $state(false);
+	// The template gallery (and the template code) loads the first time it's opened.
+	let templateGalleryWanted = $state(false);
+	$effect(() => {
+		if (templateGallery.open) templateGalleryWanted = true;
+	});
 	$effect(() => {
 		if (exportDialog.open) exportDialogWanted = true;
 	});
@@ -241,6 +247,19 @@
 		<LiveAnnouncer />
 		<ShortcutsDialog />
 		<Onboarding />
+		{#if templateGalleryWanted}
+			{#await Promise.all( [import('$lib/shared/ui/TemplateGallery.svelte'), import('$lib/templates/insert')] ) then [{ default: TemplateGallery }, { insertTemplate }]}
+				<TemplateGallery
+					bind:open={templateGallery.open}
+					title="Insert template"
+					onpick={(t) =>
+						void insertTemplate(ctx, t).catch((err: unknown) => {
+							console.error(err);
+							toast.error('Couldn’t insert the template');
+						})}
+				/>
+			{/await}
+		{/if}
 		{#if exportDialogWanted}
 			{#await import('./ui/ExportDialog.svelte') then { default: ExportDialog }}
 				<ExportDialog />
