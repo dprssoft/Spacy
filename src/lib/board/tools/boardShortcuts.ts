@@ -3,6 +3,7 @@ import { createAtCenter, CREATION_TOOLS } from '../a11y/keyboard';
 import type { BoardContext } from '../context';
 import { help } from '../ui/helpState.svelte';
 import { templateGallery } from '../ui/templateGalleryState.svelte';
+import { fullscreen } from '$lib/shared/fullscreen.svelte';
 import { nextZoomStep, zoomAt } from '../engine/viewport';
 import { openImagePicker } from '../images/importImages';
 import type { Shortcut } from './shortcuts';
@@ -94,6 +95,13 @@ export const viewShortcuts: Shortcut[] = [
 		label: 'Zoom to fit',
 		group: 'View',
 		run: (ctx) => ctx.viewport.fit(ctx.store.contentBounds())
+	},
+	{
+		id: 'view.fullscreen',
+		keys: ['Shift+F'],
+		label: 'Full screen',
+		group: 'View',
+		run: () => fullscreen.toggle()
 	},
 	{
 		id: 'view.origin',

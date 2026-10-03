@@ -389,6 +389,7 @@ Imports always create new board ids and new asset ids (remapped in the doc).
 | Enter | Edit text / doc card | Escape | Cancel / deselect / exit edit |
 | Arrows (+Shift) | Nudge 1px (10px) | ? | Shortcuts dialog |
 | Shift+T | Insert template | Home | Back to origin (100 %) |
+| Shift+F | Full screen (also a top bar button; in Settings on phones) | | |
 
 **Media keys** apply to the selected media element while it plays, or while its player is in use; then they take precedence over tool keys, arrow nudging and Space-panning:
 Space / K play-pause · J / L ∓10 s · ← / → ∓5 s · ↑ / ↓ volume · M mute · F full screen · `<` / `>` speed · 0–9 jump to 0–90 % · Home / End clip start / end · Shift+L loop. Enter on a selected media element starts it.

@@ -1063,3 +1063,12 @@ Reported by the human (screenshot): "why do we have this focus outline?"
 **Change:** `Canvas.svelte` shows the ring (`data-tab-focus`) only when Tab brought focus to the canvas; a pointer press or blur clears it. Keyboard users keep the indicator, and Tab cycling between objects keeps it on.
 
 **Verification:** pnpm verify ✅ (795) · pnpm test:e2e ✅ (198; new in `keyboard-only.spec.ts`: click + shortcut + Escape → focused without the ring; Tab from the toolbar → ring; a click → no ring).
+
+## Extra — Full screen mode — 2026-10-04
+Requested by the human: "add fullscreen mode".
+
+**Summary:** `shared/fullscreen.svelte.ts` puts the whole app in full screen with the browser's Fullscreen API (state follows `fullscreenchange`, so Esc or the browser's own exit stay in sync). There's a top bar button (Maximize/Minimize, "Full screen" / "Exit full screen"), **Shift+F** (shortcuts help, §11), and a "Full screen" item in Settings, which is the way in on phones (the top bar has no room) and on the start page.
+
+**Deviations:** the controls hide where a page can't go full screen (`document.fullscreenEnabled` false, e.g. iPhone Safari, which only allows it for videos). An installed PWA already has no browser UI there.
+
+**Verification:** pnpm verify ✅ (795) · pnpm test:e2e ✅ (199; new in `viewport.spec.ts`: the button enters full screen and relabels itself, Shift+F exits).
