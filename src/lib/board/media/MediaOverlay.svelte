@@ -3,6 +3,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { getBoard } from '../context';
 	import { worldToScreen } from '../engine/viewport';
+	import { layout } from '$lib/shared/layout.svelte';
 	import MediaControls from './MediaControls.svelte';
 
 	// Controls bars of playing media, in screen space (the same size at any zoom). A bar shows
@@ -11,7 +12,7 @@
 	const { store, viewport, selection, playback } = ctx;
 	const LINGER_MS = 2000;
 	const GAP = 8;
-	const BAR_H = 42;
+	const BAR_H = layout.coarse ? 54 : 42;
 	const COMPACT_BELOW = 280;
 
 	const active = (id: string) =>
@@ -56,7 +57,7 @@
 			// Under the element, or over its bottom edge when there's no room below.
 			const below = br.y + GAP + BAR_H <= viewport.size.h;
 			const top = below ? br.y + GAP : br.y - BAR_H - GAP;
-			return [{ el, left: tl.x, width, top, compact: width < COMPACT_BELOW }];
+			return [{ el, left: tl.x, width, top, compact: layout.compact || width < COMPACT_BELOW }];
 		})
 	);
 </script>

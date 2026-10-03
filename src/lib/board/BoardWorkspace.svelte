@@ -43,6 +43,9 @@
 	import { isTypingTarget, ShortcutRegistry } from './tools/shortcuts';
 	import { ToolManager } from './tools/toolManager.svelte';
 	import { handleMediaKey } from './media/keys';
+	import { keepEditingVisible } from './canvas/keepEditingVisible';
+	import { keyboard } from '$lib/shared/keyboard.svelte';
+	import { layout } from '$lib/shared/layout.svelte';
 	import MediaOverlay from './media/MediaOverlay.svelte';
 	import { PlaybackState } from './media/playback.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
@@ -229,6 +232,29 @@
 
 	$effect(() => {
 		document.title = `${title.value || 'Board'} — SMTHNG`;
+	});
+
+	// Touch screens: what's being edited stays above the on-screen keyboard (and the bar on it).
+	$effect(() => {
+		if (!layout.coarse && !layout.compact) return;
+		const id = ctx.selection.editingId;
+		void keyboard.inset;
+		if (!id) return;
+		const canvas = document.querySelector<HTMLElement>('[data-testid="canvas"]');
+		if (!canvas) return;
+		const bar = () =>
+			document.querySelector<HTMLElement>('[data-testid="toolbar"].docked')?.offsetHeight ?? 0;
+		let frame = 0;
+		const check = () => {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(() => keepEditingVisible(ctx, canvas, bar()));
+		};
+		check();
+		document.addEventListener('selectionchange', check);
+		return () => {
+			cancelAnimationFrame(frame);
+			document.removeEventListener('selectionchange', check);
+		};
 	});
 </script>
 

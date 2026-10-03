@@ -51,7 +51,7 @@
 	let announce = $derived(s.playing ? 'Playing' : s.ready ? 'Paused' : '');
 
 	const btn =
-		'inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1 text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
+		'inline-flex h-8 min-w-8 pointer-coarse:h-11 pointer-coarse:min-w-11 items-center justify-center rounded-md px-1 text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
 	const audio = $derived(el.provider === 'audio');
 	const native = $derived(controller instanceof NativeController ? controller : null);
 
@@ -78,6 +78,12 @@
 			? [{ label: 'Captions', checked: captions, run: () => (captions = native.toggleCaptions()) }]
 			: []),
 		...(can.pip && native ? [{ label: 'Picture in picture', run: () => native.togglePip() }] : []),
+		...(compact && can.rate
+			? [
+					{ label: `Slower (${s.rate}×)`, keys: '<', run: () => cmd.stepRate(controller, -1) },
+					{ label: `Faster (${s.rate}×)`, keys: '>', run: () => cmd.stepRate(controller, 1) }
+				]
+			: []),
 		{ label: 'Open link', run: () => window.open(el.url, '_blank', 'noopener,noreferrer') },
 		{ label: 'Copy link at this time', run: () => cmd.copyLinkAt(el, controller) }
 	]);
@@ -122,15 +128,15 @@
 		>
 			<RotateCw class="size-4" aria-hidden="true" />
 		</button>
-		<Scrubber
-			time={s.time}
-			duration={s.duration}
-			buffered={s.buffered}
-			start={el.start}
-			end={el.end}
-			onseek={(t) => controller.seek(t)}
-		/>
 	{/if}
+	<Scrubber
+		time={s.time}
+		duration={s.duration}
+		buffered={s.buffered}
+		start={el.start}
+		end={el.end}
+		onseek={(t) => controller.seek(t)}
+	/>
 	<button
 		type="button"
 		class="{btn} text-xs tabular-nums"

@@ -53,3 +53,19 @@ export function isQuickTap(down: Tap, up: Tap): boolean {
 export function isDoubleTap(prev: Tap | null, cur: Tap): boolean {
 	return !!prev && cur.t - prev.t <= DOUBLE_TAP_MS && dist(prev.at, cur.at) <= DOUBLE_TAP_SLOP;
 }
+
+/** Tools that draw: they ignore fingers while a stylus is in use (palm rejection). */
+const DRAWING_TOOLS = new Set(['pen', 'sketch', 'eraser']);
+export const PALM_WINDOW_MS = 1000;
+
+/** True when a touch should be ignored because a stylus is drawing (or just was). */
+export function palmRejected(
+	tool: string,
+	pointerType: string,
+	penDown: boolean,
+	msSincePen: number
+): boolean {
+	return (
+		pointerType === 'touch' && DRAWING_TOOLS.has(tool) && (penDown || msSincePen < PALM_WINDOW_MS)
+	);
+}

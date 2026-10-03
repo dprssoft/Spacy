@@ -191,7 +191,7 @@ export const ROTATE_HANDLE_OFFSET = 24;
 export function selectionHandles(
 	box: Box,
 	toScreen: (p: Point) => Point,
-	opts: { resize: boolean; rotate: boolean }
+	opts: { resize: boolean; rotate: boolean; rotateOffset?: number }
 ): HandlePoint[] {
 	const c = rectCenter(box);
 	const worldAt = (fx: number, fy: number) =>
@@ -207,8 +207,8 @@ export function selectionHandles(
 		const top = toScreen(worldAt(0.5, 0));
 		out.push({
 			id: 'rotate',
-			x: top.x + Math.sin(box.rotation) * ROTATE_HANDLE_OFFSET,
-			y: top.y - Math.cos(box.rotation) * ROTATE_HANDLE_OFFSET
+			x: top.x + Math.sin(box.rotation) * (opts.rotateOffset ?? ROTATE_HANDLE_OFFSET),
+			y: top.y - Math.cos(box.rotation) * (opts.rotateOffset ?? ROTATE_HANDLE_OFFSET)
 		});
 	}
 	return out;

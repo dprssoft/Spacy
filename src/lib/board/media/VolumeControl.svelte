@@ -50,7 +50,7 @@
 					aria-label="Volume"
 					value={Math.round((muted ? 0 : volume) * 100)}
 					oninput={(e) => onvolume(Number(e.currentTarget.value) / 100)}
-					class="h-28 w-4 accent-accent [direction:rtl] [writing-mode:vertical-lr]"
+					class="h-28 w-4 accent-accent [direction:rtl] [writing-mode:vertical-lr] pointer-coarse:h-6 pointer-coarse:w-48 pointer-coarse:[direction:ltr] pointer-coarse:[writing-mode:horizontal-tb]"
 				/>
 			</Popover.Content>
 		</Popover.Portal>

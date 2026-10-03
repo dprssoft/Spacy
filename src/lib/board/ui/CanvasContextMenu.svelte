@@ -41,7 +41,7 @@
 	});
 
 	const item =
-		'flex h-8 cursor-default items-center justify-between gap-8 rounded-md px-2 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-surface-2';
+		'flex h-8 pointer-coarse:h-11 cursor-default items-center justify-between gap-8 rounded-md px-2 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-surface-2';
 	const sep = 'my-1 h-px bg-border';
 </script>
 

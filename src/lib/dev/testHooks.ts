@@ -3,6 +3,7 @@ import { createElements, deleteElements } from '$lib/model/ops';
 import type { Element, NewElement } from '$lib/model/types';
 import { getPref } from '$lib/shared/localPrefs';
 import type { BoardContext } from '$lib/board/context';
+import { keyboard } from '$lib/shared/keyboard.svelte';
 import { createMixedPerfBoard, generatePerfElements } from './perfBoard';
 
 export interface TestHooks {
@@ -16,6 +17,8 @@ export interface TestHooks {
 	perfMixed(n?: number, seed?: number): Promise<number>;
 	/** How often each element's view has rendered (to check that edits re-render only what changed). */
 	renderCounts: Map<string, number>;
+	/** Pretends an on-screen keyboard of `px` is open (null: measure again). */
+	keyboard(px: number | null): void;
 	/** Time spent in instrumented hot paths (for the perf benchmark). */
 	timings: Map<string, Timing>;
 }
@@ -68,7 +71,8 @@ export function installTestHooks(ctx: BoardContext): () => void {
 		perf: (n = 3000, seed = 1) => createElements(ctx.doc, generatePerfElements(n, seed)).length,
 		perfMixed: (n = 3000, seed = 1) => createMixedPerfBoard(ctx.doc, ctx.id, n, seed),
 		renderCounts,
-		timings
+		timings,
+		keyboard: (px) => keyboard.simulate(px)
 	};
 	counting = true;
 	window.__smthng = hooks;

@@ -31,3 +31,14 @@ describe('taps', () => {
 		expect(isDoubleTap(null, first)).toBe(false);
 	});
 });
+
+describe('palmRejected', () => {
+	it('ignores fingers on drawing tools while a stylus is down or was just used', async () => {
+		const { palmRejected, PALM_WINDOW_MS } = await import('./touchGestures');
+		expect(palmRejected('pen', 'touch', true, 0)).toBe(true);
+		expect(palmRejected('sketch', 'touch', false, PALM_WINDOW_MS - 1)).toBe(true);
+		expect(palmRejected('pen', 'touch', false, PALM_WINDOW_MS + 1)).toBe(false);
+		expect(palmRejected('select', 'touch', true, 0)).toBe(false);
+		expect(palmRejected('pen', 'pen', true, 0)).toBe(false);
+	});
+});
