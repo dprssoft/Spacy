@@ -891,3 +891,30 @@ Approved by the human ("phase 1"; step 30 had left a canvas renderer out of scop
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (666 unit tests; new `canvasScene.test.ts`, `grid.test.ts`) · pnpm test:e2e ✅ (162; new in `perf-guard.spec.ts`: a 3k board at 10 % is one painted canvas with no element DOM, and back to DOM at 100 %) · screenshots compared at 31 % (DOM) and 29 % (canvas).
+
+## Extra — Optimization phases 2–3: cheaper drags of many elements — 2026-10-03
+Requested by the human ("step 2 and 3"). Targets were the hot spots measured in phase 0 and a fresh CPU profile of the 300-element drag.
+
+**Summary:**
+- **One validation per moved element instead of three.** `updateElements` validates only the merged result (the stored element is validated only when that fails, to keep skipping invalid stored data). It hands that result to the observers of its own transaction (`rememberWritten` / `forgetWritten` in `model/doc.ts`), so `BoardStore` doesn't parse the same data again. Entries are dropped as soon as the transaction ends, and only kept when the Y.Map holds exactly the validated fields. Changes from other tabs, undo or imports are still read and validated from the map.
+- **Selection outlines are one `<path>`** instead of one `<polygon>` per selected element.
+- `ShapeView` memoizes its path (`shapePathMemo`): a move no longer rebuilds it.
+- `ElementView` sets one derived style string instead of a style attribute merged with three `style:` directives.
+
+**Results** (`pnpm bench`; per-frame ms):
+
+| Scenario | fps before → after | script | store.read |
+|---|---|---|---|
+| Drag 100 selected @ 50 % | 36 → 44 | 7.5 → 4.9 | 0.6 → 0 |
+| Drag 300 selected @ 50 % | 27 → 31 | 15.8 → 11.9 | 1.6 → 0.1 |
+| Drag 300 selected @ 20 % (canvas) | 30–37 → 36 | 15.9 → 11.4 | 1.7 → 0.1 |
+| Frame + 200 children @ 35 % | 58 → 59 | 6.9 → 5.5 | 1.0 → 0.1 |
+| Others | unchanged within noise | | |
+
+**Deviations / notes:**
+- Phase 3 was planned as splitting `store.version` into finer signals. The profile showed everything that reads it costs under 60 ms per 60-frame drag together, so the work went to the measured hot spots (selection outlines, ElementView, ShapeView) instead.
+- One style string costs a little more style recalc (1.9 → 2.5 ms/frame for 300 elements) and saves more script time.
+- What's left in a 300-element drag: the Yjs transaction itself (~10 KB of updates per frame) and Svelte's own bookkeeping, then the browser painting (about half of each frame).
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (669 unit tests; new in `ops.test.ts`: invalid stored data is skipped, observers get the written element while later reads come from the map, stale keys fall back to parsing) · pnpm test:e2e ✅ (162, including the perf guard's render counts and the visual snapshots) · `pnpm bench`.

@@ -1,12 +1,14 @@
 import * as Y from 'yjs';
 import {
+	forgetWritten,
 	getDocsMap,
 	getElementsMap,
 	getMeta,
 	getSketchesMap,
 	maxZ,
-	readElement,
-	toYMap
+	rememberWritten,
+	toYMap,
+	type ElementYMap
 } from './doc';
 import { jsonEqual } from './equal';
 import { LOCAL, type Origin } from './origins';
@@ -73,27 +75,42 @@ export function updateElements(
 	patches: readonly { id: string; patch: ElementPatch }[],
 	origin: Origin = LOCAL
 ): void {
-	doc.transact(() => {
-		const map = getElementsMap(doc);
-		for (const { id, patch } of patches) {
-			const ymap = map.get(id);
-			if (!ymap) continue;
-			const current = readElement(ymap);
-			if (!current) continue;
-			if ('id' in patch && patch.id !== id) {
-				throw new InvalidElementError('Cannot change an element id', patch);
+	const written: ElementYMap[] = [];
+	try {
+		doc.transact(() => {
+			const map = getElementsMap(doc);
+			for (const { id, patch } of patches) {
+				const ymap = map.get(id);
+				if (!ymap) continue;
+				// One validation, of the result: a valid result implies a valid patch. The stored
+				// element is validated only when the result isn't (to skip it if it was invalid).
+				const cur = ymap.toJSON();
+				if ('id' in patch && patch.id !== id) {
+					throw new InvalidElementError('Cannot change an element id', patch);
+				}
+				if ('type' in patch && patch.type !== cur.type) {
+					throw new InvalidElementError('Cannot change an element type', patch);
+				}
+				const next = parseElement({ ...cur, ...patch });
+				if (!next) {
+					if (!parseElement(cur)) continue;
+					throw new InvalidElementError(`Invalid patch for ${String(cur.type)} ${id}`, patch);
+				}
+				let size = 0;
+				for (const [key, value] of Object.entries(next)) {
+					if (value !== undefined) size++;
+					if (!jsonEqual(cur[key], value)) ymap.set(key, structuredClone(value));
+				}
+				// Only when the map holds exactly `next` (no stale keys left beside it).
+				if (ymap.size === size) {
+					rememberWritten(ymap, next);
+					written.push(ymap);
+				}
 			}
-			if ('type' in patch && patch.type !== current.type) {
-				throw new InvalidElementError('Cannot change an element type', patch);
-			}
-			const next = parseElement({ ...current, ...patch });
-			if (!next) throw new InvalidElementError(`Invalid patch for ${current.type} ${id}`, patch);
-			const cur = current as unknown as Record<string, unknown>;
-			for (const [key, value] of Object.entries(next)) {
-				if (!jsonEqual(cur[key], value)) ymap.set(key, structuredClone(value));
-			}
-		}
-	}, origin);
+		}, origin);
+	} finally {
+		for (const ymap of written) forgetWritten(ymap);
+	}
 }
 
 /** Deletes elements (and doc card contents and sketch strokes). Unknown ids are ignored. */

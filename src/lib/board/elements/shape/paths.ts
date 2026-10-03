@@ -213,3 +213,13 @@ export const SHAPE_KINDS: { kind: ShapeKind; label: string; group: 'Basic' | 'Fl
 
 /** Drag-and-drop data type for shapes dragged from the library onto the canvas. */
 export const SHAPE_DRAG_TYPE = 'application/x-smthng-shape';
+
+/** A memoized `shapePath` for one view: moves give the element a new snapshot, same geometry. */
+export function shapePathMemo(): typeof shapePath {
+	let last: { key: string; d: string } | null = null;
+	return (kind, w, h, radius, inset) => {
+		const key = `${kind}|${w}|${h}|${radius}|${inset}`;
+		if (last?.key !== key) last = { key, d: shapePath(kind, w, h, radius, inset) };
+		return last.d;
+	};
+}

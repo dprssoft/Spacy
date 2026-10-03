@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
-import { getDocsMap, getElement, getElementsMap, getMeta, listElements } from './doc';
+import { getDocsMap, getElement, getElementsMap, getMeta, listElements, readElement } from './doc';
 import {
 	beforeDeleteHooks,
 	createElements,
@@ -118,6 +118,42 @@ describe('updateElement(s)', () => {
 		]);
 		expect(origins).toHaveLength(1);
 		expect([getElement(doc, 'a')?.x, getElement(doc, 'b')?.x]).toEqual([1, 2]);
+	});
+
+	it('skips an element whose stored data is invalid', () => {
+		const doc = new Y.Doc();
+		createElements(doc, [samples.shape('a')]);
+		doc.transact(() => getElementsMap(doc).get('a')!.set('w', 'broken'));
+		expect(() => updateElement(doc, 'a', { x: 5 })).not.toThrow();
+		expect(getElementsMap(doc).get('a')!.get('x')).toBe(samples.shape('a').x);
+	});
+
+	it('observers read the written element; later reads come from the stored data', () => {
+		const doc = new Y.Doc();
+		createElements(doc, [samples.shape('a')]);
+		const ymap = getElementsMap(doc).get('a')!;
+		const seen: unknown[] = [];
+		getElementsMap(doc).observeDeep(() => seen.push(readElement(ymap)));
+		updateElement(doc, 'a', { x: 7, style: { ...samples.shape('a').style, opacity: 0.5 } });
+		expect(seen).toEqual([
+			{ ...samples.shape('a'), x: 7, style: { ...samples.shape('a').style, opacity: 0.5 } }
+		]);
+
+		// A change that doesn't go through ops (e.g. from another tab) is read from the map.
+		doc.transact(() => ymap.set('y', 42), 'remote');
+		expect(seen[1]).toMatchObject({ x: 7, y: 42 });
+		expect(readElement(ymap)).toMatchObject({ x: 7, y: 42 });
+	});
+
+	it('reads stale keys left beside the written fields from the stored data', () => {
+		const doc = new Y.Doc();
+		createElements(doc, [samples.shape('a')]);
+		const ymap = getElementsMap(doc).get('a')!;
+		doc.transact(() => ymap.set('legacy', true));
+		let seen: unknown = null;
+		getElementsMap(doc).observeDeep(() => (seen = readElement(ymap)));
+		updateElement(doc, 'a', { x: 3 });
+		expect(seen).toEqual({ ...samples.shape('a'), x: 3 });
 	});
 });
 

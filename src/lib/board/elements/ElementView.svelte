@@ -11,6 +11,17 @@
 	// SvelteMap tracks reads per key: this view re-renders only when its own element changes.
 	const el = $derived(store.get(id));
 	const editing = $derived(selection.editingId === id);
+	// One style string: cheaper to update on every frame of a drag than a style attribute merged
+	// with style: directives. Connectors draw in absolute world coordinates (their geometry is
+	// derived), others in their box.
+	const css = $derived.by(() => {
+		if (!el) return '';
+		const box =
+			el.type === 'connector'
+				? 'width:0px;height:0px'
+				: `width:${el.w}px;height:${el.h}px;transform:translate(${el.x}px, ${el.y}px) rotate(${el.rotation}rad)`;
+		return `${box};${styleToCss(el.style)}`;
+	});
 
 	// Counts renders of this element for the perf guard (a no-op unless test hooks are enabled).
 	$effect.pre(() => {
@@ -22,16 +33,9 @@
 {#if el}
 	{@const def = definitionOf(el)}
 	{@const View = def.component}
-	{@const isConnector = el.type === 'connector'}
-	<!-- Connectors draw in absolute world coordinates (their geometry is derived), others in their box. -->
 	<div
 		class="pointer-events-none absolute top-0 left-0"
-		style:width={isConnector ? '0px' : `${el.w}px`}
-		style:height={isConnector ? '0px' : `${el.h}px`}
-		style:transform={isConnector
-			? undefined
-			: `translate(${el.x}px, ${el.y}px) rotate(${el.rotation}rad)`}
-		style={styleToCss(el.style)}
+		style={css}
 		data-element-id={id}
 		data-type={el.type}
 		class:opacity-30={preview.erasing.has(id)}
