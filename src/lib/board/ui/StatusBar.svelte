@@ -3,6 +3,8 @@
 	import ListTree from '@lucide/svelte/icons/list-tree';
 	import MessageSquare from '@lucide/svelte/icons/message-square';
 	import PageTabs from './PageTabs.svelte';
+	import WaystoneBar from '../waystones/WaystoneBar.svelte';
+	import { layout } from '$lib/shared/layout.svelte';
 	import ZoomControls from './ZoomControls.svelte';
 
 	const ctx = getBoard();
@@ -12,6 +14,12 @@
 	const words = $derived(ctx.words.words(selected > 0 ? ctx.selection.ids : undefined));
 </script>
 
+<!-- Phones: no room in the bar below, so the waystones get a strip of their own. -->
+{#if layout.compact && ctx.waystones.route.length > 0}
+	<div class="flex shrink-0 justify-center border-t border-border bg-surface-2" data-interactive>
+		<WaystoneBar />
+	</div>
+{/if}
 <!-- Like a spreadsheet's bottom bar: page tabs on the left, status and zoom on the right. -->
 <footer
 	class="flex h-8 shrink-0 items-stretch gap-2 border-t border-border bg-surface-2 pr-1 text-xs max-sm:gap-1 pointer-coarse:h-11"
@@ -42,6 +50,7 @@
 				>{openComments}</span
 			>{/if}
 	</button>
+	{#if !layout.compact}<WaystoneBar />{/if}
 	<p
 		class="ml-auto hidden shrink-0 items-center px-2 text-muted sm:flex"
 		data-testid="status-count"
