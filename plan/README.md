@@ -66,7 +66,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 41 | [Outline panel](./steps/41-outline-panel.md) (approved: meta.outline) | K | 39 | 1.5d |
 | [x] | 42 | [Manuscript compile](./steps/42-manuscript-compile.md) | K | 41 | 2d |
 | [x] | 43 | [Backlinks](./steps/43-backlinks.md) | K | 39 | 1d |
-| [ ] | 44 | [Find and replace](./steps/44-find-replace.md) | K | 39 | 1.5d |
+| [x] | 44 | [Find and replace](./steps/44-find-replace.md) | K | 39 | 1.5d |
 | [ ] | 45 | [Comments](./steps/45-comments.md) (approved: non-goal lifted, data model, schema 6) | K | 44 | 2.5d |
 | [ ] | 46 | [Waystones](./steps/46-waystones.md) (approved: board only, element type, schema) | K | 43 | 1.5d |
 

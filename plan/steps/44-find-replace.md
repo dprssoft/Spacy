@@ -19,8 +19,8 @@ Search all text on the page — doc cards and every canvas text (shapes, stickie
 - e2e `find-replace.spec.ts`: rename "Mara" → "Lena" across a sticky, a frame title and two doc cards with Replace all → all changed; one undo restores all; Mod+F inside a card; all-pages scope jumps to another page.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Replace all keeps doc card formatting and mentions intact
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] Replace all keeps doc card formatting and mentions intact
 
 ## Commit
 `feat(writing): find and replace across all text on the board`

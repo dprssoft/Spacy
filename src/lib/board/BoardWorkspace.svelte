@@ -55,6 +55,8 @@
 	import { compileDialog } from './writing/compileDialogState.svelte';
 	import OutlinePanel from './writing/OutlinePanel.svelte';
 	import BacklinksDialog from './writing/BacklinksDialog.svelte';
+	import FindPanel from './writing/FindPanel.svelte';
+	import { findState } from './writing/findState.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
 	import { templateGallery } from './ui/templateGalleryState.svelte';
 	import LiveAnnouncer from './ui/LiveAnnouncer.svelte';
@@ -202,6 +204,19 @@
 	}
 
 	function onKeydown(e: KeyboardEvent) {
+		// Find and replace: Mod+F anywhere on the board, also while typing in a doc card.
+		if (
+			!e.defaultPrevented &&
+			!(e.target instanceof Element && e.target.closest('[role=dialog]')) &&
+			(e.ctrlKey || e.metaKey) &&
+			!e.altKey &&
+			!e.shiftKey &&
+			e.key.toLowerCase() === 'f'
+		) {
+			e.preventDefault();
+			findState.show();
+			return;
+		}
 		if (e.defaultPrevented || isTypingTarget(e.target)) return;
 		// Keys typed into floating UI (menus, dialogs) belong to that UI.
 		if (
@@ -301,6 +316,9 @@
 					{/snippet}
 				</Canvas>
 			</CanvasContextMenu>
+			{#if findState.open}
+				<FindPanel />
+			{/if}
 			<LiveAnnouncer />
 			<ShortcutsDialog />
 			<BacklinksDialog />

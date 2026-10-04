@@ -1168,3 +1168,23 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (850 unit tests; new `backlinks.test.ts`: snippets, index across cards, update after deleting a card) · pnpm test:e2e ✅ (209; new `backlinks.spec.ts`: two scenes @-mention a character card → badge "2" → the list shows the snippets → picking one selects that scene and flashes its mention; the context menu "Mentioned in 2…" opens the same list).
+
+## Step 44 — Find and replace — 2026-10-04
+**Summary:**
+- `writing/search.ts` (pure):
+  - `makeMatcher`: plain, case, whole word (Unicode letters), regular expressions with `$1` replacements; invalid patterns are reported, and patterns with a quantified group that's quantified again (`(a+)+`) are refused ("could be very slow"), since a running RegExp can't be interrupted.
+  - `canvasFields`: shape/sticky/text texts, frame/doc card/media titles, connector labels.
+  - `docTexts` / `plainText`: doc card text per Yjs text node, so matches never cross a mention chip.
+  - `context`: the text around a match.
+- `writing/findReplace.ts`: `searchBoard` (this page or all pages, in reading order) and `replaceHits`, which applies everything in **one LOCAL transaction, so Replace all is one undo step**:
+  - canvas fields via the new `updateElementsOnPage` (ops for elements on other pages)
+  - doc text node by node, back to front; the new text is inserted after the match's first character so it takes that formatting, then the old characters are deleted
+  - hits whose text changed since the search are skipped
+- **Find panel** (`FindPanel.svelte`): **Mod+F** on the board and inside a doc card being edited (not in focus mode or dialogs). It has a query, Aa / W / .* toggles, Replace with, Replace / All, the status "2 of 4 matches in 4 objects" (or the regex error), "All pages", ↑/↓ and Enter / Shift+Enter, and results grouped by object with the match highlighted. Stepping flies to the object (switching page if needed).
+
+**Deviations:**
+- Stepping to a match in a doc card flies to and pulses the card. It doesn't place a ProseMirror decoration on the exact words; the results list shows them in context.
+- Mention chips aren't changed by replacing (they show the mentioned object's current name).
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (859 unit tests; new `search.test.ts`, `findReplace.test.ts`: finds in canvas and doc text but not inside chips; Replace all keeps bold, leaves the chip, and one undo restores everything; stale hits are skipped) · pnpm test:e2e ✅ (211; new `find-replace.spec.ts`: 4 matches across a sticky, a frame title and two doc cards → Next → Replace all → one Mod+Z restores all → Mod+F inside a doc card opens the panel; the risky regex is refused; All pages finds a match on another page and jumping switches page).
