@@ -107,3 +107,15 @@ test('Back to origin returns the view to the origin at 100 %', async ({ page }) 
 	await page.getByRole('button', { name: 'Back to origin' }).click();
 	await expect.poll(() => page.evaluate(() => window.__smthng!.ctx.viewport.vp)).toEqual(home);
 });
+
+test('the outline opens as a sheet on phones', async ({ page }) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	await page.getByTestId('outline-toggle').click();
+	const panel = page.getByTestId('outline-panel');
+	await expect(panel).toBeVisible();
+	expect((await panel.boundingBox())!.width).toBeGreaterThan(page.viewportSize()!.width - 2);
+	await page.getByRole('button', { name: 'Close outline' }).click();
+	await expect(panel).toHaveCount(0);
+});

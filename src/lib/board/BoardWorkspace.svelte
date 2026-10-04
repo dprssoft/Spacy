@@ -50,6 +50,8 @@
 	import MediaOverlay from './media/MediaOverlay.svelte';
 	import { PlaybackState } from './media/playback.svelte';
 	import { BoardWordStats } from './writing/boardStats.svelte';
+	import { OutlineState } from './writing/outlineState.svelte';
+	import OutlinePanel from './writing/OutlinePanel.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
 	import { templateGallery } from './ui/templateGalleryState.svelte';
 	import LiveAnnouncer from './ui/LiveAnnouncer.svelte';
@@ -90,7 +92,11 @@
 	ctx.pages = new PagesState(ctx);
 	ctx.store.rebind();
 	ctx.words = new BoardWordStats(ctx.doc, ctx.store);
-	onDestroy(() => ctx.words.destroy());
+	ctx.outline = new OutlineState(ctx);
+	onDestroy(() => {
+		ctx.words.destroy();
+		ctx.outline.destroy();
+	});
 	ctx.shortcuts.register([
 		...toolShortcuts,
 		...viewShortcuts,
@@ -268,69 +274,82 @@
 <div class="flex h-dvh flex-col">
 	<TopBar {title} />
 	<Toolbar />
-	<main class="relative min-h-0 flex-1 overflow-hidden bg-canvas">
-		<CanvasContextMenu>
-			<Canvas>
-				{#snippet world()}
-					<ElementsLayer />
-				{/snippet}
-				{#snippet overlay()}
-					<PreviewOverlay />
-					<ConnectOverlay />
-					<SelectionOverlay />
-					<QuickCreateButtons />
-					<PulseHighlight />
-					<StylePopover />
-					<MediaOverlay />
-				{/snippet}
-			</Canvas>
-		</CanvasContextMenu>
-		<LiveAnnouncer />
-		<ShortcutsDialog />
-		<Onboarding />
-		{#if templateGalleryWanted}
-			{#await Promise.all( [import('$lib/shared/ui/TemplateGallery.svelte'), import('$lib/templates/insert')] ) then [{ default: TemplateGallery }, { insertTemplate }]}
-				<TemplateGallery
-					bind:open={templateGallery.open}
-					title="Insert template"
-					onpick={(t) =>
-						void insertTemplate(ctx, t).catch((err: unknown) => {
-							console.error(err);
-							toast.error('Couldn’t insert the template');
-						})}
-				/>
-			{/await}
+	<div class="flex min-h-0 flex-1">
+		<main class="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-canvas">
+			<CanvasContextMenu>
+				<Canvas>
+					{#snippet world()}
+						<ElementsLayer />
+					{/snippet}
+					{#snippet overlay()}
+						<PreviewOverlay />
+						<ConnectOverlay />
+						<SelectionOverlay />
+						<QuickCreateButtons />
+						<PulseHighlight />
+						<StylePopover />
+						<MediaOverlay />
+					{/snippet}
+				</Canvas>
+			</CanvasContextMenu>
+			<LiveAnnouncer />
+			<ShortcutsDialog />
+			<Onboarding />
+			{#if templateGalleryWanted}
+				{#await Promise.all( [import('$lib/shared/ui/TemplateGallery.svelte'), import('$lib/templates/insert')] ) then [{ default: TemplateGallery }, { insertTemplate }]}
+					<TemplateGallery
+						bind:open={templateGallery.open}
+						title="Insert template"
+						onpick={(t) =>
+							void insertTemplate(ctx, t).catch((err: unknown) => {
+								console.error(err);
+								toast.error('Couldn’t insert the template');
+							})}
+					/>
+				{/await}
+			{/if}
+			{#if exportDialogWanted}
+				{#await import('./ui/ExportDialog.svelte') then { default: ExportDialog }}
+					<ExportDialog />
+				{/await}
+			{/if}
+			{#if focusCard}
+				{#key focusCard.id}
+					<FocusMode card={focusCard} />
+				{/key}
+			{/if}
+			{#if import.meta.env.DEV && page.url.searchParams.get('debug') === 'perf'}
+				<div class="absolute top-3 left-16 z-20 flex gap-2">
+					<button
+						type="button"
+						class="rounded-md bg-accent px-3 py-1.5 text-sm text-accent-contrast shadow"
+						onclick={() =>
+							createElements(ctx.doc, generatePerfElements(3000, Math.floor(Math.random() * 1e6)))}
+					>
+						Generate 3,000 elements
+					</button>
+					<button
+						type="button"
+						class="rounded-md bg-accent px-3 py-1.5 text-sm text-accent-contrast shadow"
+						onclick={() =>
+							createMixedPerfBoard(ctx.doc, ctx.id, 3000, Math.floor(Math.random() * 1e6))}
+					>
+						Generate mixed perf board
+					</button>
+				</div>
+			{/if}
+		</main>
+		{#if ctx.outline.open && !layout.compact}
+			<OutlinePanel outline={ctx.outline} />
 		{/if}
-		{#if exportDialogWanted}
-			{#await import('./ui/ExportDialog.svelte') then { default: ExportDialog }}
-				<ExportDialog />
-			{/await}
-		{/if}
-		{#if focusCard}
-			{#key focusCard.id}
-				<FocusMode card={focusCard} />
-			{/key}
-		{/if}
-		{#if import.meta.env.DEV && page.url.searchParams.get('debug') === 'perf'}
-			<div class="absolute top-3 left-16 z-20 flex gap-2">
-				<button
-					type="button"
-					class="rounded-md bg-accent px-3 py-1.5 text-sm text-accent-contrast shadow"
-					onclick={() =>
-						createElements(ctx.doc, generatePerfElements(3000, Math.floor(Math.random() * 1e6)))}
-				>
-					Generate 3,000 elements
-				</button>
-				<button
-					type="button"
-					class="rounded-md bg-accent px-3 py-1.5 text-sm text-accent-contrast shadow"
-					onclick={() =>
-						createMixedPerfBoard(ctx.doc, ctx.id, 3000, Math.floor(Math.random() * 1e6))}
-				>
-					Generate mixed perf board
-				</button>
-			</div>
-		{/if}
-	</main>
+	</div>
+	{#if ctx.outline.open && layout.compact}
+		<!-- Phones: the outline is a sheet over the lower part of the screen. -->
+		<div
+			class="fixed inset-x-0 bottom-0 z-40 h-[60dvh] rounded-t-2xl border-t border-border shadow-xl"
+		>
+			<OutlinePanel outline={ctx.outline} />
+		</div>
+	{/if}
 	<StatusBar />
 </div>

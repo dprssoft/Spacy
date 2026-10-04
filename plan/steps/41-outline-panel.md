@@ -2,7 +2,7 @@
 
 Phase: K. Writers · Depends on: 39 · Estimate: 1.5 days
 
-> **Needs the human's approval:** stores the manuscript order in `meta.outline` (see below).
+> **Approved by the human (2026-10-04):** stores the manuscript order in `meta.outline` (see below).
 
 ## Goal
 A side panel, shown or hidden with a toggle, that lists the page's doc cards as a manuscript: grouped by frame (chapters → scenes), in a reading order you can drag to change, with word counts. Click to jump to a card. This order is what compile (step 42) uses.
@@ -21,8 +21,8 @@ A side panel, shown or hidden with a toggle, that lists the page's doc cards as 
 - e2e `outline.spec.ts`: insert "Scene cards" → panel shows 3 chapters × 4 → drag a scene to chapter 2 → it moves into that frame and the order persists after reload; undo restores; Mod+Shift+O toggles; click flies to the card; phones show it as a sheet.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] `00-architecture.md` §5 documents `meta.outline`
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `00-architecture.md` §5 documents `meta.outline`
 
 ## Commit
 `feat(writing): outline panel with manuscript order, word counts and drag to reorder`

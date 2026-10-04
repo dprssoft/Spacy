@@ -1112,3 +1112,24 @@ Requested by the human: "start steps 39 to 46" (with `meta.outline` approved for
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (835 unit tests; the shared template checks now cover the new templates, plus content checks for Save the Cat (15 beats), Scene cards (3 × 4 with prompts) and Hero's Journey (12 stickies, 12 connectors)) · pnpm test:e2e ✅ (203; gallery → Writing shows 8 → Hero's Journey inserts 12 connected stickies) · screenshots of the Writing gallery (light and dark) and of the Three-act template reviewed.
+
+## Step 41 — Outline panel — 2026-10-04
+Approved by the human: option (a), the manuscript order in `meta.outline`.
+
+**Summary:**
+- **Model** (`model/outline.ts`): `meta.outline` is a nested `Y.Map<pageId, string[]>`, created on open (`ensureOutlineMap`, MIGRATION origin) and added to the canvas undo scope. Reorders are undoable, but the rest of `meta` (the title) isn't. `getOutline` / `setOutline`.
+- **Order** (`writing/outline.ts`, pure): chapters are frames in reading order (rows within 100 px, then left to right); each chapter's cards are in the stored order, with unlisted cards after them in reading order; cards outside frames come last; empty chapters are skipped. `moveInOutline` handles moves within and across chapters.
+- **State** (`writing/outlineState.svelte.ts`, `ctx.outline`): the open state per board (`localPrefs`), live chapters (store + outline map), and `move`. Moving into another chapter also moves the card into that frame (below its contents, growing the frame if needed); out of a chapter it goes next to the page's content. Order, position and frame change are one undo step.
+- **Panel** (`writing/OutlinePanel.svelte`):
+  - on the right on desktop (the canvas shrinks beside it), a 60 % sheet on phones
+  - chapter headers with word totals, collapsible; scene rows with title, first line (skipping a line equal to the title) and word count
+  - drag and drop between and within chapters, Alt+↑/↓ (across chapter boundaries), Enter or click to fly to the card, double-click for focus mode
+- Toggle: an "Outline" button in the status bar and **Mod+Shift+O**.
+- `BoardWordStats` also caches each card's first lines.
+
+**Deviations:**
+- `meta.outline` is a nested Y.Map rather than a JSON value, so it can be undone without making the rest of `meta` undoable. Same location and meaning as approved.
+- Flaky under the full parallel run, passing when repeated: `mobile-gestures` "one finger on an element moves it" failed once (20/20 alone), and one unit test failed once and couldn't be reproduced.
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (841 unit tests; new `outline.test.ts`, `outlineState.test.ts` (reorder storage; a move into another frame moves and grows, and one undo restores order, position and size)) · pnpm test:e2e ✅ apart from the one flaky mobile test above (new `outline.spec.ts`: 3 chapters × 4 scenes; drag Scene 1 into chapter 2 → the order and frame change, undo restores, redo, reload keeps it and the panel state; Alt+↑, click selects, the shortcut toggles; `mobile-layout.spec.ts`: the outline is a full-width sheet on phones) · screenshot of the panel reviewed.

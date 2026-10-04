@@ -97,6 +97,13 @@ export const viewShortcuts: Shortcut[] = [
 		run: (ctx) => ctx.viewport.fit(ctx.store.contentBounds())
 	},
 	{
+		id: 'view.outline',
+		keys: ['Mod+Shift+O'],
+		label: 'Show / hide the outline',
+		group: 'View',
+		run: (ctx) => ctx.outline.toggle()
+	},
+	{
 		id: 'view.fullscreen',
 		keys: ['Shift+F'],
 		label: 'Full screen',

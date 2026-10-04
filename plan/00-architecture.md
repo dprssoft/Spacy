@@ -194,7 +194,9 @@ export type Element =
 
 ```
 doc.getMap('meta')      schemaVersion: number, title: string, stylePresets: Style[] (JSON),
-                        pages: { id: string; name: string }[] (JSON; absent = one page "Page 1" with id 'main')
+                        pages: { id: string; name: string }[] (JSON; absent = one page "Page 1" with id 'main'),
+                        outline: Y.Map<pageId, string[]> — doc card ids in manuscript order (step 41; a nested
+                        map so it's in canvas undo scope without the rest of meta; created on open)
 doc.getMap('elements')  Y.Map<elementId, Y.Map<string, unknown>>   — the elements of page 'main'
 doc.getMap('page:<id>') same shape, one map per additional page
                         - one nested Y.Map per element; each top-level field is one key
