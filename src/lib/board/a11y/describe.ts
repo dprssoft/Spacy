@@ -11,7 +11,8 @@ const TYPE_NAMES: Record<Exclude<Element['type'], 'shape'>, string> = {
 	frame: 'frame',
 	doccard: 'doc card',
 	connector: 'connector',
-	media: 'media'
+	media: 'media',
+	waystone: 'waystone'
 };
 
 /** A short spoken name: "rectangle", "sticky note", "doc card"… */
@@ -51,7 +52,8 @@ const TOOL_NAMES: Record<ToolId, string> = {
 	sticky: 'Sticky note',
 	doccard: 'Doc card',
 	frame: 'Frame',
-	image: 'Image'
+	image: 'Image',
+	waystone: 'Waystone'
 };
 
 export function describeTool(tool: ToolId, shapeLabel?: string): string {

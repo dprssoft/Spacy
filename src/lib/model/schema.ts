@@ -1,4 +1,5 @@
 import { z } from '$lib/shared/zod';
+import { ZOOM_MAX, ZOOM_MIN } from './defaults';
 import type { Element } from './types';
 
 const num = z.number(); // zod rejects NaN and ±Infinity
@@ -164,6 +165,14 @@ export const mediaSchema = z.object({
 	title: z.string().max(200)
 });
 
+export const waystoneSchema = z.object({
+	...base,
+	type: z.literal('waystone'),
+	name: z.string().max(100),
+	zoom: z.number().min(ZOOM_MIN).max(ZOOM_MAX),
+	order: z.string().min(1)
+});
+
 export const elementSchema = z.discriminatedUnion('type', [
 	shapeSchema,
 	stickySchema,
@@ -174,7 +183,8 @@ export const elementSchema = z.discriminatedUnion('type', [
 	frameSchema,
 	docCardSchema,
 	connectorSchema,
-	mediaSchema
+	mediaSchema,
+	waystoneSchema
 ]);
 
 // Compile-time guard: the schemas and the hand-written types must describe the same shape.

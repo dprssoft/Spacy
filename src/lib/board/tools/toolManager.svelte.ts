@@ -11,6 +11,7 @@ import { createShapeTool } from './shape';
 import { createSketchTool } from './sketch';
 import { createStickyTool } from './sticky';
 import { createTextTool } from './text';
+import { createWaystoneTool } from './waystone';
 import type { Tool, ToolId } from './types';
 
 export type ToolFactory = (ctx: BoardContext) => Tool;
@@ -43,6 +44,7 @@ export class ToolManager {
 		this.register('connector', createConnectorTool);
 		this.register('doccard', createDocCardTool);
 		this.register('sketch', createSketchTool);
+		this.register('waystone', createWaystoneTool);
 	}
 
 	/** Later steps register their tools here. */

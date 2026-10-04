@@ -13,7 +13,8 @@ export type ElementType =
 	| 'frame'
 	| 'doccard'
 	| 'connector'
-	| 'media';
+	| 'media'
+	| 'waystone';
 
 export type ShapeKind =
 	| 'rect'
@@ -132,6 +133,17 @@ export interface MediaElement extends BaseElement {
 	title: string; // label on the poster
 }
 
+/**
+ * A named checkpoint on a page (schema version 7). The waystone bar flies between them in
+ * `order`; a fixed 32 × 40 pin, not resizable or rotatable. Board only: never in doc cards.
+ */
+export interface WaystoneElement extends BaseElement {
+	type: 'waystone';
+	name: string; // "Act II", "Villain's lair"…
+	zoom: number; // the zoom to arrive at (ZOOM_MIN..ZOOM_MAX)
+	order: string; // fractional index: route order on the page (separate from z)
+}
+
 export type Port = 'n' | 'e' | 's' | 'w';
 
 export type Endpoint =
@@ -164,7 +176,8 @@ export type Element =
 	| FrameElement
 	| DocCardElement
 	| ConnectorElement
-	| MediaElement;
+	| MediaElement
+	| WaystoneElement;
 
 // Helpers for working with the Element union (not part of the stored model).
 export type ElementOf<T extends ElementType> = Extract<Element, { type: T }>;

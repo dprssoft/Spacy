@@ -15,6 +15,7 @@
 	import MousePointer2 from '@lucide/svelte/icons/mouse-pointer-2';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Square from '@lucide/svelte/icons/square';
+	import MapPin from '@lucide/svelte/icons/map-pin';
 	import StickyNote from '@lucide/svelte/icons/sticky-note';
 	import Type from '@lucide/svelte/icons/type';
 	import type { ShapeKind } from '$lib/model/types';
@@ -59,7 +60,8 @@
 			{ id: 'sticky', label: 'Sticky note', keys: 'S', icon: StickyNote },
 			{ id: 'doccard', label: 'Doc card', keys: 'N', icon: FileText, secondary: true },
 			{ id: 'frame', label: 'Frame', keys: 'F', icon: Frame, secondary: true },
-			{ id: 'image', label: 'Image', keys: 'Ctrl+Shift+I', icon: ImageIcon, secondary: true }
+			{ id: 'image', label: 'Image', keys: 'Ctrl+Shift+I', icon: ImageIcon, secondary: true },
+			{ id: 'waystone', label: 'Waystone', keys: 'W', icon: MapPin, secondary: true }
 		]
 	];
 

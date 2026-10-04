@@ -22,6 +22,7 @@ import { strokeSvgPath } from '../elements/stroke/strokePath';
 import { strokePaint, type SketchStroke } from '../sketch/brushes';
 import { expandRect } from '../engine/geometry';
 import { posterSubtitle } from '../media/poster';
+import { PIN_HEAD, PIN_PATH, PIN_W } from '../waystones/pin';
 import { unionBounds } from './bounds';
 import { wrapText, type FontSpec } from './wrapText';
 
@@ -171,6 +172,13 @@ class Renderer {
 				return this.connector(el);
 			case 'media':
 				return this.media(el);
+			case 'waystone':
+				return (
+					`<path d="${PIN_PATH}" fill="${escapeXml(s.fill)}"/>` +
+					(el.name
+						? `<text x="${PIN_W + 6}" y="${n(PIN_HEAD.y + 5)}" font-size="13" font-weight="600" fill="${MUTED}">${escapeXml(this.fit(el.name, 13, 240))}</text>`
+						: '')
+				);
 		}
 	}
 

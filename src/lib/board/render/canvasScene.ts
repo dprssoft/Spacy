@@ -20,6 +20,7 @@ import { isLineArt, shapePath } from '../elements/shape/paths';
 import { sameNumbers, strokeSvgPath } from '../elements/stroke/strokePath';
 import type { Viewport } from '../engine/viewport';
 import { strokePaint, type SketchStroke } from '../sketch/brushes';
+import { PIN_HEAD, PIN_PATH, PIN_W } from '../waystones/pin';
 import { wrapText } from './wrapText';
 
 export interface SceneTheme {
@@ -64,6 +65,7 @@ class Cache<T> {
 
 export class SceneRenderer {
 	#shapes = new Cache<Path2D>();
+	#pin: Path2D | null = null;
 	#strokes = new Map<string, { points: readonly number[]; width: StrokeWidth; path: Path2D }>();
 	#connectors = new Cache<Path2D>();
 	#sketches = new Cache<HTMLCanvasElement | null>();
@@ -233,6 +235,12 @@ export class SceneRenderer {
 				const x = audio ? 64 : 12;
 				const y = audio ? el.h / 2 - 6 : el.h - 34;
 				this.#line(c, el.id, el.title, x, y, el.w - x - 12, 14, 500, '#ffffff');
+				return;
+			}
+			case 'waystone': {
+				c.fillStyle = s.fill;
+				c.fill((this.#pin ??= new Path2D(PIN_PATH)));
+				if (el.name) this.#line(c, el.id, el.name, PIN_W + 6, PIN_HEAD.y, 240, 13, 600, theme.ink);
 				return;
 			}
 			case 'doccard': {

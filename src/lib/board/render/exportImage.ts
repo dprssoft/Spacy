@@ -51,9 +51,12 @@ export function scopeElements(ctx: BoardContext, scope: ExportScope): Element[] 
 export async function renderScope(
 	ctx: BoardContext,
 	scope: ExportScope,
-	opts: { background: ExportBackground; padding?: number }
+	opts: { background: ExportBackground; padding?: number; waystones?: boolean }
 ): Promise<StaticSvg | null> {
-	const elements = scopeElements(ctx, scope);
+	// Waystones are navigation aids: left out unless asked for.
+	const elements = scopeElements(ctx, scope).filter(
+		(el) => opts.waystones || el.type !== 'waystone'
+	);
 	if (elements.length === 0) return null;
 	const lines = new Map<string, DocLine[]>();
 	for (const el of elements)
@@ -104,9 +107,10 @@ export const svgBlob = (svg: string) => new Blob([svg], { type: 'image/svg+xml' 
 export async function exportSvg(
 	ctx: BoardContext,
 	scope: ExportScope,
-	background: ExportBackground
+	background: ExportBackground,
+	waystones = false
 ): Promise<Blob | null> {
-	const out = await renderScope(ctx, scope, { background });
+	const out = await renderScope(ctx, scope, { background, waystones });
 	return out ? svgBlob(out.svg) : null;
 }
 
@@ -114,9 +118,10 @@ export async function exportPng(
 	ctx: BoardContext,
 	scope: ExportScope,
 	scale: number,
-	background: ExportBackground
+	background: ExportBackground,
+	waystones = false
 ): Promise<Blob | null> {
-	const out = await renderScope(ctx, scope, { background });
+	const out = await renderScope(ctx, scope, { background, waystones });
 	if (!out) return null;
 	const fit = Math.min(
 		scale,

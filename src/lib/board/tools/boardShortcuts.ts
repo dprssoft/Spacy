@@ -61,6 +61,7 @@ export const toolShortcuts: Shortcut[] = [
 	tool('sticky', 'S', 'Sticky note', 'sticky'),
 	tool('doccard', 'N', 'Doc card', 'doccard'),
 	tool('frame', 'F', 'Frame', 'frame'),
+	tool('waystone', 'W', 'Waystone', 'waystone'),
 	{
 		id: 'tool.image',
 		keys: ['Mod+Shift+I'],
@@ -86,6 +87,36 @@ export const toolShortcuts: Shortcut[] = [
 			else ctx.tools.setTool('select');
 		}
 	}
+];
+
+const hasWaystones: Shortcut['when'] = (ctx) => ctx.waystones.route.length > 0;
+
+export const waystoneShortcuts: Shortcut[] = [
+	{
+		id: 'waystone.next',
+		keys: ['PageDown', 'Alt+ArrowRight'],
+		label: 'Next waystone',
+		group: 'View',
+		when: hasWaystones,
+		run: (ctx) => ctx.waystones.step(1)
+	},
+	{
+		id: 'waystone.prev',
+		keys: ['PageUp', 'Alt+ArrowLeft'],
+		label: 'Previous waystone',
+		group: 'View',
+		when: hasWaystones,
+		run: (ctx) => ctx.waystones.step(-1)
+	},
+	...Array.from({ length: 9 }, (_, i): Shortcut => ({
+		id: `waystone.go${i + 1}`,
+		keys: [`Alt+${i + 1}`],
+		label: `Go to waystone ${i + 1}`,
+		group: 'View',
+		hidden: true,
+		when: (ctx) => ctx.waystones.route.length > i,
+		run: (ctx) => ctx.waystones.go(i)
+	}))
 ];
 
 export const viewShortcuts: Shortcut[] = [

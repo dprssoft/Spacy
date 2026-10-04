@@ -10,7 +10,8 @@ const TYPE_NAMES: Record<ElementType, string> = {
 	doccard: 'Doc card',
 	connector: 'Connector',
 	sketch: 'Sketch',
-	media: 'Media'
+	media: 'Media',
+	waystone: 'Waystone'
 };
 
 /** A short name for the object a comment is on: its title or first line, else its type. */
@@ -18,9 +19,11 @@ export function targetLabel(el: Element): string {
 	const own =
 		'title' in el && typeof el.title === 'string'
 			? el.title
-			: 'text' in el && typeof el.text === 'string'
-				? el.text
-				: '';
+			: el.type === 'waystone'
+				? el.name
+				: 'text' in el && typeof el.text === 'string'
+					? el.text
+					: '';
 	const line = own.replace(/\s+/g, ' ').trim();
 	return line ? line.slice(0, 40) : TYPE_NAMES[el.type];
 }

@@ -100,7 +100,8 @@ export type Point = { x: number; y: number };
 export type Rect = { x: number; y: number; w: number; h: number };
 
 export type ElementType =
-  | 'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'sketch' | 'frame' | 'doccard' | 'connector' | 'media';
+  | 'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'sketch' | 'frame' | 'doccard' | 'connector' | 'media'
+  | 'waystone';
 
 export type ShapeKind =
   | 'rect' | 'ellipse' | 'diamond'                       // basic (toolbar)
@@ -163,6 +164,13 @@ export interface MediaElement extends BaseElement {   // schema version 5
   title: string;            // poster label, ≤ 200 chars
 }
 
+export interface WaystoneElement extends BaseElement {   // schema version 7
+  type: 'waystone';         // a 32 × 40 pin (tip at the bottom centre); not resizable or rotatable
+  name: string;             // ≤ 100 chars
+  zoom: number;             // the zoom to arrive at (ZOOM_MIN..ZOOM_MAX)
+  order: string;            // fractional index: route order on the page (separate from z; ties by id)
+}
+
 export type Port = 'n' | 'e' | 's' | 'w';
 
 export type Endpoint =
@@ -187,7 +195,7 @@ export interface ConnectorElement extends BaseElement {
 
 export type Element =
   | ShapeElement | StickyElement | TextElement | ImageElement
-  | StrokeElement | FrameElement | DocCardElement | ConnectorElement | MediaElement;
+  | StrokeElement | FrameElement | DocCardElement | ConnectorElement | MediaElement | WaystoneElement;
 ```
 
 ### Y.Doc layout
@@ -218,12 +226,13 @@ Rules:
 - Frames render beneath all non-frame elements (own layer); `z` orders frames among themselves.
 - Deleting a doccard deletes its `docs` entry in the same transaction.
 - Deleting an element converts endpoints of connectors attached to it into `free` endpoints at their current resolved position, in the same transaction (step 20).
-- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view). Version 6 added comments (no data moves; an older editor would delete text carrying the `comment` mark).
+- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view). Version 6 added comments (no data moves; an older editor would delete text carrying the `comment` mark). Version 7 added waystones (no data moves; older versions would drop them from their view).
 - Media (`src/lib/board/media`): which elements are playing is per-tab state (`PlaybackState` in the board context), never stored. A poster is shown until play; playing elements stay mounted when culled or when the scene canvas is shown; page switches stop playback. Double-click / Enter plays and hands the pointer to the player (the editing mode, like doc cards); Escape or a click elsewhere leaves it while playback continues. Exports, thumbnails and the scene canvas draw the poster. CSP: `frame-src https://www.youtube-nocookie.com https://player.vimeo.com; media-src 'self' blob: https:` — `connect-src` stays `'self'` (no oEmbed or thumbnail fetching).
 - Fonts (`src/lib/fonts`): `catalog.ts` lists the fonts (id, label, category, CSS stack); 10 are bundled from `@fontsource*` packages (Latin, Latin Extended and Cyrillic woff2 subsets, ~1 MB in all, precached for offline use) and registered with the `FontFace` API under `SMTHNG <name>` families, so the browser downloads a subset only when text uses it. Canvas text stores the id in `style.font.family` (optional; no schema bump: an older app shows the default font); doc card text uses the `fontFamily` mark. Exports embed the files of the fonts they use as data URLs.
 - Doc card text formatting (schema version 4): underline, `textColor`, `highlight`, `fontFamily` and `fontSize` marks and an `align` attribute on paragraphs and headings. The marks hold ids from fixed lists (`doccards/formatOptions.ts`), rendered as `data-*` attributes and styled in `prose.css`; text color and highlight also take a `#rrggbb` value (`data-*="custom"` plus a CSS variable in the style attribute). Anything else is dropped on parse. The bump matters: an older editor deletes text carrying marks it doesn't know.
 - Sketches (schema version 3): `SketchElement { type: 'sketch'; bx; by; nw; nh }` shows the rectangle `(bx, by, nw, nh)` of its stroke space stretched onto its box. Adding a stroke appends to `sketches[id]` and grows that rectangle and the box together (one transaction, one undo step), so moving or resizing never rewrites stroke data. `sketches` entries are created, deleted, copied and undone with their element, like `docs`.
 - Comments (schema version 6, `src/lib/model/comments.ts`; UI in `src/lib/board/comments`): all writes go through its helpers. Text threads are anchored by a `comment` mark (`threadId`, `excludes: ''` so comments may overlap; y-tiptap stores it as the text attribute `comment--<hash>`) in doc card text, so the highlight moves with edits; a text thread whose marked text was all deleted stays as "orphaned" (listed with "The commented text was deleted"). Deleting an element deletes threads anchored to it (and the text threads of a deleted doc card) in the same transaction (a `beforeDeleteHooks` entry); deleting a text thread removes its marks. Paste and duplicate copy the threads of the copied objects (the clipboard payload carries them) and repoint the copied marks (`copyThreadsTo`). The `comments` map is in canvas undo scope; the mark itself is applied by the editor (its own Yjs undo). The author name is a localPref. Exports (PNG/SVG/PDF, compile, Markdown) leave comments out; "Download .md with comments" writes them as footnotes.
+- Waystones (schema version 7, `src/lib/board/waystones`): named checkpoints on a page, board only (not @-mentionable, never in doc cards). `ctx.waystones` (`WaystonesState`) gives the page's route (`routeOf`: by `order`, ties by id since copies share a key), the bar's position, and flying: `flyTarget` centres the pin's tip at the waystone's zoom via `viewport.animateTo` (reduced motion: no animation). New ones (the W tool, or "Add waystone here" at the view centre) take the current zoom and go to the end of the route. The pin is an ordinary world-size object (hit-testing, selection, connectors and exports agree); below 60 % zoom its number and name are drawn in the screen-space overlay at a constant size (and fly there on click). Image exports leave waystones out unless "Include waystones" is ticked. Presenting (from the list) goes full screen with only the waystone bar; Escape or leaving full screen ends it.
 - Pages (`src/lib/model/pages.ts`): elements never move between maps; connectors attach only within a page; `docs` is shared and keyed by element id. Anything that must see the whole board (asset cleanup, import, board duplication) uses `allPageMaps` / `listAllElements`. Deleting a page removes its elements and their `docs` entries with origin `PAGES` (not undoable) and clears the undo history.
 
 ## 6. Storage
@@ -261,7 +270,7 @@ export interface AssetRecord {
 `LOCAL` (user edits, tracked by undo) · `REMOTE_TAB` · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
 
 ### localStorage keys (via `localPrefs`)
-`smthng:theme`, `smthng:home:sort`, `smthng:home:layout`, `smthng:defaults:<type>`, `smthng:copiedStyle`, `smthng:grid`, `smthng:snap`, `smthng:onboarded`, `smthng:lastBackupAt`, `smthng:backupReminderDismissedAt`, `smthng:testHooks`, `smthng:commentAuthor`, `smthng:comments:<boardId>` (panel open).
+`smthng:theme`, `smthng:home:sort`, `smthng:home:layout`, `smthng:defaults:<type>`, `smthng:copiedStyle`, `smthng:grid`, `smthng:snap`, `smthng:onboarded`, `smthng:lastBackupAt`, `smthng:backupReminderDismissedAt`, `smthng:testHooks`, `smthng:commentAuthor`, `smthng:comments:<boardId>` (panel open), `smthng:waystones:wrap`.
 
 ## 7. Yjs → Svelte bridge
 
@@ -389,6 +398,8 @@ Imports always create new board ids and new asset ids (remapped in the doc). Ele
 | S | Sticky | Mod+Shift+L | Lock / Unlock |
 | N | Doc card | ] / [ | Forward / Backward |
 | F | Frame | Mod+] / Mod+[ | To front / To back |
+| W | Waystone | PageDown / PageUp (Alt+→ / Alt+←) | Next / previous waystone |
+| Alt+1…9 | Go to waystone 1…9 | | |
 | Mod+Shift+I | Insert image | Mod+Alt+C / Mod+Alt+V | Copy / Paste style |
 | Shift+1 | Zoom to fit | Shift+0 | Zoom to 100% |
 | Shift+2 | Zoom to selection | Mod+= / Mod+- | Zoom in / out |

@@ -11,6 +11,8 @@ export interface Shortcut {
 	run(ctx: BoardContext): void;
 	/** Only active when this returns true. */
 	when?(ctx: BoardContext): boolean;
+	/** Left out of the shortcuts dialog (a family of keys listed there as one row). */
+	hidden?: boolean;
 }
 
 export function isMacPlatform(): boolean {
