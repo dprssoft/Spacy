@@ -1,4 +1,5 @@
 import * as Y from 'yjs';
+import { copyThreadsTo, threadsOn } from '$lib/model/comments';
 import { cloneElements } from '$lib/model/clone';
 import { getDocsMap } from '$lib/model/doc';
 import { newId } from '$lib/model/ids';
@@ -39,7 +40,9 @@ export function createWithContent(
 	els: NewElement[],
 	fragments: Map<string, Y.XmlFragment> = new Map(),
 	/** New sketch ids → the strokes to copy into them. */
-	sketches: Map<string, readonly unknown[]> = new Map()
+	sketches: Map<string, readonly unknown[]> = new Map(),
+	/** Runs inside the same transaction, after the elements exist (e.g. copying comments). */
+	afterCreate?: () => void
 ): Element[] {
 	let created: Element[] = [];
 	ctx.doc.transact(() => {
@@ -47,6 +50,7 @@ export function createWithContent(
 		const docs = getDocsMap(ctx.doc);
 		for (const [id, frag] of fragments) docs.set(id, frag.clone());
 		for (const [id, strokes] of sketches) setSketchStrokes(ctx.doc, id, strokes);
+		afterCreate?.();
 	}, LOCAL);
 	// After the transaction: the store only sees the new elements once it has committed.
 	syncFrameMembership(
@@ -73,8 +77,11 @@ export function duplicateSelection(ctx: BoardContext, offset: Point = { x: 16, y
 		const copy = el.type === 'sketch' ? idMap.get(el.id) : undefined;
 		if (copy) sketches.set(copy, rawStrokes(ctx.doc, el.id));
 	}
+	const threads = threadsOn(ctx.doc, new Set(els.map((e) => e.id)));
 	ctx.undo.stopCapturing();
-	const created = createWithContent(ctx, elements, fragments, sketches);
+	const created = createWithContent(ctx, elements, fragments, sketches, () =>
+		copyThreadsTo(ctx.doc, threads, idMap, ctx.pages.current)
+	);
 	ctx.undo.stopCapturing();
 	ctx.selection.set(created.map((e) => e.id));
 }

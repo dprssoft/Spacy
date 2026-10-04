@@ -6,6 +6,7 @@
 	import { theme, type ThemeMode } from '$lib/shared/theme.svelte';
 	import { requestPersistentStorage, storageEstimate } from '$lib/storage/persist';
 	import AboutDialog from './AboutDialog.svelte';
+	import CommentNameDialog from './CommentNameDialog.svelte';
 	import { backupAll, importFiles } from './fileActions';
 	import { formatBytes } from './formatBytes';
 	import { readMediaPrefs, writeMediaPrefs } from '$lib/board/media/mediaPrefs';
@@ -16,6 +17,7 @@
 	let open = $state(false);
 	let oneAtATime = $state(readMediaPrefs().oneAtATime);
 	let about = $state(false);
+	let commentName = $state(false);
 	let input = $state<HTMLInputElement>();
 	let storage = $state<{ usage: number; persisted: boolean } | null>(null);
 
@@ -73,6 +75,9 @@
 					at a time
 				{/snippet}
 			</DropdownMenu.CheckboxItem>
+			<DropdownMenu.Item class={item} onSelect={() => (commentName = true)}
+				>Your name for comments…</DropdownMenu.Item
+			>
 			<DropdownMenu.Separator class={sep} />
 			{#if pwa.canInstall}
 				<DropdownMenu.Item class={item} onSelect={() => pwa.install()}
@@ -124,3 +129,4 @@
 	}}
 />
 <AboutDialog bind:open={about} />
+<CommentNameDialog bind:open={commentName} />

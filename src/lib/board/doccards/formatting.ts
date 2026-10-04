@@ -87,6 +87,25 @@ const Alignment = Extension.create({
 });
 
 /** Text color, highlight, font, size and alignment (underline comes with the starter kit). */
+/** A comment on a range of text (step 45): the thread lives in the board's `comments` map. */
+export const CommentMark = Mark.create({
+	name: 'comment',
+	inclusive: false,
+	excludes: '',
+	addAttributes() {
+		return {
+			threadId: {
+				default: null,
+				parseHTML: (el: HTMLElement) => el.getAttribute('data-comment'),
+				renderHTML: (attrs: Record<string, unknown>) =>
+					typeof attrs.threadId === 'string' ? { 'data-comment': attrs.threadId } : {}
+			}
+		};
+	},
+	parseHTML: () => [{ tag: 'span[data-comment]' }],
+	renderHTML: ({ HTMLAttributes }) => ['span', { ...HTMLAttributes, class: 'comment-mark' }, 0]
+});
+
 export function formatExtensions(): Extensions {
-	return [...(Object.keys(FORMAT_MARKS) as FormatMark[]).map(choiceMark), Alignment];
+	return [...(Object.keys(FORMAT_MARKS) as FormatMark[]).map(choiceMark), Alignment, CommentMark];
 }

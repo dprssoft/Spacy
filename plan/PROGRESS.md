@@ -1188,3 +1188,28 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (859 unit tests; new `search.test.ts`, `findReplace.test.ts`: finds in canvas and doc text but not inside chips; Replace all keeps bold, leaves the chip, and one undo restores everything; stale hits are skipped) · pnpm test:e2e ✅ (211; new `find-replace.spec.ts`: 4 matches across a sticky, a frame title and two doc cards → Next → Replace all → one Mod+Z restores all → Mod+F inside a doc card opens the panel; the risky regex is refused; All pages finds a match on another page and jumping switches page).
+
+## Step 45 — Comments — 2026-10-04
+**Summary:**
+- **Model** (`model/comments.ts`, schema version 6, migration 6 a no-op): the `comments` map. Helpers (each in one transaction) are `createThread`, `reply`, `editMessage`, `deleteMessage` (the last message deletes the thread), `setResolved`, `deleteThread` (also removes a text thread's highlight), plus `listThreads`, `threadsOn` and `parseThreads` (zod; clipboard input).
+  - The `comment` text mark (`threadId`; `excludes: ''` so comments can overlap) is in the doc card schema. `remapCommentMarks` / `commentQuotes` read and rewrite it straight in Yjs; y-tiptap stores it as `comment--<hash>`.
+  - A `beforeDeleteHooks` entry deletes threads on deleted elements, and the text threads of deleted doc cards, in the same transaction.
+  - The `comments` map is in canvas undo scope.
+- **Copying:** the clipboard payload carries the threads of the copied objects. Paste and duplicate copy them onto the copies inside the creating transaction (one undo step; `createWithContent` gained an `afterCreate` callback), and the marks in the copied doc cards are repointed to the copied threads (marks of threads that weren't copied are removed).
+- **UI** (`board/comments`): `ctx.comments` (`CommentsState`) holds the threads, the popover and the panel.
+  - **Badges:** a count of open threads at each object's top-right, in screen space; a doc card's count includes its text threads.
+  - **Popover:** next to the object or highlight, a bottom sheet on phones. It has replies, edit/delete per message, Resolve/Reopen and Delete thread. Escape returns to the text being edited.
+  - **Ways in:** "Comment" in the context menu (and so the phone long-press menu), **Mod+Alt+M**, and a "Comment" button in the doc text bubble menu. Clicking a highlight opens its thread.
+  - **Comments panel** (status bar toggle with the open count): Open/Resolved filter, sorted by position; a click flies to the object and opens the thread.
+  - **Focus mode:** the card's open text comments in the right margin (wide screens).
+  - **Author name:** asked in the composer the first time, and editable in Settings ("Your name for comments…").
+- **Exports:** comment marks were already ignored by Markdown, compile, Word and HTML. "Download .md with comments" (context menu, for cards that have text comments) writes them as footnotes (`[^n]` after the commented text; the thread's messages as the note).
+
+**Deviations:**
+- `.smthng` import keeps element ids (only the board and asset ids are new), so the comments map needs no remapping on import. The ids are remapped on paste and duplicate.
+- The text mark is applied through the editor, so it's part of the editor's own Yjs undo, while the thread is in canvas undo. Undoing the mark in the editor leaves an orphaned thread, which is a state the plan already allows.
+- Clicking in the comment popover no longer ends doc card editing (the popover counts as one of the card's popups).
+- Phones e2e is `mobile-comments.spec.ts`: the mobile project only matches `mobile-*.spec.ts`.
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (872 unit tests; new `model/comments.test.ts`: ops, malformed data, undo steps, delete hook incl. a doc card's text threads and undo, quotes, orphaning, mark remap/removal, `copyThreadsTo`, v5 → v6; footnotes in `markdown.test.ts`; duplicate and cross-board paste copy threads) · pnpm test:e2e ✅ (216; new `comments.spec.ts`: sticky comment → badge → reply (name asked once) → resolve hides the badge, the panel lists it under Resolved → reopen → undo/redo → delete removes the thread, undo restores it; text comment in a doc card → highlight → typing before it keeps the highlight on its word → clicking it opens the thread; badge and panel for the card; `.smthng` export and import keep comments; duplicate copies them; axe on the panel. `mobile-comments.spec.ts`: long-press → Comment → a full-width bottom sheet with ≥ 44 px buttons; axe on the sheet).

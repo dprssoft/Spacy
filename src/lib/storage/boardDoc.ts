@@ -1,3 +1,4 @@
+import { getCommentsMap } from '$lib/model/comments';
 import { ensureOutlineMap } from '$lib/model/outline';
 import { deleteDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
@@ -153,6 +154,7 @@ export function createBoardUndo(doc: Y.Doc): Y.UndoManager {
 			...allPageMaps(doc),
 			getDocsMap(doc),
 			getSketchesMap(doc),
+			getCommentsMap(doc),
 			...(outline instanceof Y.Map ? [outline] : [])
 		],
 		{

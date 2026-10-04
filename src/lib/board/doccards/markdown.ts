@@ -16,24 +16,37 @@ export interface DocNode {
 
 // The current conversion's link lookup for mentions (conversion is synchronous).
 let mentionLink: ((id: string) => string | null) | null = null;
+// The current conversion's comment footnotes, when asked for: thread ids in order of appearance.
+let footnotes: { text: (threadId: string) => string | null; ids: string[] } | null = null;
 
 /**
  * `link` gives a URL for a mentioned element (a media element's link); such mentions become
- * `[label](url)` instead of `@label`.
+ * `[label](url)` instead of `@label`. `comment` gives a footnote for a comment thread on text;
+ * without it comments are left out.
  */
 export function docToMarkdown(
 	doc: DocNode,
-	opts: { title?: string; link?: (id: string) => string | null } = {}
+	opts: {
+		title?: string;
+		link?: (id: string) => string | null;
+		comment?: (threadId: string) => string | null;
+	} = {}
 ): string {
 	const parts: string[] = [];
 	const title = opts.title?.trim();
 	if (title) parts.push(`# ${escapeInline(title)}`);
 	mentionLink = opts.link ?? null;
+	footnotes = opts.comment ? { text: opts.comment, ids: [] } : null;
 	try {
 		const body = blocks(doc.content ?? []);
 		if (body) parts.push(body);
+		const notes = footnotes?.ids.map(
+			(id, i) => `[^${i + 1}]: ${escapeInline(footnotes!.text(id) ?? '').replace(/\s+/g, ' ')}`
+		);
+		if (notes?.length) parts.push(notes.join('\n'));
 	} finally {
 		mentionLink = null;
+		footnotes = null;
 	}
 	return parts.length ? `${parts.join('\n\n')}\n` : '';
 }
@@ -128,9 +141,18 @@ const DELIMS: Record<string, string> = { bold: '**', italic: '_', strike: '~~' }
 const markKey = (marks: DocMark[] | undefined) =>
 	JSON.stringify(
 		[...(marks ?? [])]
-			.filter((m) => (MARK_ORDER as readonly string[]).includes(m.type))
-			.sort((a, b) => a.type.localeCompare(b.type))
+			.filter(
+				(m) =>
+					(MARK_ORDER as readonly string[]).includes(m.type) ||
+					(footnotes !== null && m.type === 'comment')
+			)
+			.sort((a, b) => a.type.localeCompare(b.type) || commentOf(a).localeCompare(commentOf(b)))
 	);
+
+const commentOf = (m: DocMark): string =>
+	m.type === 'comment' && typeof m.attrs?.threadId === 'string' ? m.attrs.threadId : '';
+const commentsOf = (n: DocNode | undefined): string[] =>
+	(n?.marks ?? []).map(commentOf).filter(Boolean);
 
 function inline(nodes: DocNode[]): string {
 	// Merge adjacent text nodes with identical marks.
@@ -141,7 +163,21 @@ function inline(nodes: DocNode[]): string {
 			merged[merged.length - 1] = { ...prev, text: (prev.text ?? '') + (n.text ?? '') };
 		else merged.push(n);
 	}
-	return merged.map(inlineNode).join('');
+	return merged.map((n, i) => inlineNode(n) + footnoteRefs(n, merged[i + 1])).join('');
+}
+
+/** `[^n]` after the last piece of text of each comment that ends here. */
+function footnoteRefs(node: DocNode, next: DocNode | undefined): string {
+	if (!footnotes) return '';
+	const continues = new Set(commentsOf(next));
+	let out = '';
+	for (const id of commentsOf(node)) {
+		if (continues.has(id) || !footnotes.text(id)) continue;
+		let n = footnotes.ids.indexOf(id) + 1;
+		if (n === 0) n = footnotes.ids.push(id);
+		out += `[^${n}]`;
+	}
+	return out;
 }
 
 /** A URL usable as a `[text](url)` target: spaces and parentheses percent-encoded. */

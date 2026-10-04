@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { getDocsMap } from '$lib/model/doc';
+import { createThread, listThreads } from '$lib/model/comments';
 import { createElements } from '$lib/model/ops';
 import { samples } from '$lib/model/testFixtures';
 import type { Element } from '$lib/model/types';
@@ -101,5 +102,25 @@ describe('edit commands', () => {
 
 		ungroupSelection(ctx);
 		expect(['a', 'b', 'c'].map((id) => ctx.store.get(id)!.groupId)).toEqual([null, null, null]);
+	});
+
+	it('duplicating a commented object copies its threads, in the same undo step', () => {
+		const ctx = setup(samples.sticky('b'));
+		createThread(ctx.doc, {
+			anchor: { kind: 'element', elementId: 'b' },
+			page: 'main',
+			author: 'Ann',
+			text: 'Hi'
+		});
+		ctx.undo.stopCapturing();
+		ctx.selection.set(['b']);
+		duplicateSelection(ctx);
+		const copy = ctx.selection.single!;
+		expect(listThreads(ctx.doc).map((t) => t.anchor)).toEqual([
+			{ kind: 'element', elementId: 'b' },
+			{ kind: 'element', elementId: copy }
+		]);
+		ctx.history.undo();
+		expect(listThreads(ctx.doc)).toHaveLength(1);
 	});
 });

@@ -10,11 +10,12 @@
 	import { getBoard } from '../context';
 	import { rovingTabindex } from '../ui/rovingTabindex';
 	import BubbleMenu from './BubbleMenu.svelte';
+	import FocusComments from './FocusComments.svelte';
 	import DocCardMenu from './DocCardMenu.svelte';
 	import DocRibbon from './DocRibbon.svelte';
 	import type { Editor } from './editorFactory';
 	import { closeFocus } from './focus';
-	import { jumpToElement, mentionAt } from './jumpTo';
+	import { commentAt, jumpToElement, mentionAt } from './jumpTo';
 	import { loadBoardEditor, type BoardEditorModule } from './lazy';
 	import './prose.css';
 	import { isSuggestionKey } from './suggestionPopup.svelte';
@@ -87,7 +88,8 @@
 	function onkeydown(e: KeyboardEvent) {
 		if (isSuggestionKey(e)) return;
 		// Keys in menus (the ⋯ menu) belong to them.
-		if (e.target instanceof Element && e.target.closest('[role=menu]')) return;
+		if (e.target instanceof Element && e.target.closest('[role=menu],[data-comment-popover]'))
+			return;
 		if (e.key === 'Escape') {
 			e.preventDefault();
 			close();
@@ -118,6 +120,8 @@
 	function onclick(e: MouseEvent) {
 		const target = mentionAt(e.target);
 		if (target) jumpToElement(ctx, target);
+		const thread = commentAt(e.target);
+		if (thread && !target) ctx.comments.openThread(thread);
 	}
 
 	// --- Writing aids (step 39), all optional -----------------------------------------------
@@ -264,8 +268,11 @@
 			<BacklinksList targetId={id} />
 		</section>
 	{/if}
+	<FocusComments cardId={id} class={chrome} />
 	<div class="absolute right-3 bottom-3 {chrome}">
 		<FocusCounter {stats} />
 	</div>
-	<div class="hidden"><BubbleMenu {editor} bind:element={menu} /></div>
+	<div class="hidden">
+		<BubbleMenu {editor} bind:element={menu} oncomment={(ed) => ctx.comments.startText(id, ed)} />
+	</div>
 </div>

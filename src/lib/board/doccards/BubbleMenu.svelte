@@ -7,12 +7,21 @@
 	import Heading3 from '@lucide/svelte/icons/heading-3';
 	import Italic from '@lucide/svelte/icons/italic';
 	import Link from '@lucide/svelte/icons/link';
+	import MessageSquarePlus from '@lucide/svelte/icons/message-square-plus';
 	import Strikethrough from '@lucide/svelte/icons/strikethrough';
 	import type { Editor } from './editorFactory';
 	import LinkPopover from './LinkPopover.svelte';
 
-	let { editor, element = $bindable() }: { editor: Editor | null; element?: HTMLDivElement } =
-		$props();
+	let {
+		editor,
+		element = $bindable(),
+		oncomment
+	}: {
+		editor: Editor | null;
+		element?: HTMLDivElement;
+		/** Starts a comment on the selected text (board doc cards). */
+		oncomment?: (editor: Editor) => void;
+	} = $props();
 
 	// Bumped on every editor transaction so the active states re-render.
 	let tick = $state(0);
@@ -115,6 +124,18 @@
 			>
 				<Link class="size-4" aria-hidden="true" />
 			</button>
+			{#if oncomment}
+				<button
+					type="button"
+					class={button}
+					aria-label="Comment"
+					data-bubble-comment
+					onmousedown={(e) => e.preventDefault()}
+					onclick={() => oncomment(editor!)}
+				>
+					<MessageSquarePlus class="size-4" aria-hidden="true" />
+				</button>
+			{/if}
 			<div class="mx-0.5 h-5 w-px bg-border"></div>
 			{#each headings as b (b.label)}{@render item(b, editor)}{/each}
 		{/if}

@@ -11,7 +11,7 @@
 	import BubbleMenu from '../../doccards/BubbleMenu.svelte';
 	import type { Editor } from '../../doccards/editorFactory';
 	import { openFocus } from '../../doccards/focus';
-	import { jumpToElement, mentionAt } from '../../doccards/jumpTo';
+	import { commentAt, jumpToElement, mentionAt } from '../../doccards/jumpTo';
 	import { loadBoardEditor, type BoardEditorModule } from '../../doccards/lazy';
 	import { isSuggestionKey } from '../../doccards/suggestionPopup.svelte';
 	import '../../doccards/prose.css';
@@ -148,7 +148,7 @@
 		const onDown = (e: PointerEvent) => {
 			const t = e.target;
 			if (t instanceof Node && body?.contains(t)) return;
-			if (t instanceof Element && t.closest('[data-doc-popup]')) return;
+			if (t instanceof Element && t.closest('[data-doc-popup],[data-comment-popover]')) return;
 			ctx.editing.end();
 		};
 		document.addEventListener('pointerdown', onDown, true);
@@ -176,6 +176,8 @@
 	function onclick(e: MouseEvent) {
 		const target = mentionAt(e.target);
 		if (target) jumpToElement(ctx, target);
+		const thread = commentAt(e.target);
+		if (thread && !target) ctx.comments.openThread(thread);
 	}
 
 	/** Scroll the body when it can scroll that way; otherwise let the canvas pan. */
@@ -247,5 +249,7 @@
 </div>
 {#if showEditor}
 	<!-- The editor moves the menu into document.body while it's shown. -->
-	<div class="hidden"><BubbleMenu {editor} bind:element={menu} /></div>
+	<div class="hidden">
+		<BubbleMenu {editor} bind:element={menu} oncomment={(ed) => ctx.comments.startText(id, ed)} />
+	</div>
 {/if}
