@@ -156,7 +156,7 @@
 	// again a frame later too: the theme attribute on <html> may update after this effect.
 	let dotColor = $state('');
 	$effect(() => {
-		void theme.resolved;
+		void theme.key;
 		const node = container;
 		if (!node) return;
 		const read = () => (dotColor = getComputedStyle(node).getPropertyValue('--canvas-dot').trim());

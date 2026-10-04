@@ -4,6 +4,7 @@
 	import { toast } from 'svelte-sonner';
 	import { pwa } from '$lib/shared/pwa.svelte';
 	import { theme, type ThemeMode } from '$lib/shared/theme.svelte';
+	import { isPaletteId, PALETTES } from '$lib/shared/palettes';
 	import { requestPersistentStorage, storageEstimate } from '$lib/storage/persist';
 	import AboutDialog from './AboutDialog.svelte';
 	import CommentNameDialog from './CommentNameDialog.svelte';
@@ -51,7 +52,7 @@
 		<DropdownMenu.Content
 			align="end"
 			sideOffset={4}
-			class="z-50 min-w-60 rounded-lg border border-border bg-surface p-1 shadow-lg"
+			class="z-50 max-h-[var(--bits-dropdown-menu-content-available-height)] min-w-60 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg"
 		>
 			<DropdownMenu.RadioGroup value={theme.mode} onValueChange={(v) => theme.set(v as ThemeMode)}>
 				<DropdownMenu.GroupHeading class={heading}>Theme</DropdownMenu.GroupHeading>
@@ -59,6 +60,30 @@
 					<DropdownMenu.RadioItem value={m.value} class={item} closeOnSelect={false}>
 						{#snippet children({ checked })}
 							<span class="w-4 text-accent" aria-hidden="true">{checked ? '●' : ''}</span>{m.label}
+						{/snippet}
+					</DropdownMenu.RadioItem>
+				{/each}
+			</DropdownMenu.RadioGroup>
+			<DropdownMenu.Separator class={sep} />
+			<DropdownMenu.RadioGroup
+				value={theme.palette}
+				onValueChange={(v) => isPaletteId(v) && theme.setPalette(v)}
+			>
+				<DropdownMenu.GroupHeading class={heading}>Palette</DropdownMenu.GroupHeading>
+				{#each PALETTES as p (p.id)}
+					<DropdownMenu.RadioItem
+						value={p.id}
+						class={item}
+						closeOnSelect={false}
+						data-palette-option={p.id}
+					>
+						{#snippet children({ checked })}
+							<span class="w-4 text-accent" aria-hidden="true">{checked ? '●' : ''}</span>
+							<span
+								class="size-3.5 rounded-full border border-black/10"
+								style:background={p.accent[theme.resolved]}
+								aria-hidden="true"
+							></span>{p.label}
 						{/snippet}
 					</DropdownMenu.RadioItem>
 				{/each}
