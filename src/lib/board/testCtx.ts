@@ -12,6 +12,7 @@ import { PagesState } from './pages.svelte';
 import { BoardWordStats } from './writing/boardStats.svelte';
 import { OutlineState } from './writing/outlineState.svelte';
 import { BacklinkIndex } from './writing/backlinks.svelte';
+import { CommentsState } from './comments/commentsState.svelte';
 import { BoardPrefs } from './prefs.svelte';
 import { PreviewState } from './preview.svelte';
 import { SelectionState } from './selection.svelte';
@@ -45,5 +46,6 @@ export function testCtx(id = 'board-1', doc = new Y.Doc()): BoardContext {
 	ctx.words = new BoardWordStats(doc, ctx.store);
 	ctx.outline = new OutlineState(ctx);
 	ctx.backlinks = new BacklinkIndex(doc);
+	ctx.comments = new CommentsState(ctx);
 	return ctx;
 }

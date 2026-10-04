@@ -10,6 +10,7 @@ import type { PlaybackState } from './media/playback.svelte';
 import type { BoardWordStats } from './writing/boardStats.svelte';
 import type { OutlineState } from './writing/outlineState.svelte';
 import type { BacklinkIndex } from './writing/backlinks.svelte';
+import type { CommentsState } from './comments/commentsState.svelte';
 import type { PagesState } from './pages.svelte';
 import type { BoardPrefs } from './prefs.svelte';
 import type { SelectionState } from './selection.svelte';
@@ -42,6 +43,7 @@ export interface BoardContext {
 	words: BoardWordStats;
 	outline: OutlineState;
 	backlinks: BacklinkIndex;
+	comments: CommentsState;
 	sketch: SketchSettings;
 }
 

@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { getBoard } from '../context';
 	import ListTree from '@lucide/svelte/icons/list-tree';
+	import MessageSquare from '@lucide/svelte/icons/message-square';
 	import PageTabs from './PageTabs.svelte';
 	import ZoomControls from './ZoomControls.svelte';
 
 	const ctx = getBoard();
 	const count = $derived(ctx.store.elements.size);
 	const selected = $derived(ctx.selection.size);
+	const openComments = $derived(ctx.comments.onPage.filter((t) => !t.resolved).length);
 	const words = $derived(ctx.words.words(selected > 0 ? ctx.selection.ids : undefined));
 </script>
 
@@ -26,6 +28,19 @@
 		onclick={() => ctx.outline.toggle()}
 	>
 		<ListTree class="size-4" aria-hidden="true" /><span class="max-sm:sr-only">Outline</span>
+	</button>
+	<button
+		type="button"
+		class="inline-flex shrink-0 items-center gap-1.5 self-center rounded-md px-2 py-1 text-muted hover:bg-surface hover:text-text aria-pressed:text-accent pointer-coarse:min-h-11"
+		aria-pressed={ctx.comments.panelOpen}
+		title="Comments"
+		data-testid="comments-toggle"
+		onclick={() => ctx.comments.togglePanel()}
+	>
+		<MessageSquare class="size-4" aria-hidden="true" /><span class="max-sm:sr-only">Comments</span>
+		{#if openComments > 0}<span class="tabular-nums" data-testid="comments-count"
+				>{openComments}</span
+			>{/if}
 	</button>
 	<p
 		class="ml-auto hidden shrink-0 items-center px-2 text-muted sm:flex"

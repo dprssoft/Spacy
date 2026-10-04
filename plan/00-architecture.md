@@ -14,7 +14,7 @@ This document is the contract every step builds on. Steps may refine details, bu
 - Real-time multi-user collaboration is **not** in scope, but the data layer (Yjs) is chosen so a sync server can be added later by changing only `openBoard()`.
 
 ### Non-goals (do not build)
-Accounts, server sync, comments, version history, UML/BPMN libraries, auto-layout, swimlanes, gradients, user-uploaded fonts (a fixed set of 10 bundled open-licence fonts plus system stacks is offered), custom shape editor, frame clipping, nested frames, nested groups, connector-to-connector junctions, line jumps, page/print layout, tables/images inside doc cards, suggestion mode. (Mobile editing was a non-goal until steps 37–38: phones and tablets are now supported for viewing and editing.)
+Accounts, server sync, version history, UML/BPMN libraries, auto-layout, swimlanes, gradients, user-uploaded fonts (a fixed set of 10 bundled open-licence fonts plus system stacks is offered), custom shape editor, frame clipping, nested frames, nested groups, connector-to-connector junctions, line jumps, page/print layout, tables/images inside doc cards, suggestion mode. (Mobile editing was a non-goal until steps 37–38: phones and tablets are now supported for viewing and editing. Comments were a non-goal until step 45: threads on objects and on doc card text, signed with a per-browser name; no mentions of people or notifications.)
 
 ## 2. Tech stack
 
@@ -206,6 +206,10 @@ doc.getMap('docs')      Y.Map<doccardId, Y.XmlFragment>   (TipTap content)
 doc.getMap('sketches')  Y.Map<sketchId, Y.Array<{ b: brush, c: color, s: size, p: number[] }>>
                         - append-only brush strokes of sketch elements; p = flat [x, y, pressure, …]
                           in the sketch's own coordinates
+doc.getMap('comments')  Y.Map<threadId, Y.Map<{                       (schema version 6, step 45)
+                          anchor: { kind: 'element'; elementId } | { kind: 'text'; cardId } (JSON),
+                          page: string, resolved: boolean, createdAt: number,
+                          messages: Y.Array<{ id, author, text, at, editedAt? }> }>>
 ```
 
 Rules:
@@ -214,11 +218,12 @@ Rules:
 - Frames render beneath all non-frame elements (own layer); `z` orders frames among themselves.
 - Deleting a doccard deletes its `docs` entry in the same transaction.
 - Deleting an element converts endpoints of connectors attached to it into `free` endpoints at their current resolved position, in the same transaction (step 20).
-- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view).
+- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view). Version 6 added comments (no data moves; an older editor would delete text carrying the `comment` mark).
 - Media (`src/lib/board/media`): which elements are playing is per-tab state (`PlaybackState` in the board context), never stored. A poster is shown until play; playing elements stay mounted when culled or when the scene canvas is shown; page switches stop playback. Double-click / Enter plays and hands the pointer to the player (the editing mode, like doc cards); Escape or a click elsewhere leaves it while playback continues. Exports, thumbnails and the scene canvas draw the poster. CSP: `frame-src https://www.youtube-nocookie.com https://player.vimeo.com; media-src 'self' blob: https:` — `connect-src` stays `'self'` (no oEmbed or thumbnail fetching).
 - Fonts (`src/lib/fonts`): `catalog.ts` lists the fonts (id, label, category, CSS stack); 10 are bundled from `@fontsource*` packages (Latin, Latin Extended and Cyrillic woff2 subsets, ~1 MB in all, precached for offline use) and registered with the `FontFace` API under `SMTHNG <name>` families, so the browser downloads a subset only when text uses it. Canvas text stores the id in `style.font.family` (optional; no schema bump: an older app shows the default font); doc card text uses the `fontFamily` mark. Exports embed the files of the fonts they use as data URLs.
 - Doc card text formatting (schema version 4): underline, `textColor`, `highlight`, `fontFamily` and `fontSize` marks and an `align` attribute on paragraphs and headings. The marks hold ids from fixed lists (`doccards/formatOptions.ts`), rendered as `data-*` attributes and styled in `prose.css`; text color and highlight also take a `#rrggbb` value (`data-*="custom"` plus a CSS variable in the style attribute). Anything else is dropped on parse. The bump matters: an older editor deletes text carrying marks it doesn't know.
 - Sketches (schema version 3): `SketchElement { type: 'sketch'; bx; by; nw; nh }` shows the rectangle `(bx, by, nw, nh)` of its stroke space stretched onto its box. Adding a stroke appends to `sketches[id]` and grows that rectangle and the box together (one transaction, one undo step), so moving or resizing never rewrites stroke data. `sketches` entries are created, deleted, copied and undone with their element, like `docs`.
+- Comments (schema version 6, `src/lib/model/comments.ts`; UI in `src/lib/board/comments`): all writes go through its helpers. Text threads are anchored by a `comment` mark (`threadId`, `excludes: ''` so comments may overlap; y-tiptap stores it as the text attribute `comment--<hash>`) in doc card text, so the highlight moves with edits; a text thread whose marked text was all deleted stays as "orphaned" (listed with "The commented text was deleted"). Deleting an element deletes threads anchored to it (and the text threads of a deleted doc card) in the same transaction (a `beforeDeleteHooks` entry); deleting a text thread removes its marks. Paste and duplicate copy the threads of the copied objects (the clipboard payload carries them) and repoint the copied marks (`copyThreadsTo`). The `comments` map is in canvas undo scope; the mark itself is applied by the editor (its own Yjs undo). The author name is a localPref. Exports (PNG/SVG/PDF, compile, Markdown) leave comments out; "Download .md with comments" writes them as footnotes.
 - Pages (`src/lib/model/pages.ts`): elements never move between maps; connectors attach only within a page; `docs` is shared and keyed by element id. Anything that must see the whole board (asset cleanup, import, board duplication) uses `allPageMaps` / `listAllElements`. Deleting a page removes its elements and their `docs` entries with origin `PAGES` (not undoable) and clears the undo history.
 
 ## 6. Storage
@@ -256,7 +261,7 @@ export interface AssetRecord {
 `LOCAL` (user edits, tracked by undo) · `REMOTE_TAB` · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
 
 ### localStorage keys (via `localPrefs`)
-`smthng:theme`, `smthng:home:sort`, `smthng:home:layout`, `smthng:defaults:<type>`, `smthng:copiedStyle`, `smthng:grid`, `smthng:snap`, `smthng:onboarded`, `smthng:lastBackupAt`, `smthng:backupReminderDismissedAt`, `smthng:testHooks`.
+`smthng:theme`, `smthng:home:sort`, `smthng:home:layout`, `smthng:defaults:<type>`, `smthng:copiedStyle`, `smthng:grid`, `smthng:snap`, `smthng:onboarded`, `smthng:lastBackupAt`, `smthng:backupReminderDismissedAt`, `smthng:testHooks`, `smthng:commentAuthor`, `smthng:comments:<boardId>` (panel open).
 
 ## 7. Yjs → Svelte bridge
 
@@ -368,7 +373,7 @@ type BoardPayload = {
   assets: { id: string; mime: string; width: number; height: number; data: string /* base64 */ }[];
 };
 ```
-Imports always create new board ids and new asset ids (remapped in the doc).
+Imports always create new board ids and new asset ids (remapped in the doc). Element ids are kept (they're per board), so the `comments` map (step 45) travels in `doc` unchanged.
 
 ## 11. Keyboard shortcuts (`Mod` = Ctrl on Win/Linux, Cmd on macOS)
 
@@ -391,7 +396,7 @@ Imports always create new board ids and new asset ids (remapped in the doc).
 | Enter | Edit text / doc card | Escape | Cancel / deselect / exit edit |
 | Arrows (+Shift) | Nudge 1px (10px) | ? | Shortcuts dialog |
 | Shift+T | Insert template | Home | Back to origin (100 %) |
-| Shift+F | Full screen (also a top bar button; in Settings on phones) | | |
+| Shift+F | Full screen (also a top bar button; in Settings on phones) | Mod+Alt+M | Comment on the selected object |
 
 **Media keys** apply to the selected media element while it plays, or while its player is in use; then they take precedence over tool keys, arrow nudging and Space-panning:
 Space / K play-pause · J / L ∓10 s · ← / → ∓5 s · ↑ / ↓ volume · M mute · F full screen · `<` / `>` speed · 0–9 jump to 0–90 % · Home / End clip start / end · Shift+L loop. Enter on a selected media element starts it.

@@ -52,6 +52,10 @@
 	import { BoardWordStats } from './writing/boardStats.svelte';
 	import { OutlineState } from './writing/outlineState.svelte';
 	import { BacklinkIndex } from './writing/backlinks.svelte';
+	import { CommentsState } from './comments/commentsState.svelte';
+	import CommentBadges from './comments/CommentBadges.svelte';
+	import CommentPopover from './comments/CommentPopover.svelte';
+	import CommentsPanel from './comments/CommentsPanel.svelte';
 	import { compileDialog } from './writing/compileDialogState.svelte';
 	import OutlinePanel from './writing/OutlinePanel.svelte';
 	import BacklinksDialog from './writing/BacklinksDialog.svelte';
@@ -99,7 +103,9 @@
 	ctx.words = new BoardWordStats(ctx.doc, ctx.store);
 	ctx.outline = new OutlineState(ctx);
 	ctx.backlinks = new BacklinkIndex(ctx.doc);
+	ctx.comments = new CommentsState(ctx);
 	onDestroy(() => {
+		ctx.comments.destroy();
 		ctx.words.destroy();
 		ctx.outline.destroy();
 		ctx.backlinks.destroy();
@@ -313,6 +319,7 @@
 						<PulseHighlight />
 						<StylePopover />
 						<MediaOverlay />
+						<CommentBadges />
 					{/snippet}
 				</Canvas>
 			</CanvasContextMenu>
@@ -322,6 +329,7 @@
 			<LiveAnnouncer />
 			<ShortcutsDialog />
 			<BacklinksDialog />
+			<CommentPopover />
 			<Onboarding />
 			{#if templateGalleryWanted}
 				{#await Promise.all( [import('$lib/shared/ui/TemplateGallery.svelte'), import('$lib/templates/insert')] ) then [{ default: TemplateGallery }, { insertTemplate }]}
@@ -375,6 +383,9 @@
 		{#if ctx.outline.open && !layout.compact}
 			<OutlinePanel outline={ctx.outline} />
 		{/if}
+		{#if ctx.comments.panelOpen && !layout.compact}
+			<CommentsPanel />
+		{/if}
 	</div>
 	{#if ctx.outline.open && layout.compact}
 		<!-- Phones: the outline is a sheet over the lower part of the screen. -->
@@ -382,6 +393,13 @@
 			class="fixed inset-x-0 bottom-0 z-40 h-[60dvh] rounded-t-2xl border-t border-border shadow-xl"
 		>
 			<OutlinePanel outline={ctx.outline} />
+		</div>
+	{/if}
+	{#if ctx.comments.panelOpen && layout.compact}
+		<div
+			class="fixed inset-x-0 bottom-0 z-40 h-[60dvh] rounded-t-2xl border-t border-border shadow-xl"
+		>
+			<CommentsPanel />
 		</div>
 	{/if}
 	<StatusBar />

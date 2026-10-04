@@ -1,4 +1,5 @@
 import * as Y from 'yjs';
+import { copyThreadsTo, parseThreads, threadsOn, type CommentThread } from '$lib/model/comments';
 import { cloneElements } from '$lib/model/clone';
 import { DEFAULT_SIZES, FONT_SIZE_PX, LINE_HEIGHT, newElementBase } from '$lib/model/defaults';
 import { getDocsMap } from '$lib/model/doc';
@@ -28,6 +29,8 @@ export interface ClipPayload {
 	docs: string;
 	/** Brush strokes of copied sketches, by element id. */
 	sketches?: Record<string, unknown[]>;
+	/** Comment threads on the copied elements (and on text in copied doc cards). */
+	comments?: CommentThread[];
 }
 
 /** Last copy made in this tab; used when the system clipboard is unavailable. */
@@ -50,7 +53,8 @@ export function serializeElements(ctx: BoardContext, els: readonly Element[]): s
 		sourceBoardId: ctx.id,
 		elements: [...els],
 		docs: bytesToBase64(Y.encodeStateAsUpdate(temp)),
-		sketches
+		sketches,
+		comments: threadsOn(ctx.doc, new Set(els.map((e) => e.id)))
 	};
 	temp.destroy();
 	return CLIPBOARD_PREFIX + JSON.stringify(payload);
@@ -73,7 +77,8 @@ export function parsePayload(text: string): ClipPayload | null {
 			sketches:
 				raw.sketches && typeof raw.sketches === 'object'
 					? (raw.sketches as Record<string, unknown[]>)
-					: undefined
+					: undefined,
+			comments: parseThreads(raw.comments)
 		};
 	} catch {
 		return null;
@@ -162,7 +167,9 @@ export async function pastePayload(
 	}
 
 	ctx.undo.stopCapturing();
-	const created = createWithContent(ctx, remapped, fragments, sketches);
+	const created = createWithContent(ctx, remapped, fragments, sketches, () =>
+		copyThreadsTo(ctx.doc, payload.comments ?? [], idMap, ctx.pages.current)
+	);
 	ctx.undo.stopCapturing();
 	ctx.tools.setTool('select');
 	ctx.selection.set(created.map((e) => e.id));

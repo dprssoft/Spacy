@@ -102,6 +102,11 @@
 					ctx.selection.set(connectedComponent(ctx, ctx.selection.ids))
 				)}
 				<ContextMenu.Separator class={sep} />
+				{#if ctx.selection.single}
+					{@render entry('Comment', 'Mod+Alt+M', () =>
+						ctx.comments.openElement(ctx.selection.single!)
+					)}
+				{/if}
 				{@render entry('Export selection…', null, () => exportDialog.show('png', 'selection'))}
 				{#if mentionedIn > 0}
 					{@render entry(
@@ -124,6 +129,11 @@
 					<ContextMenu.Separator class={sep} />
 					{@render entry('Copy as Markdown', null, () => copyMarkdown(ctx, docCard))}
 					{@render entry('Download .md', null, () => downloadMarkdown(ctx, docCard))}
+					{#if ctx.comments.threads.some((t) => t.anchor.kind === 'text' && t.anchor.cardId === docCard)}
+						{@render entry('Download .md with comments', null, () =>
+							downloadMarkdown(ctx, docCard, { comments: true })
+						)}
+					{/if}
 				{/if}
 			{:else}
 				{@render entry('Paste', 'Mod+V', () => pasteFromClipboard(ctx))}

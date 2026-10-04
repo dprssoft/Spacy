@@ -38,6 +38,14 @@ export const editShortcuts: Shortcut[] = [
 		run: deleteSelection
 	},
 	{
+		id: 'edit.comment',
+		keys: ['Mod+Alt+M'],
+		label: 'Comment',
+		group: 'Edit',
+		when: (ctx) => !!ctx.selection.single,
+		run: (ctx) => ctx.comments.openElement(ctx.selection.single!)
+	},
+	{
 		id: 'edit.duplicate',
 		keys: ['Mod+D'],
 		label: 'Duplicate',

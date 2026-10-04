@@ -138,4 +138,22 @@ describe('docToMarkdown', () => {
 		expect(docToMarkdown(doc(p(t('x'))), { title: 'T' })).toBe('# T\n\nx\n');
 		expect(docToMarkdown(doc())).toBe('');
 	});
+
+	it('leaves comments out unless asked, then writes them as footnotes', () => {
+		const c = (text: string, ...ids: string[]) => ({
+			type: 'text',
+			text,
+			marks: ids.map((threadId) => ({ type: 'comment', attrs: { threadId } }))
+		});
+		const d = doc(
+			p(t('A '), c('brave', 'x'), c(' new', 'x', 'y'), t(' world '), c('*again*', 'x2')),
+			p(c('gone', 'deleted'))
+		);
+		expect(docToMarkdown(d)).toBe('A brave new world \\*again\\*\n\ngone\n');
+		const notes: Record<string, string> = { x: 'Ann: Why?', y: 'Bo: Ok', x2: 'Cy: [sic]' };
+		expect(docToMarkdown(d, { comment: (id) => notes[id] ?? null })).toBe(
+			'A brave new[^1][^2] world \\*again\\*[^3]\n\ngone\n\n' +
+				'[^1]: Ann: Why?\n[^2]: Bo: Ok\n[^3]: Cy: \\[sic\\]\n'
+		);
+	});
 });

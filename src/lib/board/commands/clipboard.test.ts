@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
+import { createThread, listThreads } from '$lib/model/comments';
 import { getDocsMap } from '$lib/model/doc';
 import { createElements } from '$lib/model/ops';
 import { samples } from '$lib/model/testFixtures';
@@ -37,6 +38,27 @@ describe('clipboard payloads', () => {
 		expect(pasted.some((e) => e.id === 's' || e.id === 'd')).toBe(false);
 		const card = pasted.find((e) => e.type === 'doccard')!;
 		expect(getDocsMap(dst.doc).get(card.id)?.toString()).toContain('Card text');
+	});
+
+	it('pasting a commented object copies its threads onto the copy', async () => {
+		const src = testCtx('board-a');
+		createElements(src.doc, [samples.sticky('s')]);
+		createThread(src.doc, {
+			anchor: { kind: 'element', elementId: 's' },
+			page: 'main',
+			author: 'Ann',
+			text: 'Check this'
+		});
+		src.selection.set(['s']);
+		const text = copySelectionText(src)!;
+
+		const dst = testCtx('board-b');
+		await pasteText(dst, text);
+		const [thread] = listThreads(dst.doc);
+		expect(thread).toMatchObject({
+			anchor: { kind: 'element', elementId: dst.selection.single },
+			messages: [{ author: 'Ann', text: 'Check this' }]
+		});
 	});
 
 	it('rejects malformed or foreign clipboard text', () => {

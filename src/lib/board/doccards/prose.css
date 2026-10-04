@@ -257,3 +257,10 @@
 	animation: mention-flash 1.6s ease-out;
 	border-radius: 4px;
 }
+
+/* Commented text (step 45). */
+.comment-mark {
+	background: color-mix(in srgb, #ffd43b 35%, transparent);
+	border-bottom: 2px solid #fab005;
+	cursor: pointer;
+}

@@ -36,8 +36,8 @@ doc.getMap('comments'): Y.Map<threadId, Y.Map<{
 - e2e `comments.spec.ts`: comment on a sticky → badge → reply → resolve (badge hides, panel shows it under Resolved) → reopen; comment a text range in a doc card → highlight → edit text around it → highlight follows; delete the sticky → its thread is gone; export + import a `.smthng` → comments come back; phones: long-press → Comment → sheet.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] `00-architecture.md`: non-goal lifted, §5 comments map and mark, schema 6, §10 file format note
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `00-architecture.md`: non-goal lifted, §5 comments map and mark, schema 6, §10 file format note
 
 ## Out of scope
 Mentions of people, notifications, real-time presence (no accounts, no server).

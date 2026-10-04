@@ -12,6 +12,12 @@ export function mentionAt(target: EventTarget | null): string | null {
 	return target.closest<HTMLElement>('.mention[data-id]')?.dataset.id ?? null;
 }
 
+/** The comment thread id when `target` is (inside) commented text. */
+export function commentAt(target: EventTarget | null): string | null {
+	if (!(target instanceof Element)) return null;
+	return target.closest<HTMLElement>('[data-comment]')?.dataset.comment ?? null;
+}
+
 /** Brings a mentioned object into view, selects it and pulses it (closing focus mode first). */
 export function jumpToElement(ctx: BoardContext, id: string): boolean {
 	// The object may be on another page: go there first.
