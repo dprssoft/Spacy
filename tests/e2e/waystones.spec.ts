@@ -41,6 +41,9 @@ test('place waystones with W, fly between them, reorder, and keep the order afte
 	]);
 	const position = page.getByTestId('waystone-position');
 	await expect(position).toHaveText('3 / 3');
+	// Docked in the status bar, not over the board.
+	await expect(page.locator('footer').getByTestId('waystone-bar')).toBeVisible();
+	await expect(page.getByTestId('canvas').getByTestId('waystone-bar')).toHaveCount(0);
 
 	await page.getByTestId('canvas').focus();
 	await page.keyboard.press('Escape');
@@ -67,6 +70,17 @@ test('place waystones with W, fly between them, reorder, and keep the order afte
 	await list.locator('[data-go]').first().focus();
 	await page.keyboard.press('Alt+ArrowDown');
 	await expect(list.locator('[data-go]')).toHaveText(['Waystone 2', 'Prologue', 'Waystone 3']);
+
+	// Presenting: only the bar is left, floating over the board.
+	await page.keyboard.press('Escape');
+	await page.getByTestId('waystone-current').click();
+	await page.getByRole('button', { name: 'Present' }).click();
+	await expect(page.locator('footer')).toHaveCount(0);
+	await expect(page.getByTestId('waystone-bar')).toBeVisible();
+	if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/p.png` });
+	await page.getByRole('button', { name: 'Stop presenting' }).click();
+	await expect(page.locator('footer').getByTestId('waystone-bar')).toBeVisible();
+	if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/d.png` });
 
 	await page.reload();
 	await waitForHooks(page);

@@ -54,7 +54,7 @@
 	import { BacklinkIndex } from './writing/backlinks.svelte';
 	import { CommentsState } from './comments/commentsState.svelte';
 	import { WaystonesState } from './waystones/waystones.svelte';
-	import WaystoneBar from './waystones/WaystoneBar.svelte';
+	import WaystonePresenter from './waystones/WaystonePresenter.svelte';
 	import WaystoneLabels from './waystones/WaystoneLabels.svelte';
 	import CommentBadges from './comments/CommentBadges.svelte';
 	import CommentPopover from './comments/CommentPopover.svelte';
@@ -331,7 +331,7 @@
 					{/snippet}
 				</Canvas>
 			</CanvasContextMenu>
-			<WaystoneBar />
+			<WaystonePresenter />
 			{#if findState.open}
 				<FindPanel />
 			{/if}

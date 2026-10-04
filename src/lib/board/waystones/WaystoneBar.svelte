@@ -4,52 +4,29 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import X from '@lucide/svelte/icons/x';
-	import { fullscreen } from '$lib/shared/fullscreen.svelte';
 	import { getBoard } from '../context';
 	import WaystoneList from './WaystoneList.svelte';
 
-	// The route of the page's waystones: ◀ "2 / 5 · Act II" ▶; the name opens the list.
+	// The route of the page's waystones: ◀ "2 / 5 · Act II" ▶; the name opens the list. Docked in
+	// the status bar; floating over the board only while presenting (the status bar is hidden).
+	let { floating = false }: { floating?: boolean } = $props();
+
 	const ctx = getBoard();
 	const { waystones } = ctx;
 	const route = $derived(waystones.route);
 	const at = $derived(Math.min(waystones.current, route.length - 1));
 	const here = $derived(at >= 0 ? route[at] : undefined);
 
-	// Leaving full screen (Escape, the browser's own controls) stops presenting.
-	let wasFullscreen = false;
-	$effect(() => {
-		const active = fullscreen.active;
-		if (wasFullscreen && !active && waystones.presenting) waystones.presenting = false;
-		wasFullscreen = active;
-	});
-	// Presenting ends with its route.
-	$effect(() => {
-		if (waystones.presenting && route.length === 0) waystones.stopPresenting();
-	});
-
-	function onkeydown(e: KeyboardEvent) {
-		// Without full screen (not allowed here), Escape is the way out.
-		if (e.key === 'Escape' && waystones.presenting) {
-			e.preventDefault();
-			waystones.stopPresenting();
-		}
-	}
-
-	// Another page, another route.
-	$effect(() => {
-		void ctx.pages.current;
-		waystones.reset();
-	});
-
-	const button =
-		'inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-text disabled:opacity-40 pointer-coarse:size-11';
+	const button = $derived(
+		`inline-flex shrink-0 items-center justify-center text-muted hover:bg-surface-2 hover:text-text disabled:opacity-40 pointer-coarse:size-11 ${floating ? 'size-8 rounded-full' : 'size-7 rounded-md hover:bg-surface'}`
+	);
 </script>
-
-<svelte:window {onkeydown} />
 
 {#if route.length > 0}
 	<div
-		class="absolute bottom-3 left-1/2 z-20 flex w-max max-w-[calc(100%-16px)] -translate-x-1/2 items-center gap-0.5 rounded-full border border-border bg-surface p-1 shadow-lg"
+		class={floating
+			? 'absolute bottom-3 left-1/2 z-20 flex w-max max-w-[calc(100%-16px)] -translate-x-1/2 items-center gap-0.5 rounded-full border border-border bg-surface p-1 shadow-lg'
+			: 'flex min-w-0 shrink-0 items-center justify-center gap-0.5 self-center'}
 		role="toolbar"
 		aria-label="Waystones"
 		data-interactive
@@ -66,7 +43,9 @@
 		>
 		<Popover.Root bind:open={waystones.listOpen}>
 			<Popover.Trigger
-				class="inline-flex h-8 max-w-64 min-w-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm hover:bg-surface-2 pointer-coarse:h-11"
+				class={floating
+					? 'inline-flex h-8 max-w-64 min-w-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm hover:bg-surface-2 pointer-coarse:h-11'
+					: 'inline-flex h-7 max-w-56 min-w-0 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs hover:bg-surface max-sm:max-w-none pointer-coarse:h-11'}
 				aria-label="Waystones list"
 				title="All waystones"
 				data-testid="waystone-current"
@@ -75,7 +54,9 @@
 				<span class="tabular-nums" data-testid="waystone-position"
 					>{here ? `${at + 1} / ${route.length}` : `– / ${route.length}`}</span
 				>
-				{#if here}<span class="truncate text-muted">· {here.name}</span>{/if}
+				{#if here}<span class="truncate text-muted" class:max-sm:hidden={!floating}
+						>· {here.name}</span
+					>{/if}
 			</Popover.Trigger>
 			<Popover.Portal>
 				<Popover.Content
