@@ -66,6 +66,15 @@ test('the SE handle resizes; Shift keeps the aspect ratio', async ({ page }) => 
 	expect(r.w / r.h).toBeCloseTo(220 / 120, 2);
 });
 
+test('pressing a handle off-centre doesn’t make the box jump', async ({ page }) => {
+	await add(page, [el.shape('a', -100, -50)]);
+	await clickElement(page, 'a');
+	const se = await handle(page, 'se');
+	const from = { x: Math.round(se.x) + 3, y: Math.round(se.y) - 3 };
+	await drag(page, from, { x: from.x + 40, y: from.y });
+	expect(await byId(page, 'a')).toMatchObject({ x: -100, y: -50, w: 200, h: 100 });
+});
+
 test('the rotate handle rotates; Shift snaps to 15°', async ({ page }) => {
 	await add(page, [el.shape('a', -80, -50)]);
 	await clickElement(page, 'a');

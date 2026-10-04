@@ -1,6 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
-import { createBoard, enableTestHooks, waitForHooks } from './helpers';
+import {
+	clipboardPermissions,
+	createBoard,
+	enableTestHooks,
+	readClipboard,
+	waitForHooks
+} from './helpers';
 
 const EXPECTED = '# Untitled\n\n## Goals\n\n- [ ] write docs\n- [x] ship **it**\n';
 
@@ -34,12 +40,12 @@ test('"Download .md" saves the card as Markdown', async ({ page }) => {
 	expect(await readFile((await download.path())!, 'utf8')).toBe(EXPECTED);
 });
 
-test('"Copy as Markdown" from the canvas menu', async ({ page, context }) => {
-	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('"Copy as Markdown" from the canvas menu', async ({ page, context, browserName }) => {
+	await context.grantPermissions(clipboardPermissions(browserName));
 	const card = page.locator('[data-type="doccard"]');
 	const b = (await card.boundingBox())!;
 	await page.mouse.click(b.x + b.width / 2, b.y + b.height - 30, { button: 'right' });
 	await page.getByRole('menuitem', { name: 'Copy as Markdown' }).click();
 	await expect(page.getByText('Copied as Markdown')).toBeVisible();
-	expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(EXPECTED);
+	expect(await readClipboard(page, browserName)).toBe(EXPECTED);
 });

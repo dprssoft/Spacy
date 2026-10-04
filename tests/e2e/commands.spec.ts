@@ -1,7 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
-import { clickElement, createBoard, el, enableTestHooks, waitForHooks } from './helpers';
+import {
+	clickElement,
+	clipboardPermissions,
+	createBoard,
+	el,
+	enableTestHooks,
+	waitForHooks
+} from './helpers';
 
-test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
+test.use({ permissions: async ({ browserName }, use) => use(clipboardPermissions(browserName)) });
 
 test.beforeEach(async ({ page }) => {
 	await enableTestHooks(page);

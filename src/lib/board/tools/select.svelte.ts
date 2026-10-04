@@ -18,6 +18,7 @@ import {
 	cursorForHandle,
 	isResizeHandle,
 	resizeBox,
+	resizeHandlePoint,
 	rotateElementsAround,
 	scaleElementsToBox,
 	sizePatch,
@@ -63,7 +64,15 @@ type State =
 	/** Moving a bend point of a straight/curved connector. */
 	| { kind: 'waypoint'; id: string; index: number }
 	| { kind: 'marquee'; start: Point; base: string[] }
-	| { kind: 'resizing'; handle: ResizeHandle; box: Box; snapshot: Element[]; snapper: Snapper }
+	| {
+			kind: 'resizing';
+			handle: ResizeHandle;
+			box: Box;
+			/** Handle position minus the pointer at press: the handle keeps that offset. */
+			grab: Point;
+			snapshot: Element[];
+			snapper: Snapper;
+	  }
 	| { kind: 'rotating'; center: Point; startAngle: number; snapshot: Element[] };
 
 /** Click/Shift/marquee selection, move (Alt duplicates, Shift locks axis), resize, rotate. */
@@ -185,8 +194,10 @@ export function createSelectTool(ctx: BoardContext): Tool {
 	}
 
 	function resize(e: CanvasPointerEvent, s: Extract<State, { kind: 'resizing' }>) {
+		// Without the grab offset, pressing a handle off-centre would make the box jump.
+		const at = { x: e.world.x + s.grab.x, y: e.world.y + s.grab.y };
 		// Snap the dragged handle (only for unrotated boxes: guides are axis-aligned).
-		const pointer = s.box.rotation === 0 ? s.snapper.point(e.world, e.mod) : e.world;
+		const pointer = s.box.rotation === 0 ? s.snapper.point(at, e.mod) : at;
 		e = { ...e, world: pointer };
 		if (s.snapshot.length === 1) {
 			const el = s.snapshot[0]!;
@@ -331,7 +342,9 @@ export function createSelectTool(ctx: BoardContext): Tool {
 						ctx,
 						targets.map((el) => el.id)
 					);
-					state = { kind: 'resizing', handle, box, snapshot: targets, snapper };
+					const h = resizeHandlePoint(box, handle);
+					const grab = { x: h.x - e.world.x, y: h.y - e.world.y };
+					state = { kind: 'resizing', handle, box, grab, snapshot: targets, snapper };
 				}
 				return;
 			}
