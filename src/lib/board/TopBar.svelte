@@ -16,6 +16,7 @@
 	import SaveIndicator from './SaveIndicator.svelte';
 	import { formatKeys } from './tools/formatKeys';
 	import { exportDialog } from './ui/exportDialogState.svelte';
+	import { compileDialog } from './writing/compileDialogState.svelte';
 	import { canSaveToFile, downloadBoardFile, saveTarget } from './ui/saveToFile.svelte';
 	import type { BoardTitle } from './title.svelte';
 
@@ -108,6 +109,9 @@
 					>
 					<DropdownMenu.Item class={item} onSelect={() => exportDialog.show('svg')}
 						>SVG…</DropdownMenu.Item
+					>
+					<DropdownMenu.Item class={item} onSelect={() => (compileDialog.open = true)}
+						>Compile manuscript…</DropdownMenu.Item
 					>
 					<DropdownMenu.Separator class="my-1 h-px bg-border" />
 					<DropdownMenu.Item class={item} onSelect={() => downloadBoardFile(ctx.id, title.value)}

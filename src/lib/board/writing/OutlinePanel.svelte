@@ -7,6 +7,7 @@
 	import { jumpToElement } from '../doccards/jumpTo';
 	import { openFocus } from '../doccards/focus';
 	import type { OutlineState } from './outlineState.svelte';
+	import { compileDialog } from './compileDialogState.svelte';
 
 	let { outline }: { outline: OutlineState } = $props();
 
@@ -79,7 +80,12 @@
 		>
 		<button
 			type="button"
-			class="ml-auto inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text pointer-coarse:size-11"
+			class="ml-auto h-7 rounded-md px-2 text-xs text-muted hover:bg-surface-2 hover:text-text pointer-coarse:h-11"
+			onclick={() => (compileDialog.open = true)}>Compile…</button
+		>
+		<button
+			type="button"
+			class="inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text pointer-coarse:size-11"
 			aria-label="Close outline"
 			onclick={() => outline.toggle()}
 		>

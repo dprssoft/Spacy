@@ -1133,3 +1133,22 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (841 unit tests; new `outline.test.ts`, `outlineState.test.ts` (reorder storage; a move into another frame moves and grows, and one undo restores order, position and size)) · pnpm test:e2e ✅ apart from the one flaky mobile test above (new `outline.spec.ts`: 3 chapters × 4 scenes; drag Scene 1 into chapter 2 → the order and frame change, undo restores, redo, reload keeps it and the panel state; Alt+↑, click selects, the shortcut toggles; `mobile-layout.spec.ts`: the outline is a full-width sheet on phones) · screenshot of the panel reviewed.
+
+## Step 42 — Manuscript compile — 2026-10-04
+**Summary:**
+- `writing/compile.ts` (pure): outline chapters + card contents + options → a `Manuscript`.
+  - Options: chapter headings from frames (untitled frames become "Chapter N"; numbering doesn't repeat for frames already named "Chapter N"), numbering, scene titles, separator (`* * *`, blank, none), title page (title, author, date), chapter selection, leave out collapsed cards.
+  - Card headings are moved down two levels under the manuscript's H1 (chapter) and H2 (scene); empty cards are skipped.
+- **Writers:**
+  - **Markdown** (`manuscriptToMarkdown`, via `docToMarkdown`).
+  - **Word** (`writing/docxWriter.ts`, no dependency): WordprocessingML with Title/Subtitle, Heading 1–3 (named "heading N", so Word and our reader treat them as headings), Normal (Times New Roman 12 pt, 1.5 lines), Quote, Code, Hyperlink; bullet and numbered lists (numbered lists restart), task items as ☐/☑, links as hyperlink relationships; a page break before each chapter; A4 page.
+  - **Print/PDF** (`writing/manuscriptHtml.ts`): a print stylesheet (serif, page breaks per chapter, a title page) shown in a hidden `srcdoc` iframe and printed with the browser's "Save as PDF".
+- `writing/zip.ts`: a stored-entry zip writer with CRC32.
+- **Compile dialog** (lazy; Export → "Compile manuscript…", and "Compile…" in the outline): format, structure, title page (the author is remembered per browser), chapter checkboxes, a chapter/word summary, Download / Print.
+
+**Deviations:**
+- Mentions become their labels in all formats.
+- EPUB is left for later (out of scope).
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (848 unit tests; new `compile.test.ts`: chapters, numbering (incl. no double numbering), scene titles, selection, collapsed, demotion, Markdown, print HTML, CRC32 check value, `.docx` round-trip through our own reader (headings, marks, lists, links, title page), valid XML in every part) · pnpm test:e2e ✅ (208; new `compile.spec.ts`: Markdown download with title page and chapters in order; Word download is a zip with the chosen chapters only; the print view has the chapter sections) · **LibreOffice check:** a compiled `.docx` converts headless to text and HTML with Heading 1/2/3, page breaks before chapters, scene separators and the title page.
