@@ -112,6 +112,7 @@
 				type="button"
 				class={icon}
 				aria-label="Rename {w.name}"
+				title="Rename"
 				onclick={() => (renaming = w.id)}><Pencil class="size-3.5" aria-hidden="true" /></button
 			>
 			<button
@@ -126,6 +127,7 @@
 				type="button"
 				class={icon}
 				aria-label="Delete {w.name}"
+				title="Delete"
 				onclick={() => waystones.remove(w.id)}
 				><Trash2 class="size-3.5" aria-hidden="true" /></button
 			>

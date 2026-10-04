@@ -11,7 +11,7 @@
 </script>
 
 <DropdownMenu.Root>
-	<DropdownMenu.Trigger class={className} aria-label="Help">
+	<DropdownMenu.Trigger class={className} aria-label="Help" title="Help">
 		<CircleQuestionMark class="size-4" aria-hidden="true" />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Portal>

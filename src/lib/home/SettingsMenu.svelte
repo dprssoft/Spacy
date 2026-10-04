@@ -44,7 +44,7 @@
 </script>
 
 <DropdownMenu.Root bind:open>
-	<DropdownMenu.Trigger class={className} aria-label="Settings">
+	<DropdownMenu.Trigger class={className} aria-label="Settings" title="Settings">
 		<Settings class="size-[18px]" aria-hidden="true" />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Portal>

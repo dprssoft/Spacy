@@ -26,13 +26,18 @@
 		type="button"
 		class={btn}
 		aria-label={muted ? 'Unmute' : 'Mute'}
+		title={muted ? 'Unmute (M)' : 'Mute (M)'}
 		aria-keyshortcuts="M"
 		onclick={() => onmute(!muted)}
 	>
 		<Icon class="size-4" aria-hidden="true" />
 	</button>
 	<Popover.Root>
-		<Popover.Trigger class="{btn} w-5 min-w-5 px-0 text-[10px]" aria-label="Volume">
+		<Popover.Trigger
+			class="{btn} w-5 min-w-5 px-0 text-[10px]"
+			aria-label="Volume"
+			title="Volume (↑ / ↓)"
+		>
 			{Math.round((muted ? 0 : volume) * 100)}
 		</Popover.Trigger>
 		<Popover.Portal>

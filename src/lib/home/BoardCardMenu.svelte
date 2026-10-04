@@ -24,6 +24,7 @@
 	<DropdownMenu.Trigger
 		{tabindex}
 		aria-label="Board actions"
+		title="Board actions"
 		class="inline-flex size-7 items-center justify-center rounded-md bg-surface/90 text-muted shadow-sm backdrop-blur transition hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none data-[state=open]:text-text"
 	>
 		<Ellipsis class="size-4" aria-hidden="true" />

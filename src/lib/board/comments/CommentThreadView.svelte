@@ -64,6 +64,7 @@
 			type="button"
 			class="{action} px-1.5"
 			aria-label="Delete thread"
+			title="Delete thread"
 			onclick={() => step(() => deleteThread(ctx.doc, thread.id))}
 			><Trash2 class="size-3.5" aria-hidden="true" /></button
 		>

@@ -100,6 +100,7 @@
 		type="button"
 		class={btn}
 		aria-label={s.playing ? 'Pause' : 'Play'}
+		title={s.playing ? 'Pause (K)' : 'Play (K)'}
 		aria-keyshortcuts="K"
 		data-testid="media-toggle"
 		onclick={() => cmd.togglePlay(controller, el)}
@@ -114,6 +115,7 @@
 			type="button"
 			class={btn}
 			aria-label="Back 10 seconds"
+			title="Back 10 s (J)"
 			aria-keyshortcuts="J"
 			onclick={() => cmd.seekBy(controller, -10)}
 		>
@@ -123,6 +125,7 @@
 			type="button"
 			class={btn}
 			aria-label="Forward 10 seconds"
+			title="Forward 10 s (L)"
 			aria-keyshortcuts="L"
 			onclick={() => cmd.seekBy(controller, 10)}
 		>
@@ -141,6 +144,7 @@
 		type="button"
 		class="{btn} text-xs tabular-nums"
 		aria-label="Show {remaining ? 'elapsed' : 'remaining'} time"
+		title="Show {remaining ? 'elapsed' : 'remaining'} time"
 		data-testid="media-time"
 		onclick={() => (remaining = !remaining)}
 	>
@@ -158,8 +162,10 @@
 		/>
 		{#if can.rate}
 			<DropdownMenu.Root>
-				<DropdownMenu.Trigger class="{btn} text-xs tabular-nums" aria-label="Speed {s.rate}×"
-					>{s.rate}×</DropdownMenu.Trigger
+				<DropdownMenu.Trigger
+					class="{btn} text-xs tabular-nums"
+					aria-label="Speed {s.rate}×"
+					title="Playback speed">{s.rate}×</DropdownMenu.Trigger
 				>
 				<DropdownMenu.Portal>
 					<DropdownMenu.Content
@@ -192,6 +198,7 @@
 			type="button"
 			class={btn}
 			aria-label={fullscreen ? 'Exit full screen' : 'Full screen'}
+			title={fullscreen ? 'Exit full screen (F)' : 'Full screen (F)'}
 			aria-keyshortcuts="F"
 			onclick={() => cmd.toggleFullscreen(el.id)}
 		>

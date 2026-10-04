@@ -82,6 +82,7 @@
 				type="button"
 				class={toggle}
 				aria-label="Grid view"
+				title="Grid view"
 				aria-pressed={layout === 'grid'}
 				onclick={() => (layout = 'grid')}
 			>
@@ -91,6 +92,7 @@
 				type="button"
 				class={toggle}
 				aria-label="List view"
+				title="List view"
 				aria-pressed={layout === 'list'}
 				onclick={() => (layout = 'list')}
 			>

@@ -46,6 +46,7 @@
 		type="button"
 		class="pointer-events-auto -ml-1.5 inline-flex size-6 shrink-0 items-center justify-center rounded opacity-60 hover:bg-black/5 hover:opacity-100"
 		aria-label={el.collapsed ? 'Expand doc card' : 'Collapse doc card'}
+		title={el.collapsed ? 'Expand' : 'Collapse'}
 		aria-expanded={!el.collapsed}
 		data-interactive
 		onpointerdown={(e) => e.stopPropagation()}
@@ -83,6 +84,7 @@
 			<Popover.Trigger
 				class="pointer-events-auto inline-flex h-6 shrink-0 items-center gap-0.5 rounded px-1 text-xs opacity-60 hover:bg-black/5 hover:opacity-100"
 				aria-label="Mentioned in {backlinks.length} {backlinks.length === 1 ? 'card' : 'cards'}"
+				title="Mentioned in {backlinks.length} {backlinks.length === 1 ? 'card' : 'cards'}"
 				data-interactive
 				data-testid="backlinks-badge"
 				onpointerdown={(e: PointerEvent) => e.stopPropagation()}

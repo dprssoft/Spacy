@@ -63,6 +63,7 @@
 			<button
 				type="button"
 				aria-label="Clear search"
+				title="Clear search"
 				onclick={() => {
 					search = '';
 					input?.focus();
