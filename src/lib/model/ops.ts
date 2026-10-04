@@ -6,6 +6,7 @@ import {
 	getMeta,
 	getSketchesMap,
 	maxZ,
+	pageElementsMap,
 	rememberWritten,
 	toYMap,
 	type ElementYMap
@@ -75,10 +76,20 @@ export function updateElements(
 	patches: readonly { id: string; patch: ElementPatch }[],
 	origin: Origin = LOCAL
 ): void {
+	updateElementsOnPage(doc, null, patches, origin);
+}
+
+/** Like `updateElements`, on a given page (null: the active one), e.g. find and replace. */
+export function updateElementsOnPage(
+	doc: Y.Doc,
+	pageId: string | null,
+	patches: readonly { id: string; patch: ElementPatch }[],
+	origin: Origin = LOCAL
+): void {
 	const written: ElementYMap[] = [];
 	try {
 		doc.transact(() => {
-			const map = getElementsMap(doc);
+			const map = pageId === null ? getElementsMap(doc) : pageElementsMap(doc, pageId);
 			for (const { id, patch } of patches) {
 				const ymap = map.get(id);
 				if (!ymap) continue;
