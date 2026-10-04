@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { cloneElements } from './clone';
-import { copyThreadsTo, threadsOn } from './comments';
+import { copyThreadsTo, deleteThreadsWhere, threadsOn } from './comments';
 import {
 	getActivePageId,
 	getDocsMap,
@@ -111,6 +111,7 @@ export function deletePages(doc: Y.Doc, pageIds: Iterable<string>): boolean {
 	doc.transact(() => {
 		const docs = getDocsMap(doc);
 		const sketches = getSketchesMap(doc);
+		const removed = new Set<string>();
 		for (const p of pages) {
 			if (!ids.has(p.id)) continue;
 			const map = pageElementsMap(doc, p.id);
@@ -118,8 +119,10 @@ export function deletePages(doc: Y.Doc, pageIds: Iterable<string>): boolean {
 				map.delete(id);
 				docs.delete(id);
 				sketches.delete(id);
+				removed.add(id);
 			}
 		}
+		deleteThreadsWhere(doc, (id) => removed.has(id));
 	}, PAGES);
 	// A stored list must exist from here on: without one, the first page would come back.
 	setPages(doc, kept);
@@ -176,6 +179,15 @@ export function duplicatePage(doc: Y.Doc, pageId: string): Page | null {
 		if (outline.length > 0) setOutline(doc, page.id, outline);
 	}, PAGES);
 	return page;
+}
+
+/**
+ * Deletes comment threads whose element is on no page (left behind by page deletes before they
+ * removed comments, or by imported data). Run when a board opens; not undoable.
+ */
+export function pruneOrphanThreads(doc: Y.Doc, origin: Origin): void {
+	const ids = new Set(allPageMaps(doc).flatMap((map) => [...map.keys()]));
+	doc.transact(() => deleteThreadsWhere(doc, (id) => !ids.has(id)), origin);
 }
 
 /** Every page's element map, in page order. */

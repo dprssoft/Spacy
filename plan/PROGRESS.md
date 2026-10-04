@@ -1254,3 +1254,9 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (903 unit tests; new in `model/pages.test.ts`: multi-delete incl. the "never all" rule, duplicate with frame/group/doc card/sketch/outline/comment, copy names; in `pages.svelte.test.ts`: duplicate shows the copy with connectors remapped and undo working there, toggle/range picking, multi-remove). e2e `pages.spec.ts` ✅ on chromium, firefox and mobile (new: duplicate → Ctrl-click → "Delete 2 pages" → all-picked delete disabled). WebKit can't launch on this machine (missing system libraries; same on `main`).
+
+### Comments on deleted pages — 2026-10-04
+- Deleting pages now deletes the comment threads on their objects (`deleteThreadsWhere` in `model/comments.ts`, shared with the element delete hook). Before, they stayed in the board data and exports, hidden from the panel.
+- Boards saved before this are cleaned when opened: `pruneOrphanThreads` (origin `MIGRATION`, not undoable) deletes threads whose object is on no page. No schema version change.
+
+**Verification:** pnpm verify ✅ (905 unit tests; new in `model/pages.test.ts`: page delete removes element and text threads of its objects only; prune keeps threads on any page). e2e `comments`, `pages`, `files` ✅ on chromium and firefox.

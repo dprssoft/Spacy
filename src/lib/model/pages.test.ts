@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { listThreads, createThread } from './comments';
 import { getDocsMap, getElementsMap, getSketchesMap, listElements, MAIN_PAGE } from './doc';
 import { migrate, SCHEMA_VERSION } from './migrations';
+import { MIGRATION } from './origins';
 import { createElements, deleteElements } from './ops';
 import {
 	activePage,
@@ -16,6 +17,7 @@ import {
 	movePage,
 	nextPageName,
 	pageOfElement,
+	pruneOrphanThreads,
 	renamePage,
 	setActivePage
 } from './pages';
@@ -193,5 +195,53 @@ describe('pages', () => {
 		const long = 'x'.repeat(40);
 		expect(copyName(long)).toHaveLength(40);
 		expect(copyName(long).endsWith(' copy')).toBe(true);
+	});
+
+	it('deleting pages deletes the comments on their objects, and only those', () => {
+		const doc = new Y.Doc();
+		createElements(doc, [samples.shape('a')]);
+		const p2 = addPage(doc);
+		setActivePage(doc, p2.id);
+		createElements(doc, [samples.shape('b'), samples.doccard('d')]);
+		const thread = (anchor: Parameters<typeof createThread>[1]['anchor'], page: string) =>
+			createThread(doc, { anchor, page, author: 'Ann', text: 'hi' });
+		const kept = thread({ kind: 'element', elementId: 'a' }, MAIN_PAGE);
+		thread({ kind: 'element', elementId: 'b' }, p2.id);
+		thread({ kind: 'text', cardId: 'd' }, p2.id);
+
+		expect(deletePages(doc, [p2.id])).toBe(true);
+		expect(listThreads(doc).map((t) => t.id)).toEqual([kept]);
+	});
+
+	it('prunes threads whose object is on no page', () => {
+		const doc = new Y.Doc();
+		createElements(doc, [samples.shape('a')]);
+		const p2 = addPage(doc);
+		setActivePage(doc, p2.id);
+		createElements(doc, [samples.doccard('d')]);
+		const onA = createThread(doc, {
+			anchor: { kind: 'element', elementId: 'a' },
+			page: MAIN_PAGE,
+			author: 'Ann',
+			text: 'hi'
+		});
+		const onD = createThread(doc, {
+			anchor: { kind: 'text', cardId: 'd' },
+			page: p2.id,
+			author: 'Ann',
+			text: 'hi'
+		});
+		createThread(doc, {
+			anchor: { kind: 'element', elementId: 'gone' },
+			page: 'old-page',
+			author: 'Ann',
+			text: 'orphan'
+		});
+		pruneOrphanThreads(doc, MIGRATION);
+		expect(
+			listThreads(doc)
+				.map((t) => t.id)
+				.sort()
+		).toEqual([onA, onD].sort());
 	});
 });
