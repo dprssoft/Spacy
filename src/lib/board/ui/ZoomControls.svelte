@@ -43,6 +43,7 @@
 		type="button"
 		class={button}
 		aria-label="Zoom out"
+		title="Zoom out (Mod+-)"
 		disabled={viewport.zoom <= 0.1}
 		onclick={() => zoomTo(nextZoomStep(viewport.zoom, -1))}
 	>
@@ -51,6 +52,7 @@
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
 			aria-label="Zoom options, current zoom {percent}%"
+			title="Zoom options"
 			class="h-7 min-w-14 rounded-md px-1.5 text-xs font-medium tabular-nums hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none pointer-coarse:h-11"
 		>
 			<span data-testid="zoom-level">{percent}%</span>
@@ -114,6 +116,7 @@
 		type="button"
 		class={button}
 		aria-label="Zoom in"
+		title="Zoom in (Mod+=)"
 		disabled={viewport.zoom >= 4}
 		onclick={() => zoomTo(nextZoomStep(viewport.zoom, 1))}
 	>

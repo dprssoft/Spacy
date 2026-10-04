@@ -30,6 +30,7 @@
 		style:left="{b.x}px"
 		style:top="{b.y}px"
 		aria-label="{b.count} {b.count === 1 ? 'comment' : 'comments'}"
+		title="{b.count} open {b.count === 1 ? 'comment' : 'comments'}"
 		data-interactive
 		data-comment-badge={b.id}
 		onclick={() => comments.openElement(b.id)}

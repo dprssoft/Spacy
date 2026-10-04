@@ -230,6 +230,7 @@
 							<DropdownMenu.Trigger
 								class="{button} sm:hidden"
 								aria-label="Insert more"
+								title="Insert more"
 								data-insert-menu
 							>
 								<Plus class="size-[18px]" aria-hidden="true" />

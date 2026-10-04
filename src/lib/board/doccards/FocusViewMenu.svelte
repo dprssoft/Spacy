@@ -45,7 +45,7 @@
 </script>
 
 <DropdownMenu.Root>
-	<DropdownMenu.Trigger class={className} aria-label="View options">
+	<DropdownMenu.Trigger class={className} aria-label="View options" title="View options">
 		<Eye class="size-4" aria-hidden="true" />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Portal>

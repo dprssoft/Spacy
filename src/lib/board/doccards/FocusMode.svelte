@@ -225,7 +225,13 @@
 		</div>
 		<FocusViewMenu class={iconButton} />
 		<DocCardMenu cardId={id} class={iconButton} />
-		<button type="button" class={iconButton} aria-label="Close focus mode" onclick={close}>
+		<button
+			type="button"
+			class={iconButton}
+			aria-label="Close focus mode"
+			title="Close focus mode (Esc)"
+			onclick={close}
+		>
 			<X class="size-4" aria-hidden="true" />
 		</button>
 	</header>

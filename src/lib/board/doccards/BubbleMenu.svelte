@@ -93,6 +93,7 @@
 		type="button"
 		class={button}
 		aria-label={b.label}
+		title={b.label}
 		aria-pressed={isOn(() => b.active(ed))}
 		onmousedown={(e) => e.preventDefault()}
 		onclick={() => b.run(ed)}
@@ -118,6 +119,7 @@
 				type="button"
 				class={button}
 				aria-label="Link"
+				title="Link"
 				aria-pressed={isOn(() => editor!.isActive('link'))}
 				onmousedown={(e) => e.preventDefault()}
 				onclick={() => (linking = true)}
@@ -129,6 +131,7 @@
 					type="button"
 					class={button}
 					aria-label="Comment"
+					title="Comment on the selection"
 					data-bubble-comment
 					onmousedown={(e) => e.preventDefault()}
 					onclick={() => oncomment(editor!)}

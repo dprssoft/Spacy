@@ -10,7 +10,7 @@
 </script>
 
 <DropdownMenu.Root>
-	<DropdownMenu.Trigger class={btn} aria-label="More media options">
+	<DropdownMenu.Trigger class={btn} aria-label="More media options" title="More options">
 		<Ellipsis class="size-4" aria-hidden="true" />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Portal>

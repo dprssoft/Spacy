@@ -128,6 +128,7 @@
 				type="button"
 				tabindex={tab}
 				aria-label={board.starred ? 'Unstar board' : 'Star board'}
+				title={board.starred ? 'Unstar' : 'Star'}
 				aria-pressed={board.starred}
 				onclick={() => actions.setStarred(board, !board.starred)}
 				class={[

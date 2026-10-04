@@ -87,6 +87,7 @@
 			type="button"
 			class="inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text pointer-coarse:size-11"
 			aria-label="Close outline"
+			title="Close outline"
 			onclick={() => outline.toggle()}
 		>
 			<X class="size-4" aria-hidden="true" />

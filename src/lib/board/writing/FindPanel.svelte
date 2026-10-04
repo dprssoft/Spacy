@@ -135,6 +135,7 @@
 			type="button"
 			class={icon}
 			aria-label="Close find"
+			title="Close (Esc)"
 			onclick={() => (findState.open = false)}><X class="size-4" aria-hidden="true" /></button
 		>
 	</div>
@@ -174,6 +175,7 @@
 			type="button"
 			class={icon}
 			aria-label="Previous match"
+			title="Previous match (Shift+Enter)"
 			disabled={!hits.length}
 			onclick={() => go(current - 1)}><ChevronUp class="size-4" aria-hidden="true" /></button
 		>
@@ -181,6 +183,7 @@
 			type="button"
 			class={icon}
 			aria-label="Next match"
+			title="Next match (Enter)"
 			disabled={!hits.length}
 			onclick={() => go(current + 1)}><ChevronDown class="size-4" aria-hidden="true" /></button
 		>

@@ -17,6 +17,7 @@
 	<DropdownMenu.Trigger
 		class={className}
 		aria-label="Doc card options"
+		title="Doc card options"
 		data-interactive
 		onpointerdown={(e: PointerEvent) => e.stopPropagation()}
 	>

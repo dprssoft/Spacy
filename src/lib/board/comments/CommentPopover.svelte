@@ -158,6 +158,7 @@
 				type="button"
 				class="ml-auto inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text pointer-coarse:size-11"
 				aria-label="Close comments"
+				title="Close (Esc)"
 				onclick={() => comments.close()}><X class="size-4" aria-hidden="true" /></button
 			>
 		</header>

@@ -40,13 +40,18 @@
 					type="button"
 					class={icon}
 					aria-label="Edit comment"
+					title="Edit"
 					onclick={() => {
 						draft = message.text;
 						editing = true;
 					}}><Pencil class="size-3.5" aria-hidden="true" /></button
 				>
-				<button type="button" class={icon} aria-label="Delete comment" onclick={ondelete}
-					><Trash2 class="size-3.5" aria-hidden="true" /></button
+				<button
+					type="button"
+					class={icon}
+					aria-label="Delete comment"
+					title="Delete"
+					onclick={ondelete}><Trash2 class="size-3.5" aria-hidden="true" /></button
 				>
 			</span>
 		{/if}

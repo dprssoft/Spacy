@@ -59,6 +59,7 @@
 			type="button"
 			class={button}
 			aria-label="Previous waystone"
+			title="Previous waystone (PageUp)"
 			aria-keyshortcuts="PageUp"
 			disabled={!waystones.wrap && at <= 0}
 			onclick={() => waystones.step(-1)}><ChevronLeft class="size-4" aria-hidden="true" /></button
@@ -67,6 +68,7 @@
 			<Popover.Trigger
 				class="inline-flex h-8 max-w-64 min-w-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm hover:bg-surface-2 pointer-coarse:h-11"
 				aria-label="Waystones list"
+				title="All waystones"
 				data-testid="waystone-current"
 			>
 				<MapPin class="size-3.5 shrink-0 text-muted" aria-hidden="true" />
@@ -90,6 +92,7 @@
 			type="button"
 			class={button}
 			aria-label="Next waystone"
+			title="Next waystone (PageDown)"
 			aria-keyshortcuts="PageDown"
 			disabled={!waystones.wrap && at >= route.length - 1}
 			onclick={() => waystones.step(1)}><ChevronRight class="size-4" aria-hidden="true" /></button
@@ -99,6 +102,7 @@
 				type="button"
 				class={button}
 				aria-label="Stop presenting"
+				title="Stop presenting (Esc)"
 				onclick={() => waystones.stopPresenting()}><X class="size-4" aria-hidden="true" /></button
 			>
 		{/if}
