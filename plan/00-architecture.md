@@ -399,7 +399,7 @@ Imports always create new board ids and new asset ids (remapped in the doc). Ele
 | N | Doc card | ] / [ | Forward / Backward |
 | F | Frame | Mod+] / Mod+[ | To front / To back |
 | W | Waystone | PageDown / PageUp (Alt+→ / Alt+←) | Next / previous waystone |
-| Alt+1…9 | Go to waystone 1…9 | | |
+| Alt+1…9 | Go to waystone 1…9 | Shift+N | Go to the nearest object (not waystones or connectors; again: the next nearest) |
 | Mod+Shift+I | Insert image | Mod+Alt+C / Mod+Alt+V | Copy / Paste style |
 | Shift+1 | Zoom to fit | Shift+0 | Zoom to 100% |
 | Shift+2 | Zoom to selection | Mod+= / Mod+- | Zoom in / out |

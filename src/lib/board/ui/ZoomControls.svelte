@@ -2,7 +2,9 @@
 	import { DropdownMenu } from 'bits-ui';
 	import Minus from '@lucide/svelte/icons/minus';
 	import LocateFixed from '@lucide/svelte/icons/locate-fixed';
+	import Navigation from '@lucide/svelte/icons/navigation';
 	import Plus from '@lucide/svelte/icons/plus';
+	import { goToNearest } from '../commands/navigate';
 	import { nextZoomStep, zoomAt } from '../engine/viewport';
 	import type { ViewportState } from '../viewport.svelte';
 	import type { Rect } from '$lib/model/types';
@@ -20,7 +22,8 @@
 	} = $props();
 
 	const percent = $derived(Math.round(viewport.zoom * 100));
-	const { store, prefs } = getBoard();
+	const ctx = getBoard();
+	const { store, prefs } = ctx;
 	const frames = $derived(
 		store.frameOrder.flatMap((id) => {
 			const el = store.get(id);
@@ -66,6 +69,9 @@
 			>
 				<DropdownMenu.Item class={item} onSelect={() => viewport.fit(contentBounds())}>
 					Zoom to fit <kbd class="text-xs text-muted">⇧1</kbd>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item class={item} onSelect={() => goToNearest(ctx)}>
+					Go to the nearest object <kbd class="text-xs text-muted">⇧N</kbd>
 				</DropdownMenu.Item>
 				<DropdownMenu.Separator class="my-1 h-px bg-border" />
 				{#each [0.5, 1, 2] as z (z)}
@@ -121,6 +127,18 @@
 		onclick={() => zoomTo(nextZoomStep(viewport.zoom, 1))}
 	>
 		<Plus class="size-4" aria-hidden="true" />
+	</button>
+	<!-- Phones: no room in the bar; it's in the zoom menu. -->
+	<button
+		type="button"
+		class="{button} max-sm:hidden"
+		aria-label="Go to the nearest object"
+		aria-keyshortcuts="Shift+N"
+		title="Go to the nearest object (Shift+N)"
+		data-testid="go-to-nearest"
+		onclick={() => goToNearest(ctx)}
+	>
+		<Navigation class="size-4" aria-hidden="true" />
 	</button>
 	<button
 		type="button"

@@ -85,3 +85,46 @@ test('full screen: the top bar button and Shift+F toggle it', async ({ page }) =
 	await expect.poll(() => page.evaluate(() => document.fullscreenElement !== null)).toBe(false);
 	await expect(button).toHaveAccessibleName('Full screen');
 });
+
+test('Go to the nearest object flies back from empty space (not to a waystone)', async ({
+	page
+}) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	await page.evaluate(
+		(els) => window.__smthng!.createElements(els as never[]),
+		[
+			{ ...el.shape('box', 3000, 2000), text: 'Lost?' },
+			{
+				...el.shape('pin', 40, 40),
+				type: 'waystone',
+				kind: undefined,
+				text: undefined,
+				w: 32,
+				h: 40,
+				name: 'Here',
+				zoom: 1,
+				order: 'a0'
+			}
+		]
+	);
+	const box = page.locator('[data-element-id="box"]');
+	await expect(box).not.toBeInViewport();
+	await page.getByTestId('go-to-nearest').click();
+	await expect(box).toBeInViewport({ ratio: 1 });
+	// Arrived: the box is centred.
+	await expect
+		.poll(() =>
+			page.evaluate(() => {
+				const { viewport } = window.__smthng!.ctx;
+				const cx = (viewport.size.w / 2 - viewport.x) / viewport.zoom;
+				return Math.round(cx);
+			})
+		)
+		.toBe(3080);
+	// Shift+N from here moves on (nothing else but the waystone, which is skipped).
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('Shift+N');
+	await expect(page.getByText('Already there')).toBeVisible();
+});
