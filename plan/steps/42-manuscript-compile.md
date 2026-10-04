@@ -23,8 +23,8 @@ Turn the page's doc cards into one document in outline order: Markdown, Word (`.
 - e2e `compile.spec.ts`: Scene cards template → compile to Markdown (download content has 3 chapter headings in order and the scene text), to DOCX (download is a zip with `word/document.xml`), print view opens with the chapters.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] A compiled `.docx` opens in LibreOffice/Word with correct headings (manual check noted in PROGRESS; LibreOffice headless conversion in a test if available)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] A compiled `.docx` opens in LibreOffice/Word with correct headings (manual check noted in PROGRESS; LibreOffice headless conversion in a test if available)
 
 ## Out of scope
 EPUB (could follow the same model later), footnotes, custom styles.

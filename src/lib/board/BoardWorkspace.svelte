@@ -51,6 +51,7 @@
 	import { PlaybackState } from './media/playback.svelte';
 	import { BoardWordStats } from './writing/boardStats.svelte';
 	import { OutlineState } from './writing/outlineState.svelte';
+	import { compileDialog } from './writing/compileDialogState.svelte';
 	import OutlinePanel from './writing/OutlinePanel.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
 	import { templateGallery } from './ui/templateGalleryState.svelte';
@@ -160,6 +161,10 @@
 
 	// The export dialog (and the static renderer behind it) loads the first time it's opened.
 	let exportDialogWanted = $state(false);
+	let compileWanted = $state(false);
+	$effect(() => {
+		if (compileDialog.open) compileWanted = true;
+	});
 	// The template gallery (and the template code) loads the first time it's opened.
 	let templateGalleryWanted = $state(false);
 	$effect(() => {
@@ -306,6 +311,11 @@
 								toast.error('Couldn’t insert the template');
 							})}
 					/>
+				{/await}
+			{/if}
+			{#if compileWanted}
+				{#await import('./writing/CompileDialog.svelte') then { default: CompileDialog }}
+					<CompileDialog boardTitle={title.value} />
 				{/await}
 			{/if}
 			{#if exportDialogWanted}
