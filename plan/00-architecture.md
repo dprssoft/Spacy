@@ -270,7 +270,7 @@ export interface AssetRecord {
 `LOCAL` (user edits, tracked by undo) · `REMOTE_TAB` · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
 
 ### localStorage keys (via `localPrefs`)
-`smthng:theme`, `smthng:home:sort`, `smthng:home:layout`, `smthng:defaults:<type>`, `smthng:copiedStyle`, `smthng:grid`, `smthng:snap`, `smthng:onboarded`, `smthng:lastBackupAt`, `smthng:backupReminderDismissedAt`, `smthng:testHooks`, `smthng:commentAuthor`, `smthng:comments:<boardId>` (panel open), `smthng:waystones:wrap`.
+`smthng:theme`, `smthng:home:sort`, `smthng:home:layout`, `smthng:defaults:<type>`, `smthng:copiedStyle`, `smthng:grid`, `smthng:snap`, `smthng:onboarded`, `smthng:lastBackupAt`, `smthng:backupReminderDismissedAt`, `smthng:testHooks`, `smthng:commentAuthor`, `smthng:comments:<boardId>` (panel open), `smthng:waystones:wrap`, `smthng:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by `static/theme-init.js`; element colors never change).
 
 ## 7. Yjs → Svelte bridge
 

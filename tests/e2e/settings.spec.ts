@@ -47,3 +47,31 @@ test('the web app manifest is served with icons and the file handler', async ({ 
 	for (const icon of manifest.icons)
 		expect((await page.request.get(`/${icon.src}`)).ok()).toBe(true);
 });
+
+test('a palette picked in Settings recolors the UI, survives a reload and can go back to the default', async ({
+	page
+}) => {
+	await page.goto('/');
+	const accent = () =>
+		page.evaluate(() =>
+			getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()
+		);
+	expect(await accent()).toBe('#4f46e5');
+	await page.getByRole('button', { name: 'Settings' }).click();
+	await page.getByRole('menuitemradio', { name: 'Blueprint petrol' }).click();
+	await expect(page.locator('html')).toHaveAttribute('data-palette', 'petrol');
+	expect(await accent()).toBe('#0e6b78');
+	await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#0e6b78');
+	await page.getByRole('menuitemradio', { name: 'Dark' }).click();
+	expect(await accent()).toBe('#5cc3cf');
+
+	// Applied before the app starts (no flash of the default colors).
+	await page.reload();
+	expect(await page.evaluate(() => document.documentElement.dataset.palette)).toBe('petrol');
+	expect(await accent()).toBe('#5cc3cf');
+
+	await page.getByRole('button', { name: 'Settings' }).click();
+	await page.getByRole('menuitemradio', { name: 'Indigo' }).click();
+	await expect(page.locator('html')).not.toHaveAttribute('data-palette', /.*/);
+	expect(await accent()).toBe('#818cf8');
+});

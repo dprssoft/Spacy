@@ -40,11 +40,11 @@
 
 	let colors: { mode: string; theme: SceneTheme & { dot: string } } | null = null;
 	function sceneTheme(node: HTMLElement) {
-		if (colors?.mode !== theme.resolved) {
+		if (colors?.mode !== theme.key) {
 			const css = getComputedStyle(node);
 			const v = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
 			colors = {
-				mode: theme.resolved,
+				mode: theme.key,
 				theme: {
 					ink: v('--ink', '#1e1e1e'),
 					canvasBg: v('--canvas-bg', '#ffffff'),
@@ -107,7 +107,7 @@
 			view,
 			store.version,
 			strokesVersion,
-			theme.resolved,
+			theme.key,
 			ctx.prefs.grid,
 			imagesLoaded,
 			preview.erasing.size
