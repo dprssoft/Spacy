@@ -11,6 +11,7 @@ import type { BoardWordStats } from './writing/boardStats.svelte';
 import type { OutlineState } from './writing/outlineState.svelte';
 import type { BacklinkIndex } from './writing/backlinks.svelte';
 import type { CommentsState } from './comments/commentsState.svelte';
+import type { WaystonesState } from './waystones/waystones.svelte';
 import type { PagesState } from './pages.svelte';
 import type { BoardPrefs } from './prefs.svelte';
 import type { SelectionState } from './selection.svelte';
@@ -44,6 +45,7 @@ export interface BoardContext {
 	outline: OutlineState;
 	backlinks: BacklinkIndex;
 	comments: CommentsState;
+	waystones: WaystonesState;
 	sketch: SketchSettings;
 }
 

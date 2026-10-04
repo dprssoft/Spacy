@@ -1213,3 +1213,28 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (872 unit tests; new `model/comments.test.ts`: ops, malformed data, undo steps, delete hook incl. a doc card's text threads and undo, quotes, orphaning, mark remap/removal, `copyThreadsTo`, v5 → v6; footnotes in `markdown.test.ts`; duplicate and cross-board paste copy threads) · pnpm test:e2e ✅ (216; new `comments.spec.ts`: sticky comment → badge → reply (name asked once) → resolve hides the badge, the panel lists it under Resolved → reopen → undo/redo → delete removes the thread, undo restores it; text comment in a doc card → highlight → typing before it keeps the highlight on its word → clicking it opens the thread; badge and panel for the card; `.smthng` export and import keep comments; duplicate copies them; axe on the panel. `mobile-comments.spec.ts`: long-press → Comment → a full-width bottom sheet with ≥ 44 px buttons; axe on the sheet).
+
+## Step 46 — Waystones — 2026-10-04
+**Summary:**
+- **Model** (schema version 7, migration 7 a no-op): `WaystoneElement { name, zoom, order }`, a 32 × 40 pin; zod checks the zoom range and a non-empty order. Defaults: an orange pin (`style.fill`, the only style option).
+  - Registered like a box: connectable, not resizable or rotatable.
+  - Drawn by the scene canvas and the SVG/PNG renderer (pin and name).
+  - Not mentionable: `mentionLabel` has no case for it.
+- **Route** (`waystones/route.ts`, pure): `routeOf` (by fractional `order`, ties by id), `orderAfter`, `orderForMove` (also past copies that share a key), `stepIndex` (with or without wrap), `anchorOf` / `boxAt` (the pin's tip) and `flyTarget` (centres the tip at the clamped zoom).
+- **State** (`ctx.waystones`): `go`, `step`, `add` (the view centre or a point; current zoom; end of the route), `rename`, `move`, `updateZoom` and `remove`, each one undo step. It also has the wrap setting (localPref) and `present` / `stopPresenting`.
+- **UI:**
+  - the **W** tool (on phones in "Insert more")
+  - the **waystone bar** at the bottom centre (hidden without waystones): ◀ "2 / 5 · Act II" ▶
+  - its **list**: go, rename, reorder by drag or Alt+↑/↓, "Update zoom to current view", delete, "Wrap around", "Add waystone here", "Present"
+  - **keys**: PageDown/PageUp and Alt+→/← for next/previous, Alt+1…9 to jump (one "Go to waystone 1–9" row in the shortcuts dialog; the nine bindings are `hidden`)
+  - **presenting**: full screen with the top bar, toolbar, status bar and panels hidden, and a "Stop presenting" button on the bar
+  - switching page resets the bar's position
+- **Exports:** "Include waystones" in the export dialog (shown when the page has some), off by default. Thumbnails leave them out.
+
+**Deviations:**
+- "Constant on-screen size like handles": the pin itself is a normal world-size object, so hit-testing, the selection box, connectors and exports agree with what's drawn. Below 60 % zoom the number and name move to the screen-space overlay at a constant size and stay readable (clicking one flies there).
+- Copies made by paste or duplicate keep the original's `order`. Ties sort by id, and moving one in the list gives it its own key.
+- `connectable.matrix.test.ts` lists the registered types. `waystone` was added to the expected set (a new type, not a weaker check).
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (893 unit tests; new `route.test.ts`: order and ties, append/move keys incl. shared keys, step with and without wrap, fly target centre and zoom clamp; `waystones.test.ts`: schema, v6 → v7, add at the centre and at a point with zoom and order, one undo step each, step/wrap, rename/reorder/update zoom/remove) · pnpm test:e2e ✅ (219; new `waystones.spec.ts`: three waystones placed with W at 100/200/50 % → "3 / 3" → Alt+1 → PageDown flies to the second at 200 % → Alt+3 at 50 % shows the overlay labels → PageDown wraps to "1 / 3" → rename and Alt+↓ reorder in the list → the order survives a reload; the export dialog shows nothing until "Include waystones" is ticked. `mobile-waystones.spec.ts`: Insert more → Waystone → tap places one; the bar's buttons are ≥ 44 × 44). Screenshots of the pins, the list and the zoomed-out labels were reviewed.

@@ -17,6 +17,7 @@
 			keys: formatKeys('Enter')
 		},
 		{ group: 'Edit', label: 'Move the selection (Shift: 10 px)', keys: 'Arrows' },
+		{ group: 'View', label: 'Go to waystone 1–9', keys: formatKeys('Alt+1') + '–9' },
 		// Media keys apply to the selected media while it plays, or while using its player.
 		{ group: 'Media', label: 'Play / pause', keys: 'Space  /  K' },
 		{ group: 'Media', label: 'Back / forward 10 s', keys: 'J  /  L' },
@@ -35,11 +36,13 @@
 	const groups = $derived.by(() => {
 		const q = query.trim().toLowerCase();
 		const rows = [
-			...ctx.shortcuts.all.map((s: Shortcut) => ({
-				group: s.group,
-				label: s.label,
-				keys: s.keys.map((k) => formatKeys(k)).join('  /  ')
-			})),
+			...ctx.shortcuts.all
+				.filter((s: Shortcut) => !s.hidden)
+				.map((s: Shortcut) => ({
+					group: s.group,
+					label: s.label,
+					keys: s.keys.map((k) => formatKeys(k)).join('  /  ')
+				})),
 			...EXTRA
 		].filter((r) => !q || r.label.toLowerCase().includes(q) || r.keys.toLowerCase().includes(q));
 		return GROUPS.map((g) => ({ name: g, rows: rows.filter((r) => r.group === g) })).filter(

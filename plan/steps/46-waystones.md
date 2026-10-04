@@ -29,8 +29,8 @@ Waystones are board objects (per page, undoable, movable, connectable). They liv
 - e2e `waystones.spec.ts`: place three waystones with W (different zooms) → bar "1 / 3" → PageDown flies to the second at its zoom → Alt+3 → reorder in the list → order persists after reload; phones: Insert more → Waystone, bar buttons ≥ 44 px.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] `00-architecture.md` §5 (type, schema version), §11 (W, PageDown/PageUp, Alt+1…9)
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `00-architecture.md` §5 (type, schema version), §11 (W, PageDown/PageUp, Alt+1…9)
 
 ## Commit
 `feat(waystones): named checkpoints to fly between on a page`

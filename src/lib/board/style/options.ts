@@ -58,7 +58,8 @@ export const STYLE_OPTIONS: Record<ElementType, readonly StyleOption[]> = {
 	frame: ['fill', 'fillStyle', 'stroke', 'radius'],
 	doccard: ['fill', 'stroke', 'radius', 'shadow', 'fontSize', 'fontFamily'],
 	connector: ['stroke', 'strokeWidth', 'dash', 'opacity', 'routing', 'markers', 'labelBackground'],
-	media: ['radius', 'shadow']
+	media: ['radius', 'shadow'],
+	waystone: ['fill']
 };
 
 export const MIXED: unique symbol = Symbol('mixed');

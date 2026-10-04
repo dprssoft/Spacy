@@ -235,8 +235,8 @@ describe('schema version 6', () => {
 		const doc = new Y.Doc();
 		doc.transact(() => doc.getMap('meta').set('schemaVersion', 5), IMPORT);
 		migrate(doc);
-		expect(SCHEMA_VERSION).toBe(6);
-		expect(doc.getMap('meta').get('schemaVersion')).toBe(6);
+		expect(SCHEMA_VERSION).toBeGreaterThanOrEqual(6);
+		expect(doc.getMap('meta').get('schemaVersion')).toBe(SCHEMA_VERSION);
 		expect(getCommentsMap(doc).size).toBe(0);
 	});
 });

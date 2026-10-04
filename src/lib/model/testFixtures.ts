@@ -90,6 +90,13 @@ export const samples: { [T in ElementType]: (id?: string, z?: string) => Element
 		end: null,
 		loop: false,
 		title: 'YouTube video'
+	}),
+	waystone: (id = 'waystone1', z = 'a9') => ({
+		...base('waystone', id, z),
+		type: 'waystone',
+		name: 'Act II',
+		zoom: 1,
+		order: 'a0'
 	})
 };
 

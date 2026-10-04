@@ -12,7 +12,8 @@ export type ToolId =
 	| 'sticky'
 	| 'doccard'
 	| 'frame'
-	| 'image';
+	| 'image'
+	| 'waystone';
 
 export type HandleId = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'rotate' | (string & {});
 

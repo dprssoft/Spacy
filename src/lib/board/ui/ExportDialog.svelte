@@ -17,6 +17,7 @@
 
 	let scale = $state<1 | 2 | 3>(2);
 	let background = $state<'transparent' | 'white'>('white');
+	let withWaystones = $state(false);
 	let frameId = $state<string | null>(null);
 	let busy = $state(false);
 	let previewUrl = $state<string | null>(null);
@@ -28,6 +29,7 @@
 		})
 	);
 	const hasSelection = $derived(ctx.selection.size > 0);
+	const hasWaystones = $derived(ctx.waystones.route.length > 0);
 	const bg = $derived(background === 'white' ? '#ffffff' : 'transparent');
 
 	const scope = $derived.by((): ExportScope | null => {
@@ -47,7 +49,7 @@
 		}
 		let alive = true;
 		let url: string | null = null;
-		void renderScope(ctx, scope, { background: bg }).then((out) => {
+		void renderScope(ctx, scope, { background: bg, waystones: withWaystones }).then((out) => {
 			if (!alive || !out) return;
 			url = URL.createObjectURL(svgBlob(out.svg));
 			previewUrl = url;
@@ -79,7 +81,9 @@
 		try {
 			const format = exportDialog.format;
 			const blob =
-				format === 'png' ? await exportPng(ctx, s, scale, bg) : await exportSvg(ctx, s, bg);
+				format === 'png'
+					? await exportPng(ctx, s, scale, bg, withWaystones)
+					: await exportSvg(ctx, s, bg, withWaystones);
 			if (blob) downloadBlob(blob, filename(format, s));
 			exportDialog.open = false;
 		} finally {
@@ -196,6 +200,12 @@
 					</div>
 				{/if}
 			</div>
+			{#if hasWaystones}
+				<label class="flex items-center gap-2 text-sm">
+					<input type="checkbox" bind:checked={withWaystones} data-testid="export-waystones" />
+					Include waystones
+				</label>
+			{/if}
 			<div class="flex justify-end gap-2">
 				<Dialog.Close
 					class="h-9 rounded-lg px-3 text-sm font-medium hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"

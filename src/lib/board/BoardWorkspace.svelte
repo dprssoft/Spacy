@@ -38,7 +38,7 @@
 	import { editShortcuts } from './commands/editShortcuts';
 	import { HistoryState } from './commands/history.svelte';
 	import CanvasContextMenu from './ui/CanvasContextMenu.svelte';
-	import { toolShortcuts, viewShortcuts } from './tools/boardShortcuts';
+	import { toolShortcuts, viewShortcuts, waystoneShortcuts } from './tools/boardShortcuts';
 	import { selectShortcuts } from './tools/selectShortcuts';
 	import { HandleRegistry } from './tools/handles';
 	import { isTypingTarget, ShortcutRegistry } from './tools/shortcuts';
@@ -53,6 +53,9 @@
 	import { OutlineState } from './writing/outlineState.svelte';
 	import { BacklinkIndex } from './writing/backlinks.svelte';
 	import { CommentsState } from './comments/commentsState.svelte';
+	import { WaystonesState } from './waystones/waystones.svelte';
+	import WaystoneBar from './waystones/WaystoneBar.svelte';
+	import WaystoneLabels from './waystones/WaystoneLabels.svelte';
 	import CommentBadges from './comments/CommentBadges.svelte';
 	import CommentPopover from './comments/CommentPopover.svelte';
 	import CommentsPanel from './comments/CommentsPanel.svelte';
@@ -104,6 +107,7 @@
 	ctx.outline = new OutlineState(ctx);
 	ctx.backlinks = new BacklinkIndex(ctx.doc);
 	ctx.comments = new CommentsState(ctx);
+	ctx.waystones = new WaystonesState(ctx);
 	onDestroy(() => {
 		ctx.comments.destroy();
 		ctx.words.destroy();
@@ -113,6 +117,7 @@
 	ctx.shortcuts.register([
 		...toolShortcuts,
 		...viewShortcuts,
+		...waystoneShortcuts,
 		...selectShortcuts,
 		...editShortcuts,
 		...diagramShortcuts,
@@ -302,8 +307,10 @@
 <svelte:document oncopy={onCopy} oncut={onCut} onpaste={onPaste} />
 
 <div class="flex h-dvh flex-col">
-	<TopBar {title} />
-	<Toolbar />
+	{#if !ctx.waystones.presenting}
+		<TopBar {title} />
+		<Toolbar />
+	{/if}
 	<div class="flex min-h-0 flex-1">
 		<main class="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-canvas">
 			<CanvasContextMenu>
@@ -320,9 +327,11 @@
 						<StylePopover />
 						<MediaOverlay />
 						<CommentBadges />
+						<WaystoneLabels />
 					{/snippet}
 				</Canvas>
 			</CanvasContextMenu>
+			<WaystoneBar />
 			{#if findState.open}
 				<FindPanel />
 			{/if}
@@ -380,10 +389,10 @@
 				</div>
 			{/if}
 		</main>
-		{#if ctx.outline.open && !layout.compact}
+		{#if ctx.outline.open && !layout.compact && !ctx.waystones.presenting}
 			<OutlinePanel outline={ctx.outline} />
 		{/if}
-		{#if ctx.comments.panelOpen && !layout.compact}
+		{#if ctx.comments.panelOpen && !layout.compact && !ctx.waystones.presenting}
 			<CommentsPanel />
 		{/if}
 	</div>
@@ -395,12 +404,14 @@
 			<OutlinePanel outline={ctx.outline} />
 		</div>
 	{/if}
-	{#if ctx.comments.panelOpen && layout.compact}
+	{#if ctx.comments.panelOpen && layout.compact && !ctx.waystones.presenting}
 		<div
 			class="fixed inset-x-0 bottom-0 z-40 h-[60dvh] rounded-t-2xl border-t border-border shadow-xl"
 		>
 			<CommentsPanel />
 		</div>
 	{/if}
-	<StatusBar />
+	{#if !ctx.waystones.presenting}
+		<StatusBar />
+	{/if}
 </div>
