@@ -74,6 +74,63 @@ describe('PagesState', () => {
 		expect(ctx.pages.list).toHaveLength(1);
 	});
 
+	it('duplicate shows the copy; connectors between copied elements follow the copies', () => {
+		const ctx = testCtx();
+		const first = ctx.pages.current;
+		createElements(ctx.doc, [samples.shape('shape1'), samples.connector('c')]);
+		ctx.undo.stopCapturing();
+		const copy = ctx.pages.duplicate(first)!;
+		expect(ctx.pages.current).toBe(copy.id);
+		expect(ctx.pages.list.map((p) => p.name)).toEqual(['Page 1', 'Page 1 copy']);
+		const els = [...ctx.store.elements.values()];
+		const shape = els.find((e) => e.type === 'shape')!;
+		const conn = els.find((e) => e.type === 'connector');
+		expect(conn?.type === 'connector' && conn.from).toMatchObject({ elementId: shape.id });
+		// Edits on the copy are undoable there.
+		ctx.undo.stopCapturing();
+		createElements(ctx.doc, [samples.sticky('n')]);
+		ctx.undo.undo();
+		expect(ctx.store.get('n')).toBeUndefined();
+		expect(ctx.store.elements.size).toBe(2);
+	});
+
+	it('picks several pages with toggle and range, and removes them together', () => {
+		const ctx = testCtx();
+		const first = ctx.pages.current;
+		const p2 = ctx.pages.add();
+		const p3 = ctx.pages.add();
+		const p4 = ctx.pages.add();
+		createElements(ctx.doc, [samples.shape('on4')]);
+		ctx.pages.select(p2.id);
+		ctx.pages.togglePick(p4.id);
+		expect(ctx.pages.selectedIds).toEqual([p2.id, p4.id]);
+		expect(ctx.pages.targets(p4.id)).toEqual([p2.id, p4.id]);
+		expect(ctx.pages.targets(first)).toEqual([first]);
+		ctx.pages.togglePick(p4.id);
+		expect(ctx.pages.selectedIds).toEqual([p2.id]);
+
+		ctx.pages.pickRange(p4.id);
+		expect(ctx.pages.selectedIds).toEqual([p2.id, p3.id, p4.id]);
+		ctx.pages.remove(ctx.pages.selectedIds);
+		expect(ctx.pages.list.map((p) => p.id)).toEqual([first]);
+		expect(ctx.pages.current).toBe(first);
+		expect(ctx.pages.picked).toEqual([]);
+		expect(ctx.undo.canUndo()).toBe(false);
+
+		ctx.pages.remove([first]); // the last page stays
+		expect(ctx.pages.list).toHaveLength(1);
+	});
+
+	it('a plain click clears the picked pages', () => {
+		const ctx = testCtx();
+		const first = ctx.pages.current;
+		const p2 = ctx.pages.add();
+		ctx.pages.togglePick(first);
+		expect(ctx.pages.picked).toEqual([first]);
+		ctx.pages.select(p2.id);
+		expect(ctx.pages.picked).toEqual([]);
+	});
+
 	it('rename and move update the list', () => {
 		const ctx = testCtx();
 		const first = ctx.pages.current;

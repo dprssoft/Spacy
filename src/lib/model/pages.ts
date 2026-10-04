@@ -1,4 +1,6 @@
-import type * as Y from 'yjs';
+import * as Y from 'yjs';
+import { cloneElements } from './clone';
+import { copyThreadsTo, threadsOn } from './comments';
 import {
 	getActivePageId,
 	getDocsMap,
@@ -8,10 +10,13 @@ import {
 	pageElementsMap,
 	readElement,
 	setActivePageId,
+	toYMap,
 	type ElementYMap
 } from './doc';
 import { newId } from './ids';
 import { LOCAL, PAGES, type Origin } from './origins';
+import { getOutline, setOutline } from './outline';
+import { parseElement } from './schema';
 import type { Element } from './types';
 
 // Pages ("sheets") of a board. The list lives in `meta.pages`; each page's elements are their own
@@ -94,29 +99,83 @@ export function movePage(doc: Y.Doc, pageId: string, delta: -1 | 1): void {
 }
 
 /**
- * Deletes a page with everything on it (elements and their doc card contents). The last page
- * can't be deleted. Not undoable: the content is removed outside the undo history.
+ * Deletes pages with everything on them (elements and their doc card contents). At least one page
+ * always stays: returns false and changes nothing if that would delete every page, or if none of
+ * the ids is a page. Not undoable: the content is removed outside the undo history.
  */
-export function deletePage(doc: Y.Doc, pageId: string): boolean {
+export function deletePages(doc: Y.Doc, pageIds: Iterable<string>): boolean {
 	const pages = getPages(doc);
-	if (pages.length <= 1 || !pages.some((p) => p.id === pageId)) return false;
+	const ids = new Set(pageIds);
+	const kept = pages.filter((p) => !ids.has(p.id));
+	if (kept.length === 0 || kept.length === pages.length) return false;
 	doc.transact(() => {
-		const map = pageElementsMap(doc, pageId);
 		const docs = getDocsMap(doc);
 		const sketches = getSketchesMap(doc);
-		for (const id of [...map.keys()]) {
-			map.delete(id);
-			docs.delete(id);
-			sketches.delete(id);
+		for (const p of pages) {
+			if (!ids.has(p.id)) continue;
+			const map = pageElementsMap(doc, p.id);
+			for (const id of [...map.keys()]) {
+				map.delete(id);
+				docs.delete(id);
+				sketches.delete(id);
+			}
 		}
 	}, PAGES);
 	// A stored list must exist from here on: without one, the first page would come back.
-	setPages(
-		doc,
-		pages.filter((p) => p.id !== pageId)
-	);
-	if (getActivePageId(doc) === pageId) setActivePageId(doc, getPages(doc)[0]!.id);
+	setPages(doc, kept);
+	if (ids.has(getActivePageId(doc))) setActivePageId(doc, kept[0]!.id);
 	return true;
+}
+
+/** Deletes one page; see `deletePages`. The last page can't be deleted. */
+export function deletePage(doc: Y.Doc, pageId: string): boolean {
+	return deletePages(doc, [pageId]);
+}
+
+/** "<name> copy", cut to fit the name limit. */
+export const copyName = (name: string): string =>
+	`${name.slice(0, MAX_PAGE_NAME - ' copy'.length).trimEnd()} copy`;
+
+/**
+ * Adds a copy of a page right after it: every element with a new id (connectors, frames and
+ * groups follow the copies), doc card contents, sketch strokes, comments and the doc card outline.
+ * Like adding a page, it isn't undoable. Returns the new page, or null if the page doesn't exist.
+ */
+export function duplicatePage(doc: Y.Doc, pageId: string): Page | null {
+	const source = getPages(doc).find((p) => p.id === pageId);
+	if (!source) return null;
+	const els: Element[] = [];
+	for (const ymap of pageElementsMap(doc, pageId).values()) {
+		const el = readElement(ymap);
+		if (el) els.push(el);
+	}
+	const { elements, idMap } = cloneElements(els, { offset: { x: 0, y: 0 } });
+	const threads = threadsOn(doc, new Set(idMap.keys()));
+	let page: Page | null = null;
+	doc.transact(() => {
+		page = addPage(doc, { name: copyName(source.name), afterId: pageId });
+		const map = pageElementsMap(doc, page.id);
+		const docs = getDocsMap(doc);
+		const sketches = getSketchesMap(doc);
+		elements.forEach((input, i) => {
+			// Same stacking order as the original.
+			const el = parseElement({ ...input, z: els[i]!.z });
+			if (!el) return;
+			map.set(el.id, toYMap(el));
+			const frag = docs.get(els[i]!.id);
+			if (frag) docs.set(el.id, frag.clone());
+			const strokes = sketches.get(els[i]!.id);
+			if (strokes) {
+				const arr = new Y.Array<unknown>();
+				arr.push(strokes.toArray());
+				sketches.set(el.id, arr);
+			}
+		});
+		copyThreadsTo(doc, threads, idMap, page.id);
+		const outline = getOutline(doc, pageId).flatMap((id) => idMap.get(id) ?? []);
+		if (outline.length > 0) setOutline(doc, page.id, outline);
+	}, PAGES);
+	return page;
 }
 
 /** Every page's element map, in page order. */
