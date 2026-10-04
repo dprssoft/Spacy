@@ -6,6 +6,7 @@ import { templateGallery } from '../ui/templateGalleryState.svelte';
 import { fullscreen } from '$lib/shared/fullscreen.svelte';
 import { nextZoomStep, zoomAt } from '../engine/viewport';
 import { openImagePicker } from '../images/importImages';
+import { goToNearest } from '../commands/navigate';
 import type { Shortcut } from './shortcuts';
 import type { ToolId } from './types';
 
@@ -140,6 +141,13 @@ export const viewShortcuts: Shortcut[] = [
 		label: 'Full screen',
 		group: 'View',
 		run: () => fullscreen.toggle()
+	},
+	{
+		id: 'view.nearest',
+		keys: ['Shift+N'],
+		label: 'Go to the nearest object',
+		group: 'View',
+		run: (ctx) => void goToNearest(ctx)
 	},
 	{
 		id: 'view.origin',
