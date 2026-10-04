@@ -2,7 +2,8 @@ import { getMeta, pageElementsMap } from '$lib/model/doc';
 import {
 	activePage,
 	addPage,
-	deletePage,
+	deletePages,
+	duplicatePage,
 	getPages,
 	movePage,
 	pageOfElement,
@@ -29,6 +30,8 @@ const lastPageKey = (boardId: string) => `page:${boardId}`;
 export class PagesState {
 	list = $state<Page[]>([]);
 	current = $state('');
+	/** Tabs picked with Ctrl/Cmd- or Shift-click, besides the current one (empty: just it). */
+	picked = $state<string[]>([]);
 	readonly #ctx: BoardContext;
 	/** Where the view was on each page, for this session. */
 	// Plain bookkeeping, not rendered.
@@ -76,12 +79,48 @@ export class PagesState {
 			next.every((p, i) => p.id === this.list[i]?.id && p.name === this.list[i]?.name);
 		if (same) return;
 		this.list = next;
+		this.picked = this.picked.filter((id) => next.some((p) => p.id === id));
 		for (const p of next) undo.addToScope(pageElementsMap(doc, p.id));
 		if (!next.some((p) => p.id === this.current)) this.#show(next[0]!.id);
 	}
 
+	/**
+	 * The pages a tab menu acts on: all picked pages (in page order) when `pageId` is one of them,
+	 * otherwise just `pageId`.
+	 */
+	targets(pageId: string): string[] {
+		const ids = this.selectedIds;
+		return ids.includes(pageId) ? ids : [pageId];
+	}
+
+	/** The current page plus the picked ones, in page order. */
+	get selectedIds(): string[] {
+		return this.list
+			.filter((p) => p.id === this.current || this.picked.includes(p.id))
+			.map((p) => p.id);
+	}
+
+	/** Ctrl/Cmd-click: adds a tab to the picked pages or takes it out (without switching pages). */
+	togglePick(pageId: string): void {
+		if (pageId === this.current) return;
+		this.picked = this.picked.includes(pageId)
+			? this.picked.filter((id) => id !== pageId)
+			: [...this.picked, pageId];
+	}
+
+	/** Shift-click: picks every page between the current one and this one. */
+	pickRange(pageId: string): void {
+		const ids = this.list.map((p) => p.id);
+		const from = ids.indexOf(this.current);
+		const to = ids.indexOf(pageId);
+		if (from < 0 || to < 0) return;
+		const [a, b] = from < to ? [from, to] : [to, from];
+		this.picked = ids.slice(a, b + 1).filter((id) => id !== this.current);
+	}
+
 	/** Shows a page: ends editing, clears the selection and restores that page's view. */
 	select(pageId: string): void {
+		this.picked = [];
 		if (pageId === this.current || !this.list.some((p) => p.id === pageId)) return;
 		this.#views.set(this.current, this.#ctx.viewport.vp);
 		this.#show(pageId);
@@ -124,17 +163,32 @@ export class PagesState {
 		this.#sync();
 	}
 
-	/** Deletes a page and its content for good (the undo history is cleared). */
-	remove(pageId: string): void {
+	/** Adds a copy of a page after it and shows it, at the same view. */
+	duplicate(pageId: string): Page | null {
+		const page = duplicatePage(this.#ctx.doc, pageId);
+		if (!page) return null;
+		const view = pageId === this.current ? this.#ctx.viewport.vp : this.#views.get(pageId);
+		if (view) this.#views.set(page.id, view);
+		this.#sync();
+		this.select(page.id);
+		return page;
+	}
+
+	/** Deletes pages and their content for good (the undo history is cleared). */
+	remove(pageIds: string | readonly string[]): void {
 		const { doc, undo } = this.#ctx;
-		const wasCurrent = pageId === this.current;
-		const index = this.list.findIndex((p) => p.id === pageId);
-		if (!deletePage(doc, pageId)) return;
-		// Steps that touched the deleted page can't be replayed.
+		const ids = typeof pageIds === 'string' ? [pageIds] : pageIds;
+		const wasCurrent = ids.includes(this.current);
+		// After deleting the current page, show the nearest page before it that's left.
+		const index = this.list.findIndex((p) => p.id === this.current);
+		const before = this.list.slice(0, index).filter((p) => !ids.includes(p.id));
+		if (!deletePages(doc, ids)) return;
+		// Steps that touched the deleted pages can't be replayed.
 		undo.clear();
-		this.#views.delete(pageId);
+		for (const id of ids) this.#views.delete(id);
 		this.list = getPages(doc);
-		if (wasCurrent) this.#show((this.list[Math.max(0, index - 1)] ?? this.list[0]!).id);
+		this.picked = [];
+		if (wasCurrent) this.#show((before.at(-1) ?? this.list[0]!).id);
 	}
 
 	/** Shows the page an element is on. Returns false if it isn't on any page. */

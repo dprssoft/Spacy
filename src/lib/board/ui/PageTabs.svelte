@@ -6,15 +6,20 @@
 	import { getBoard } from '../context';
 
 	// Sheet tabs: click to switch, double-click to rename, right-click (or the menu key) for more.
+	// Ctrl/Cmd-click and Shift-click pick several tabs; the menu then acts on all of them.
 	const { pages } = getBoard();
 
 	let renaming = $state<string | null>(null);
 	let draft = $state('');
 	let menuFor = $state<string | null>(null);
-	let deleting = $state<string | null>(null);
+	let deleting = $state<string[]>([]);
 	let confirmOpen = $state(false);
 
-	const deletingName = $derived(pages.list.find((p) => p.id === deleting)?.name ?? '');
+	const deleteTitle = $derived(
+		deleting.length === 1
+			? `Delete “${pages.list.find((p) => p.id === deleting[0])?.name ?? ''}”?`
+			: `Delete ${deleting.length} pages?`
+	);
 
 	function startRename(id: string) {
 		draft = pages.list.find((p) => p.id === id)?.name ?? '';
@@ -27,6 +32,18 @@
 	function focusAndSelect(node: HTMLInputElement) {
 		node.focus();
 		node.select();
+	}
+
+	function onTabClick(e: MouseEvent, id: string) {
+		if (e.ctrlKey || e.metaKey) pages.togglePick(id);
+		else if (e.shiftKey) pages.pickRange(id);
+		else pages.select(id);
+	}
+
+	function openMenu(id: string) {
+		// Opening the menu on a picked tab keeps the others picked.
+		if (!pages.selectedIds.includes(id)) pages.select(id);
+		menuFor = id;
 	}
 
 	function onTabKeydown(e: KeyboardEvent, index: number) {
@@ -53,6 +70,9 @@
 	<div role="tablist" aria-label="Pages" class="flex min-w-0 items-stretch overflow-x-auto">
 		{#each pages.list as page, i (page.id)}
 			{@const active = page.id === pages.current}
+			{@const picked = pages.picked.includes(page.id)}
+			{@const targets = menuFor === page.id ? pages.targets(page.id) : [page.id]}
+			{@const many = targets.length > 1}
 			{#if renaming === page.id}
 				<input
 					{@attach focusAndSelect}
@@ -83,20 +103,20 @@
 								aria-haspopup="menu"
 								tabindex={active ? 0 : -1}
 								data-page-tab={page.id}
-								title="{page.name} — double-click to rename, right-click for more"
-								class="max-w-40 shrink-0 truncate border-r border-border px-3 text-xs whitespace-nowrap text-muted hover:bg-surface hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-inset aria-selected:bg-surface aria-selected:font-medium aria-selected:text-text aria-selected:shadow-[inset_0_-2px_0_var(--accent)]"
+								data-picked={picked || undefined}
+								title="{page.name} — double-click to rename, right-click for more, Ctrl-click to pick several"
+								class="max-w-40 shrink-0 truncate border-r border-border px-3 text-xs whitespace-nowrap text-muted hover:bg-surface hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-inset aria-selected:bg-surface aria-selected:font-medium aria-selected:text-text aria-selected:shadow-[inset_0_-2px_0_var(--accent)] data-[picked]:bg-surface data-[picked]:text-text data-[picked]:shadow-[inset_0_-2px_0_var(--muted)]"
 								onpointerdown={undefined}
-								onclick={() => pages.select(page.id)}
+								onclick={(e) => onTabClick(e, page.id)}
 								ondblclick={() => startRename(page.id)}
 								oncontextmenu={(e) => {
 									e.preventDefault();
-									pages.select(page.id);
-									menuFor = page.id;
+									openMenu(page.id);
 								}}
 								onkeydown={(e) => {
 									if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
 										e.preventDefault();
-										menuFor = page.id;
+										openMenu(page.id);
 									} else onTabKeydown(e, i);
 								}}
 							>
@@ -111,19 +131,27 @@
 							sideOffset={4}
 							class="z-50 min-w-44 rounded-lg border border-border bg-surface p-1 shadow-lg"
 						>
-							<DropdownMenu.Item class={item} onSelect={() => startRename(page.id)}>
+							<DropdownMenu.Item class={item} disabled={many} onSelect={() => startRename(page.id)}>
 								Rename
 							</DropdownMenu.Item>
 							<DropdownMenu.Item
 								class={item}
-								disabled={i === 0}
+								onSelect={() => {
+									for (const id of targets) pages.duplicate(id);
+								}}
+							>
+								{many ? `Duplicate ${targets.length} pages` : 'Duplicate'}
+							</DropdownMenu.Item>
+							<DropdownMenu.Item
+								class={item}
+								disabled={many || i === 0}
 								onSelect={() => pages.move(page.id, -1)}
 							>
 								Move left
 							</DropdownMenu.Item>
 							<DropdownMenu.Item
 								class={item}
-								disabled={i === pages.list.length - 1}
+								disabled={many || i === pages.list.length - 1}
 								onSelect={() => pages.move(page.id, 1)}
 							>
 								Move right
@@ -131,13 +159,13 @@
 							<DropdownMenu.Separator class="my-1 h-px bg-border" />
 							<DropdownMenu.Item
 								class="{item} text-danger"
-								disabled={pages.list.length <= 1}
+								disabled={targets.length >= pages.list.length}
 								onSelect={() => {
-									deleting = page.id;
+									deleting = targets;
 									confirmOpen = true;
 								}}
 							>
-								Delete
+								{many ? `Delete ${targets.length} pages` : 'Delete'}
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
 					</DropdownMenu.Portal>
@@ -158,12 +186,14 @@
 
 <ConfirmDialog
 	bind:open={confirmOpen}
-	title="Delete “{deletingName}”?"
-	description="Everything on this page is deleted. This can’t be undone, and it clears the undo history."
-	confirmLabel="Delete page"
+	title={deleteTitle}
+	description="Everything on {deleting.length === 1
+		? 'this page'
+		: 'these pages'} is deleted. This can’t be undone, and it clears the undo history."
+	confirmLabel={deleting.length === 1 ? 'Delete page' : `Delete ${deleting.length} pages`}
 	danger
 	onConfirm={() => {
-		if (deleting) pages.remove(deleting);
-		deleting = null;
+		pages.remove(deleting);
+		deleting = [];
 	}}
 />

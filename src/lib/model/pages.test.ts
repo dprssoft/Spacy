@@ -1,12 +1,16 @@
 import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
-import { getDocsMap, getElementsMap, listElements, MAIN_PAGE } from './doc';
+import { listThreads, createThread } from './comments';
+import { getDocsMap, getElementsMap, getSketchesMap, listElements, MAIN_PAGE } from './doc';
 import { migrate, SCHEMA_VERSION } from './migrations';
 import { createElements, deleteElements } from './ops';
 import {
 	activePage,
 	addPage,
+	copyName,
 	deletePage,
+	deletePages,
+	duplicatePage,
 	getPages,
 	listAllElements,
 	movePage,
@@ -15,6 +19,8 @@ import {
 	renamePage,
 	setActivePage
 } from './pages';
+import { getOutline, setOutline } from './outline';
+import { setSketchStrokes } from './ops';
 import { samples } from './testFixtures';
 
 describe('pages', () => {
@@ -107,5 +113,85 @@ describe('pages', () => {
 		expect(getPages(doc)).toEqual([{ id: 'y', name: 'Y' }]);
 		doc.getMap('meta').set('pages', 'nope');
 		expect(getPages(doc)).toEqual([{ id: MAIN_PAGE, name: 'Page 1' }]);
+	});
+
+	it('deletes several pages at once, but never all of them', () => {
+		const doc = new Y.Doc();
+		createElements(doc, [samples.shape('a')]);
+		const p2 = addPage(doc);
+		const p3 = addPage(doc);
+		setActivePage(doc, p2.id);
+		createElements(doc, [samples.doccard('d')]);
+
+		expect(deletePages(doc, [MAIN_PAGE, p2.id, p3.id])).toBe(false);
+		expect(deletePages(doc, ['missing'])).toBe(false);
+		expect(getPages(doc)).toHaveLength(3);
+
+		expect(deletePages(doc, [MAIN_PAGE, p2.id])).toBe(true);
+		expect(getPages(doc).map((p) => p.id)).toEqual([p3.id]);
+		expect(doc.getMap('elements').size).toBe(0);
+		expect(getDocsMap(doc).has('d')).toBe(false);
+		expect(activePage(doc).id).toBe(p3.id);
+	});
+
+	it('duplicates a page after it with new ids and copies of everything on it', () => {
+		const doc = new Y.Doc();
+		const frame = samples.frame('f');
+		const inFrame = { ...samples.shape('s'), parentId: 'f', groupId: 'g' };
+		createElements(doc, [frame, inFrame, samples.doccard('d'), samples.sketch('k')]);
+		getDocsMap(doc)
+			.get('d')!
+			.insert(0, [new Y.XmlText('hello')]);
+		setSketchStrokes(doc, 'k', [{ points: [1, 2] }]);
+		setOutline(doc, MAIN_PAGE, ['d']);
+		createThread(doc, {
+			anchor: { kind: 'element', elementId: 's' },
+			page: MAIN_PAGE,
+			author: 'Ann',
+			text: 'hi'
+		});
+		const after = addPage(doc, { name: 'Last' });
+
+		const copy = duplicatePage(doc, MAIN_PAGE)!;
+		expect(getPages(doc).map((p) => p.name)).toEqual(['Page 1', 'Page 1 copy', 'Last']);
+		expect(getPages(doc)[2]!.id).toBe(after.id);
+		expect(activePage(doc).id).toBe(MAIN_PAGE); // the model doesn't switch pages
+
+		setActivePage(doc, copy.id);
+		const els = listElements(doc);
+		expect(els).toHaveLength(4);
+		const byType = (t: string) => els.find((e) => e.type === t)!;
+		const [f2, s2, d2, k2] = ['frame', 'shape', 'doccard', 'sketch'].map(byType);
+		expect(els.every((e) => !['f', 's', 'd', 'k'].includes(e.id))).toBe(true);
+		expect(s2!.parentId).toBe(f2!.id);
+		expect(s2!.groupId).not.toBe('g');
+		expect(s2!.groupId).not.toBeNull();
+		expect(s2!.z).toBe(inFrame.z); // same stacking order
+		expect(getDocsMap(doc).get(d2!.id)!.toString()).toContain('hello');
+		expect(getDocsMap(doc).get(d2!.id)).not.toBe(getDocsMap(doc).get('d'));
+		expect(getSketchesMap(doc).get(k2!.id)!.toArray()).toEqual([{ points: [1, 2] }]);
+		expect(getOutline(doc, copy.id)).toEqual([d2!.id]);
+		const threads = listThreads(doc);
+		expect(threads).toHaveLength(2);
+		expect(threads.find((t) => t.page === copy.id)?.anchor).toEqual({
+			kind: 'element',
+			elementId: s2!.id
+		});
+
+		// The original is untouched.
+		setActivePage(doc, MAIN_PAGE);
+		expect(
+			listElements(doc)
+				.map((e) => e.id)
+				.sort()
+		).toEqual(['d', 'f', 'k', 's']);
+		expect(duplicatePage(doc, 'missing')).toBeNull();
+	});
+
+	it('copy names fit the name limit', () => {
+		expect(copyName('Plan')).toBe('Plan copy');
+		const long = 'x'.repeat(40);
+		expect(copyName(long)).toHaveLength(40);
+		expect(copyName(long).endsWith(' copy')).toBe(true);
 	});
 });

@@ -69,6 +69,37 @@ test('rename, move and delete a page from its tab', async ({ page }) => {
 	await expect(page.getByRole('menuitem', { name: 'Delete' })).toHaveAttribute('data-disabled', '');
 });
 
+test('duplicate a page, then delete several pages at once', async ({ page }) => {
+	await add(page, 'one');
+	await tab(page, 'Page 1').click({ button: 'right' });
+	await page.getByRole('menuitem', { name: 'Duplicate' }).click();
+	await expect(page.getByRole('tab')).toHaveText(['Page 1', 'Page 1 copy']);
+	await expect(tab(page, 'Page 1 copy')).toHaveAttribute('aria-selected', 'true');
+	await expect(page.locator('[data-type="shape"]')).toHaveText('one');
+	expect(await ids(page)).toHaveLength(1);
+	expect(await ids(page)).not.toEqual(['one']); // a copy, with its own id
+
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await expect(page.getByRole('tab')).toHaveText(['Page 1', 'Page 1 copy', 'Page 3']);
+	await tab(page, 'Page 1').click({ modifiers: ['ControlOrMeta'] });
+	await expect(tab(page, 'Page 1')).toHaveAttribute('data-picked', 'true');
+	await tab(page, 'Page 1').click({ button: 'right' });
+	await page.getByRole('menuitem', { name: 'Delete 2 pages' }).click();
+	await expect(page.getByRole('alertdialog')).toContainText('Delete 2 pages?');
+	await page.getByRole('button', { name: 'Delete 2 pages' }).click();
+	await expect(page.getByRole('tab')).toHaveText(['Page 1 copy']);
+	await expect(page.locator('[data-type="shape"]')).toHaveText('one');
+
+	// Every page picked: deleting them all isn't offered.
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await tab(page, 'Page 1 copy').click({ modifiers: ['Shift'] });
+	await tab(page, 'Page 2').click({ button: 'right' });
+	await expect(page.getByRole('menuitem', { name: 'Delete 2 pages' })).toHaveAttribute(
+		'data-disabled',
+		''
+	);
+});
+
 test('undo returns to the page where the change was made', async ({ page }) => {
 	await add(page, 'one');
 	await page.getByRole('button', { name: 'Add page' }).click();

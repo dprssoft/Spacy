@@ -1246,3 +1246,11 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 
 ### UI palettes — 2026-10-04
 - Settings → Palette: Indigo (the default, unchanged), Terracotta, Graphite & lime, Blueprint petrol, Ink & plum, Moss & brass, each with light and dark variants (all text/muted/accent pairs ≥ 4.5:1). Stored per browser (`smthng:palette`), applied before first paint (`theme-init.js`), and the browser theme color follows. Only UI tokens change; board content keeps its colors. Code that caches CSS variables (dot grid, scene canvas) now keys on `theme.key` (mode + palette). e2e in `settings.spec.ts`.
+
+### Duplicate and multi-delete pages — 2026-10-04
+- **Duplicate** (tab menu): adds "<name> copy" right after the page and shows it at the same view. Everything on it is copied with new ids (`duplicatePage` in `model/pages.ts`): frames/groups/connectors follow the copies (clone hooks), doc card contents, sketch strokes, comment threads and the doc card outline; stacking order is kept. Like adding a page, it isn't undoable (origin `PAGES`).
+- **Several pages:** Ctrl/Cmd-click toggles a tab, Shift-click picks the range from the current tab; picked tabs are shown with a muted underline. The tab menu then offers "Duplicate N pages" / "Delete N pages" (rename and move are disabled). `deletePages` refuses to delete every page; `deletePage` now calls it.
+- Not on phones: picking needs a modifier key; the single-page menu works as before.
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (903 unit tests; new in `model/pages.test.ts`: multi-delete incl. the "never all" rule, duplicate with frame/group/doc card/sketch/outline/comment, copy names; in `pages.svelte.test.ts`: duplicate shows the copy with connectors remapped and undo working there, toggle/range picking, multi-remove). e2e `pages.spec.ts` ✅ on chromium, firefox and mobile (new: duplicate → Ctrl-click → "Delete 2 pages" → all-picked delete disabled). WebKit can't launch on this machine (missing system libraries; same on `main`).
