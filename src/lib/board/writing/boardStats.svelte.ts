@@ -3,7 +3,7 @@ import { getDocsMap } from '$lib/model/doc';
 import type { Element } from '$lib/model/types';
 import { fragmentToJSON } from '../doccards/fragmentJson';
 import type { BoardStore } from '../boardStore.svelte';
-import { countWords, docStats } from './wordCount';
+import { countWords, docStats, docText } from './wordCount';
 
 // After a pause in typing: a whole card is recounted from its stored text (can take ~100 ms).
 const RECOUNT_MS = 800;
@@ -17,7 +17,7 @@ export class BoardWordStats {
 	version = $state(0);
 	// A cache, not reactive state: `version` is the signal.
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
-	readonly #cards = new Map<string, number>();
+	readonly #cards = new Map<string, { words: number; lines: string[] }>();
 	readonly #doc: Y.Doc;
 	readonly #store: BoardStore;
 	#timer: ReturnType<typeof setTimeout> | null = null;
@@ -40,14 +40,28 @@ export class BoardWordStats {
 		getDocsMap(doc).observeDeep(this.#onDocs);
 	}
 
-	cardWords(id: string): number {
-		let n = this.#cards.get(id);
-		if (n === undefined) {
+	#card(id: string): { words: number; lines: string[] } {
+		let c = this.#cards.get(id);
+		if (!c) {
 			const frag = getDocsMap(this.#doc).get(id);
-			n = frag ? docStats(fragmentToJSON(frag)).words : 0;
-			this.#cards.set(id, n);
+			const json = frag ? fragmentToJSON(frag) : null;
+			c = json
+				? { words: docStats(json).words, lines: docText(json).text.split('\n', 3) }
+				: { words: 0, lines: [] };
+			this.#cards.set(id, c);
 		}
-		return n;
+		return c;
+	}
+
+	cardWords(id: string): number {
+		return this.#card(id).words;
+	}
+
+	/** The card's first line of text that isn't just its title (outline previews). */
+	cardFirstLine(id: string, title = ''): string {
+		void this.version;
+		const t = title.trim().toLowerCase();
+		return this.#card(id).lines.find((l) => l.trim().toLowerCase() !== t) ?? '';
 	}
 
 	elementWords(el: Element): number {

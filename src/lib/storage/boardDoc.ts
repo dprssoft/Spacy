@@ -1,3 +1,4 @@
+import { ensureOutlineMap } from '$lib/model/outline';
 import { deleteDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
@@ -52,6 +53,7 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 	}
 
 	const stopTabSync = createTabSync(doc, boardChannelName(id));
+	ensureOutlineMap(doc);
 	const undo = createBoardUndo(doc);
 
 	const touch = debounce(() => boardsRepo.touchUpdated(id), TOUCH_UPDATED_MS);
@@ -145,8 +147,17 @@ export async function duplicateBoard(id: string): Promise<BoardMeta> {
  */
 export function createBoardUndo(doc: Y.Doc): Y.UndoManager {
 	// Every page is in scope; pages added later join through `undo.addToScope` (board/pages).
-	return new Y.UndoManager([...allPageMaps(doc), getDocsMap(doc), getSketchesMap(doc)], {
-		trackedOrigins: new Set([LOCAL]),
-		captureTimeout: 500
-	});
+	const outline = getMeta(doc).get('outline');
+	return new Y.UndoManager(
+		[
+			...allPageMaps(doc),
+			getDocsMap(doc),
+			getSketchesMap(doc),
+			...(outline instanceof Y.Map ? [outline] : [])
+		],
+		{
+			trackedOrigins: new Set([LOCAL]),
+			captureTimeout: 500
+		}
+	);
 }

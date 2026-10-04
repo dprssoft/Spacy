@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getBoard } from '../context';
+	import ListTree from '@lucide/svelte/icons/list-tree';
 	import PageTabs from './PageTabs.svelte';
 	import ZoomControls from './ZoomControls.svelte';
 
@@ -15,6 +16,17 @@
 	data-interactive
 >
 	<PageTabs />
+	<button
+		type="button"
+		class="inline-flex shrink-0 items-center gap-1.5 self-center rounded-md px-2 py-1 text-muted hover:bg-surface hover:text-text aria-pressed:text-accent pointer-coarse:min-h-11"
+		aria-pressed={ctx.outline.open}
+		aria-keyshortcuts="Control+Shift+O"
+		title="Outline (Mod+Shift+O)"
+		data-testid="outline-toggle"
+		onclick={() => ctx.outline.toggle()}
+	>
+		<ListTree class="size-4" aria-hidden="true" /><span class="max-sm:sr-only">Outline</span>
+	</button>
 	<p
 		class="ml-auto hidden shrink-0 items-center px-2 text-muted sm:flex"
 		data-testid="status-count"
