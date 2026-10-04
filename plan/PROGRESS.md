@@ -1152,3 +1152,19 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (848 unit tests; new `compile.test.ts`: chapters, numbering (incl. no double numbering), scene titles, selection, collapsed, demotion, Markdown, print HTML, CRC32 check value, `.docx` round-trip through our own reader (headings, marks, lists, links, title page), valid XML in every part) · pnpm test:e2e ✅ (208; new `compile.spec.ts`: Markdown download with title page and chapters in order; Word download is a zip with the chosen chapters only; the print view has the chapter sections) · **LibreOffice check:** a compiled `.docx` converts headless to text and HTML with Heading 1/2/3, page breaks before chapters, scene separators and the title page.
+
+## Step 43 — Backlinks — 2026-10-04
+**Summary:**
+- `writing/backlinks.svelte.ts`: `mentionsIn(doc)` (pure: each mention with ~80 characters around it, the mention as `@label`) and `BacklinkIndex` (`ctx.backlinks`). It covers all doc cards on every page (`docs` is shared), caches per card, drops a card's cache when its fragment changes and refreshes after 300 ms, and builds a reverse index (target → cards) once per change. Self-mentions and leftover fragments are ignored.
+- **UI:**
+  - a "↩ N" badge in the doc card header with a "Mentioned in" popover
+  - a "Mentioned in" box in focus mode
+  - a "Mentioned in N…" context menu entry for any mentioned object, opening a dialog
+- Picking a backlink flies to the card and flashes the mention chip (`openBacklink`, `.mention-flash`). Current card titles are shown (titles live on elements, not in the index).
+
+**Deviations:**
+- The first e2e failures came from the test: the target card sat behind the toolbar, and later the view had flown away before the right-click. Fixed in the test (positioned lower; "Back to origin" first). The app was fine.
+- Unit tests write mentions straight into the Yjs fragment: `setDocContent`'s base schema has no mention node (the board editor adds it).
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (850 unit tests; new `backlinks.test.ts`: snippets, index across cards, update after deleting a card) · pnpm test:e2e ✅ (209; new `backlinks.spec.ts`: two scenes @-mention a character card → badge "2" → the list shows the snippets → picking one selects that scene and flashes its mention; the context menu "Mentioned in 2…" opens the same list).

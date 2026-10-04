@@ -19,6 +19,7 @@
 	import './prose.css';
 	import { isSuggestionKey } from './suggestionPopup.svelte';
 	import FocusCounter from './FocusCounter.svelte';
+	import BacklinksList from '../writing/BacklinksList.svelte';
 	import FocusViewMenu from './FocusViewMenu.svelte';
 	import { watchEditorStats, type LiveStats } from '../writing/editorStats';
 	import { focusPrefs, SIZE_PX, WIDTH_CH } from '../writing/focusPrefs.svelte';
@@ -252,6 +253,17 @@
 			{onclick}
 		></div>
 	</div>
+	{#if ctx.backlinks.of(id).length > 0}
+		<!-- Where this card is mentioned (step 43). -->
+		<section
+			class="pointer-events-auto absolute bottom-12 left-3 w-72 rounded-xl border border-border bg-surface p-2 shadow {chrome}"
+			aria-label="Mentioned in"
+			data-focus-backlinks
+		>
+			<p class="px-2 pb-1 text-xs font-semibold text-muted">Mentioned in</p>
+			<BacklinksList targetId={id} />
+		</section>
+	{/if}
 	<div class="absolute right-3 bottom-3 {chrome}">
 		<FocusCounter {stats} />
 	</div>

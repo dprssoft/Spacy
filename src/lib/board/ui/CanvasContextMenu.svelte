@@ -20,6 +20,7 @@
 	import { connectedComponent } from '../diagram/quickCreate';
 	import { copyMarkdown, downloadMarkdown } from '../doccards/exportMarkdown';
 	import { exportDialog } from './exportDialogState.svelte';
+	import { backlinksDialog } from '../writing/backlinksDialogState.svelte';
 	import { formatKeys } from '../tools/formatKeys';
 
 	let { children }: { children: Snippet } = $props();
@@ -31,6 +32,9 @@
 	const hasSelection = $derived(open && ctx.selection.size > 0);
 	const allLocked = $derived(open && selectedElements(ctx).every((el) => el.locked));
 	const stackFrame = $derived(open ? stackableFrame(ctx) : null);
+	const mentionedIn = $derived(
+		open && ctx.selection.single ? ctx.backlinks.of(ctx.selection.single).length : 0
+	);
 	const media = $derived.by(() => {
 		const el = open && ctx.selection.single ? ctx.store.get(ctx.selection.single) : undefined;
 		return el?.type === 'media' ? el : null;
@@ -99,6 +103,13 @@
 				)}
 				<ContextMenu.Separator class={sep} />
 				{@render entry('Export selection…', null, () => exportDialog.show('png', 'selection'))}
+				{#if mentionedIn > 0}
+					{@render entry(
+						`Mentioned in ${mentionedIn}…`,
+						null,
+						() => (backlinksDialog.targetId = ctx.selection.single)
+					)}
+				{/if}
 				{#if media}
 					<ContextMenu.Separator class={sep} />
 					{@render entry(ctx.playback.playing.has(media.id) ? 'Stop' : 'Play', null, () =>
