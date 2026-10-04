@@ -18,7 +18,7 @@ Every mentionable object shows where it's mentioned: a "Mentioned in…" list fo
 - e2e: a character card mentioned from two scene cards → badge "2" → list → click opens the right scene with the mention highlighted.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `pnpm verify` and `pnpm test:e2e` pass
 
 ## Commit
 `feat(writing): backlinks — see where each object is mentioned`

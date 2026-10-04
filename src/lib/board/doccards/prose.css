@@ -242,3 +242,18 @@
 .focus-paragraph .ProseMirror > .is-current {
 	opacity: 1;
 }
+
+/* A mention opened from "Mentioned in" flashes briefly. */
+@keyframes mention-flash {
+	0%,
+	60% {
+		box-shadow: 0 0 0 3px var(--accent);
+	}
+	100% {
+		box-shadow: 0 0 0 0 transparent;
+	}
+}
+.mention-flash {
+	animation: mention-flash 1.6s ease-out;
+	border-radius: 4px;
+}

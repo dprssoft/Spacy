@@ -2,6 +2,9 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Maximize2 from '@lucide/svelte/icons/maximize-2';
+	import CornerUpLeft from '@lucide/svelte/icons/corner-up-left';
+	import { Popover } from 'bits-ui';
+	import BacklinksList from '../../writing/BacklinksList.svelte';
 	import { DOC_CARD_HEADER_H } from '$lib/model/defaults';
 	import { updateElement } from '$lib/model/ops';
 	import type { DocCardElement } from '$lib/model/types';
@@ -13,6 +16,7 @@
 		$props();
 
 	const ctx = getBoard();
+	const backlinks = $derived(ctx.backlinks.of(el.id));
 	let draft = $state('');
 	let cancelled = false;
 
@@ -73,6 +77,31 @@
 	{:else}
 		<div class="min-w-0 truncate px-1 font-semibold" data-doccard-title>{el.title}</div>
 		<div class="flex-1"></div>
+	{/if}
+	{#if backlinks.length > 0}
+		<Popover.Root>
+			<Popover.Trigger
+				class="pointer-events-auto inline-flex h-6 shrink-0 items-center gap-0.5 rounded px-1 text-xs opacity-60 hover:bg-black/5 hover:opacity-100"
+				aria-label="Mentioned in {backlinks.length} {backlinks.length === 1 ? 'card' : 'cards'}"
+				data-interactive
+				data-testid="backlinks-badge"
+				onpointerdown={(e: PointerEvent) => e.stopPropagation()}
+			>
+				<CornerUpLeft class="size-3.5" aria-hidden="true" />{backlinks.length}
+			</Popover.Trigger>
+			<Popover.Portal>
+				<Popover.Content
+					side="bottom"
+					align="end"
+					sideOffset={6}
+					data-interactive
+					class="z-50 w-80 rounded-xl border border-border bg-surface p-2 text-text shadow-lg"
+				>
+					<p class="px-2 pb-1 text-xs font-semibold text-muted">Mentioned in</p>
+					<BacklinksList targetId={el.id} />
+				</Popover.Content>
+			</Popover.Portal>
+		</Popover.Root>
 	{/if}
 	<DocCardMenu
 		cardId={el.id}

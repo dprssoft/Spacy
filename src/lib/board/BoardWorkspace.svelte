@@ -51,8 +51,10 @@
 	import { PlaybackState } from './media/playback.svelte';
 	import { BoardWordStats } from './writing/boardStats.svelte';
 	import { OutlineState } from './writing/outlineState.svelte';
+	import { BacklinkIndex } from './writing/backlinks.svelte';
 	import { compileDialog } from './writing/compileDialogState.svelte';
 	import OutlinePanel from './writing/OutlinePanel.svelte';
+	import BacklinksDialog from './writing/BacklinksDialog.svelte';
 	import { exportDialog } from './ui/exportDialogState.svelte';
 	import { templateGallery } from './ui/templateGalleryState.svelte';
 	import LiveAnnouncer from './ui/LiveAnnouncer.svelte';
@@ -94,9 +96,11 @@
 	ctx.store.rebind();
 	ctx.words = new BoardWordStats(ctx.doc, ctx.store);
 	ctx.outline = new OutlineState(ctx);
+	ctx.backlinks = new BacklinkIndex(ctx.doc);
 	onDestroy(() => {
 		ctx.words.destroy();
 		ctx.outline.destroy();
+		ctx.backlinks.destroy();
 	});
 	ctx.shortcuts.register([
 		...toolShortcuts,
@@ -299,6 +303,7 @@
 			</CanvasContextMenu>
 			<LiveAnnouncer />
 			<ShortcutsDialog />
+			<BacklinksDialog />
 			<Onboarding />
 			{#if templateGalleryWanted}
 				{#await Promise.all( [import('$lib/shared/ui/TemplateGallery.svelte'), import('$lib/templates/insert')] ) then [{ default: TemplateGallery }, { insertTemplate }]}
