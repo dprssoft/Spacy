@@ -260,6 +260,7 @@ export interface AssetRecord {
 
 ### Board contents
 - One `y-indexeddb` database per board, name `smthng-board-<id>`.
+- An open board is saved by `BoardSaver` (`src/lib/storage/boardSaver.ts`): the same layout as y-indexeddb (an auto-increment `updates` store of Yjs updates, plus `custom`), but every write is awaited so a failed save is reported ("Not saved" in the top bar, a toast with Retry, a prompt before leaving). Retry writes the full state, because the failed update is missing from storage. One-shot snapshot reads and writes still use `y-indexeddb`.
 - `openBoard(id)` (in `src/lib/storage/boardDoc.ts`) is the **only** place that wires providers to a Y.Doc. A future sync server is added here.
 
 ### Cross-tab sync

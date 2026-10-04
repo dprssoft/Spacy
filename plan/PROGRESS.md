@@ -1260,3 +1260,12 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 - Boards saved before this are cleaned when opened: `pruneOrphanThreads` (origin `MIGRATION`, not undoable) deletes threads whose object is on no page. No schema version change.
 
 **Verification:** pnpm verify ✅ (905 unit tests; new in `model/pages.test.ts`: page delete removes element and text threads of its objects only; prune keeps threads on any page). e2e `comments`, `pages`, `files` ✅ on chromium and firefox.
+
+### Save failures are reported — 2026-10-04
+- y-indexeddb never caught its write errors: with storage full, or with a connection the browser closed, edits stayed in memory and were lost on reload while the top bar said "Saved locally". If storage was full while a board loaded, its first sync never finished either.
+- **`BoardSaver`** (`storage/boardSaver.ts`) now saves the open board. It keeps y-indexeddb's layout (the same `updates`/`custom` stores and update blobs, merged into one at 500 like before, after merging in updates other tabs stored meanwhile), so `loadSnapshot`/`writeSnapshot` (still y-indexeddb) and existing boards work unchanged. Every write awaits its transaction: a failure sets the state to failed, and a later successful write doesn't clear it (the failed update is missing). `retry()` reconnects if needed and replaces the stored updates with the full state in one transaction.
+- **UI** (`board/saveStatus.svelte.ts`, `ctx.save`): the top bar shows "Not saved" (click to retry), an error toast stays up with "Retry", and closing the tab asks first while changes aren't saved.
+
+**Deviations:** the live board no longer uses `y-indexeddb`'s provider (the plan names it for persistence); the storage format is unchanged, recorded in `00-architecture.md`.
+**Dependencies added:** none (`idb` was already used)
+**Verification:** pnpm verify ✅ (912 unit tests; new `boardSaver.test.ts`: save and load, a throwing write → failed, a later write keeps failed, retry saves everything; an aborted transaction; a failed retry; storage that can't open rejects; merging keeps another tab's updates; reads y-indexeddb boards and y-indexeddb reads ours) · e2e chromium + mobile ✅ 223 (new `save-errors.spec.ts`: broken IndexedDB writes → "Not saved" + toast, leaving asks → Retry → "Saved locally" → the object survives a reload; also ✅ on firefox). The full firefox run has 19 failures that fail the same way on the previous commit (e.g. `pen-images` paste, `select` SE handle), not caused by this.
