@@ -187,6 +187,13 @@ export interface HandlePoint {
 
 export const ROTATE_HANDLE_OFFSET = 24;
 
+/** World position of a resize handle of `box`. */
+export function resizeHandlePoint(box: Box, handle: ResizeHandle): Point {
+	const d = DIRS[handle];
+	const p = { x: box.x + ((d.x + 1) / 2) * box.w, y: box.y + ((d.y + 1) / 2) * box.h };
+	return rotatePoint(p, rectCenter(box), box.rotation);
+}
+
 /** Screen positions of the handles of `box`. */
 export function selectionHandles(
 	box: Box,
@@ -198,10 +205,7 @@ export function selectionHandles(
 		rotatePoint({ x: box.x + fx * box.w, y: box.y + fy * box.h }, c, box.rotation);
 	const out: HandlePoint[] = [];
 	if (opts.resize) {
-		for (const id of RESIZE_HANDLES) {
-			const d = DIRS[id];
-			out.push({ id, ...toScreen(worldAt((d.x + 1) / 2, (d.y + 1) / 2)) });
-		}
+		for (const id of RESIZE_HANDLES) out.push({ id, ...toScreen(resizeHandlePoint(box, id)) });
 	}
 	if (opts.rotate) {
 		const top = toScreen(worldAt(0.5, 0));

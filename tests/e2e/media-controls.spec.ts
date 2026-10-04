@@ -36,7 +36,10 @@ async function addPlaying(page: Page, url: string, at = { x: 0, y: 0 }): Promise
 			ctx.pointer = at;
 			const dt = new DataTransfer();
 			dt.setData('text/plain', url);
-			document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true }));
+			// Firefox drops `clipboardData` given to a synthetic event's constructor.
+			const e = new ClipboardEvent('paste', { bubbles: true, cancelable: true });
+			Object.defineProperty(e, 'clipboardData', { value: dt });
+			document.dispatchEvent(e);
 			return ctx.selection.single!;
 		},
 		{ url, at }

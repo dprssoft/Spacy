@@ -1269,3 +1269,11 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Deviations:** the live board no longer uses `y-indexeddb`'s provider (the plan names it for persistence); the storage format is unchanged, recorded in `00-architecture.md`.
 **Dependencies added:** none (`idb` was already used)
 **Verification:** pnpm verify ✅ (912 unit tests; new `boardSaver.test.ts`: save and load, a throwing write → failed, a later write keeps failed, retry saves everything; an aborted transaction; a failed retry; storage that can't open rejects; merging keeps another tab's updates; reads y-indexeddb boards and y-indexeddb reads ours) · e2e chromium + mobile ✅ 223 (new `save-errors.spec.ts`: broken IndexedDB writes → "Not saved" + toast, leaving asks → Retry → "Saved locally" → the object survives a reload; also ✅ on firefox). The full firefox run has 19 failures that fail the same way on the previous commit (e.g. `pen-images` paste, `select` SE handle), not caused by this.
+
+### Firefox e2e failures — 2026-10-04
+19 tests failed on Firefox; three causes:
+- **Clipboard permissions (8):** Playwright's Firefox rejects `clipboard-read`/`clipboard-write`, so the context couldn't be created. Tests now grant them only on Chromium (`clipboardPermissions` in `helpers.ts`); on Firefox the keyboard copy/paste works without them, and `readClipboard` reads the clipboard by pasting into a scratch textarea.
+- **Synthetic paste events (10, media and image paste):** Firefox replaces the `clipboardData` given to a synthetic `ClipboardEvent` with an empty one. The tests set it with `Object.defineProperty` instead. Real pastes were never affected.
+- **Resize handle (1), an app bug:** resizing put the handle exactly under the pointer, so pressing a handle off-centre made the box jump by that offset (Firefox rounds mouse coordinates to whole pixels, so it showed as 119.5 instead of 120). The select tool now keeps the grab offset for the whole drag (`resizeHandlePoint` in `engine/transform.ts`).
+
+**Verification:** pnpm verify ✅ (913 unit tests; new `resizeHandlePoint` test) · e2e ✅ firefox + chromium + mobile: 417 passed, 24 skipped (Chromium-only or desktop-only tests); new `select.spec.ts` test: pressing the SE handle 3 px off-centre and dragging 40 px grows the box by exactly 40. WebKit still can't launch on this machine (missing system libraries).

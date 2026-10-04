@@ -96,3 +96,28 @@ export async function clickElement(
 	await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 	for (const m of modifiers) await page.keyboard.up(m);
 }
+
+/**
+ * Clipboard permissions to grant: only Chromium knows them. Firefox and WebKit refuse the names
+ * (the context can't be created), and they allow the clipboard from user key presses anyway.
+ */
+export const clipboardPermissions = (browserName: string): string[] =>
+	browserName === 'chromium' ? ['clipboard-read', 'clipboard-write'] : [];
+
+/** The clipboard's text. Outside Chromium, pasted into a scratch textarea with a real key press. */
+export async function readClipboard(page: Page, browserName: string): Promise<string> {
+	if (browserName === 'chromium') return page.evaluate(() => navigator.clipboard.readText());
+	await page.evaluate(() => {
+		const t = document.createElement('textarea');
+		t.id = 'clipboard-probe';
+		t.style.cssText = 'position:fixed;top:0;left:0;z-index:99999';
+		document.body.append(t);
+		t.focus();
+	});
+	await page.keyboard.press('ControlOrMeta+v');
+	return page.evaluate(() => {
+		const t = document.getElementById('clipboard-probe') as HTMLTextAreaElement;
+		t.remove();
+		return t.value;
+	});
+}

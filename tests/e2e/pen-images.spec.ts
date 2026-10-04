@@ -97,7 +97,10 @@ async function dispatchWithFile(page: Page, kind: 'drop' | 'paste', at?: { x: nu
 			const dt = new DataTransfer();
 			dt.items.add(new File([new Uint8Array(bytes)], 'dropped.png', { type: 'image/png' }));
 			if (kind === 'paste') {
-				document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true }));
+				// Firefox drops `clipboardData` given to a synthetic event's constructor.
+				const e = new ClipboardEvent('paste', { bubbles: true, cancelable: true });
+				Object.defineProperty(e, 'clipboardData', { value: dt });
+				document.dispatchEvent(e);
 				return;
 			}
 			const target = document.querySelector('[data-testid=canvas]')!;

@@ -7,6 +7,7 @@ import {
 	hitHandle,
 	normalizeAngle,
 	resizeBox,
+	resizeHandlePoint,
 	RESIZE_HANDLES,
 	rotateElementsAround,
 	scaleElementsToBox,
@@ -195,6 +196,14 @@ describe('handles', () => {
 		expect(hs.find((h) => h.id === 'se')).toMatchObject({ x: 100, y: 50 });
 		expect(hs.find((h) => h.id === 'rotate')).toMatchObject({ x: 50, y: -24 });
 		expect(selectionHandles(box, id, { resize: false, rotate: true })).toHaveLength(1);
+	});
+
+	it('resize handle points are in world space, rotated with the box', () => {
+		expect(resizeHandlePoint(box, 'se')).toEqual({ x: 100, y: 50 });
+		expect(resizeHandlePoint(box, 'n')).toEqual({ x: 50, y: 0 });
+		const turned = resizeHandlePoint({ ...box, rotation: Math.PI }, 'se');
+		expect(turned.x).toBeCloseTo(0);
+		expect(turned.y).toBeCloseTo(0);
 	});
 
 	it('hit-tests handles within a radius, preferring rotate', () => {
