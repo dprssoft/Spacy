@@ -334,13 +334,19 @@ export function copyThreadsTo(
 	}
 }
 
-// Deleting an element deletes its threads (element-anchored, and text threads of a doc card).
-beforeDeleteHooks.push((doc, ids) => {
+/**
+ * Deletes the threads whose element (or doc card, for text threads) matches `drop`. Call inside a
+ * transaction.
+ */
+export function deleteThreadsWhere(doc: Y.Doc, drop: (elementId: string) => boolean): void {
 	const map = getCommentsMap(doc);
 	for (const [id, t] of [...map]) {
 		const anchor = anchorSchema.safeParse(t.get('anchor'));
 		if (!anchor.success) continue;
 		const target = anchor.data.kind === 'element' ? anchor.data.elementId : anchor.data.cardId;
-		if (ids.has(target)) map.delete(id);
+		if (drop(target)) map.delete(id);
 	}
-});
+}
+
+// Deleting an element deletes its threads (element-anchored, and text threads of a doc card).
+beforeDeleteHooks.push((doc, ids) => deleteThreadsWhere(doc, (id) => ids.has(id)));

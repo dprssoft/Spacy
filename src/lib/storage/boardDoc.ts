@@ -5,7 +5,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 import { getDocsMap, getMeta, getSketchesMap } from '$lib/model/doc';
 import { migrate } from '$lib/model/migrations';
-import { allPageMaps } from '$lib/model/pages';
+import { allPageMaps, pruneOrphanThreads } from '$lib/model/pages';
 import { IMPORT, LOCAL, MIGRATION, type Origin } from '$lib/model/origins';
 import { debounce } from '$lib/shared/debounce';
 import * as assetsRepo from './assetsRepo';
@@ -52,6 +52,7 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 	if (typeof getMeta(doc).get('title') !== 'string') {
 		doc.transact(() => getMeta(doc).set('title', meta.title), MIGRATION);
 	}
+	pruneOrphanThreads(doc, MIGRATION);
 
 	const stopTabSync = createTabSync(doc, boardChannelName(id));
 	ensureOutlineMap(doc);
