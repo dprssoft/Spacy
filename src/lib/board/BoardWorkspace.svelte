@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
+	import { SaveStatus } from './saveStatus.svelte';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/state';
@@ -96,7 +97,8 @@
 		assets: new AssetUrlCache(),
 		prefs: new BoardPrefs(),
 		sketch: new SketchSettings(),
-		playback: new PlaybackState()
+		playback: new PlaybackState(),
+		save: new SaveStatus(board.saver)
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);
@@ -109,6 +111,7 @@
 	ctx.comments = new CommentsState(ctx);
 	ctx.waystones = new WaystonesState(ctx);
 	onDestroy(() => {
+		ctx.save.destroy();
 		ctx.comments.destroy();
 		ctx.words.destroy();
 		ctx.outline.destroy();

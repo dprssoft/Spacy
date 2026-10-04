@@ -8,6 +8,7 @@ import { migrate } from '$lib/model/migrations';
 import { allPageMaps, pruneOrphanThreads } from '$lib/model/pages';
 import { IMPORT, LOCAL, MIGRATION, type Origin } from '$lib/model/origins';
 import { debounce } from '$lib/shared/debounce';
+import { BoardSaver } from './boardSaver';
 import * as assetsRepo from './assetsRepo';
 import * as boardsRepo from './boardsRepo';
 import { createTabSync } from './tabSync';
@@ -27,6 +28,8 @@ export interface OpenBoard {
 	id: string;
 	doc: Y.Doc;
 	undo: Y.UndoManager;
+	/** Whether changes are reaching storage; retry after a failure. */
+	saver: BoardSaver;
 	close(): Promise<void>;
 }
 
@@ -38,14 +41,13 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 	if (!meta) throw new BoardNotFoundError(id);
 
 	const doc = new Y.Doc();
-	const persistence = new IndexeddbPersistence(boardDbName(id), doc);
+	const saver = await BoardSaver.open(boardDbName(id), doc);
 	// Future: add a network provider (e.g. HocuspocusProvider) here.
-	await persistence.whenSynced;
 
 	try {
 		migrate(doc);
 	} catch (err) {
-		await persistence.destroy();
+		await saver.destroy();
 		doc.destroy();
 		throw err;
 	}
@@ -69,6 +71,7 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 		id,
 		doc,
 		undo,
+		saver,
 		async close() {
 			if (closed) return;
 			closed = true;
@@ -76,7 +79,7 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 			await touch.flush();
 			undo.destroy();
 			stopTabSync();
-			await persistence.destroy();
+			await saver.destroy();
 			doc.destroy();
 		}
 	};

@@ -1,5 +1,6 @@
 import { getContext, setContext } from 'svelte';
 import type * as Y from 'yjs';
+import type { SaveStatus } from './saveStatus.svelte';
 import type { Point } from '$lib/model/types';
 import type { BoardStore } from './boardStore.svelte';
 import type { HistoryState } from './commands/history.svelte';
@@ -47,6 +48,7 @@ export interface BoardContext {
 	comments: CommentsState;
 	waystones: WaystonesState;
 	sketch: SketchSettings;
+	save: SaveStatus;
 }
 
 const KEY = Symbol('board');
