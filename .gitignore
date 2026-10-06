@@ -28,7 +28,6 @@ blob-report
 
 # Temp / analysis
 .scaffold
-stats.html
 coverage
 
 # Bundle analysis (pnpm analyze)
