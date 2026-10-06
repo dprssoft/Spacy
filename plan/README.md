@@ -18,6 +18,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | M8: Extensions | 36 | Insert templates (kanban, retro, SWOT…) into any board; play YouTube, Vimeo, audio and video on the board with rich controls |
 | M9: Mobile | 38 | Use and edit boards on phones and tablets: fitted layout, finger gestures, long-press menu, style sheet, keyboard-aware editing |
 | M10: Writers | 46 | Word counts, focus aids, writing templates, outline + compile to one manuscript, backlinks, find & replace, comments on anything, waystones |
+| M11: Sync | 50 (51 for the mobile apps) | Connect Google Drive in Settings; boards, the board list and images sync between your own devices; offline edits catch up |
 
 ## Steps
 
@@ -69,6 +70,11 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 44 | [Find and replace](./steps/44-find-replace.md) | K | 39 | 1.5d |
 | [x] | 45 | [Comments](./steps/45-comments.md) (approved: non-goal lifted, data model, schema 6) | K | 44 | 2.5d |
 | [x] | 46 | [Waystones](./steps/46-waystones.md) (approved: board only, element type, schema) | K | 43 | 1.5d |
+| [ ] | 47 | [Sync engine (boards)](./steps/47-sync-engine.md) (**needs approval**: lifts the "server sync" non-goal) | L. Sync | 32 | 2.5d |
+| [ ] | 48 | [Board list sync](./steps/48-library-sync.md) (**needs approval**: library doc) | L | 47 | 1.5d |
+| [ ] | 49 | [Image sync](./steps/49-asset-sync.md) | L | 48 | 1d |
+| [ ] | 50 | [Google Drive and sync settings](./steps/50-google-drive.md) (**blocked**: app name, domain, OAuth client) | L | 49 | 2d |
+| [ ] | 51 | [Capacitor app and native Google sign-in](./steps/51-capacitor-sign-in.md) (**blocked**: app name, bundle id) | L | 50 | 2d |
 
 Total is about 46 working days for one developer, or about 11–12 weeks with a buffer.
 

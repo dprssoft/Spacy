@@ -9,14 +9,17 @@ There is no backend and no account.
 
 ## Features
 
-- **Pages:** several pages per board, as sheet tabs along the bottom (add, rename, reorder, delete).
+- **Pages:** several pages per board, as sheet tabs along the bottom (add, rename, reorder, duplicate, delete).
 - **Sketching:** a sketch is one object you keep drawing into, with pen, pencil, marker, highlighter and an eraser; pen and pencil follow stylus pressure.
 - **Whiteboard:** infinite canvas, shapes, sticky notes, text, pen, images, frames; select, move, resize, rotate, group, lock; undo and redo; copy and paste.
 - **Styling:** contextual style popover with a 50-color palette, any custom color and recent colors, 13 fonts (10 bundled, with Cyrillic) for all text, quick styles, align and distribute, smart guides, snap to grid.
 - **Diagrams:** straight, elbow and curved connectors, seven end markers, labels, manual bends, a flowchart shape library, quick-create of connected shapes.
 - **Doc cards:** headings, lists, checklists, quotes, code, links; fonts, sizes, colors, highlights and alignment from a Word-like ribbon; focus mode; `/` commands; `@` mentions of canvas objects; Markdown export.
-- **Sharing:** PNG and SVG export, `.smthng` board files, full backup and restore, templates.
-- **Everywhere:** installable, works offline, light and dark themes, keyboard-only use, screen reader announcements. Press `?` on a board for the shortcut list.
+- **Writing:** word counts, an outline in manuscript order, compile to Markdown, Word or print, backlinks, find and replace, comments on objects and text.
+- **Media:** YouTube, Vimeo, audio and video links play in place, with clips, loop and speed.
+- **Presenting:** waystones (named checkpoints to fly between) and full screen.
+- **Sharing:** PNG and SVG export, `.smthng` board files, full backup and restore, a template gallery (start a board or insert into one).
+- **Everywhere:** installable, works offline, phones and tablets, light and dark themes with six palettes, keyboard-only use, screen reader announcements. Press `?` on a board for the shortcut list.
 
 ## Data & privacy
 
@@ -42,8 +45,8 @@ The app is built with SvelteKit (SPA mode), Svelte 5, TypeScript, Tailwind CSS v
 
 ```bash
 pnpm test                 # unit and component tests (Vitest)
-pnpm test:e2e             # end-to-end tests in Chromium (Playwright)
-pnpm test:e2e:all         # Chromium, Firefox and WebKit
+pnpm test:e2e             # end-to-end tests in Chromium and phone emulation (Playwright)
+pnpm test:e2e:all         # also Firefox and WebKit
 ```
 
 First run: `pnpm exec playwright install --with-deps chromium firefox webkit`. WebKit needs the system libraries of a supported distribution (Ubuntu or Debian); CI runs all three browsers.
@@ -80,7 +83,7 @@ pnpm dlx wrangler pages deploy build --project-name smthng
 
 **Netlify:** the same settings (build command `pnpm build`, publish directory `build`, Node 22).
 
-**Any other static host** works if it serves `index.html` for unknown paths and sends the headers from `build/_headers`. The `script-src` hash in that file is written by the build (`scripts/postbuild-csp.mjs`), so always deploy the `_headers` from the same build as the pages.
+**Any other static host** works if it serves `200.html` for unknown paths (the rewrite in `build/_redirects`; `index.html` is the prerendered start page, not the fallback) and sends the headers from `build/_headers`. The `script-src` hash in that file is written by the build (`scripts/postbuild-csp.mjs`), so always deploy the `_headers` from the same build as the pages.
 
 To check a build locally exactly as it will be served: `pnpm build && pnpm serve`.
 
@@ -91,5 +94,4 @@ The bundled fonts come from [Fontsource](https://fontsource.org): Inter, Montser
 ## Roadmap
 
 - Real-time collaboration: a sync server provider added where the board is opened (`openBoard`); the data model is already a Yjs document.
-- Comments on objects and doc cards.
 - Version history.

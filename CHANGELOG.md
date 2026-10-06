@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 — 2026-10-03
+## 1.0.0 — 2026-10-04
 
 The first release: a whiteboard that lives in your browser, with diagrams and doc cards.
 
@@ -64,9 +64,52 @@ The first release: a whiteboard that lives in your browser, with diagrams and do
 - A 50-color palette (four shades of ten hues and a row of grays) in every color picker: fill, stroke, text, sticky notes, sketch brushes ("More colors"), doc card text and highlight.
 - Any color: a color picker and a hex field everywhere, and the last custom colors under "Recent". Sticky notes take any color too.
 
+### Media
+
+- Paste a YouTube, Vimeo, audio or video link to get a media object that plays in place.
+- One set of controls for every player: play and pause, seek, volume, speed, clips with start and end, loop, full screen and keyboard shortcuts.
+
+### Templates
+
+- A template gallery: Flowchart, Brainstorm, Meeting notes, Kanban, Retrospective, SWOT, Eisenhower matrix, Mind map, Timeline, Journey map, Business model canvas and Weekly planner, plus writing templates (story structures, characters, world-building, scene cards, article, screenplay).
+- Start a board from a template, or insert one into the current board.
+
+### Writing
+
+- Word count and reading time; optional focus mode aids.
+- Outline panel: the manuscript order of doc cards, with word counts and drag to reorder.
+- Compile doc cards into one manuscript: Markdown, Word or print/PDF.
+- Backlinks: see where each object is mentioned.
+- Find and replace across all text on the board.
+- Drop text, Markdown and Word files on the board to make doc cards.
+
+### Comments
+
+- Comment threads on any object and on text inside doc cards: reply, resolve, reopen; a panel lists them per page.
+
+### Navigation and presenting
+
+- Waystones: named checkpoints on a page to fly between, with a list, keys and a full-screen presenting mode.
+- Go to the nearest object (Shift+N), back to origin, full screen mode (Shift+F).
+
+### Phones and tablets
+
+- The start page and boards fit phones: one-finger pan, pinch zoom, long-press menus and marquee, double-tap, a style sheet and keyboard-aware editing, palm rejection for the stylus.
+
+### Pages and settings
+
+- Duplicate a page; pick several tabs (Ctrl/⌘- or Shift-click) to duplicate or delete them together.
+- Six UI palettes in Settings, each with light and dark variants.
+
+### Reliability
+
+- A save that doesn't reach browser storage (for example when it's full) shows "Not saved" with a Retry, and leaving the page asks first.
+- Deleting a page also deletes the comments on it.
+
 ### M7 — Release quality
 
 - Installable and fully offline (PWA) with an update prompt; settings and a backup reminder.
 - Lazy-loaded editor and export code; low-zoom doc card previews.
 - Keyboard-only flows, screen reader announcements, shortcuts dialog, first-run tips, reduced motion.
 - Content-Security-Policy and security headers; end-to-end tests in Chromium, Firefox and WebKit.
+- A lighter start page: template previews and storage housekeeping load after it has painted.
