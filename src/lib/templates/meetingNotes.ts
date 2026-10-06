@@ -4,7 +4,7 @@ import { getDocsMap } from '$lib/model/doc';
 import { TEMPLATE } from '$lib/model/origins';
 import type { DocNode } from '$lib/board/doccards/markdown';
 import { TemplateBuilder } from './builder';
-import { setDocContent } from './docContent';
+import { writeDocJSON } from '$lib/board/doccards/fragmentWrite';
 import { h, items, p } from './docHelpers';
 
 export const MEETING_NOTES: DocNode = {
@@ -39,6 +39,6 @@ export function buildMeetingNotes(doc: Y.Doc): void {
 	b.connect(card, 'e', frame, 'w', { label: 'decisions' });
 	doc.transact(() => {
 		b.commit(doc);
-		setDocContent(getDocsMap(doc).get(card.id)!, MEETING_NOTES);
+		writeDocJSON(getDocsMap(doc).get(card.id)!, MEETING_NOTES);
 	}, TEMPLATE);
 }

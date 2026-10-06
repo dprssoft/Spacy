@@ -3,6 +3,7 @@
 	import { debounce } from '$lib/shared/debounce';
 	import { getPref, setPref } from '$lib/shared/localPrefs';
 	import ConfirmDialog from '$lib/shared/ui/ConfirmDialog.svelte';
+	import * as boardsRepo from '$lib/storage/boardsRepo';
 	import { requestPersistentStorage } from '$lib/storage/persist';
 	import type { BoardSort } from '$lib/storage/types';
 	import * as actions from './actions';
@@ -18,16 +19,27 @@
 	import { handleLaunchFiles } from './fileActions';
 	import { parseView } from './views';
 
+	/** Featured template previews (SVG data URLs), drawn at build time. */
+	let { templatePreviews }: { templatePreviews: Record<string, string> } = $props();
+
 	const SORTS: BoardSort[] = ['opened', 'updated', 'created', 'title'];
 
 	const ui = setHomeUI(new HomeUI());
 	const query = new BoardsQuery();
-	const view = $derived(parseView(page.url.searchParams.get('view')));
+	// This page is prerendered: it hydrates with the defaults (the build has no URL query and no
+	// localStorage), then applies the view from the URL and the stored sort and layout.
+	let hydrated = $state(false);
+	const view = $derived(hydrated ? parseView(page.url.searchParams.get('view')) : 'recent');
 
 	let search = $state('');
-	const storedSort = getPref<BoardSort>('home:sort', 'opened');
-	let sort = $state<BoardSort>(SORTS.includes(storedSort) ? storedSort : 'opened');
-	let layout = $state<Layout>(getPref<string>('home:layout', 'grid') === 'list' ? 'list' : 'grid');
+	let sort = $state<BoardSort>('opened');
+	let layout = $state<Layout>('grid');
+	$effect(() => {
+		const storedSort = getPref<BoardSort>('home:sort', 'opened');
+		sort = SORTS.includes(storedSort) ? storedSort : 'opened';
+		layout = getPref<string>('home:layout', 'grid') === 'list' ? 'list' : 'grid';
+		hydrated = true;
+	});
 
 	const applySearch = debounce((q: string) => (query.query = q), 150);
 
@@ -36,16 +48,21 @@
 	});
 	$effect(() => {
 		query.sort = sort;
-		setPref('home:sort', sort);
+		if (hydrated) setPref('home:sort', sort);
 	});
-	$effect(() => setPref('home:layout', layout));
+	$effect(() => {
+		if (hydrated) setPref('home:layout', layout);
+	});
 	$effect(() => applySearch(search));
 	$effect(() => query.start());
 	$effect(() => {
 		void requestPersistentStorage();
-		// Housekeeping, off the critical path (it loads the board storage code).
-		void import('$lib/storage/boardLifecycle')
-			.then((m) => m.purgeExpiredTrash())
+		// Housekeeping: the board storage code it needs only loads when something has expired.
+		void boardsRepo
+			.expiredTrash()
+			.then(async (ids) => {
+				if (ids.length > 0) await (await import('$lib/storage/boardLifecycle')).purgeExpiredTrash();
+			})
 			.catch((err) => console.error('Trash purge failed', err));
 	});
 
@@ -75,7 +92,7 @@
 			<div class="mx-auto max-w-7xl space-y-8 p-4 md:p-8">
 				<BackupReminder />
 				{#if (view === 'recent' || view === 'all') && !query.query}
-					<TemplatesRow />
+					<TemplatesRow previews={templatePreviews} />
 				{/if}
 				<div>
 					<GridToolbar

@@ -17,17 +17,21 @@ function readPalette(): PaletteId {
 }
 
 class ThemeState {
-	mode = $state<ThemeMode>(readMode());
+	// The defaults until `init()`: the prerendered start page hydrates with them (the stored
+	// choice is already on <html>, set by the inline script in app.html before first paint).
+	mode = $state<ThemeMode>('system');
 	systemDark = $state(false);
 	resolved: ResolvedTheme = $derived(
 		this.mode === 'system' ? (this.systemDark ? 'dark' : 'light') : this.mode
 	);
-	palette = $state<PaletteId>(readPalette());
+	palette = $state<PaletteId>('default');
 	/** Changes whenever the colors do: for code that reads CSS variables once per theme. */
 	readonly key = $derived(`${this.resolved}:${this.palette}`);
 
-	/** Tracks the OS preference and keeps `html[data-theme]` in sync. Returns cleanup. */
+	/** Loads the stored choice, tracks the OS preference and keeps `html[data-theme]` in sync. */
 	init(): () => void {
+		this.mode = readMode();
+		this.palette = readPalette();
 		const media =
 			typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
 		const onChange = () => (this.systemDark = media?.matches ?? false);

@@ -1277,3 +1277,17 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 - **Resize handle (1), an app bug:** resizing put the handle exactly under the pointer, so pressing a handle off-centre made the box jump by that offset (Firefox rounds mouse coordinates to whole pixels, so it showed as 119.5 instead of 120). The select tool now keeps the grab offset for the whole drag (`resizeHandlePoint` in `engine/transform.ts`).
 
 **Verification:** pnpm verify ✅ (913 unit tests; new `resizeHandlePoint` test) · e2e ✅ firefox + chromium + mobile: 417 passed, 24 skipped (Chromium-only or desktop-only tests); new `select.spec.ts` test: pressing the SE handle 3 px off-centre and dragging 40 px grows the box by exactly 40. WebKit still can't launch on this machine (missing system libraries).
+
+### Prerendered start page — 2026-10-06
+**Summary:**
+- The start page (`/`) is prerendered at build time into `build/index.html` (`routes/+page.ts`: `ssr = prerender = true`), so it paints before the app's JavaScript loads and then hydrates. Every other route stays client-only; the SPA fallback is now `200.html` (`_redirects`, adapter, PWA `navigateFallback`, `scripts/serve-build.mjs`).
+- The featured template previews are drawn at build time (`routes/+page.server.ts`) and shipped in the HTML, so the start page no longer loads the renderer to draw them.
+- The first render reads no browser state: `HomePage` hydrates with the default sort, layout and view, then applies localStorage and `?view=` (and only writes prefs after that); `theme` reads its stored mode/palette in `init()`. The layout is `inert` until hydration (`html[data-hydrated]` marks it).
+- The theme script is inline in `app.html` (one request fewer before first paint); `postbuild-csp.mjs` hashes the inline scripts of every built page into `script-src`. `static/theme-init.js` is removed.
+- Templates write doc card content with `writeDocJSON` (`board/doccards/fragmentWrite.ts`, plain Yjs) instead of TipTap's schema, so building a template (and its preview) doesn't load TipTap. Imported documents still go through the schema (`importDocs`).
+- Trash purge on the start page asks `boardsRepo.expiredTrash()` first and only loads the board storage code when something has expired. `serve-build.mjs` compresses text (br/gzip) like real hosts.
+
+**Deviations:** the architecture's "SPA, `ssr = false` everywhere" gets one exception for `/`; recorded in `00-architecture.md` §2 together with the fallback rename.
+**Dependencies added:** none
+**Follow-ups:** `templates.spec.ts` "kanban: cards move between columns" is flaky on Firefox (fails ~3 in 4 here, the same on the previous commit); `comments.spec.ts` text-comment test flaked once in a full Chromium run (5/5 alone).
+**Verification:** pnpm verify ✅ (935 unit tests; new `fragmentWrite.test.ts`: every template's doc cards read back in the editor identically whether written by `writeDocJSON` or TipTap's writer) · pnpm test:e2e ✅ chromium + mobile 226 passed, 1 flaky (above); new `prerender.spec.ts` (start page and previews visible with JavaScript off; stored layout/theme and `?view=` apply after hydration and aren't overwritten; a board URL uses the fallback and going home works) also ✅ on firefox, with `home`, `settings`, `templates` (except the kanban flake).

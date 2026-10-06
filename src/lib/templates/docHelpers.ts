@@ -3,7 +3,7 @@ import { getDocsMap } from '$lib/model/doc';
 import { TEMPLATE } from '$lib/model/origins';
 import type { DocNode } from '$lib/board/doccards/markdown';
 import type { TemplateBuilder } from './builder';
-import { setDocContent } from './docContent';
+import { writeDocJSON } from '$lib/board/doccards/fragmentWrite';
 
 // Small builders for doc card content in templates.
 
@@ -33,6 +33,6 @@ export function commitWithDocs(
 	ydoc.transact(() => {
 		b.commit(ydoc);
 		const docs = getDocsMap(ydoc);
-		for (const [id, content] of contents) setDocContent(docs.get(id)!, content);
+		for (const [id, content] of contents) writeDocJSON(docs.get(id)!, content);
 	}, TEMPLATE);
 }

@@ -7,6 +7,9 @@
 	import NewBoardCard from './NewBoardCard.svelte';
 	import TemplateCard from './TemplateCard.svelte';
 
+	/** Previews of the featured templates, drawn at build time (see routes/+page.server.ts). */
+	let { previews }: { previews: Record<string, string> } = $props();
+
 	const featured = templates.filter((t) => t.featured);
 	let galleryOpen = $state(false);
 	let galleryWanted = $state(false);
@@ -23,39 +26,9 @@
 			toast.error('Couldn’t create the board');
 		}
 	}
-
-	let section = $state<HTMLElement>();
-	let previews = $state<Record<string, string>>({});
-
-	// Previews are built in memory the first time the row is on screen (cached for the session).
-	$effect(() => {
-		if (!section) return;
-		let alive = true;
-		const observer = new IntersectionObserver((entries) => {
-			if (!entries.some((e) => e.isIntersecting)) return;
-			observer.disconnect();
-			void import('$lib/templates/preview').then(({ templatePreview }) => {
-				for (const t of featured)
-					void templatePreview(t)
-						.then((url) => {
-							if (alive) previews[t.id] = url;
-						})
-						.catch((err: unknown) => console.error('Template preview failed', err));
-			});
-		});
-		observer.observe(section);
-		return () => {
-			alive = false;
-			observer.disconnect();
-		};
-	});
 </script>
 
-<section
-	bind:this={section}
-	aria-label="Create"
-	class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4"
->
+<section aria-label="Create" class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
 	<NewBoardCard />
 	{#each featured as template (template.id)}
 		<TemplateCard {template} preview={previews[template.id] ?? null} />

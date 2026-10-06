@@ -4,7 +4,7 @@ import { getDocsMap } from '$lib/model/doc';
 import { TEMPLATE } from '$lib/model/origins';
 import type { DocNode } from '$lib/board/doccards/markdown';
 import { TemplateBuilder } from './builder';
-import { setDocContent } from './docContent';
+import { writeDocJSON } from '$lib/board/doccards/fragmentWrite';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const COL = { w: 260, h: 560 };
@@ -37,6 +37,6 @@ export function buildWeeklyPlanner(doc: Y.Doc): void {
 	const card = b.docCard({ x: DAYS.length * (COL.w + GAP) + 16, y: 0, w: 360, h: COL.h }, 'Notes');
 	doc.transact(() => {
 		b.commit(doc);
-		setDocContent(getDocsMap(doc).get(card.id)!, NOTES);
+		writeDocJSON(getDocsMap(doc).get(card.id)!, NOTES);
 	}, TEMPLATE);
 }

@@ -7,7 +7,8 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import pkg from './package.json' with { type: 'json' };
 
-const FALLBACK = 'index.html';
+// The SPA fallback for client-only routes; index.html is the prerendered start page.
+const FALLBACK = '200.html';
 const BUILD_ID = `${pkg.version}-${Date.now().toString(36)}`;
 
 export default defineConfig({
@@ -20,7 +21,7 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			// SPA mode: every route falls back to index.html (see plan/00-architecture.md §2).
+			// SPA mode: routes fall back to 200.html; `/` is prerendered (see plan/00-architecture.md §2).
 			adapter: adapter({ fallback: FALLBACK }),
 			// Absolute asset URLs: the service worker serves the same page for every route when offline.
 			paths: { relative: false }
@@ -30,9 +31,9 @@ export default defineConfig({
 			registerType: 'prompt',
 			kit: {
 				adapterFallback: FALLBACK,
-				// The fallback page changes with every build (it references hashed assets).
-				// Precached as '/' (every static host and the preview server serve the fallback there).
-				spa: { fallbackMapping: '/', fallbackRevision: async () => BUILD_ID }
+				// The fallback page changes with every build (it references hashed assets). The
+				// prerendered start page is precached as '/' by the plugin.
+				spa: { fallbackMapping: '/200.html', fallbackRevision: async () => BUILD_ID }
 			},
 			manifest: {
 				name: 'SMTHNG',
@@ -58,8 +59,13 @@ export default defineConfig({
 			},
 			workbox: {
 				// Everything the client needs, so any route (the SPA fallback) works offline.
-				globPatterns: ['client/**/*.{js,css,html,svg,png,ico,webp,woff2,webmanifest}'],
-				navigateFallback: '/'
+				globPatterns: [
+					'client/**/*.{js,css,html,svg,png,ico,webp,woff2,webmanifest}',
+					'prerendered/**/*.{html,json}'
+				],
+				// The start page's data (__data.json) is fetched with SvelteKit's own query parameters.
+				ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^x-sveltekit-/],
+				navigateFallback: '/200.html'
 			}
 		}),
 		// `pnpm analyze` writes stats.html (a treemap of the client bundle).
