@@ -1291,3 +1291,15 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Dependencies added:** none
 **Follow-ups:** `templates.spec.ts` "kanban: cards move between columns" is flaky on Firefox (fails ~3 in 4 here, the same on the previous commit); `comments.spec.ts` text-comment test flaked once in a full Chromium run (5/5 alone).
 **Verification:** pnpm verify ✅ (935 unit tests; new `fragmentWrite.test.ts`: every template's doc cards read back in the editor identically whether written by `writeDocJSON` or TipTap's writer) · pnpm test:e2e ✅ chromium + mobile 226 passed, 1 flaky (above); new `prerender.spec.ts` (start page and previews visible with JavaScript off; stored layout/theme and `?view=` apply after hydration and aren't overwritten; a board URL uses the fallback and going home works) also ✅ on firefox, with `home`, `settings`, `templates` (except the kanban flake).
+
+### Renamed to Spacy — 2026-10-06
+**Summary:**
+- The app is now called **Spacy** (was SMTHNG), in a separate repository cloned from SMTHNG at `a6203da`. Every name changed: UI text, titles, the installed app's name, the bundled font families (`Spacy <name>`), the IndexedDB databases (`spacy`, `spacy-board-<id>`), BroadcastChannels, `spacy:` localStorage keys, the `.spacy` file format and extension, the clipboard marker and the test hooks (`window.__spacy`). Entries above this one keep the old names: they record what was built then.
+- **Data from SMTHNG is copied over** on first start (`storage/legacyMigration.ts`, called by `getDB()`): the board list, images and every board's content keep their exact stored layout under the new names, the board list last (an interrupted copy starts over), under a Web Lock. Settings are copied by the inline script in `app.html` before the theme is read. Old `.smthng` files still import.
+- The old databases and keys are **kept**, not deleted: SMTHNG and Spacy can share an origin (both dev servers use `localhost:5173`), and deleting would break the older app. The cost is the old copy's disk space.
+- Unblocks part of steps 50–51: the app name is decided.
+
+**Deviations:** the storage names, the file format name and the localStorage prefix in `00-architecture.md` changed (asked and approved by the human: "change everything including migration").
+**Dependencies added:** none
+**Follow-ups:** the repository URL in About is still the placeholder (`your-org/spacy`); "spaCy" is also the name of a well-known Python NLP library, worth checking before registering the domain and the Google OAuth app.
+**Verification:** pnpm verify ✅ (941 unit tests; new `legacyMigration.test.ts`: board list, trashed boards, images and multi-update content copied with the old databases kept; copies only once; creates nothing without SMTHNG data; replaces a partial copy; skips boards without content; `fileFormat.test.ts`: `format: 'smthng'` accepted) · pnpm test:e2e ✅ chromium + mobile 228 passed (the manifest test now expects `.spacy` and `.smthng`); new `migration.spec.ts` (data made in the app, renamed to the SMTHNG names, then dark theme, list layout, the board and its sticky come back, and both copies exist) also ✅ on firefox.

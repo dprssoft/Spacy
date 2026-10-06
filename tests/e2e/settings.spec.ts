@@ -13,8 +13,8 @@ test('the settings menu shows storage, switches the theme and opens About', asyn
 	await page.getByRole('menuitemradio', { name: 'Light' }).click();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 
-	await page.getByRole('menuitem', { name: 'About SMTHNG' }).click();
-	const about = page.getByRole('dialog', { name: 'SMTHNG' });
+	await page.getByRole('menuitem', { name: 'About Spacy' }).click();
+	const about = page.getByRole('dialog', { name: 'Spacy' });
 	await expect(about).toContainText(/Version \d+\.\d+\.\d+/);
 	await expect(about).toContainText('Boards are stored only in this browser.');
 });
@@ -41,9 +41,9 @@ test('the web app manifest is served with icons and the file handler', async ({ 
 	const res = await page.request.get('/manifest.webmanifest');
 	expect(res.ok()).toBe(true);
 	const manifest = await res.json();
-	expect(manifest).toMatchObject({ name: 'SMTHNG', display: 'standalone', start_url: '/' });
+	expect(manifest).toMatchObject({ name: 'Spacy', display: 'standalone', start_url: '/' });
 	expect(manifest.icons.length).toBeGreaterThanOrEqual(3);
-	expect(manifest.file_handlers[0].accept['application/x-smthng']).toEqual(['.smthng']);
+	expect(manifest.file_handlers[0].accept['application/x-spacy']).toEqual(['.spacy', '.smthng']);
 	for (const icon of manifest.icons)
 		expect((await page.request.get(`/${icon.src}`)).ok()).toBe(true);
 });

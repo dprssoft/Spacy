@@ -8,12 +8,12 @@ test.beforeEach(async ({ page }) => {
 	await waitForInitialView(page);
 });
 
-const zoom = (page: Page) => page.evaluate(() => window.__smthng!.ctx.viewport.zoom);
+const zoom = (page: Page) => page.evaluate(() => window.__spacy!.ctx.viewport.zoom);
 const setView = (page: Page, vp: { x: number; y: number; zoom: number }) =>
-	page.evaluate((vp) => window.__smthng!.ctx.viewport.set(vp), vp);
+	page.evaluate((vp) => window.__spacy!.ctx.viewport.set(vp), vp);
 const route = (page: Page) =>
 	page.evaluate(() =>
-		window.__smthng!.ctx.waystones.route.map((w) => ({ name: w.name, zoom: w.zoom }))
+		window.__spacy!.ctx.waystones.route.map((w) => ({ name: w.name, zoom: w.zoom }))
 	);
 
 /** Places a waystone with W at a screen offset from the canvas centre. */

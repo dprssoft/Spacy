@@ -37,7 +37,7 @@ The first release: a whiteboard that lives in your browser, with diagrams and do
 ### M6 — Sharing
 
 - PNG and SVG export of the board, a selection or a frame; start-page thumbnails.
-- `.smthng` files: export, import, full backup; "Save to file" in Chromium.
+- `.spacy` files: export, import, full backup; "Save to file" in Chromium.
 - Flowchart, Brainstorm and Meeting notes templates.
 
 ### Pages and layout
@@ -105,6 +105,7 @@ The first release: a whiteboard that lives in your browser, with diagrams and do
 
 - A save that doesn't reach browser storage (for example when it's full) shows "Not saved" with a Retry, and leaving the page asks first.
 - Deleting a page also deletes the comments on it.
+- The app was called SMTHNG: boards and settings saved under that name carry over, and `.smthng` files still import.
 
 ### M7 — Release quality
 

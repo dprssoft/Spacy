@@ -66,14 +66,14 @@ describe('renderStaticSvg', () => {
 				font: { ...samples.shape('b').style.font, family: 'caveat' }
 			}
 		};
-		const css = '@font-face{font-family:"SMTHNG Caveat";src:url(data:font/woff2;base64,AA)}';
+		const css = '@font-face{font-family:"Spacy Caveat";src:url(data:font/woff2;base64,AA)}';
 		const { svg } = await renderStaticSvg(options([plain, fancy], { fontCss: css }));
 		const dom = parse(svg);
 		expect(dom.getElementsByTagName('parsererror')).toHaveLength(0);
 		const texts = [...dom.getElementsByTagName('text')];
 		expect(texts.find((t) => t.textContent === 'Plain')?.getAttribute('font-family')).toBeNull();
 		expect(texts.find((t) => t.textContent === 'Fancy')?.getAttribute('font-family')).toMatch(
-			/^"SMTHNG Caveat", cursive$/
+			/^"Spacy Caveat", cursive$/
 		);
 		expect(dom.getElementsByTagName('style')[0]?.textContent).toBe(css);
 	});

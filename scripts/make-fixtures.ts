@@ -11,7 +11,7 @@ const server = await createServer({
 try {
 	const { buildVisualBoardFile } = await server.ssrLoadModule('/src/lib/dev/visualFixture.ts');
 	mkdirSync('tests/e2e/fixtures', { recursive: true });
-	const file = 'tests/e2e/fixtures/visual-board.smthng';
+	const file = 'tests/e2e/fixtures/visual-board.spacy';
 	const png = readFileSync('tests/e2e/fixtures/sample.png');
 	// PNG header: width and height are big-endian at bytes 16 and 20.
 	const image = {

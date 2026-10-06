@@ -31,9 +31,9 @@ The reactive bridge from Yjs to Svelte, a spatial index, an element registry, re
    - `src/lib/board/canvas/ElementsLayer.svelte`: computes visible ids = `store.index.search(expandRect(visibleWorldRect, 50%))` into a Set (recomputed when the viewport or `store.version` changes, throttled to one rAF). Renders frames first (`frameOrder` ∩ visible), then `order` ∩ visible, with keyed `{#each}`. A prop `alwaysRender: Set<string>` (selection/editing, from step 11).
    - Wire `Shift+1` fit to `store.contentBounds()`.
    - Remove the step 09 origin marker.
-9. **Test hooks** `src/lib/dev/testHooks.ts`: `installTestHooks(ctx: BoardContext)`. If `import.meta.env.DEV || getPref('testHooks', false)`, it sets `window.__smthng = { ctx, createElements: (els) => createElements(ctx.doc, els), list: () => listElements(ctx.doc), clear: () => ... }`. Call it from `BoardWorkspace`. Type `window.__smthng` in `src/app.d.ts`.
+9. **Test hooks** `src/lib/dev/testHooks.ts`: `installTestHooks(ctx: BoardContext)`. If `import.meta.env.DEV || getPref('testHooks', false)`, it sets `window.__spacy = { ctx, createElements: (els) => createElements(ctx.doc, els), list: () => listElements(ctx.doc), clear: () => ... }`. Call it from `BoardWorkspace`. Type `window.__spacy` in `src/app.d.ts`.
 10. **Perf board** `src/lib/dev/perfBoard.ts`: `generatePerfElements(n = 3000, seed = 1): Element[]` (deterministic PRNG; mixed shapes, stickies and texts over a 10,000 × 10,000 area). In dev, `?debug=perf` shows a small floating button "Generate 3,000 elements".
-11. `tests/e2e/helpers.ts`: add `enableTestHooks(page)` (`page.addInitScript(() => localStorage.setItem('smthng:testHooks', 'true'))`) and `createBoard(page)`, which returns the board id.
+11. `tests/e2e/helpers.ts`: add `enableTestHooks(page)` (`page.addInitScript(() => localStorage.setItem('spacy:testHooks', 'true'))`) and `createBoard(page)`, which returns the board id.
 
 ## Files
 - create: `src/lib/board/engine/spatialIndex.ts`, `src/lib/board/elements/{registry.ts, index.ts, common.ts, ElementView.svelte, shape/*, sticky/*, text/*, placeholder/*}`, `src/lib/board/boardStore.svelte.ts`, `src/lib/board/canvas/ElementsLayer.svelte`, `src/lib/dev/{testHooks.ts, perfBoard.ts}`

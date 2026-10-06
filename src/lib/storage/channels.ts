@@ -6,7 +6,7 @@ const EVENT = 'boards-changed';
 const local = new EventTarget();
 // One channel instance per tab: a BroadcastChannel never receives its own messages, and the
 // local EventTarget covers this tab, so every listener fires exactly once per change.
-const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('smthng-meta') : null;
+const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('spacy-meta') : null;
 
 channel?.addEventListener('message', (e: MessageEvent<Message>) => {
 	if (e.data?.type === EVENT) local.dispatchEvent(new Event(EVENT));

@@ -9,16 +9,31 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon-180x180.png" />
 		<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
-		<!-- Applies the theme before first paint (see src/lib/shared/theme.svelte.ts). Inline to save a
-		request before first paint; the build allows it in the CSP by hash (scripts/postbuild-csp.mjs). -->
+		<!-- Applies the theme before first paint (see src/lib/shared/theme.svelte.ts), after copying the
+		settings saved under the app's old name. Inline to save a request before first paint; the build
+		allows it in the CSP by hash (scripts/postbuild-csp.mjs). -->
 		<script>
 			try {
-				var mode = JSON.parse(localStorage.getItem('smthng:theme') || '"system"');
+				// Once: copy the settings saved while the app was called SMTHNG (kept, like its data).
+				if (localStorage.getItem('spacy:migrated') === null) {
+					var legacy = [];
+					for (var i = 0; i < localStorage.length; i++) {
+						var key = localStorage.key(i);
+						if (key && key.indexOf('smthng:') === 0) legacy.push(key);
+					}
+					legacy.forEach(function (key) {
+						var next = 'spacy:' + key.slice(7);
+						if (localStorage.getItem(next) === null)
+							localStorage.setItem(next, localStorage.getItem(key));
+					});
+					localStorage.setItem('spacy:migrated', 'true');
+				}
+				var mode = JSON.parse(localStorage.getItem('spacy:theme') || '"system"');
 				var dark =
 					mode === 'dark' ||
 					(mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
 				document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-				var palette = JSON.parse(localStorage.getItem('smthng:palette') || '"default"');
+				var palette = JSON.parse(localStorage.getItem('spacy:palette') || '"default"');
 				if (/^(terracotta|graphite|petrol|plum|moss)$/.test(palette))
 					document.documentElement.dataset.palette = palette;
 			} catch {

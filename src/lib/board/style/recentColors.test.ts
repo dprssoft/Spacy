@@ -26,7 +26,7 @@ describe('recentColors', () => {
 	});
 
 	it('ignores garbage in storage', async () => {
-		localStorage.setItem('smthng:recentColors', JSON.stringify(['#ABC', 5, 'x', null]));
+		localStorage.setItem('spacy:recentColors', JSON.stringify(['#ABC', 5, 'x', null]));
 		expect((await load()).list).toEqual(['#aabbcc']);
 	});
 });

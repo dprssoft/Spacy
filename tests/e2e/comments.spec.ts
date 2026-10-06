@@ -26,7 +26,7 @@ const sticky = (id: string, x: number, y: number, text: string) => ({
 	h: 180
 });
 const add = (page: Page, e: object) =>
-	page.evaluate((e) => window.__smthng!.createElements([e as never]), e);
+	page.evaluate((e) => window.__spacy!.createElements([e as never]), e);
 
 const popover = (page: Page) => page.getByRole('dialog', { name: 'Comments' });
 
@@ -89,7 +89,7 @@ test('comment on a sticky: badge, reply, resolve, reopen; deleting the sticky re
 	await clickElement(page, 's');
 	await page.keyboard.press('Delete');
 	await expect(badge).toHaveCount(0);
-	expect(await page.evaluate(() => window.__smthng!.ctx.comments.threads.length)).toBe(0);
+	expect(await page.evaluate(() => window.__spacy!.ctx.comments.threads.length)).toBe(0);
 	await page.keyboard.press('ControlOrMeta+z');
 	await expect(badge).toHaveText('1');
 });
@@ -131,7 +131,7 @@ test('comment on text in a doc card; the highlight follows edits and opens the t
 
 	// The card's badge counts its text comments; the panel lists the thread with its quote.
 	const card = await page.evaluate(
-		() => window.__smthng!.list().find((e) => e.type === 'doccard')!.id
+		() => window.__spacy!.list().find((e) => e.type === 'doccard')!.id
 	);
 	await expect(page.locator(`[data-comment-badge="${card}"]`)).toHaveText('1');
 	await page.getByTestId('comments-toggle').click();
@@ -140,7 +140,7 @@ test('comment on text in a doc card; the highlight follows edits and opens the t
 	);
 });
 
-test('comments travel in .smthng export and import', async ({ page }) => {
+test('comments travel in .spacy export and import', async ({ page }) => {
 	await add(page, sticky('s', -90, -90, 'Keep me'));
 	await clickElement(page, 's');
 	await page.keyboard.press('ControlOrMeta+Alt+m');
@@ -150,7 +150,7 @@ test('comments travel in .smthng export and import', async ({ page }) => {
 	await page.getByRole('button', { name: 'Export' }).click();
 	const [download] = await Promise.all([
 		page.waitForEvent('download'),
-		page.getByRole('menuitem', { name: 'Download .smthng' }).click()
+		page.getByRole('menuitem', { name: 'Download .spacy' }).click()
 	]);
 	const path = (await download.path())!;
 

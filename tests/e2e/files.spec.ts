@@ -14,7 +14,7 @@ test('export a board, delete it forever, import it back', async ({ page }) => {
 	await page.getByRole('button', { name: /Rename board/ }).click();
 	await page.getByRole('textbox', { name: 'Board title' }).fill('Launch');
 	await page.keyboard.press('Enter');
-	await page.evaluate((e) => window.__smthng!.createElements([e as never]), {
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), {
 		...el.shape('n', -100, -100),
 		type: 'sticky',
 		kind: undefined,
@@ -30,7 +30,7 @@ test('export a board, delete it forever, import it back', async ({ page }) => {
 		page.waitForEvent('download'),
 		page.getByRole('menuitem', { name: 'Export' }).click()
 	]);
-	expect(download.suggestedFilename()).toBe('launch.smthng');
+	expect(download.suggestedFilename()).toBe('launch.spacy');
 	const path = (await download.path())!;
 
 	await openMenu(page, 'Launch');
@@ -53,11 +53,11 @@ test('export a board, delete it forever, import it back', async ({ page }) => {
 test('importing twice creates two boards; bad files are reported', async ({ page }) => {
 	await page.goto('/');
 	const file = {
-		name: 'one.smthng',
+		name: 'one.spacy',
 		mimeType: 'application/json',
 		buffer: Buffer.from(
 			JSON.stringify({
-				format: 'smthng',
+				format: 'spacy',
 				version: 1,
 				kind: 'board',
 				exportedAt: 0,
@@ -67,30 +67,30 @@ test('importing twice creates two boards; bad files are reported', async ({ page
 	};
 	await page.getByTestId('import-input').setInputFiles(file);
 	await expect(page.getByText('Imported “Twice”')).toBeVisible();
-	await page.getByTestId('import-input').setInputFiles({ ...file, name: 'two.smthng' });
+	await page.getByTestId('import-input').setInputFiles({ ...file, name: 'two.spacy' });
 	await page.getByRole('link', { name: 'All boards' }).click();
 	await expect(
 		page.locator('article', { has: page.getByText('Twice', { exact: true }) })
 	).toHaveCount(2);
 
 	await page.getByTestId('import-input').setInputFiles({
-		name: 'bad.smthng',
+		name: 'bad.spacy',
 		mimeType: 'application/json',
 		buffer: Buffer.from('{"format":"other"}')
 	});
 	await expect(
-		page.getByText('Couldn’t import bad.smthng: the file is not a SMTHNG file')
+		page.getByText('Couldn’t import bad.spacy: the file is not a Spacy file')
 	).toBeVisible();
 });
 
-test('the board Export menu downloads a .smthng file', async ({ page }) => {
+test('the board Export menu downloads a .spacy file', async ({ page }) => {
 	await enableTestHooks(page);
 	await createBoard(page);
 	await waitForHooks(page);
 	await page.getByRole('button', { name: 'Export' }).click();
 	const [download] = await Promise.all([
 		page.waitForEvent('download'),
-		page.getByRole('menuitem', { name: 'Download .smthng' }).click()
+		page.getByRole('menuitem', { name: 'Download .spacy' }).click()
 	]);
-	expect(download.suggestedFilename()).toBe('untitled-board.smthng');
+	expect(download.suggestedFilename()).toBe('untitled-board.spacy');
 });

@@ -5,7 +5,7 @@
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
 	// Placeholder until the project has a public home.
-	const REPOSITORY = 'https://github.com/your-org/smthng';
+	const REPOSITORY = 'https://github.com/your-org/spacy';
 </script>
 
 <Dialog.Root bind:open>
@@ -15,7 +15,7 @@
 			class="fixed top-1/2 left-1/2 z-50 w-[min(92vw,400px)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface p-6 text-center shadow-xl"
 		>
 			<Logo class="mx-auto size-12" />
-			<Dialog.Title class="mt-3 text-base font-semibold">SMTHNG</Dialog.Title>
+			<Dialog.Title class="mt-3 text-base font-semibold">Spacy</Dialog.Title>
 			<p class="text-sm text-muted">Version {__APP_VERSION__}</p>
 			<Dialog.Description class="mt-4 text-sm">
 				Boards are stored only in this browser. Back up regularly.

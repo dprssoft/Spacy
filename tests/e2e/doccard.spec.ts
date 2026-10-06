@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 type Card = { id: string; type: string; x: number; y: number; h: number; collapsed: boolean };
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list()) as Promise<Card[]>;
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list()) as Promise<Card[]>;
 const cards = async (page: Page) => (await list(page)).filter((e) => e.type === 'doccard');
 
 /** Places a doc card with the N tool at the canvas center and types into it. */
@@ -97,7 +97,7 @@ test('collapse keeps connectors attached to the header', async ({ page }) => {
 	await page.keyboard.press('Escape');
 	const card = (await cards(page))[0]!;
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('s', -520, -50)
 	);
 	// Connect the shape to the card with the connector tool.

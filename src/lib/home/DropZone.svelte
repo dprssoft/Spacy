@@ -37,7 +37,7 @@
 			class="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-accent px-10 py-8 text-center"
 		>
 			<Upload class="size-8 text-accent" aria-hidden="true" />
-			<p class="text-base font-medium">Drop .smthng files to import</p>
+			<p class="text-base font-medium">Drop .spacy files to import</p>
 		</div>
 	</div>
 {/if}

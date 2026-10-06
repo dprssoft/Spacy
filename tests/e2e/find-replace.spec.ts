@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 	await waitForHooks(page);
 	await waitForInitialView(page);
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never),
+		(els) => window.__spacy!.createElements(els as never),
 		[
 			{
 				...el.shape('st', -400, -150),
@@ -43,7 +43,7 @@ async function docCardSaying(page: Page, text: string, dx: number) {
 
 const texts = (page: Page) =>
 	page.evaluate(() => {
-		const ctx = window.__smthng!.ctx;
+		const ctx = window.__spacy!.ctx;
 		const s = ctx.store.get('st') as { text: string };
 		const f = ctx.store.get('fr') as { title: string };
 		const bodies = [...document.querySelectorAll('[data-doccard-body]')].map((n) => n.textContent);
@@ -82,7 +82,7 @@ test('find everything, replace all in one undo step; Mod+F works inside a doc ca
 	await panel.getByRole('button', { name: 'Close find' }).click();
 	await expect(panel).toHaveCount(0);
 	await page.evaluate(() => {
-		const ctx = window.__smthng!.ctx;
+		const ctx = window.__spacy!.ctx;
 		const card = [...ctx.store.elements.values()].find((e) => e.type === 'doccard')!;
 		ctx.selection.set([card.id]);
 		ctx.viewport.set({
@@ -110,10 +110,10 @@ test('whole word, regex errors, and searching all pages', async ({ page }) => {
 	// Another page with a Mara sticky.
 	await page.evaluate(
 		(e) => {
-			const ctx = window.__smthng!.ctx;
+			const ctx = window.__spacy!.ctx;
 			const first = ctx.pages.current;
 			ctx.pages.add();
-			window.__smthng!.createElements([e as never]);
+			window.__spacy!.createElements([e as never]);
 			ctx.pages.select(first);
 		},
 		{
@@ -135,6 +135,6 @@ test('whole word, regex errors, and searching all pages', async ({ page }) => {
 		.getByRole('button', { name: /elsewhere/ })
 		.click();
 	await expect
-		.poll(() => page.evaluate(() => [...window.__smthng!.ctx.selection.ids]))
+		.poll(() => page.evaluate(() => [...window.__spacy!.ctx.selection.ids]))
 		.toEqual(['other']);
 });

@@ -12,7 +12,7 @@ Routes for the start page and board page, an error page, theme tokens with light
 ## Tasks
 1. Install: `pnpm add bits-ui @lucide/svelte`.
 2. **Routes**
-   - `src/routes/+page.svelte`: placeholder heading "SMTHNG" and "Your boards" subtitle. (Replaced in step 06.)
+   - `src/routes/+page.svelte`: placeholder heading "Spacy" and "Your boards" subtitle. (Replaced in step 06.)
    - `src/routes/board/[id]/+page.svelte`: placeholder showing `Board {page.params.id}` (use `import { page } from '$app/state'`) and a link back to `/`.
    - `src/routes/+error.svelte`: shows `page.status` and `page.error?.message`, plus a "Back to boards" link to `/`.
 3. **localPrefs** `src/lib/shared/localPrefs.ts`:
@@ -21,7 +21,7 @@ Routes for the start page and board page, an error page, theme tokens with light
    export function setPref<T>(key: string, value: T): void;    // JSON.stringify, try/catch (ignore errors)
    export function removePref(key: string): void;
    ```
-   Keys are passed without the prefix. The helper adds `smthng:`.
+   Keys are passed without the prefix. The helper adds `spacy:`.
 4. **Theme tokens** in `src/app.css`:
    - `:root` (light) and `[data-theme='dark']` define: `--bg`, `--surface`, `--surface-2`, `--border`, `--text`, `--text-muted`, `--accent`, `--accent-contrast`, `--danger`, `--canvas-bg`, `--canvas-dot`, `--selection`, `--shadow`.
    - Light: bg `#f7f7f8`, surface `#ffffff`, surface-2 `#f1f1f3`, border `#e3e3e8`, text `#1e1e1e`, text-muted `#6b6b76`, accent `#4f46e5`, accent-contrast `#ffffff`, danger `#e03131`, canvas-bg `#fafafa`, canvas-dot `#d4d4d8`, selection `#4f46e5`.
@@ -29,7 +29,7 @@ Routes for the start page and board page, an error page, theme tokens with light
    - Expose them to Tailwind: `@theme inline { --color-bg: var(--bg); --color-surface: var(--surface); ... }` so classes like `bg-surface`, `text-muted`, `border-border` work.
    - Dark variant: `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));`
    - `--font-sans` set to the font stack from `00-architecture.md` §12. `body { background: var(--bg); color: var(--text); }`.
-5. **No-flash init:** in `src/app.html` `<head>`, add a small inline script that reads `localStorage['smthng:theme']` (JSON string `"light"|"dark"|"system"`, default system), resolves system via `matchMedia('(prefers-color-scheme: dark)')`, and sets `document.documentElement.dataset.theme`. Wrap it in try/catch.
+5. **No-flash init:** in `src/app.html` `<head>`, add a small inline script that reads `localStorage['spacy:theme']` (JSON string `"light"|"dark"|"system"`, default system), resolves system via `matchMedia('(prefers-color-scheme: dark)')`, and sets `document.documentElement.dataset.theme`. Wrap it in try/catch.
 6. **Theme state** `src/lib/shared/theme.svelte.ts`:
    ```ts
    export type ThemeMode = 'light' | 'dark' | 'system';

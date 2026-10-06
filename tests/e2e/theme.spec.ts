@@ -40,7 +40,7 @@ test('Tailwind theme classes follow the active theme', async ({ page }) => {
 });
 
 test('the theme is applied before the app boots (no flash)', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('smthng:theme', '"dark"'));
+	await page.addInitScript(() => localStorage.setItem('spacy:theme', '"dark"'));
 	// Block the app bundle: only the inline script in app.html can set the theme.
 	await page.route('**/_app/**', (route) => route.abort());
 	await page.goto('/');

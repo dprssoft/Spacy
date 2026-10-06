@@ -25,21 +25,21 @@ export async function resetStorage(page: Page): Promise<void> {
 /** Creates a board from the start page and returns its id (the page ends up on the board). */
 export async function createBoard(page: Page, opts: { tips?: boolean } = {}): Promise<string> {
 	// First-run tips would sit over the canvas in every test; only the onboarding test wants them.
-	if (!opts.tips) await page.addInitScript(() => localStorage.setItem('smthng:onboarded', 'true'));
+	if (!opts.tips) await page.addInitScript(() => localStorage.setItem('spacy:onboarded', 'true'));
 	await page.goto('/');
 	await page.getByRole('button', { name: /New board/ }).click();
 	await page.waitForURL(/\/board\/[\w-]+$/);
 	return new URL(page.url()).pathname.split('/').pop() ?? '';
 }
 
-/** Exposes `window.__smthng` in the production build used by e2e (see src/lib/dev/testHooks.ts). */
+/** Exposes `window.__spacy` in the production build used by e2e (see src/lib/dev/testHooks.ts). */
 export async function enableTestHooks(page: Page): Promise<void> {
-	await page.addInitScript(() => localStorage.setItem('smthng:testHooks', 'true'));
+	await page.addInitScript(() => localStorage.setItem('spacy:testHooks', 'true'));
 }
 
 /** Waits until the board's test hooks are installed. */
 export async function waitForHooks(page: Page): Promise<void> {
-	await page.waitForFunction(() => !!window.__smthng);
+	await page.waitForFunction(() => !!window.__spacy);
 }
 
 /**
@@ -48,7 +48,7 @@ export async function waitForHooks(page: Page): Promise<void> {
  * on screen instead, at whatever zoom it takes.
  */
 export async function waitForInitialView(page: Page): Promise<void> {
-	await page.waitForFunction(() => (window.__smthng?.ctx.viewport.x ?? 0) !== 0);
+	await page.waitForFunction(() => (window.__spacy?.ctx.viewport.x ?? 0) !== 0);
 }
 
 /** Shape/sticky/text element inputs (without z) for creating elements through the test hooks. */

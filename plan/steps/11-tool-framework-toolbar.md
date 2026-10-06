@@ -54,7 +54,7 @@ A tool system (state machines receiving normalized pointer events with hit info)
 ## Tests
 - `shortcuts.test.ts`: `matchesKeys` for `Mod+Z` (mac and non-mac), `Mod+Shift+Z`, `Shift+1`, `]`, `?`, letters with and without Caps Lock; `isTypingTarget`.
 - `hitTest.test.ts`: topmost wins; a rotated element; tolerance; `contain` vs `intersect`.
-- `tests/e2e/tools.spec.ts`: pressing R marks Rectangle as `aria-pressed=true`; Escape returns to Select; clicking a test-hook-created sticky selects it (verify through `window.__smthng.ctx.selection`).
+- `tests/e2e/tools.spec.ts`: pressing R marks Rectangle as `aria-pressed=true`; Escape returns to Select; clicking a test-hook-created sticky selects it (verify through `window.__spacy.ctx.selection`).
 
 ## Acceptance criteria
 - [x] `pnpm verify` and `pnpm test:e2e` pass

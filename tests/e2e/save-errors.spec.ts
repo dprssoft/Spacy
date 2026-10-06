@@ -29,7 +29,7 @@ test('a failed save is shown, warns before leaving, and retry saves everything',
 		};
 	});
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('kept', -80, -50, { text: 'kept' })
 	);
 	await expect(indicator).toContainText('Not saved');

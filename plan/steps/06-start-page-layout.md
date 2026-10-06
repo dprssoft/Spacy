@@ -13,7 +13,7 @@ A Figma-like start page: a header, a sidebar with views, a prominent "New board"
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│ ◆ SMTHNG          [🔍 Search boards…]              [Import] [◐] [⚙] │  header 56px
+│ ◆ Spacy          [🔍 Search boards…]              [Import] [◐] [⚙] │  header 56px
 ├────────────┬─────────────────────────────────────────────────────────┤
 │ 🕘 Recent  │  ┌─────────────┐ ┌──────────┐ ┌──────────┐              │
 │ ★ Starred  │  │     ＋      │ │ template │ │ template │  (step 28)   │
@@ -39,14 +39,14 @@ A Figma-like start page: a header, a sidebar with views, a prominent "New board"
 2. `src/lib/home/placeholderGradient.ts`: `placeholderGradient(id: string): string` returns a CSS `linear-gradient(...)` from two HSL colors derived deterministically from a hash of the id (soft pastel: saturation 60–70%, lightness 80–88%; dark theme handled with CSS opacity).
 3. Components in `src/lib/home/`:
    - `HomePage.svelte`: composes everything and owns a `BoardsQuery` (`start()` in `$effect` with cleanup). The view comes from the URL `?view=recent|starred|all|trash` (default recent) via `page.url.searchParams`; switching views uses `goto('?view=...', { keepFocus: true, noScroll: true })`.
-   - `HomeHeader.svelte`: logo (inline SVG diamond + "SMTHNG" wordmark), search input placeholder (wired in step 07; render it now, but it may be inert), an Import button (disabled; step 27), `ThemeToggle`, a settings button (disabled; step 29).
+   - `HomeHeader.svelte`: logo (inline SVG diamond + "Spacy" wordmark), search input placeholder (wired in step 07; render it now, but it may be inert), an Import button (disabled; step 27), `ThemeToggle`, a settings button (disabled; step 29).
    - `Sidebar.svelte`: nav links Recent / Starred / All / Trash with lucide icons (Clock, Star, LayoutGrid, Trash2) and `aria-current="page"` on the active one.
    - `NewBoardCard.svelte`: button. On click: guard against double clicks (`pending` state), `const meta = await boardsRepo.create(); await goto('/board/' + meta.id)`.
    - `TemplatesRow.svelte`: renders `NewBoardCard` followed by template cards from a `templates` prop (empty array for now). Shown only in the Recent and All views.
    - `BoardGrid.svelte`: section title (view name) and the grid of `BoardCard`. Loading → 8 skeleton cards (pulse).
    - `BoardCard.svelte`: `<a href="/board/{id}">` wrapping the thumbnail and body. Thumbnail: if `meta.thumbnail`, an object URL created in `$effect` and revoked in cleanup; else `placeholderGradient(id)`. Reserve a top-right slot for the menu (step 07).
    - `EmptyState.svelte`: icon, title, text and an optional action. Texts: recent/all → "No boards yet" / "Create your first board to get started." + New board button; starred → "No starred boards" / "Star a board to pin it here."; trash → "Trash is empty" / "Deleted boards stay here for 30 days."
-4. `src/routes/+page.svelte` renders `<HomePage />`. Set `<svelte:head><title>SMTHNG</title></svelte:head>`.
+4. `src/routes/+page.svelte` renders `<HomePage />`. Set `<svelte:head><title>Spacy</title></svelte:head>`.
 5. Call `requestPersistentStorage()` once when HomePage mounts.
 6. Make the board page placeholder (step 02) show the board title from `boardsRepo.get` so the E2E test can verify navigation. Step 08 replaces it.
 

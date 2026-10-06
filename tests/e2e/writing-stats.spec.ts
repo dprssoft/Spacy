@@ -65,7 +65,7 @@ test('focus mode: counter with details, and the optional aids persist', async ({
 	await expect.poll(() => header.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
 
 	expect(
-		await page.evaluate(() => JSON.parse(localStorage.getItem('smthng:focus') ?? '{}'))
+		await page.evaluate(() => JSON.parse(localStorage.getItem('spacy:focus') ?? '{}'))
 	).toMatchObject({
 		focusParagraph: true,
 		hideUi: true,
@@ -75,7 +75,7 @@ test('focus mode: counter with details, and the optional aids persist', async ({
 
 test('typewriter scrolling keeps the caret line near 40 % of the height', async ({ page }) => {
 	await page.addInitScript(() =>
-		localStorage.setItem('smthng:focus', JSON.stringify({ typewriter: true }))
+		localStorage.setItem('spacy:focus', JSON.stringify({ typewriter: true }))
 	);
 	await page.reload();
 	await waitForHooks(page);

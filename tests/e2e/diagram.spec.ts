@@ -15,8 +15,8 @@ type Snap = {
 	from?: { kind: string; elementId?: string };
 	to?: { kind: string; elementId?: string };
 };
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list()) as Promise<Snap[]>;
-const selected = (page: Page) => page.evaluate(() => [...window.__smthng!.ctx.selection.ids]);
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list()) as Promise<Snap[]>;
+const selected = (page: Page) => page.evaluate(() => [...window.__spacy!.ctx.selection.ids]);
 
 async function plus(page: Page, port: string) {
 	const b = page.locator(`[data-quick-create="${port}"]`);
@@ -26,7 +26,7 @@ async function plus(page: Page, port: string) {
 
 test('quick-create builds a chain; select connected picks it all', async ({ page }) => {
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('p0', -500, -50, { kind: 'process' })
 	);
 	await clickElement(page, 'p0');
@@ -46,7 +46,7 @@ test('quick-create builds a chain; select connected picks it all', async ({ page
 
 test('Shift+click on + chooses the new element type', async ({ page }) => {
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('a', -300, -50)
 	);
 	await clickElement(page, 'a');
@@ -58,7 +58,7 @@ test('Shift+click on + chooses the new element type', async ({ page }) => {
 
 test('dragging an elbow segment adds bends; Reset route removes them', async ({ page }) => {
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never),
+		(els) => window.__spacy!.createElements(els as never),
 		[el.shape('a', -400, -200), el.shape('b', 100, 100)]
 	);
 	await clickElement(page, 'a');
@@ -100,7 +100,7 @@ test('dragging an elbow segment adds bends; Reset route removes them', async ({ 
 });
 
 test('a mixed diagram: sticky → doc card → sticky → shape, all attached', async ({ page }) => {
-	await page.evaluate((e) => window.__smthng!.createElements([e as never]), {
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), {
 		...el.shape('s', -600, -100),
 		type: 'sticky',
 		kind: undefined,
@@ -140,7 +140,7 @@ test('shapes can be dragged from the library onto the canvas', async ({ page }) 
 
 test('dragging a + button onto an object of another type connects them', async ({ page }) => {
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never),
+		(els) => window.__spacy!.createElements(els as never),
 		[
 			el.shape('rect', -400, -60),
 			{

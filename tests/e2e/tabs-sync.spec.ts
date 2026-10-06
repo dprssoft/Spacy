@@ -10,11 +10,11 @@ test('two tabs on the same board see each other’s creates, moves and typing', 
 	await waitForHooks(page);
 	const other = await context.newPage();
 	await other.goto(page.url());
-	await other.waitForFunction(() => !!window.__smthng);
+	await other.waitForFunction(() => !!window.__spacy);
 
 	// Create in the first tab.
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('a', -80, -50, { text: 'Shared' })
 	);
 	const remote = other.locator('[data-element-id="a"]');

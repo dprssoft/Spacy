@@ -24,11 +24,10 @@ type Snap = {
 	groupId: string | null;
 	locked: boolean;
 };
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list()) as Promise<Snap[]>;
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list()) as Promise<Snap[]>;
 const add = (page: Page, els: unknown[]) =>
-	page.evaluate((els) => window.__smthng!.createElements(els as never), els);
-const selected = (page: Page) =>
-	page.evaluate(() => [...window.__smthng!.ctx.selection.ids].sort());
+	page.evaluate((els) => window.__spacy!.createElements(els as never), els);
+const selected = (page: Page) => page.evaluate(() => [...window.__spacy!.ctx.selection.ids].sort());
 
 test('copy/paste, duplicate, delete and undo/redo with the keyboard', async ({ page }) => {
 	await add(page, [el.shape('a', -80, -50)]);

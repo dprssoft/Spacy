@@ -22,8 +22,8 @@ Undo/redo, delete, duplicate, copy/cut/paste (within and across boards), z-order
    - **`lock.ts`:** `toggleLock` (`Mod+Shift+L`): if any selected is unlocked → lock all, else unlock all.
    - **`group.ts`:** `group` (`Mod+G`): at least 2 elements → a new `groupId` for all (replacing old ones). `ungroup` (`Mod+Shift+G`): set `groupId = null` for the selected groups.
 2. **Clipboard** `src/lib/board/commands/clipboard.ts`:
-   - Payload: `{ smthng: 1, sourceBoardId, elements: Element[], docs: string /* base64 Y update of a temp doc holding cloned fragments in getDocsMap */, assets: string[] }`.
-   - Serialized to text: `'SMTHNG-CLIPBOARD:' + JSON.stringify(payload)`. Doc cards: `tempDoc.getMap('docs').set(id, fragment.clone())` → `encodeStateAsUpdate`. Add `src/lib/shared/base64.ts` (`bytesToBase64`, `base64ToBytes`, chunked to avoid call-stack limits) with tests.
+   - Payload: `{ spacy: 1, sourceBoardId, elements: Element[], docs: string /* base64 Y update of a temp doc holding cloned fragments in getDocsMap */, assets: string[] }`.
+   - Serialized to text: `'SPACY-CLIPBOARD:' + JSON.stringify(payload)`. Doc cards: `tempDoc.getMap('docs').set(id, fragment.clone())` → `encodeStateAsUpdate`. Add `src/lib/shared/base64.ts` (`bytesToBase64`, `base64ToBytes`, chunked to avoid call-stack limits) with tests.
    - **copy** (`Mod+C`): `navigator.clipboard.writeText(text)`; also keep an in-memory `lastCopied` fallback for when the clipboard API is denied.
    - **cut** (`Mod+X`) = copy + delete.
    - **paste:** listen to the window `paste` event (not the keyboard shortcut) when the board is active and not typing. Order:

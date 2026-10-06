@@ -4,14 +4,14 @@ import { createBoard, el, enableTestHooks, waitForHooks } from './helpers';
 const ids = (page: Page) =>
 	page.evaluate(() =>
 		window
-			.__smthng!.list()
+			.__spacy!.list()
 			.map((e) => e.id)
 			.sort()
 	);
 const tab = (page: Page, name: string) => page.getByRole('tab', { name, exact: true });
 const add = (page: Page, id: string) =>
 	page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape(id, -80, -50, { text: id })
 	);
 
@@ -119,7 +119,7 @@ test('undo returns to the page where the change was made', async ({ page }) => {
 test('a second tab sees new pages and their content', async ({ page, context }) => {
 	const other = await context.newPage();
 	await other.goto(page.url());
-	await other.waitForFunction(() => !!window.__smthng);
+	await other.waitForFunction(() => !!window.__spacy);
 	await page.getByRole('button', { name: 'Add page' }).click();
 	await add(page, 'two');
 	await expect(other.getByRole('tab')).toHaveText(['Page 1', 'Page 2']);
@@ -130,7 +130,7 @@ test('a second tab sees new pages and their content', async ({ page, context }) 
 });
 
 test('a mention jumps to an object on another page', async ({ page }) => {
-	await page.evaluate((e) => window.__smthng!.createElements([e as never]), {
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), {
 		...el.shape('st', 0, 0),
 		type: 'sticky',
 		kind: undefined,
@@ -158,6 +158,6 @@ test('a mention jumps to an object on another page', async ({ page }) => {
 	await editor.locator('.mention[data-id="st"]').click();
 	await expect(tab(page, 'Page 1')).toHaveAttribute('aria-selected', 'true');
 	await expect
-		.poll(() => page.evaluate(() => [...window.__smthng!.ctx.selection.ids]))
+		.poll(() => page.evaluate(() => [...window.__spacy!.ctx.selection.ids]))
 		.toEqual(['st']);
 });

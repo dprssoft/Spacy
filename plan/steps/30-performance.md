@@ -11,7 +11,7 @@ Measure and meet the performance targets. Lazy-load heavy modules and fix any ho
 
 ## Tasks
 1. **Realistic perf board:** extend `generatePerfElements` with an option `mixed: true`: 3,000 elements = 1,800 shapes/stickies/texts, 300 strokes (~80 points each), 50 doc cards (with 3 paragraphs each via `setDocContent`), 20 frames, 30 images (reusing one generated asset), 800 connectors between random nearby elements (all routing types). Dev-only button: "Generate mixed perf board".
-2. **Render counters (dev only):** `window.__smthng.renderCounts` incremented in `ElementView` (with `$effect` pre-run counting) so you can verify that dragging one element re-renders only it and its connectors. Add a unit or e2e check: drag one element, then the count delta for unrelated ids = 0.
+2. **Render counters (dev only):** `window.__spacy.renderCounts` incremented in `ElementView` (with `$effect` pre-run counting) so you can verify that dragging one element re-renders only it and its connectors. Add a unit or e2e check: drag one element, then the count delta for unrelated ids = 0.
 3. **Hot-path checklist** (fix what fails):
    - Pointer moves write to Yjs at most once per frame (`rafBatch` used everywhere: move, resize, rotate, create, bends, label drag).
    - `BoardStore` recomputes `order` only on add/remove/z changes; spatial index updates are incremental.

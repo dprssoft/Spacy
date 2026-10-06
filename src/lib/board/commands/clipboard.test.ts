@@ -64,10 +64,10 @@ describe('clipboard payloads', () => {
 	it('rejects malformed or foreign clipboard text', () => {
 		expect(parsePayload('hello')).toBeNull();
 		expect(parsePayload(CLIPBOARD_PREFIX + '{nope')).toBeNull();
-		expect(parsePayload(CLIPBOARD_PREFIX + JSON.stringify({ smthng: 2, elements: [] }))).toBeNull();
+		expect(parsePayload(CLIPBOARD_PREFIX + JSON.stringify({ spacy: 2, elements: [] }))).toBeNull();
 		expect(
 			parsePayload(
-				CLIPBOARD_PREFIX + JSON.stringify({ smthng: 1, sourceBoardId: 'x', elements: [{ id: 1 }] })
+				CLIPBOARD_PREFIX + JSON.stringify({ spacy: 1, sourceBoardId: 'x', elements: [{ id: 1 }] })
 			)
 		).toBeNull();
 	});

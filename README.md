@@ -1,4 +1,4 @@
-# SMTHNG
+# Spacy
 
 A whiteboard that lives in your browser, with two add-ons:
 
@@ -18,14 +18,14 @@ There is no backend and no account.
 - **Writing:** word counts, an outline in manuscript order, compile to Markdown, Word or print, backlinks, find and replace, comments on objects and text.
 - **Media:** YouTube, Vimeo, audio and video links play in place, with clips, loop and speed.
 - **Presenting:** waystones (named checkpoints to fly between) and full screen.
-- **Sharing:** PNG and SVG export, `.smthng` board files, full backup and restore, a template gallery (start a board or insert into one).
+- **Sharing:** PNG and SVG export, `.spacy` board files, full backup and restore, a template gallery (start a board or insert into one).
 - **Everywhere:** installable, works offline, phones and tablets, light and dark themes with six palettes, keyboard-only use, screen reader announcements. Press `?` on a board for the shortcut list.
 
 ## Data & privacy
 
 Everything is stored **only in this browser** (IndexedDB). Nothing is sent to a server.
 
-That also means your boards are gone if the browser's site data is cleared, and they don't follow you to another device. **Back up regularly:** Settings → "Backup all boards" downloads one `.smthng` file that you can import anywhere.
+That also means your boards are gone if the browser's site data is cleared, and they don't follow you to another device. **Back up regularly:** Settings → "Backup all boards" downloads one `.spacy` file that you can import anywhere.
 
 ## Development
 
@@ -56,7 +56,7 @@ The end-to-end tests run against the production build, served like a static host
 **Visual regression.** `tests/e2e/visual.spec.ts` compares the canvas with stored screenshots (light and dark), using a fixture board that contains every element type:
 
 ```bash
-pnpm fixtures                                  # regenerate tests/e2e/fixtures/visual-board.smthng
+pnpm fixtures                                  # regenerate tests/e2e/fixtures/visual-board.spacy
 pnpm test:e2e visual --update-snapshots        # accept the current rendering as the baseline
 ```
 
@@ -78,7 +78,7 @@ The build is a static site in `build/`. It includes `_redirects` (single-page fa
 ```bash
 pnpm build
 pnpm dlx wrangler login                                   # once, opens the browser
-pnpm dlx wrangler pages deploy build --project-name smthng
+pnpm dlx wrangler pages deploy build --project-name spacy
 ```
 
 **Netlify:** the same settings (build command `pnpm build`, publish directory `build`, Node 22).

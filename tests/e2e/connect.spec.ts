@@ -9,10 +9,10 @@ test.beforeEach(async ({ page }) => {
 
 type Ep = { kind: string; elementId?: string; x?: number; y?: number };
 type Snap = { id: string; type: string; x: number; from: Ep; to: Ep };
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list()) as Promise<Snap[]>;
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list()) as Promise<Snap[]>;
 const connectors = async (page: Page) => (await list(page)).filter((e) => e.type === 'connector');
 const add = (page: Page, els: unknown[]) =>
-	page.evaluate((els) => window.__smthng!.createElements(els as never), els);
+	page.evaluate((els) => window.__spacy!.createElements(els as never), els);
 
 const base = el.shape('x', 0, 0);
 const of = (
@@ -113,14 +113,14 @@ for (const type of ['shape', 'sticky', 'text', 'image', 'stroke', 'frame', 'docc
 
 		const path = page.locator(`[data-element-id="${c!.id}"] path`).first();
 		const before = await path.getAttribute('d');
-		await page.evaluate(() => window.__smthng!.ctx.doc.transact(() => {}));
+		await page.evaluate(() => window.__spacy!.ctx.doc.transact(() => {}));
 		await clickElement(page, 'dst');
 		const dc = await center(page, 'dst');
 		await drag(page, dc, { x: dc.x + 80, y: dc.y + 120 });
 		await expect(path).not.toHaveAttribute('d', before!);
 		// The end still sits on the moved rectangle's outline.
 		const end = await page.evaluate((cid) => {
-			const g = window.__smthng!.ctx;
+			const g = window.__spacy!.ctx;
 			const conn = g.store.get(cid);
 			const dst = g.store.get('dst')!;
 			if (conn?.type !== 'connector') return null;

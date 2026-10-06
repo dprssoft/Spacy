@@ -60,7 +60,7 @@ test('the outline lists chapters and scenes; drag a scene to another chapter', a
 		]);
 	const parentOf = (title: string) =>
 		page.evaluate((title) => {
-			const els = window.__smthng!.list();
+			const els = window.__spacy!.list();
 			const card = els.find(
 				(e) => e.type === 'doccard' && (e as { title: string }).title === title
 			)!;
@@ -99,7 +99,7 @@ test('keyboard reorder, totals, click to fly, shortcut toggles', async ({ page }
 	await rows(page).nth(6).click();
 	const id = await rows(page).nth(6).getAttribute('data-outline-card');
 	await expect
-		.poll(() => page.evaluate(() => [...window.__smthng!.ctx.selection.ids]))
+		.poll(() => page.evaluate(() => [...window.__spacy!.ctx.selection.ids]))
 		.toEqual([id]);
 
 	await page.getByTestId('canvas').focus();

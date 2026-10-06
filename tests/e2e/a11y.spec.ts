@@ -36,7 +36,7 @@ test('a board with a selection and the style popover open', async ({ page }) => 
 	await createBoard(page);
 	await waitForHooks(page);
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never),
+		(els) => window.__spacy!.createElements(els as never),
 		[el.shape('a', -200, -60, { text: 'Hello' }), el.shape('b', 60, -60)]
 	);
 	await clickElement(page, 'a');
@@ -65,10 +65,7 @@ test('the export dialog and the shortcuts dialog', async ({ page }) => {
 	await enableTestHooks(page);
 	await createBoard(page);
 	await waitForHooks(page);
-	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
-		el.shape('a', -80, -50)
-	);
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), el.shape('a', -80, -50));
 	await page.getByRole('button', { name: 'Export' }).click();
 	await page.getByRole('menuitem', { name: 'PNG…' }).click();
 	await expect(page.getByRole('img', { name: 'Export preview' })).toBeVisible();
@@ -82,7 +79,7 @@ test('the export dialog and the shortcuts dialog', async ({ page }) => {
 });
 
 test('dark mode: the start page and a board', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('smthng:theme', '"dark"'));
+	await page.addInitScript(() => localStorage.setItem('spacy:theme', '"dark"'));
 	await createBoard(page);
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 	expect(await violations(page)).toEqual([]);

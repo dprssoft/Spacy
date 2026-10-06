@@ -22,8 +22,8 @@ async function canvasCenter(page: Page) {
 	return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
 }
 const add = (page: Page, e: object) =>
-	page.evaluate((e) => window.__smthng!.createElements([e as never]), e);
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list());
+	page.evaluate((e) => window.__spacy!.createElements([e as never]), e);
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list());
 
 test('long-press an element opens its menu; long-press empty canvas opens the canvas menu', async ({
 	page
@@ -77,7 +77,7 @@ test('editing stays above the on-screen keyboard', async ({ page }) => {
 	// Low on the screen, where a keyboard would cover it.
 	await add(page, { ...el.shape('s', -80, 220), text: 'Low' });
 	const box = (await page.locator('[data-element-id="s"]').boundingBox())!;
-	await page.evaluate(() => window.__smthng!.keyboard(320));
+	await page.evaluate(() => window.__spacy!.keyboard(320));
 	await new Touch(page).doubleTap({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
 	const editor = page.getByRole('textbox', { name: 'Edit text' });
 	await expect(editor).toBeFocused();
@@ -90,7 +90,7 @@ test('editing stays above the on-screen keyboard', async ({ page }) => {
 	await expect.poll(async () => ((await list(page))[0] as { text?: string }).text).toBe('Low text');
 	// The tools stepped aside while editing and are back now.
 	await expect(page.getByRole('toolbar', { name: 'Tools' })).toBeVisible();
-	await page.evaluate(() => window.__smthng!.keyboard(null));
+	await page.evaluate(() => window.__spacy!.keyboard(null));
 });
 
 test('a finger draws with the pen; right after a stylus, fingers draw nothing', async ({
@@ -142,9 +142,9 @@ test('media controls are touch-sized and play/pause by tap', async ({ page }) =>
 	const toggle = controls.getByTestId('media-toggle');
 	expect((await toggle.boundingBox())!.height).toBeGreaterThanOrEqual(43.5);
 	await expect(controls.getByTestId('media-scrubber')).toBeVisible();
-	const id = await page.evaluate(() => [...window.__smthng!.ctx.playback.playing][0]!);
+	const id = await page.evaluate(() => [...window.__spacy!.ctx.playback.playing][0]!);
 	const playing = () =>
-		page.evaluate((id) => window.__smthng!.ctx.playback.controllers.get(id)?.state.playing, id);
+		page.evaluate((id) => window.__spacy!.ctx.playback.controllers.get(id)?.state.playing, id);
 	await expect.poll(playing).toBe(true);
 	await toggle.tap();
 	await expect.poll(playing).toBe(false);

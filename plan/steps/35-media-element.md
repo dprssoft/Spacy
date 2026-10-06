@@ -30,7 +30,7 @@ export interface MediaElement extends BaseElement {
 }
 ```
 - `ElementType` gains `'media'`; schema version 5 (no data moves). `end` and `loop` are part of the type from the start (defaults `null` / `false`), so step 36's controls need no second bump. The bump keeps older apps from opening boards with media: they would drop the elements they can't parse from their view, and a later edit (e.g. deleting a frame) could leave them orphaned.
-- No new Y.Doc maps, no assets, no file format change (`.smthng` carries the element like any other).
+- No new Y.Doc maps, no assets, no file format change (`.spacy` carries the element like any other).
 
 ## Tasks
 1. **Model**: the type, the zod schema (url must be `https:`, max 2,048 chars; title max 200), `DEFAULT_SIZES.media` (video 480 × 270, audio 360 × 72), `baseStyleFor('media')` (radius sm, shadow on, no stroke), migration to version 5.

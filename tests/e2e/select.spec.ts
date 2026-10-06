@@ -8,12 +8,11 @@ test.beforeEach(async ({ page }) => {
 });
 
 type Snap = { id: string; x: number; y: number; w: number; h: number; rotation: number };
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list()) as Promise<Snap[]>;
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list()) as Promise<Snap[]>;
 const byId = async (page: Page, id: string) => (await list(page)).find((e) => e.id === id)!;
-const selected = (page: Page) =>
-	page.evaluate(() => [...window.__smthng!.ctx.selection.ids].sort());
+const selected = (page: Page) => page.evaluate(() => [...window.__spacy!.ctx.selection.ids].sort());
 const add = (page: Page, els: unknown[]) =>
-	page.evaluate((els) => window.__smthng!.createElements(els as never), els);
+	page.evaluate((els) => window.__spacy!.createElements(els as never), els);
 const canvas = async (page: Page) => (await page.getByTestId('canvas').boundingBox())!;
 
 async function drag(page: Page, from: { x: number; y: number }, to: { x: number; y: number }) {
@@ -46,7 +45,7 @@ test('marquee selects two shapes; dragging moves both as one undo step', async (
 	expect(a1.y - a0.y).toBeCloseTo(30, 0);
 	expect(b1.x - b0.x).toBeCloseTo(a1.x - a0.x, 5);
 
-	await page.evaluate(() => window.__smthng!.ctx.undo.undo());
+	await page.evaluate(() => window.__spacy!.ctx.undo.undo());
 	expect((await byId(page, 'a')).x).toBe(a0.x);
 	expect((await byId(page, 'b')).x).toBe(b0.x);
 });
@@ -105,7 +104,7 @@ test('Alt+drag duplicates; Escape during a drag reverts it', async ({ page }) =>
 	expect(copy.x).toBeCloseTo(100, 0);
 	expect(await selected(page)).toEqual([copy.id]);
 
-	const depth = await page.evaluate(() => window.__smthng!.ctx.undo.undoStack.length);
+	const depth = await page.evaluate(() => window.__spacy!.ctx.undo.undoStack.length);
 	const b2 = (await page.locator(`[data-element-id="${copy.id}"]`).boundingBox())!;
 	await page.mouse.move(b2.x + 30, b2.y + 30);
 	await page.mouse.down();
@@ -113,7 +112,7 @@ test('Alt+drag duplicates; Escape during a drag reverts it', async ({ page }) =>
 	await page.keyboard.press('Escape');
 	await page.mouse.up();
 	expect((await byId(page, copy.id)).x).toBeCloseTo(copy.x, 5);
-	expect(await page.evaluate(() => window.__smthng!.ctx.undo.undoStack.length)).toBe(depth);
+	expect(await page.evaluate(() => window.__spacy!.ctx.undo.undoStack.length)).toBe(depth);
 });
 
 test('grouped elements select together; double-click enters the group', async ({ page }) => {

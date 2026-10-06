@@ -1,5 +1,5 @@
 // Every localStorage access goes through here: storage can be disabled, full, or hold garbage.
-const PREFIX = 'smthng:';
+const PREFIX = 'spacy:';
 
 export function getPref<T>(key: string, fallback: T): T {
 	try {

@@ -9,9 +9,9 @@ test.beforeEach(async ({ page }) => {
 
 type Snap = { id: string; x: number; y: number; style: { fill: string; strokeWidth: number } };
 const byId = async (page: Page, id: string) =>
-	((await page.evaluate(() => window.__smthng!.list())) as Snap[]).find((e) => e.id === id)!;
+	((await page.evaluate(() => window.__spacy!.list())) as Snap[]).find((e) => e.id === id)!;
 const add = (page: Page, els: unknown[]) =>
-	page.evaluate((els) => window.__smthng!.createElements(els as never), els);
+	page.evaluate((els) => window.__spacy!.createElements(els as never), els);
 
 test('Align left lines up the selection', async ({ page }) => {
 	await add(page, [el.shape('a', -300, -100), el.shape('b', 40, 60)]);
@@ -85,7 +85,7 @@ test('quick styles, copy/paste style and "set as default"', async ({ page }) => 
 	await page.getByTestId('canvas').focus();
 	await page.keyboard.press('r');
 	await page.mouse.click(c.x + 150, c.y + 450);
-	const list = (await page.evaluate(() => window.__smthng!.list())) as Snap[];
+	const list = (await page.evaluate(() => window.__spacy!.list())) as Snap[];
 	const created = list.find((e) => e.id !== 'a' && e.id !== 'b')!;
 	expect(created.style.fill).toBe('#a5d8ff');
 });

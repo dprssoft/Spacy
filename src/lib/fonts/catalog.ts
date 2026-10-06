@@ -15,7 +15,7 @@ export interface FontDef {
 }
 
 const bundled = (name: string, weight: string, fallback: string) => {
-	const family = `SMTHNG ${name}`;
+	const family = `Spacy ${name}`;
 	return { stack: `"${family}", ${fallback}`, bundled: { family, weight } };
 };
 

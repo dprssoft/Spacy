@@ -5,6 +5,6 @@
 	let { data }: PageProps = $props();
 </script>
 
-<svelte:head><title>SMTHNG</title></svelte:head>
+<svelte:head><title>Spacy</title></svelte:head>
 
 <HomePage templatePreviews={data.templatePreviews} />

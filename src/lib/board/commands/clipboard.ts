@@ -18,11 +18,11 @@ import { getDefaultStyle } from '../style/styleDefaults';
 import { syncFrameMembership, withFrameChildren } from '../frameMembership';
 import { createWithContent, deleteSelection, selectedElements } from './edit';
 
-export const CLIPBOARD_PREFIX = 'SMTHNG-CLIPBOARD:';
+export const CLIPBOARD_PREFIX = 'SPACY-CLIPBOARD:';
 const PASTE_STEP = 16;
 
 export interface ClipPayload {
-	smthng: 1;
+	spacy: 1;
 	sourceBoardId: string;
 	elements: Element[];
 	/** base64 Yjs update of a doc whose `docs` map holds the copied doc cards' contents. */
@@ -49,7 +49,7 @@ export function serializeElements(ctx: BoardContext, els: readonly Element[]): s
 	const sketches: Record<string, unknown[]> = {};
 	for (const el of els) if (el.type === 'sketch') sketches[el.id] = rawStrokes(ctx.doc, el.id);
 	const payload: ClipPayload = {
-		smthng: 1,
+		spacy: 1,
 		sourceBoardId: ctx.id,
 		elements: [...els],
 		docs: bytesToBase64(Y.encodeStateAsUpdate(temp)),
@@ -60,17 +60,17 @@ export function serializeElements(ctx: BoardContext, els: readonly Element[]): s
 	return CLIPBOARD_PREFIX + JSON.stringify(payload);
 }
 
-/** Parses clipboard text; null if it isn't a (valid) SMTHNG payload. */
+/** Parses clipboard text; null if it isn't a (valid) Spacy payload. */
 export function parsePayload(text: string): ClipPayload | null {
 	if (!text.startsWith(CLIPBOARD_PREFIX)) return null;
 	try {
 		const raw = JSON.parse(text.slice(CLIPBOARD_PREFIX.length)) as Partial<ClipPayload>;
-		if (raw.smthng !== 1 || !Array.isArray(raw.elements) || typeof raw.sourceBoardId !== 'string')
+		if (raw.spacy !== 1 || !Array.isArray(raw.elements) || typeof raw.sourceBoardId !== 'string')
 			return null;
 		const elements = raw.elements.map(parseElement).filter((e): e is Element => !!e);
 		if (elements.length === 0) return null;
 		return {
-			smthng: 1,
+			spacy: 1,
 			sourceBoardId: raw.sourceBoardId,
 			elements,
 			docs: typeof raw.docs === 'string' ? raw.docs : '',

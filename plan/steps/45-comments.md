@@ -5,7 +5,7 @@ Phase: K. Writers · Depends on: 44 · Estimate: 2.5 days
 > **Approved by the human (2026-10-04):** lifts the "comments" non-goal, adds a `comments` map, a `comment` text mark and schema version 6.
 
 ## Goal
-Comment threads on **any object** (a sticky, a shape, a frame, an image, a connector, media…) and on **ranges of text** inside doc cards. Comments can be replied to, resolved and reopened, listed in a panel, and they travel with the board in `.smthng` files. No accounts: the author is a name you set once (per browser).
+Comment threads on **any object** (a sticky, a shape, a frame, an image, a connector, media…) and on **ranges of text** inside doc cards. Comments can be replied to, resolved and reopened, listed in a panel, and they travel with the board in `.spacy` files. No accounts: the author is a name you set once (per browser).
 
 ## Proposed data model (for approval)
 ```ts
@@ -20,7 +20,7 @@ doc.getMap('comments'): Y.Map<threadId, Y.Map<{
 - Text anchors are a ProseMirror **`comment` mark** (`threadId` attribute) in the doc card schema, so the highlighted range moves with edits. Schema version 6: an older editor deletes text carrying marks it doesn't know.
 - Deleting an element deletes its element-anchored threads (same transaction); deleting all of a thread's marked text leaves the thread as "orphaned" (shown in the panel with its quote).
 - Comments are in canvas undo scope (creating/deleting a thread, resolving); message edits are too.
-- `.smthng` export/import carries the map (ids remapped with elements on import and paste; pasting a commented object copies its threads).
+- `.spacy` export/import carries the map (ids remapped with elements on import and paste; pasting a commented object copies its threads).
 
 ## Tasks
 1. Model ops (`model/comments.ts`): create thread (element or text), reply, edit, delete message, resolve/reopen, delete thread; hooks on element delete and clone.
@@ -33,7 +33,7 @@ doc.getMap('comments'): Y.Map<threadId, Y.Map<{
 ## Tests
 - `comments.test.ts`: ops, delete/clone hooks, undo, orphaning, import remap.
 - `migrations.test.ts`: v5 → v6.
-- e2e `comments.spec.ts`: comment on a sticky → badge → reply → resolve (badge hides, panel shows it under Resolved) → reopen; comment a text range in a doc card → highlight → edit text around it → highlight follows; delete the sticky → its thread is gone; export + import a `.smthng` → comments come back; phones: long-press → Comment → sheet.
+- e2e `comments.spec.ts`: comment on a sticky → badge → reply → resolve (badge hides, panel shows it under Resolved) → reopen; comment a text range in a doc card → highlight → edit text around it → highlight follows; delete the sticky → its thread is gone; export + import a `.spacy` → comments come back; phones: long-press → Comment → sheet.
 
 ## Acceptance criteria
 - [x] `pnpm verify` and `pnpm test:e2e` pass

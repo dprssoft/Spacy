@@ -1,4 +1,4 @@
-# SMTHNG — Architecture
+# Spacy — Architecture
 
 This document is the contract every step builds on. Steps may refine details, but must not contradict it without human approval (see `CLAUDE.md`).
 
@@ -10,7 +10,7 @@ This document is the contract every step builds on. Steps may refine details, bu
 - **Media:** YouTube, Vimeo and audio/video links play in place on the board (click-to-play: nothing is requested from a provider before play).
 - **Templates:** a gallery of built-in layouts (kanban, retrospective, SWOT, mind map…) for new boards or inserted into the current one.
 - **Start page:** Figma-like home with "New board", templates, Recent / Starred / All / Trash, search, sort, grid/list, thumbnails.
-- **No backend.** Data lives in IndexedDB. Sharing = `.smthng` file export/import + PNG/SVG/Markdown export. Installable, offline-capable PWA.
+- **No backend.** Data lives in IndexedDB. Sharing = `.spacy` file export/import + PNG/SVG/Markdown export. Installable, offline-capable PWA.
 - Real-time multi-user collaboration is **not** in scope, but the data layer (Yjs) is chosen so a sync server can be added later by changing only `openBoard()`.
 
 ### Non-goals (do not build)
@@ -228,7 +228,7 @@ Rules:
 - Deleting an element converts endpoints of connectors attached to it into `free` endpoints at their current resolved position, in the same transaction (step 20).
 - `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view). Version 6 added comments (no data moves; an older editor would delete text carrying the `comment` mark). Version 7 added waystones (no data moves; older versions would drop them from their view).
 - Media (`src/lib/board/media`): which elements are playing is per-tab state (`PlaybackState` in the board context), never stored. A poster is shown until play; playing elements stay mounted when culled or when the scene canvas is shown; page switches stop playback. Double-click / Enter plays and hands the pointer to the player (the editing mode, like doc cards); Escape or a click elsewhere leaves it while playback continues. Exports, thumbnails and the scene canvas draw the poster. CSP: `frame-src https://www.youtube-nocookie.com https://player.vimeo.com; media-src 'self' blob: https:` — `connect-src` stays `'self'` (no oEmbed or thumbnail fetching).
-- Fonts (`src/lib/fonts`): `catalog.ts` lists the fonts (id, label, category, CSS stack); 10 are bundled from `@fontsource*` packages (Latin, Latin Extended and Cyrillic woff2 subsets, ~1 MB in all, precached for offline use) and registered with the `FontFace` API under `SMTHNG <name>` families, so the browser downloads a subset only when text uses it. Canvas text stores the id in `style.font.family` (optional; no schema bump: an older app shows the default font); doc card text uses the `fontFamily` mark. Exports embed the files of the fonts they use as data URLs.
+- Fonts (`src/lib/fonts`): `catalog.ts` lists the fonts (id, label, category, CSS stack); 10 are bundled from `@fontsource*` packages (Latin, Latin Extended and Cyrillic woff2 subsets, ~1 MB in all, precached for offline use) and registered with the `FontFace` API under `Spacy <name>` families, so the browser downloads a subset only when text uses it. Canvas text stores the id in `style.font.family` (optional; no schema bump: an older app shows the default font); doc card text uses the `fontFamily` mark. Exports embed the files of the fonts they use as data URLs.
 - Doc card text formatting (schema version 4): underline, `textColor`, `highlight`, `fontFamily` and `fontSize` marks and an `align` attribute on paragraphs and headings. The marks hold ids from fixed lists (`doccards/formatOptions.ts`), rendered as `data-*` attributes and styled in `prose.css`; text color and highlight also take a `#rrggbb` value (`data-*="custom"` plus a CSS variable in the style attribute). Anything else is dropped on parse. The bump matters: an older editor deletes text carrying marks it doesn't know.
 - Sketches (schema version 3): `SketchElement { type: 'sketch'; bx; by; nw; nh }` shows the rectangle `(bx, by, nw, nh)` of its stroke space stretched onto its box. Adding a stroke appends to `sketches[id]` and grows that rectangle and the box together (one transaction, one undo step), so moving or resizing never rewrites stroke data. `sketches` entries are created, deleted, copied and undone with their element, like `docs`.
 - Comments (schema version 6, `src/lib/model/comments.ts`; UI in `src/lib/board/comments`): all writes go through its helpers. Text threads are anchored by a `comment` mark (`threadId`, `excludes: ''` so comments may overlap; y-tiptap stores it as the text attribute `comment--<hash>`) in doc card text, so the highlight moves with edits; a text thread whose marked text was all deleted stays as "orphaned" (listed with "The commented text was deleted"). Deleting an element deletes threads anchored to it (and the text threads of a deleted doc card) in the same transaction (a `beforeDeleteHooks` entry); deleting a text thread removes its marks. Paste and duplicate copy the threads of the copied objects (the clipboard payload carries them) and repoint the copied marks (`copyThreadsTo`). The `comments` map is in canvas undo scope; the mark itself is applied by the editor (its own Yjs undo). The author name is a localPref. Exports (PNG/SVG/PDF, compile, Markdown) leave comments out; "Download .md with comments" writes them as footnotes.
@@ -237,7 +237,7 @@ Rules:
 
 ## 6. Storage
 
-### IndexedDB database `smthng` (via `idb`), version 1
+### IndexedDB database `spacy` (via `idb`), version 1
 
 ```ts
 export interface BoardMeta {
@@ -259,19 +259,24 @@ export interface AssetRecord {
 - Store `assets` (keyPath `id`; index `boardId`)
 
 ### Board contents
-- One `y-indexeddb` database per board, name `smthng-board-<id>`.
+- One `y-indexeddb` database per board, name `spacy-board-<id>`.
 - An open board is saved by `BoardSaver` (`src/lib/storage/boardSaver.ts`): the same layout as y-indexeddb (an auto-increment `updates` store of Yjs updates, plus `custom`), but every write is awaited so a failed save is reported ("Not saved" in the top bar, a toast with Retry, a prompt before leaving). Retry writes the full state, because the failed update is missing from storage. One-shot snapshot reads and writes still use `y-indexeddb`.
 - `openBoard(id)` (in `src/lib/storage/boardDoc.ts`) is the **only** place that wires providers to a Y.Doc. A future sync server is added here.
 
+### Data from SMTHNG (the app's old name)
+- Before `getDB()` first opens `spacy`, `migrateLegacyDatabases` (`src/lib/storage/legacyMigration.ts`) copies `smthng` and every board's `smthng-board-<id>` to the new names (stores, indexes, keys and values, unchanged), board list last, under a Web Lock. It runs only when `spacy` doesn't exist yet. The old databases are kept: an older SMTHNG on the same origin (e.g. a dev server) may still use them.
+- Settings: the inline script in `src/app.html` copies `smthng:*` localStorage keys to `spacy:*` (never over an existing key) once, before reading the theme, and sets `spacy:migrated`.
+- Imports accept files with `format: 'smthng'` and the `.smthng` extension; exports write `spacy`.
+
 ### Cross-tab sync
-- `BroadcastChannel('smthng-meta')` — `{ type: 'boards-changed' }` after any metadata mutation.
-- `BroadcastChannel('smthng-board-<id>')` — Yjs updates between tabs with the same board open (origin `REMOTE_TAB`).
+- `BroadcastChannel('spacy-meta')` — `{ type: 'boards-changed' }` after any metadata mutation.
+- `BroadcastChannel('spacy-board-<id>')` — Yjs updates between tabs with the same board open (origin `REMOTE_TAB`).
 
 ### Transaction origins (`src/lib/model/origins.ts`)
 `LOCAL` (user edits, tracked by undo) · `REMOTE_TAB` · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
 
 ### localStorage keys (via `localPrefs`)
-`smthng:theme`, `smthng:home:sort`, `smthng:home:layout`, `smthng:defaults:<type>`, `smthng:copiedStyle`, `smthng:grid`, `smthng:snap`, `smthng:onboarded`, `smthng:lastBackupAt`, `smthng:backupReminderDismissedAt`, `smthng:testHooks`, `smthng:commentAuthor`, `smthng:comments:<boardId>` (panel open), `smthng:waystones:wrap`, `smthng:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by the inline theme script in `src/app.html`; element colors never change).
+`spacy:theme`, `spacy:home:sort`, `spacy:home:layout`, `spacy:defaults:<type>`, `spacy:copiedStyle`, `spacy:grid`, `spacy:snap`, `spacy:onboarded`, `spacy:lastBackupAt`, `spacy:backupReminderDismissedAt`, `spacy:testHooks`, `spacy:commentAuthor`, `spacy:comments:<boardId>` (panel open), `spacy:waystones:wrap`, `spacy:migrated` (settings copied from SMTHNG, see §6), `spacy:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by the inline theme script in `src/app.html`; element colors never change).
 
 ## 7. Yjs → Svelte bridge
 
@@ -365,25 +370,25 @@ interface MediaController {
   subscribe(fn): () => void; destroy();
 }
 ```
-Adapters: `NativeController` (`<video>`/`<audio>`), `YouTubeController` and `VimeoController` (postMessage only — no provider script runs in the page; messages are accepted only from that iframe's window and the provider's origin; no answer within 4 s → `fallback`: the iframe reloads with the provider's own controls). `PlaybackState` holds one controller per playing element; `runSession` applies the personal volume/speed (`localPrefs` `smthng:media`, never on the board) and enforces the clip (`start`/`end`/`loop`, stored on the element). The controls bar renders in the screen-space overlay (inside the player when it's fullscreen). Starting one media pauses the others unless the "Play one media at a time" setting is off.
+Adapters: `NativeController` (`<video>`/`<audio>`), `YouTubeController` and `VimeoController` (postMessage only — no provider script runs in the page; messages are accepted only from that iframe's window and the provider's origin; no answer within 4 s → `fallback`: the iframe reloads with the provider's own controls). `PlaybackState` holds one controller per playing element; `runSession` applies the personal volume/speed (`localPrefs` `spacy:media`, never on the board) and enforces the clip (`start`/`end`/`loop`, stored on the element). The controls bar renders in the screen-space overlay (inside the player when it's fullscreen). Starting one media pauses the others unless the "Play one media at a time" setting is off.
 
 ### Board context (`src/lib/board/context.ts`)
 Svelte context object created in `BoardPage.svelte`, grows over steps:
 `{ id, doc, undo, store, viewport, selection, tools, commands, prefs }`. Access with `getBoard()`.
 
-## 10. File format `.smthng` (step 27)
+## 10. File format `.spacy` (step 27)
 
 ```ts
-type SmthngFile =
-  | { format: 'smthng'; version: 1; kind: 'board'; exportedAt: number; board: BoardPayload }
-  | { format: 'smthng'; version: 1; kind: 'backup'; exportedAt: number; boards: BoardPayload[] };
+type SpacyFile =
+  | { format: 'spacy'; version: 1; kind: 'board'; exportedAt: number; board: BoardPayload }
+  | { format: 'spacy'; version: 1; kind: 'backup'; exportedAt: number; boards: BoardPayload[] };
 type BoardPayload = {
   title: string; createdAt: number;
   doc: string;   // base64 of Y.encodeStateAsUpdate
   assets: { id: string; mime: string; width: number; height: number; data: string /* base64 */ }[];
 };
 ```
-Imports always create new board ids and new asset ids (remapped in the doc). Element ids are kept (they're per board), so the `comments` map (step 45) travels in `doc` unchanged.
+Files from before the rename (`format: 'smthng'`, `.smthng`) import the same way. Imports always create new board ids and new asset ids (remapped in the doc). Element ids are kept (they're per board), so the `comments` map (step 45) travels in `doc` unchanged.
 
 ## 11. Keyboard shortcuts (`Mod` = Ctrl on Win/Linux, Cmd on macOS)
 
@@ -413,7 +418,7 @@ Imports always create new board ids and new asset ids (remapped in the doc). Ele
 **Media keys** apply to the selected media element while it plays, or while its player is in use; then they take precedence over tool keys, arrow nudging and Space-panning:
 Space / K play-pause · J / L ∓10 s · ← / → ∓5 s · ↑ / ↓ volume · M mute · F full screen · `<` / `>` speed · 0–9 jump to 0–90 % · Home / End clip start / end · Shift+L loop. Enter on a selected media element starts it.
 
-**Touch** (phones and tablets; `tools/touchGestures.ts`, `pointerRouter.ts`, `viewportInput.ts`): one finger on empty canvas pans (Select tool); on an element it selects/moves; long-press (500 ms) then drag draws a marquee; tap on empty canvas clears the selection; double-tap = double-click; two fingers pinch-zoom and pan, and a pinch cancels whatever the first finger started (`smthng:gesturecancel`). Touch `pointerdown`s are `preventDefault`ed so no emulated mouse events follow. Touch editing (step 38): long-press (500 ms, still) on an element selects it and opens the canvas context menu at the finger (a synthetic `contextmenu`; the browser's own long-press `contextmenu` is swallowed); a still long-press on empty canvas opens the canvas menu, a moving one draws a marquee. Drawing tools ignore fingers while a stylus is down and for 1 s after (`palmRejected`). Handles have 44 px hit areas on coarse pointers (rotate handle 70 px out). On phones the style bar docks at the bottom and its panels open as bottom sheets; while editing, the tools hide, a doc card's formatting row docks on the on-screen keyboard (`shared/keyboard.svelte.ts`, from `visualViewport`), and the board pans to keep the edited element / caret line visible (`keepEditingVisible`). Layout: below 640 px (`layout.compact`, `max-sm:`) the board's toolbar is a bottom bar with secondary tools in an "Insert more" menu, the top bar is icon-only, and touch targets are ≥ 44 px under `(pointer: coarse)`.
+**Touch** (phones and tablets; `tools/touchGestures.ts`, `pointerRouter.ts`, `viewportInput.ts`): one finger on empty canvas pans (Select tool); on an element it selects/moves; long-press (500 ms) then drag draws a marquee; tap on empty canvas clears the selection; double-tap = double-click; two fingers pinch-zoom and pan, and a pinch cancels whatever the first finger started (`spacy:gesturecancel`). Touch `pointerdown`s are `preventDefault`ed so no emulated mouse events follow. Touch editing (step 38): long-press (500 ms, still) on an element selects it and opens the canvas context menu at the finger (a synthetic `contextmenu`; the browser's own long-press `contextmenu` is swallowed); a still long-press on empty canvas opens the canvas menu, a moving one draws a marquee. Drawing tools ignore fingers while a stylus is down and for 1 s after (`palmRejected`). Handles have 44 px hit areas on coarse pointers (rotate handle 70 px out). On phones the style bar docks at the bottom and its panels open as bottom sheets; while editing, the tools hide, a doc card's formatting row docks on the on-screen keyboard (`shared/keyboard.svelte.ts`, from `visualViewport`), and the board pans to keep the edited element / caret line visible (`keepEditingVisible`). Layout: below 640 px (`layout.compact`, `max-sm:`) the board's toolbar is a bottom bar with secondary tools in an "Insert more" menu, the top bar is icon-only, and touch targets are ≥ 44 px under `(pointer: coarse)`.
 
 Shortcuts are ignored while focus is in `input`, `textarea`, `select`, or `[contenteditable]` (except Escape handling defined per step).
 

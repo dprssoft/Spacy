@@ -23,7 +23,7 @@ Creating, renaming, starring, trashing, restoring and deleting boards on one dev
 - **First connect:** the local library and remote library merge; nothing is overwritten.
 
 ## Tasks
-1. Library doc storage (its own y-indexeddb database `smthng-library`), engine registration.
+1. Library doc storage (its own y-indexeddb database `spacy-library`), engine registration.
 2. Reconciler both ways; `boardsRepo` writes notify it.
 3. Tombstones: purge, expiry, remote file deletion, local `destroyBoard` on other devices.
 4. Placeholder state on the start page for boards whose content hasn't downloaded yet.
@@ -39,7 +39,7 @@ Creating, renaming, starring, trashing, restoring and deleting boards on one dev
 
 ## Acceptance criteria
 - [ ] `pnpm verify` passes
-- [ ] `00-architecture.md`: §5 the library doc, §6 `smthng-library`, §14 reconciliation and tombstones
+- [ ] `00-architecture.md`: §5 the library doc, §6 `spacy-library`, §14 reconciliation and tombstones
 
 ## Out of scope
 Images (step 49), Google Drive and UI (step 50).

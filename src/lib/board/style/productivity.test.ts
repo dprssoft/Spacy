@@ -67,7 +67,7 @@ describe('style defaults', () => {
 	});
 
 	it('ignores corrupted saved defaults', () => {
-		localStorage.setItem('smthng:defaults:shape', JSON.stringify({ strokeWidth: 3 }));
+		localStorage.setItem('spacy:defaults:shape', JSON.stringify({ strokeWidth: 3 }));
 		expect(getDefaultStyle('shape')).toEqual(baseStyleFor('shape'));
 	});
 });

@@ -101,7 +101,7 @@ test('Insert → Media adds a video link that plays, stays mounted off screen, a
 
 	// Far out of view, it stays mounted (the sound goes on).
 	await page.evaluate(() => {
-		const v = window.__smthng!.ctx.viewport;
+		const v = window.__spacy!.ctx.viewport;
 		v.set({ ...v.vp, x: v.vp.x + 5000 });
 	});
 	await page.waitForTimeout(300);
@@ -109,14 +109,14 @@ test('Insert → Media adds a video link that plays, stays mounted off screen, a
 
 	// Deleting it stops it.
 	await page.evaluate(() => {
-		const ctx = window.__smthng!.ctx;
+		const ctx = window.__spacy!.ctx;
 		const id = [...ctx.playback.playing][0]!;
-		window.__smthng!.ctx.selection.set([id]);
+		window.__spacy!.ctx.selection.set([id]);
 	});
 	await page.getByTestId('canvas').focus();
 	await page.keyboard.press('Delete');
 	await expect(media(page)).toHaveCount(0);
-	expect(await page.evaluate(() => window.__smthng!.ctx.playback.playing.size)).toBe(0);
+	expect(await page.evaluate(() => window.__spacy!.ctx.playback.playing.size)).toBe(0);
 });
 
 test('switching page stops playback', async ({ page }) => {
@@ -127,12 +127,12 @@ test('switching page stops playback', async ({ page }) => {
 	await page.keyboard.press('Escape');
 
 	await page.evaluate(() => {
-		const { pages } = window.__smthng!.ctx;
+		const { pages } = window.__spacy!.ctx;
 		const first = pages.current;
 		pages.select(pages.add().id);
 		pages.select(first);
 	});
 	await expect(media(page)).toHaveCount(1);
 	await expect(media(page).locator('video')).toHaveCount(0);
-	expect(await page.evaluate(() => window.__smthng!.ctx.playback.playing.size)).toBe(0);
+	expect(await page.evaluate(() => window.__spacy!.ctx.playback.playing.size)).toBe(0);
 });

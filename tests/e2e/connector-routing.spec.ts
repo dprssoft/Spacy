@@ -16,14 +16,14 @@ type Conn = {
 	label: { text: string; t: number };
 };
 const conn = async (page: Page) =>
-	((await page.evaluate(() => window.__smthng!.list())) as Conn[]).find(
+	((await page.evaluate(() => window.__spacy!.list())) as Conn[]).find(
 		(e) => e.type === 'connector'
 	)!;
 
 /** Two shapes connected by the connector tool; returns the connector's path locator. */
 async function setup(page: Page) {
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never),
+		(els) => window.__spacy!.createElements(els as never),
 		[el.shape('a', -360, -150), el.shape('b', 160, 60)]
 	);
 	const center = async (id: string) => {
@@ -51,7 +51,7 @@ async function clickConnector(page: Page, button: 'left' | 'right' = 'left', cli
 		return { x: q.x, y: q.y };
 	});
 	const canvas = (await page.getByTestId('canvas').boundingBox())!;
-	const vp = await page.evaluate(() => window.__smthng!.ctx.viewport.vp);
+	const vp = await page.evaluate(() => window.__spacy!.ctx.viewport.vp);
 	await page.mouse.click(canvas.x + pt.x * vp.zoom + vp.x, canvas.y + pt.y * vp.zoom + vp.y, {
 		button,
 		clickCount
@@ -118,7 +118,7 @@ test('"Set as default" on a connector applies its routing to new connectors', as
 	await page.getByRole('button', { name: 'Set as default for new connectors' }).click();
 	await page.keyboard.press('Escape');
 	const created = await page.evaluate(() => {
-		const ctx = window.__smthng!.ctx;
+		const ctx = window.__spacy!.ctx;
 		return ctx.store.elements.size;
 	});
 	expect(created).toBe(3);
@@ -130,7 +130,7 @@ test('"Set as default" on a connector applies its routing to new connectors', as
 	await page.mouse.down();
 	await page.mouse.move(box.x + 300, box.y + 550, { steps: 5 });
 	await page.mouse.up();
-	const all = (await page.evaluate(() => window.__smthng!.list())) as Conn[];
+	const all = (await page.evaluate(() => window.__spacy!.list())) as Conn[];
 	expect(all.filter((e) => e.type === 'connector').map((e) => e.routing)).toEqual([
 		'curve',
 		'curve'

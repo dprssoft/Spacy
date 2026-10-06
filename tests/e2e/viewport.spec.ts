@@ -53,10 +53,7 @@ test('space + drag pans the canvas', async ({ page }) => {
 	await enableTestHooks(page);
 	await createBoard(page);
 	await waitForHooks(page);
-	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
-		el.shape('probe', 0, 0)
-	);
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), el.shape('probe', 0, 0));
 	const probe = page.locator('[data-element-id="probe"]');
 	await expect(probe).toBeVisible();
 	const before = (await probe.boundingBox())!;
@@ -93,7 +90,7 @@ test('Go to the nearest object flies back from empty space (not to a waystone)',
 	await createBoard(page);
 	await waitForHooks(page);
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never[]),
+		(els) => window.__spacy!.createElements(els as never[]),
 		[
 			{ ...el.shape('box', 3000, 2000), text: 'Lost?' },
 			{
@@ -117,7 +114,7 @@ test('Go to the nearest object flies back from empty space (not to a waystone)',
 	await expect
 		.poll(() =>
 			page.evaluate(() => {
-				const { viewport } = window.__smthng!.ctx;
+				const { viewport } = window.__spacy!.ctx;
 				const cx = (viewport.size.w / 2 - viewport.x) / viewport.zoom;
 				return Math.round(cx);
 			})

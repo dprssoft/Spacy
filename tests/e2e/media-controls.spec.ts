@@ -32,7 +32,7 @@ test.beforeEach(async ({ page, context }) => {
 async function addPlaying(page: Page, url: string, at = { x: 0, y: 0 }): Promise<string> {
 	const id = await page.evaluate(
 		({ url, at }) => {
-			const ctx = window.__smthng!.ctx;
+			const ctx = window.__spacy!.ctx;
 			ctx.pointer = at;
 			const dt = new DataTransfer();
 			dt.setData('text/plain', url);
@@ -55,12 +55,12 @@ const bar = (page: Page, id: string) =>
 	page.locator(`[data-media-bar="${id}"] [data-testid=media-controls]`);
 const state = (page: Page, id: string) =>
 	page.evaluate((id) => {
-		const c = window.__smthng!.ctx.playback.controllers.get(id);
+		const c = window.__spacy!.ctx.playback.controllers.get(id);
 		return c ? { ...c.state } : null;
 	}, id);
 const media = (page: Page, id: string) =>
 	page.evaluate(
-		(id) => window.__smthng!.ctx.store.get(id) as unknown as Record<string, unknown>,
+		(id) => window.__spacy!.ctx.store.get(id) as unknown as Record<string, unknown>,
 		id
 	);
 
@@ -89,9 +89,9 @@ test('clip and loop: set start and end, it loops, and undo restores the clip', a
 			.or(page.getByRole('menuitemcheckbox', { name: item }))
 			.click();
 	};
-	await page.evaluate((id) => window.__smthng!.ctx.playback.controllers.get(id)!.seek(100), id);
+	await page.evaluate((id) => window.__spacy!.ctx.playback.controllers.get(id)!.seek(100), id);
 	await more('Set start here');
-	await page.evaluate((id) => window.__smthng!.ctx.playback.controllers.get(id)!.seek(110), id);
+	await page.evaluate((id) => window.__spacy!.ctx.playback.controllers.get(id)!.seek(110), id);
 	await more('Set end here');
 	await more('Loop');
 	const el = await media(page, id);
@@ -127,14 +127,14 @@ test('volume and speed are personal: kept after a reload, never on the board', a
 	await controls.getByRole('button', { name: /^Speed/ }).click();
 	await page.getByRole('menuitemradio', { name: '1.5×' }).click();
 	await expect.poll(async () => (await state(page, id))?.rate).toBe(1.5);
-	const prefs = await page.evaluate(() => JSON.parse(localStorage.getItem('smthng:media') ?? '{}'));
+	const prefs = await page.evaluate(() => JSON.parse(localStorage.getItem('spacy:media') ?? '{}'));
 	expect(prefs).toMatchObject({ muted: true, rate: 1.5 });
 	expect(Object.keys(await media(page, id))).not.toContain('rate');
 
 	await page.reload();
 	await waitForHooks(page);
 	await page.evaluate((id) => {
-		const ctx = window.__smthng!.ctx;
+		const ctx = window.__spacy!.ctx;
 		ctx.selection.set([id]);
 		ctx.playback.play(id);
 	}, id);
@@ -189,7 +189,7 @@ test('controls keep their size at any zoom and pass axe', async ({ page }) => {
 	const at100 = await height();
 	for (const zoom of [0.25, 2]) {
 		await page.evaluate((z) => {
-			const v = window.__smthng!.ctx.viewport;
+			const v = window.__spacy!.ctx.viewport;
 			v.set({ zoom: z, x: v.size.w / 2, y: v.size.h / 3 });
 		}, zoom);
 		await expect(bar(page, id)).toBeVisible();
@@ -201,7 +201,7 @@ test('controls keep their size at any zoom and pass axe', async ({ page }) => {
 
 test('a player that never answers falls back to its own controls', async ({ page }) => {
 	const id = await addPlaying(page, `https://youtu.be/${SILENT}`).catch(() => null);
-	const mediaId = id ?? (await page.evaluate(() => window.__smthng!.ctx.selection.single!));
+	const mediaId = id ?? (await page.evaluate(() => window.__spacy!.ctx.selection.single!));
 	const frame = page.locator(`[data-element-id="${mediaId}"] iframe`);
 	await expect(frame).toHaveAttribute('src', /controls=0/);
 	await expect(page.getByText('Using the player’s controls')).toBeVisible({ timeout: 8000 });

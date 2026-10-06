@@ -1,7 +1,7 @@
 import type { ViewportState } from '../viewport.svelte';
 
 /** Dispatched on the canvas when a pinch starts: tools drop what the first finger started. */
-export const GESTURE_CANCEL = 'smthng:gesturecancel';
+export const GESTURE_CANCEL = 'spacy:gesturecancel';
 
 export interface ViewportInputOptions {
 	/** When true, Space isn't taken for panning (a playing media element uses it to play/pause). */

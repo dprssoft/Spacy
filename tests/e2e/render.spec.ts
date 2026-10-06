@@ -9,7 +9,7 @@ test('elements created through the model render and persist', async ({ page }) =
 	await createBoard(page);
 	await waitForHooks(page);
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never),
+		(els) => window.__spacy!.createElements(els as never),
 		[
 			el.shape('rect', -200, -100, { text: 'Hello' }),
 			{
@@ -46,7 +46,7 @@ test('culling keeps off-screen elements out of the DOM, and Shift+1 fits content
 	await waitForHooks(page);
 	// Otherwise the board may open fitted to the 3,000 elements, with all of them on screen.
 	await waitForInitialView(page);
-	const total = await page.evaluate(() => window.__smthng!.perf(3000));
+	const total = await page.evaluate(() => window.__spacy!.perf(3000));
 	expect(total).toBe(3000);
 	await expect(page.locator('[data-element-id]').first()).toBeVisible();
 	const rendered = await page.locator('[data-element-id]').count();
@@ -64,9 +64,9 @@ test('edits from another tab render live', async ({ page, context }) => {
 	await waitForHooks(page);
 	const other = await context.newPage();
 	await other.goto(`/board/${id}`);
-	await other.waitForFunction(() => !!window.__smthng);
+	await other.waitForFunction(() => !!window.__spacy);
 	await other.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('remote', 0, 0)
 	);
 	await expect(page.locator('[data-element-id="remote"]')).toBeVisible();

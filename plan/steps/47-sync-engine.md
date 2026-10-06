@@ -23,14 +23,14 @@ A storage-agnostic engine that keeps every board's Yjs document in sync with a r
 - **Upload by state vector:** per board, the engine stores `syncedSV` in IndexedDB: the board's state vector right after the last cycle in which everything local was uploaded and everything remote applied. The next upload is `encodeStateAsUpdate(local, syncedSV)`, the exact set of changes since. There's no outbox to keep consistent, and edits made offline or while sync was off are picked up automatically.
 - **Download:** new remote files (by `changes` cursor) are applied with origin `REMOTE_SYNC` (new, in `origins.ts`, so they stay out of undo). They're applied to the open `Y.Doc` if the board is open in this tab, otherwise merged into IndexedDB (`writeSnapshot`). Boards open in **other tabs** get them through the board's tab-sync channel.
 - **Compaction:** when a board has ≥ 50 remote files, a device uploads one file with the merged state (`kind=snapshot`), then deletes only the files it had merged. Files from other devices that it hadn't seen yet stay. Yjs merges are idempotent, so two devices compacting at once is safe.
-- **One syncing tab per browser:** a Web Lock (`navigator.locks.request('smthng-sync')`) picks the leader; other tabs stay passive. If the lock API is missing, the tab syncs anyway (duplicate uploads are harmless).
-- **Device id:** random, kept in `localPrefs` (`smthng:sync:device`).
+- **One syncing tab per browser:** a Web Lock (`navigator.locks.request('spacy-sync')`) picks the leader; other tabs stay passive. If the lock API is missing, the tab syncs anyway (duplicate uploads are harmless).
+- **Device id:** random, kept in `localPrefs` (`spacy:sync:device`).
 - **Schema guard:** a remote board whose `schemaVersion` is newer than this app's is not opened or merged. The board is marked "Needs a newer version of the app" and its sync pauses (the `NewerSchemaError` path).
 - **Schedule:** a cycle runs on start, 3 s after the last local change to a board (debounced), on `online`, when the tab becomes visible, and every 60 s while visible. Failures back off exponentially (up to 5 min).
 
 ## Tasks
 1. `RemoteStore`, `MemoryRemoteStore`, the `REMOTE_SYNC` origin.
-2. `SyncEngine` (`storage/sync/engine.ts`, pure TS): the per-board cycle (download → apply → upload delta → record `syncedSV`), compaction, cursor and `syncedSV` persistence (a new `sync` store in the `smthng` IndexedDB, DB version 2), backoff and schedule hooks.
+2. `SyncEngine` (`storage/sync/engine.ts`, pure TS): the per-board cycle (download → apply → upload delta → record `syncedSV`), compaction, cursor and `syncedSV` persistence (a new `sync` store in the `spacy` IndexedDB, DB version 2), backoff and schedule hooks.
 3. Leader election and the tab-channel broadcast of applied remote updates.
 4. Hook into `openBoard`: an open board's doc reports local changes to the engine (debounce) and receives remote updates live.
 5. `SyncStatus` (plain state the UI will read in step 50): `off | syncing | synced(at) | offline | error(reason)` per board and overall.

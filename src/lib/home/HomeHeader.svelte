@@ -35,7 +35,7 @@
 >
 	<div class="flex shrink-0 items-center gap-2 md:w-52">
 		<Logo class="size-7" />
-		<h1 class="text-[15px] font-semibold tracking-tight max-sm:sr-only">SMTHNG</h1>
+		<h1 class="text-[15px] font-semibold tracking-tight max-sm:sr-only">Spacy</h1>
 	</div>
 
 	<div class="relative max-w-md min-w-0 flex-1">
