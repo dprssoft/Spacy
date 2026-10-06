@@ -21,7 +21,7 @@ Accounts, server sync, version history, UML/BPMN libraries, auto-layout, swimlan
 | Concern | Choice |
 |---|---|
 | Framework | SvelteKit 2, Svelte 5 (runes), TypeScript strict |
-| Build/deploy mode | SPA: `@sveltejs/adapter-static` with `fallback: 'index.html'`, root `+layout.ts` → `ssr = false`, `prerender = false` |
+| Build/deploy mode | SPA: `@sveltejs/adapter-static` with `fallback: '200.html'`, root `+layout.ts` → `ssr = false`, `prerender = false`. Exception: the start page (`/`) is prerendered at build time (`routes/+page.ts` → `ssr = prerender = true`; `+page.server.ts` draws the featured template previews) into `index.html`; it hydrates with defaults and applies browser state (localStorage, `?view=`, the theme choice) after hydration, and the layout is `inert` until then |
 | Styling | Tailwind CSS v4 (`@tailwindcss/vite`), CSS variables for theme tokens |
 | Headless UI | `bits-ui` (dropdown, context menu, dialog, alert dialog, popover, tooltip, select) |
 | Icons | `@lucide/svelte` |
@@ -65,7 +65,7 @@ Accounts, server sync, version history, UML/BPMN libraries, auto-layout, swimlan
 ├─ src/
 │  ├─ app.html  app.css  app.d.ts
 │  ├─ routes/
-│  │  ├─ +layout.ts               ssr=false, prerender=false
+│  │  ├─ +layout.ts               ssr=false, prerender=false (the start page overrides both)
 │  │  ├─ +layout.svelte           css, theme, toaster
 │  │  ├─ +page.svelte             start page
 │  │  ├─ +error.svelte
@@ -271,7 +271,7 @@ export interface AssetRecord {
 `LOCAL` (user edits, tracked by undo) · `REMOTE_TAB` · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
 
 ### localStorage keys (via `localPrefs`)
-`smthng:theme`, `smthng:home:sort`, `smthng:home:layout`, `smthng:defaults:<type>`, `smthng:copiedStyle`, `smthng:grid`, `smthng:snap`, `smthng:onboarded`, `smthng:lastBackupAt`, `smthng:backupReminderDismissedAt`, `smthng:testHooks`, `smthng:commentAuthor`, `smthng:comments:<boardId>` (panel open), `smthng:waystones:wrap`, `smthng:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by `static/theme-init.js`; element colors never change).
+`smthng:theme`, `smthng:home:sort`, `smthng:home:layout`, `smthng:defaults:<type>`, `smthng:copiedStyle`, `smthng:grid`, `smthng:snap`, `smthng:onboarded`, `smthng:lastBackupAt`, `smthng:backupReminderDismissedAt`, `smthng:testHooks`, `smthng:commentAuthor`, `smthng:comments:<boardId>` (panel open), `smthng:waystones:wrap`, `smthng:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by the inline theme script in `src/app.html`; element colors never change).
 
 ## 7. Yjs → Svelte bridge
 

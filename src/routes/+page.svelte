@@ -1,7 +1,10 @@
 <script lang="ts">
 	import HomePage from '$lib/home/HomePage.svelte';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 </script>
 
 <svelte:head><title>SMTHNG</title></svelte:head>
 
-<HomePage />
+<HomePage templatePreviews={data.templatePreviews} />

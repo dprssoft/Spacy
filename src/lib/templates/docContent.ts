@@ -1,5 +1,5 @@
-// TipTap schema helpers for template content. Only imported lazily (templates), so TipTap stays out
-// of the home page bundle.
+// TipTap schema helpers for imported documents (`importDocs`), which need the schema to parse and
+// normalize outside content. Templates write their own authored content with `writeDocJSON`.
 import { getSchema } from '@tiptap/core';
 import type { Schema } from '@tiptap/pm/model';
 import { prosemirrorJSONToYXmlFragment } from '@tiptap/y-tiptap';
