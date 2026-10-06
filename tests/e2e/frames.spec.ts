@@ -15,10 +15,10 @@ type Snap = {
 	parentId: string | null;
 	title?: string;
 };
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list()) as Promise<Snap[]>;
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list()) as Promise<Snap[]>;
 const byType = async (page: Page, type: string) =>
 	(await list(page)).filter((e) => e.type === type);
-const selected = (page: Page) => page.evaluate(() => [...window.__smthng!.ctx.selection.ids]);
+const selected = (page: Page) => page.evaluate(() => [...window.__spacy!.ctx.selection.ids]);
 const canvas = async (page: Page) => (await page.getByTestId('canvas').boundingBox())!;
 
 async function drag(page: Page, from: { x: number; y: number }, to: { x: number; y: number }) {

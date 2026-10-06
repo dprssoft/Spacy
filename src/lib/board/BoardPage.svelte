@@ -40,7 +40,7 @@
 			else if (err instanceof NewerSchemaError)
 				status = {
 					kind: 'error',
-					message: 'This board was created with a newer version of SMTHNG.'
+					message: 'This board was created with a newer version of Spacy.'
 				};
 			else {
 				console.error(err);

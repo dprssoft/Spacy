@@ -36,8 +36,8 @@ export default defineConfig({
 				spa: { fallbackMapping: '/200.html', fallbackRevision: async () => BUILD_ID }
 			},
 			manifest: {
-				name: 'SMTHNG',
-				short_name: 'SMTHNG',
+				name: 'Spacy',
+				short_name: 'Spacy',
 				description: 'A whiteboard with diagrams and docs that lives in your browser.',
 				start_url: '/',
 				scope: '/',
@@ -55,7 +55,7 @@ export default defineConfig({
 						purpose: 'maskable'
 					}
 				],
-				file_handlers: [{ action: '/', accept: { 'application/x-smthng': ['.smthng'] } }]
+				file_handlers: [{ action: '/', accept: { 'application/x-spacy': ['.spacy', '.smthng'] } }]
 			},
 			workbox: {
 				// Everything the client needs, so any route (the SPA fallback) works offline.

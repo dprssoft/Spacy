@@ -38,7 +38,7 @@ const text = (name: string, content: string, type = ''): DropFile => ({
 const docCards = (page: Page) =>
 	page.evaluate(() =>
 		window
-			.__smthng!.list()
+			.__spacy!.list()
 			.filter((e) => e.type === 'doccard')
 			.map((e) => (e as { title: string }).title)
 	);
@@ -81,7 +81,7 @@ test('text and Word files become doc cards; unsupported files are ignored', asyn
 	await expect(page.getByRole('heading', { name: 'Quarterly report' })).toBeVisible();
 	await expect(page.locator('[data-doccard-body] strong', { hasText: '12%' })).toBeVisible();
 	// Both cards are selected after the drop.
-	expect(await page.evaluate(() => window.__smthng!.ctx.selection.ids.size)).toBe(2);
+	expect(await page.evaluate(() => window.__spacy!.ctx.selection.ids.size)).toBe(2);
 });
 
 test('a file that is not really a Word document shows an error', async ({ page }) => {

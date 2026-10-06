@@ -32,7 +32,7 @@ test('a template is inserted into the open board from the gallery, as one undo s
 	await waitForHooks(page);
 	await waitForInitialView(page);
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('mine', 2000, 2000)
 	);
 
@@ -44,9 +44,9 @@ test('a template is inserted into the open board from the gallery, as one undo s
 	await dialog.getByRole('button', { name: 'Brainstorm template' }).click();
 	await expect(dialog).toBeHidden();
 
-	const count = () => page.evaluate(() => window.__smthng!.list().length);
+	const count = () => page.evaluate(() => window.__spacy!.list().length);
 	await expect.poll(count).toBeGreaterThan(8);
-	const selected = await page.evaluate(() => window.__smthng!.ctx.selection.ids.size);
+	const selected = await page.evaluate(() => window.__spacy!.ctx.selection.ids.size);
 	expect(selected).toBe((await count()) - 1);
 	await expect(page.locator('[data-type=shape]').filter({ hasText: 'Topic' })).toBeVisible();
 
@@ -82,7 +82,7 @@ test('kanban: cards move between columns and "Stack contents" tidies a column', 
 		x: number;
 		y: number;
 	};
-	const list = () => page.evaluate(() => window.__smthng!.list() as unknown as El[]);
+	const list = () => page.evaluate(() => window.__spacy!.list() as unknown as El[]);
 	const els = await list();
 	const done = els.find((e) => e.title === 'Done')!;
 	const task = els.find((e) => e.text === 'Task 3')!;
@@ -140,10 +140,10 @@ test("the Writing category inserts the Hero's Journey", async ({ page }) => {
 	await dialog.getByRole('button', { name: "Hero's Journey template" }).click();
 	await expect
 		.poll(() =>
-			page.evaluate(() => window.__smthng!.list().filter((e) => e.type === 'sticky').length)
+			page.evaluate(() => window.__spacy!.list().filter((e) => e.type === 'sticky').length)
 		)
 		.toBe(12);
 	expect(
-		await page.evaluate(() => window.__smthng!.list().filter((e) => e.type === 'connector').length)
+		await page.evaluate(() => window.__spacy!.list().filter((e) => e.type === 'connector').length)
 	).toBe(12);
 });

@@ -11,11 +11,11 @@ test.use({ viewport: { width: 1440, height: 900 } });
 
 async function openFixture(page: Page, theme: 'light' | 'dark') {
 	await page.addInitScript((t) => {
-		localStorage.setItem('smthng:theme', JSON.stringify(t));
-		localStorage.setItem('smthng:onboarded', 'true');
+		localStorage.setItem('spacy:theme', JSON.stringify(t));
+		localStorage.setItem('spacy:onboarded', 'true');
 	}, theme);
 	await page.goto('/');
-	await page.getByTestId('import-input').setInputFiles('tests/e2e/fixtures/visual-board.smthng');
+	await page.getByTestId('import-input').setInputFiles('tests/e2e/fixtures/visual-board.spacy');
 	await page.getByRole('button', { name: 'Open' }).click();
 	await page.waitForURL(/\/board\//);
 	// Everything has rendered: the doc card's editor (lazy) and the image.
@@ -38,7 +38,7 @@ for (const theme of ['light', 'dark'] as const) {
 }
 
 test('the template gallery', async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('smthng:onboarded', 'true'));
+	await page.addInitScript(() => localStorage.setItem('spacy:onboarded', 'true'));
 	await page.goto('/');
 	await page.getByRole('button', { name: 'More templates' }).click();
 	const dialog = page.getByRole('dialog', { name: 'New board from a template' });

@@ -27,7 +27,7 @@ export const canSaveToFile = (): boolean => picker() !== null;
 const exportBoardFile = async (id: string) =>
 	(await import('$lib/storage/fileFormat')).exportBoardFile(id);
 
-const fileName = (title: string) => `${slug(title) || 'board'}.smthng`;
+const fileName = (title: string) => `${slug(title) || 'board'}.spacy`;
 
 export async function downloadBoardFile(boardId: string, title: string): Promise<void> {
 	try {
@@ -56,7 +56,7 @@ class SaveTarget {
 			if (!handle) {
 				handle = await show({
 					suggestedName: fileName(title),
-					types: [{ description: 'SMTHNG board', accept: { 'application/json': ['.smthng'] } }]
+					types: [{ description: 'Spacy board', accept: { 'application/json': ['.spacy'] } }]
 				});
 				this.handles[boardId] = handle;
 			}

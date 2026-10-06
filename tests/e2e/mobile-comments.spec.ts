@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('long-press a sticky → Comment → a bottom sheet to write in', async ({ page }) => {
-	await page.evaluate((e) => window.__smthng!.createElements([e as never]), {
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), {
 		...el.shape('s', -80, -80),
 		type: 'sticky',
 		kind: undefined,

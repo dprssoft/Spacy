@@ -15,7 +15,7 @@ A SvelteKit SPA skeleton with strict TypeScript, Tailwind v4, ESLint + Prettier,
    pnpm dlx sv create .scaffold --template minimal --types ts --no-add-ons --no-install
    ```
    If the flags differ in the current `sv` version, run `pnpm dlx sv create --help` and use the non-interactive equivalents. Move everything (including dotfiles) from `.scaffold/` to the repo root without overwriting `CLAUDE.md`, `AGENTS.md`, `plan/`. Delete `.scaffold/`.
-2. In `package.json` set `"name": "smthng"`, `"private": true`, `"type": "module"`. Run `pnpm install`.
+2. In `package.json` set `"name": "spacy"`, `"private": true`, `"type": "module"`. Run `pnpm install`.
 3. **SPA mode:** `pnpm remove @sveltejs/adapter-auto && pnpm add -D @sveltejs/adapter-static`. In `svelte.config.js`: `adapter: adapter({ fallback: 'index.html' })`. Create `src/routes/+layout.ts`:
    ```ts
    export const ssr = false;
@@ -39,7 +39,7 @@ A SvelteKit SPA skeleton with strict TypeScript, Tailwind v4, ESLint + Prettier,
    import '@testing-library/jest-dom/vitest';
    ```
    Add `src/lib/shared/sanity.test.ts` (1 trivial test) so the suite is non-empty.
-8. **Playwright:** `pnpm add -D @playwright/test && pnpm exec playwright install chromium`. `playwright.config.ts`: `testDir: 'tests/e2e'`, `webServer: { command: 'pnpm build && pnpm preview --port 4173', port: 4173, reuseExistingServer: !process.env.CI }`, `use: { baseURL: 'http://localhost:4173' }`, one project `chromium`. Add `tests/e2e/smoke.spec.ts`: home page loads and shows text "SMTHNG". Make `src/routes/+page.svelte` render `<h1>SMTHNG</h1>`.
+8. **Playwright:** `pnpm add -D @playwright/test && pnpm exec playwright install chromium`. `playwright.config.ts`: `testDir: 'tests/e2e'`, `webServer: { command: 'pnpm build && pnpm preview --port 4173', port: 4173, reuseExistingServer: !process.env.CI }`, `use: { baseURL: 'http://localhost:4173' }`, one project `chromium`. Add `tests/e2e/smoke.spec.ts`: home page loads and shows text "Spacy". Make `src/routes/+page.svelte` render `<h1>Spacy</h1>`.
 9. **Scripts** in `package.json`:
    ```json
    "dev": "vite dev",
@@ -55,7 +55,7 @@ A SvelteKit SPA skeleton with strict TypeScript, Tailwind v4, ESLint + Prettier,
    ```
 10. **.gitignore:** `node_modules`, `build`, `.svelte-kit`, `.scaffold`, `test-results`, `playwright-report`, `blob-report`, `.env*`, `stats.html`.
 11. **CI** `.github/workflows/ci.yml`: on push + pull_request; ubuntu-latest; `pnpm/action-setup@v4`; `actions/setup-node@v4` with Node 22 and pnpm cache; `pnpm install --frozen-lockfile`; `pnpm verify`.
-12. Create `README.md` (short: what SMTHNG is, `pnpm dev`, `pnpm verify`, link to `plan/README.md`).
+12. Create `README.md` (short: what Spacy is, `pnpm dev`, `pnpm verify`, link to `plan/README.md`).
 13. `git init -b main`, then commit (see below).
 
 ## Files
@@ -63,7 +63,7 @@ A SvelteKit SPA skeleton with strict TypeScript, Tailwind v4, ESLint + Prettier,
 
 ## Tests
 - `sanity.test.ts` (trivial)
-- `smoke.spec.ts` (home shows "SMTHNG")
+- `smoke.spec.ts` (home shows "Spacy")
 
 ## Acceptance criteria
 - [x] `pnpm verify` passes

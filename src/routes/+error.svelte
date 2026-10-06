@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 </script>
 
-<svelte:head><title>{page.status} — SMTHNG</title></svelte:head>
+<svelte:head><title>{page.status} — Spacy</title></svelte:head>
 
 <main class="flex min-h-dvh flex-col items-center justify-center gap-3 p-6 text-center">
 	<p class="text-5xl font-semibold text-muted">{page.status}</p>

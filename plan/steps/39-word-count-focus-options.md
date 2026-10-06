@@ -16,7 +16,7 @@ Writers always know how much they've written: live word and character counts and
    - focus mode: a quiet counter bottom-right (click for the details: characters, paragraphs, reading time).
    - status bar: for the selection ("3 selected · 2,105 words") or the page when nothing is selected; hidden when there are no words.
    Counts update at most every 300 ms while typing (idle callback) so long documents stay smooth.
-3. **Focus mode options** (a "View" menu in focus mode; `localPrefs` `smthng:focus`):
+3. **Focus mode options** (a "View" menu in focus mode; `localPrefs` `spacy:focus`):
    - **Typewriter scrolling:** the caret line stays at 40 % of the height.
    - **Focus paragraph:** paragraphs other than the caret's are dimmed (opacity .35, CSS on the ProseMirror node with a decoration).
    - **Line width:** narrow (60ch), medium (72ch, default), wide (90ch).

@@ -58,8 +58,8 @@ export function testHooksEnabled(): boolean {
 }
 
 /**
- * Exposes the board on `window.__smthng` in dev, or in any build when
- * localStorage `smthng:testHooks` is `true` (used by e2e tests). Returns cleanup.
+ * Exposes the board on `window.__spacy` in dev, or in any build when
+ * localStorage `spacy:testHooks` is `true` (used by e2e tests). Returns cleanup.
  */
 export function installTestHooks(ctx: BoardContext): () => void {
 	if (!testHooksEnabled()) return () => {};
@@ -75,11 +75,11 @@ export function installTestHooks(ctx: BoardContext): () => void {
 		keyboard: (px) => keyboard.simulate(px)
 	};
 	counting = true;
-	window.__smthng = hooks;
+	window.__spacy = hooks;
 	return () => {
 		counting = false;
 		renderCounts.clear();
 		timings.clear();
-		if (window.__smthng === hooks) delete window.__smthng;
+		if (window.__spacy === hooks) delete window.__spacy;
 	};
 }

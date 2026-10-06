@@ -19,7 +19,7 @@ type Snap = {
 	h: number;
 	assetId?: string;
 };
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list()) as Promise<Snap[]>;
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list()) as Promise<Snap[]>;
 const canvas = async (page: Page) => (await page.getByTestId('canvas').boundingBox())!;
 
 async function press(page: Page, key: string) {
@@ -47,7 +47,7 @@ test('the pen draws a stroke that persists; the eraser deletes it', async ({ pag
 	expect(stroke!.w).toBeGreaterThan(140);
 	// The pen stays active for the next stroke.
 	await expect(page.getByRole('button', { name: 'Pen' })).toHaveAttribute('aria-pressed', 'true');
-	expect(await page.evaluate(() => window.__smthng!.ctx.undo.undoStack.length)).toBe(1);
+	expect(await page.evaluate(() => window.__spacy!.ctx.undo.undoStack.length)).toBe(1);
 
 	await page.reload();
 	await expect(page.locator('[data-type="stroke"] path')).toHaveCount(1);

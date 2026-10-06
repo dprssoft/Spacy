@@ -8,8 +8,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 const canvasBox = async (page: Page) => (await page.getByTestId('canvas').boundingBox())!;
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list());
-const undoDepth = (page: Page) => page.evaluate(() => window.__smthng!.ctx.undo.undoStack.length);
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list());
+const undoDepth = (page: Page) => page.evaluate(() => window.__spacy!.ctx.undo.undoStack.length);
 
 async function press(page: Page, key: string) {
 	await page.getByTestId('canvas').focus();
@@ -36,9 +36,9 @@ test('R + drag draws a rectangle of the dragged size as one undo step', async ({
 		'aria-pressed',
 		'true'
 	);
-	expect(await page.evaluate(() => [...window.__smthng!.ctx.selection.ids])).toEqual([rect!.id]);
+	expect(await page.evaluate(() => [...window.__spacy!.ctx.selection.ids])).toEqual([rect!.id]);
 
-	await page.evaluate(() => window.__smthng!.ctx.undo.undo());
+	await page.evaluate(() => window.__spacy!.ctx.undo.undo());
 	expect(await list(page)).toEqual([]);
 });
 
@@ -121,7 +121,7 @@ test('double-click empty canvas writes a text there', async ({ page }) => {
 	const [text] = await list(page);
 	expect(text).toMatchObject({ type: 'text', text: 'Note to self' });
 	await clickElement(page, text!.id);
-	expect(await page.evaluate(() => [...window.__smthng!.ctx.selection.ids])).toEqual([text!.id]);
+	expect(await page.evaluate(() => [...window.__spacy!.ctx.selection.ids])).toEqual([text!.id]);
 });
 
 test('typing in the editor does not trigger tool shortcuts', async ({ page }) => {

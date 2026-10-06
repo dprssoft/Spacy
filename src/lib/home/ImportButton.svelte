@@ -10,7 +10,7 @@
 	type="button"
 	class={className}
 	aria-label="Import boards"
-	title="Import .smthng files"
+	title="Import .spacy files"
 	onclick={() => input?.click()}
 >
 	<Upload class="size-[18px]" aria-hidden="true" />
@@ -18,7 +18,7 @@
 <input
 	bind:this={input}
 	type="file"
-	accept=".smthng,application/json"
+	accept=".spacy,.smthng,application/json"
 	multiple
 	hidden
 	data-testid="import-input"

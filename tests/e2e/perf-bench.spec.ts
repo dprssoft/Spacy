@@ -52,14 +52,14 @@ async function openPerfBoard(page: Page, n = 3000): Promise<void> {
 	await createBoard(page);
 	await waitForHooks(page);
 	await waitForInitialView(page);
-	if (n > 0) await page.evaluate((k) => window.__smthng!.perfMixed(k), n);
+	if (n > 0) await page.evaluate((k) => window.__spacy!.perfMixed(k), n);
 	await page.waitForTimeout(500); // let image and doc card views settle
 }
 
 async function setView(page: Page, center: { x: number; y: number }, zoom: number) {
 	await page.evaluate(
 		({ center, zoom }) => {
-			const v = window.__smthng!.ctx.viewport;
+			const v = window.__spacy!.ctx.viewport;
 			v.set({
 				zoom,
 				x: v.size.w / 2 - center.x * zoom,
@@ -77,7 +77,7 @@ const nextFrame = (page: Page) =>
 /** Starts recording frame times, hot-path timings and doc updates in `page`. */
 async function startRecording(page: Page) {
 	await page.evaluate(() => {
-		const hooks = window.__smthng!;
+		const hooks = window.__spacy!;
 		hooks.timings.clear();
 		const rec = { stamps: [] as number[], updates: 0, bytes: 0, running: true };
 		const tick = (t: number) => {
@@ -108,7 +108,7 @@ async function stopRecording(page: Page) {
 			}
 		).__bench;
 		bench.stop();
-		const t = (name: string) => window.__smthng!.timings.get(name) ?? { ms: 0, calls: 0 };
+		const t = (name: string) => window.__spacy!.timings.get(name) ?? { ms: 0, calls: 0 };
 		return {
 			stamps: bench.rec.stamps,
 			updates: bench.rec.updates,
@@ -205,11 +205,11 @@ async function centerOf(page: Page, selector: string) {
 /** Puts a grab handle on top at world (0, 0) and selects it plus the `n` elements nearest to it. */
 async function selectAroundOrigin(page: Page, n: number): Promise<number> {
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('grab', -80, -50)
 	);
 	return page.evaluate((n) => {
-		const { store, selection } = window.__smthng!.ctx;
+		const { store, selection } = window.__spacy!.ctx;
 		const ids = store.index
 			.search({ x: -3000, y: -3000, w: 6000, h: 6000 })
 			.filter((id) => {
@@ -235,7 +235,7 @@ test('pan', async ({ page }) => {
 		await measure(`pan @ ${zoom * 100}%`, page, async () => {
 			for (let i = 0; i < FRAMES; i++) {
 				await page.evaluate(() => {
-					const v = window.__smthng!.ctx.viewport;
+					const v = window.__spacy!.ctx.viewport;
 					v.set({ ...v.vp, x: v.vp.x + 5 });
 				});
 				await nextFrame(page);
@@ -247,7 +247,7 @@ test('pan', async ({ page }) => {
 test('drag 1 of 3k', async ({ page }) => {
 	await openPerfBoard(page);
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('grab', -80, -50)
 	);
 	await setView(page, { x: 0, y: 0 }, 1);
@@ -267,7 +267,7 @@ for (const [n, zoom] of [
 		await nextFrame(page);
 		// The grab handle's screen position (it may be drawn on the scene canvas, not in the DOM).
 		const from = await page.evaluate(() => {
-			const { viewport, store } = window.__smthng!.ctx;
+			const { viewport, store } = window.__spacy!.ctx;
 			const g = store.get('grab')!;
 			const r = document.querySelector('[data-testid="canvas"]')!.getBoundingClientRect();
 			const z = viewport.zoom;
@@ -277,7 +277,7 @@ for (const [n, zoom] of [
 			};
 		});
 		await measure(`drag ${count} selected @ ${zoom * 100}%`, page, () => drag(page, from));
-		const moved = await page.evaluate(() => window.__smthng!.ctx.store.get('grab')!.x);
+		const moved = await page.evaluate(() => window.__spacy!.ctx.store.get('grab')!.x);
 		if (moved === -80) throw new Error('the drag did not move the selection');
 	});
 }
@@ -288,7 +288,7 @@ test('move a frame with 200 children', async ({ page }) => {
 	const fx = 20_000;
 	const fy = 20_000;
 	await page.evaluate(
-		({ frame, children }) => window.__smthng!.createElements([frame, ...children] as never),
+		({ frame, children }) => window.__spacy!.createElements([frame, ...children] as never),
 		{
 			frame: {
 				...el.shape('bench-frame', fx, fy),
@@ -309,7 +309,7 @@ test('move a frame with 200 children', async ({ page }) => {
 	await setView(page, { x: fx + 1000, y: fy + 700 }, 0.35);
 	const title = await centerOf(page, '[data-element-id="bench-frame"] [data-frame-title]');
 	await measure('frame + 200 children @ 35%', page, () => drag(page, title));
-	const moved = await page.evaluate(() => window.__smthng!.ctx.store.get('child-0')!.x);
+	const moved = await page.evaluate(() => window.__spacy!.ctx.store.get('child-0')!.x);
 	if (moved === fx + 40) throw new Error('the frame drag did not move its children');
 });
 
@@ -318,13 +318,13 @@ test('drag 300 selected in another tab', async ({ page, context }) => {
 	const other = await context.newPage();
 	await other.goto(page.url());
 	await waitForHooks(other);
-	await other.waitForFunction(() => window.__smthng!.ctx.store.elements.size > 2900);
+	await other.waitForFunction(() => window.__spacy!.ctx.store.elements.size > 2900);
 	await other.waitForTimeout(500);
 	await setView(page, { x: 0, y: 0 }, 0.5);
 	await setView(other, { x: 0, y: 0 }, 0.5);
 	const count = await selectAroundOrigin(other, 299);
-	await other.waitForFunction(() => window.__smthng!.ctx.store.get('grab'));
-	await page.waitForFunction(() => window.__smthng!.ctx.store.get('grab'));
+	await other.waitForFunction(() => window.__spacy!.ctx.store.get('grab'));
+	await page.waitForFunction(() => window.__spacy!.ctx.store.get('grab'));
 	const from = await centerOf(other, '[data-element-id="grab"]');
 	await measure(`remote: ${count} dragged in the other tab`, page, () => drag(other, from, other));
 });

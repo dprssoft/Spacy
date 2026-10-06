@@ -9,13 +9,14 @@ import { allPageMaps, pruneOrphanThreads } from '$lib/model/pages';
 import { IMPORT, LOCAL, MIGRATION, type Origin } from '$lib/model/origins';
 import { debounce } from '$lib/shared/debounce';
 import { BoardSaver } from './boardSaver';
+import { boardDbName } from './db';
 import * as assetsRepo from './assetsRepo';
 import * as boardsRepo from './boardsRepo';
 import { createTabSync } from './tabSync';
 import type { BoardMeta } from './types';
 
-export const boardDbName = (id: string): string => `smthng-board-${id}`;
-export const boardChannelName = (id: string): string => `smthng-board-${id}`;
+export { boardDbName };
+export const boardChannelName = (id: string): string => `spacy-board-${id}`;
 
 export class BoardNotFoundError extends Error {
 	constructor(readonly id: string) {

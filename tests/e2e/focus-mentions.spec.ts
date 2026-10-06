@@ -45,7 +45,7 @@ test('deep links open focus mode; unknown ids are stripped with a toast', async 
 	await placeCard(page);
 	await page.keyboard.type('Deep');
 	await page.keyboard.press('Escape');
-	const id = await page.evaluate(() => window.__smthng!.ctx.selection.single);
+	const id = await page.evaluate(() => window.__spacy!.ctx.selection.single);
 	const base = page.url().split('?')[0]!;
 	await page.goto(`${base}?doc=${id}`);
 	await expect(page.getByRole('dialog', { name: /Doc card/ })).toBeVisible();
@@ -81,7 +81,7 @@ test('slash commands insert blocks; the bubble menu formats a selection', async 
 });
 
 test('mentions link to canvas objects and jump to them', async ({ page }) => {
-	await page.evaluate((e) => window.__smthng!.createElements([e as never]), {
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), {
 		...el.shape('st', 1400, 900),
 		type: 'sticky',
 		kind: undefined,
@@ -100,7 +100,7 @@ test('mentions link to canvas objects and jump to them', async ({ page }) => {
 
 	await chip.click();
 	await expect
-		.poll(() => page.evaluate(() => [...window.__smthng!.ctx.selection.ids]))
+		.poll(() => page.evaluate(() => [...window.__spacy!.ctx.selection.ids]))
 		.toEqual(['st']);
 	// The viewport animates so that the sticky is centered.
 	await expect
@@ -117,11 +117,11 @@ test('mentions link to canvas objects and jump to them', async ({ page }) => {
 
 	// Deleted objects: the chip is struck through and says so when clicked.
 	await page.keyboard.press('Delete');
-	await page.evaluate(() => window.__smthng!.ctx.selection.clear());
+	await page.evaluate(() => window.__spacy!.ctx.selection.clear());
 	const id = await page.evaluate(
-		() => [...window.__smthng!.ctx.store.elements.values()].find((e) => e.type === 'doccard')!.id
+		() => [...window.__spacy!.ctx.store.elements.values()].find((e) => e.type === 'doccard')!.id
 	);
-	await page.evaluate((id) => window.__smthng!.ctx.selection.set([id]), id);
+	await page.evaluate((id) => window.__spacy!.ctx.selection.set([id]), id);
 	await page.keyboard.press('ControlOrMeta+Enter');
 	const focusChip = focusEditor(page).locator('.mention[data-id="st"]');
 	await expect(focusChip).toHaveClass(/mention-missing/);

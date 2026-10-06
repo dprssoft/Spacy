@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 	await createBoard(page);
 	await waitForHooks(page);
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never),
+		(els) => window.__spacy!.createElements(els as never),
 		[
 			el.shape('a', -300, -80, { text: 'Start' }),
 			{

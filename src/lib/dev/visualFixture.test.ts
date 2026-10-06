@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getElementsMap, listElements } from '$lib/model/doc';
-import { parseSmthngFile } from '$lib/storage/fileFormat';
+import { parseSpacyFile } from '$lib/storage/fileFormat';
 import { buildVisualBoard, buildVisualBoardFile } from './visualFixture';
 
 describe('visual fixture', () => {
@@ -26,8 +26,8 @@ describe('visual fixture', () => {
 		expect(new Set(conns.flatMap((c) => [c.markerStart, c.markerEnd])).size).toBe(7);
 	});
 
-	it('is a valid .smthng file', () => {
+	it('is a valid .spacy file', () => {
 		const file = buildVisualBoardFile({ base64: 'AAAA', width: 2, height: 2 });
-		expect(parseSmthngFile(file).boards[0]?.title).toBe('Visual fixture');
+		expect(parseSpacyFile(file).boards[0]?.title).toBe('Visual fixture');
 	});
 });

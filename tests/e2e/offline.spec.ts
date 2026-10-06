@@ -11,7 +11,7 @@ test('boards and the start page work offline after the first visit', async ({ pa
 	const id = await createBoard(page);
 	await waitForHooks(page);
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('a', -80, -50, { text: 'Offline' })
 	);
 	// An active worker has finished precaching; it serves the next navigation.

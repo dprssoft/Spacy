@@ -279,7 +279,7 @@
 	});
 
 	$effect(() => {
-		document.title = `${title.value || 'Board'} — SMTHNG`;
+		document.title = `${title.value || 'Board'} — Spacy`;
 	});
 
 	// Touch screens: what's being edited stays above the on-screen keyboard (and the bar on it).

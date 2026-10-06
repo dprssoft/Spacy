@@ -17,8 +17,8 @@ test('after hydration the stored layout, theme and the ?view= parameter apply', 
 	page
 }) => {
 	await page.addInitScript(() => {
-		localStorage.setItem('smthng:home:layout', '"list"');
-		localStorage.setItem('smthng:theme', '"dark"');
+		localStorage.setItem('spacy:home:layout', '"list"');
+		localStorage.setItem('spacy:theme', '"dark"');
 	});
 	await page.goto('/?view=starred');
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
@@ -29,7 +29,7 @@ test('after hydration the stored layout, theme and the ?view= parameter apply', 
 		'true'
 	);
 	// The stored choice wasn't overwritten by the defaults the page hydrated with.
-	expect(await page.evaluate(() => localStorage.getItem('smthng:home:layout'))).toBe('"list"');
+	expect(await page.evaluate(() => localStorage.getItem('spacy:home:layout'))).toBe('"list"');
 });
 
 test('a board opened directly uses the SPA fallback; going home shows the prerendered page', async ({

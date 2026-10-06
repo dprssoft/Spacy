@@ -8,20 +8,20 @@ test.beforeEach(async ({ page }) => {
 	await waitForHooks(page);
 	await waitForInitialView(page);
 	// A sticky-like shape at the world origin (the canvas center), 160 × 100.
-	await page.evaluate((e) => window.__smthng!.createElements([e as never]), {
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), {
 		...el.shape('s', -80, -50),
 		text: 'Hello'
 	});
-	await page.evaluate(() => window.__smthng!.ctx.selection.clear());
+	await page.evaluate(() => window.__spacy!.ctx.selection.clear());
 });
 
 async function center(page: Page) {
 	const b = (await page.getByTestId('canvas').boundingBox())!;
 	return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
 }
-const vp = (page: Page) => page.evaluate(() => window.__smthng!.ctx.viewport.vp);
-const shape = (page: Page) => page.evaluate(() => window.__smthng!.ctx.store.get('s')!);
-const selected = (page: Page) => page.evaluate(() => [...window.__smthng!.ctx.selection.ids]);
+const vp = (page: Page) => page.evaluate(() => window.__spacy!.ctx.viewport.vp);
+const shape = (page: Page) => page.evaluate(() => window.__spacy!.ctx.store.get('s')!);
+const selected = (page: Page) => page.evaluate(() => [...window.__spacy!.ctx.selection.ids]);
 
 test('one finger on empty canvas pans; nothing gets selected', async ({ page }) => {
 	const c = await center(page);

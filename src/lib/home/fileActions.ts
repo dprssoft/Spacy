@@ -10,7 +10,7 @@ const fileFormat = () => import('$lib/storage/fileFormat');
 
 const MB = 1024 * 1024;
 
-/** Imports `.smthng` files one after another; always creates new boards. */
+/** Imports `.spacy` files one after another; always creates new boards. */
 export async function importFiles(files: Iterable<File>): Promise<BoardMeta[]> {
 	const imported: BoardMeta[] = [];
 	const { importFile, InvalidFileError } = await fileFormat();
@@ -59,7 +59,7 @@ export function handleLaunchFiles(): void {
 export async function exportBoard(board: Pick<BoardMeta, 'id' | 'title'>): Promise<void> {
 	try {
 		const { exportBoardFile } = await fileFormat();
-		downloadBlob(await exportBoardFile(board.id), `${slug(board.title) || 'board'}.smthng`);
+		downloadBlob(await exportBoardFile(board.id), `${slug(board.title) || 'board'}.spacy`);
 	} catch (err) {
 		console.error(err);
 		toast.error('Couldn’t export the board');
@@ -70,7 +70,7 @@ export async function backupAll(): Promise<void> {
 	try {
 		const date = new Date().toISOString().slice(0, 10);
 		const { exportBackup } = await fileFormat();
-		downloadBlob(await exportBackup(), `smthng-backup-${date}.smthng`);
+		downloadBlob(await exportBackup(), `spacy-backup-${date}.spacy`);
 		toast.success('Backup downloaded');
 	} catch (err) {
 		console.error(err);

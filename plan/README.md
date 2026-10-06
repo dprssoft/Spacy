@@ -1,4 +1,4 @@
-# SMTHNG — Implementation plan
+# Spacy — Implementation plan
 
 A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like start page. SvelteKit + Svelte 5 + TypeScript + Tailwind v4. No backend.
 
@@ -13,7 +13,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | M3: Styling | 18 | Style everything, quick styles, align, snapping |
 | M4: Diagrams | 22 | Connect any object to any object; routing, markers, labels, bends, shape library, quick-create |
 | M5: Doc cards | 25 | Rich text on the canvas, focus mode, mentions, Markdown export |
-| M6: Sharing | 28 | PNG/SVG export, thumbnails, `.smthng` import/export, backup, templates |
+| M6: Sharing | 28 | PNG/SVG export, thumbnails, `.spacy` import/export, backup, templates |
 | M7: v1.0 | 32 | PWA, performance, accessibility, full E2E, deploy |
 | M8: Extensions | 36 | Insert templates (kanban, retro, SWOT…) into any board; play YouTube, Vimeo, audio and video on the board with rich controls |
 | M9: Mobile | 38 | Use and edit boards on phones and tablets: fitted layout, finger gestures, long-press menu, style sheet, keyboard-aware editing |
@@ -50,7 +50,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 24 | [Focus mode and mentions](./steps/24-focus-mode-mentions.md) | F | 23 | 2d |
 | [x] | 25 | [Markdown export](./steps/25-markdown-export.md) | F | 24 | 1d |
 | [x] | 26 | [Static SVG renderer, export, thumbnails](./steps/26-static-svg-export-thumbnails.md) | G. Sharing | 22, 25 | 2d |
-| [x] | 27 | [`.smthng` files, import, backup](./steps/27-file-format-import-export.md) | G | 26 | 1.5d |
+| [x] | 27 | [`.spacy` files, import, backup](./steps/27-file-format-import-export.md) | G | 26 | 1.5d |
 | [x] | 28 | [Templates](./steps/28-templates.md) | G | 27 | 1.5d |
 | [x] | 29 | [PWA, settings, backup reminder](./steps/29-pwa.md) | H. Release | 28 | 1d |
 | [x] | 30 | [Performance pass](./steps/30-performance.md) | H | 29 | 1d |
@@ -73,8 +73,8 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [ ] | 47 | [Sync engine (boards)](./steps/47-sync-engine.md) (**needs approval**: lifts the "server sync" non-goal) | L. Sync | 32 | 2.5d |
 | [ ] | 48 | [Board list sync](./steps/48-library-sync.md) (**needs approval**: library doc) | L | 47 | 1.5d |
 | [ ] | 49 | [Image sync](./steps/49-asset-sync.md) | L | 48 | 1d |
-| [ ] | 50 | [Google Drive and sync settings](./steps/50-google-drive.md) (**blocked**: app name, domain, OAuth client) | L | 49 | 2d |
-| [ ] | 51 | [Capacitor app and native Google sign-in](./steps/51-capacitor-sign-in.md) (**blocked**: app name, bundle id) | L | 50 | 2d |
+| [ ] | 50 | [Google Drive and sync settings](./steps/50-google-drive.md) (**blocked**: domain, OAuth client) | L | 49 | 2d |
+| [ ] | 51 | [Capacitor app and native Google sign-in](./steps/51-capacitor-sign-in.md) (**blocked**: bundle id) | L | 50 | 2d |
 
 Total is about 46 working days for one developer, or about 11–12 weeks with a buffer.
 

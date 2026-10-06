@@ -2,8 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { createBoard, el, enableTestHooks, waitForHooks } from './helpers';
 
 type Shape = { id: string; type: string; kind?: string; text?: string; x: number; y: number };
-const list = (page: Page) => page.evaluate(() => window.__smthng!.list()) as Promise<Shape[]>;
-const selected = (page: Page) => page.evaluate(() => [...window.__smthng!.ctx.selection.ids]);
+const list = (page: Page) => page.evaluate(() => window.__spacy!.list()) as Promise<Shape[]>;
+const selected = (page: Page) => page.evaluate(() => [...window.__spacy!.ctx.selection.ids]);
 const announced = (page: Page) => page.getByTestId('announcer');
 
 test.beforeEach(async ({ page }) => {
@@ -64,7 +64,7 @@ test('every creation tool creates at the center with Enter', async ({ page }) =>
 
 test('Tab walks through objects in reading order, then leaves the canvas', async ({ page }) => {
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never),
+		(els) => window.__spacy!.createElements(els as never),
 		[el.shape('c', -200, 120), el.shape('b', 100, -150), el.shape('a', -200, -150)]
 	);
 	const canvas = page.getByTestId('canvas');

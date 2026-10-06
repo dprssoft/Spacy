@@ -18,7 +18,7 @@ Open, close, duplicate and delete board documents (Y.Doc + y-indexeddb), with li
    - Returns cleanup (remove the listener, close the channel). No-op if `BroadcastChannel` is missing.
 4. `src/lib/storage/boardDoc.ts`:
    ```ts
-   export const boardDbName = (id: string) => `smthng-board-${id}`;
+   export const boardDbName = (id: string) => `spacy-board-${id}`;
    export class BoardNotFoundError extends Error {}
    export interface OpenBoard { id: string; doc: Y.Doc; undo: Y.UndoManager; close(): Promise<void> }
 
@@ -26,7 +26,7 @@ Open, close, duplicate and delete board documents (Y.Doc + y-indexeddb), with li
    ```
    - Throws `BoardNotFoundError` if `boardsRepo.get(id)` is undefined.
    - `new Y.Doc()` → `new IndexeddbPersistence(boardDbName(id), doc)` → `await persistence.whenSynced` → `migrate(doc)` → if `meta.title` is missing, set it from BoardMeta (origin `MIGRATION`).
-   - `createTabSync(doc, 'smthng-board-' + id)`.
+   - `createTabSync(doc, 'spacy-board-' + id)`.
    - `undo = new Y.UndoManager(getElementsMap(doc), { trackedOrigins: new Set([LOCAL]), captureTimeout: 500 })` (D10: scope = the elements map only).
    - Track local edits: on `update` with origin `LOCAL`, call a debounced (2 s) `boardsRepo.touchUpdated(id)`.
    - `close()`: flush the debounce, destroy the undo manager, the tab sync and the persistence (`persistence.destroy()`), then `doc.destroy()`.

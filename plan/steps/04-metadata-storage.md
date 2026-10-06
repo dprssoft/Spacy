@@ -11,9 +11,9 @@ IndexedDB storage for board metadata and image assets, change notifications acro
 ## Tasks
 1. Install: `pnpm add idb`.
 2. `src/lib/storage/types.ts`: `BoardMeta`, `AssetRecord` (from `00-architecture.md` §6), `BoardFilter = 'recent'|'starred'|'all'|'trash'`, `BoardSort = 'opened'|'updated'|'created'|'title'`.
-3. `src/lib/storage/db.ts`: `getDB()` (memoized `openDB('smthng', 1, { upgrade })`) creating the stores and indexes from §6. Also export `resetDBForTests()`, which closes the connection and clears the memo.
+3. `src/lib/storage/db.ts`: `getDB()` (memoized `openDB('spacy', 1, { upgrade })`) creating the stores and indexes from §6. Also export `resetDBForTests()`, which closes the connection and clears the memo.
 4. `src/lib/storage/channels.ts`:
-   - `notifyBoardsChanged()`: posts `{type:'boards-changed'}` on `BroadcastChannel('smthng-meta')` **and** dispatches on a module-level `EventTarget` (BroadcastChannel doesn't deliver to its own tab)
+   - `notifyBoardsChanged()`: posts `{type:'boards-changed'}` on `BroadcastChannel('spacy-meta')` **and** dispatches on a module-level `EventTarget` (BroadcastChannel doesn't deliver to its own tab)
    - `onBoardsChanged(cb): () => void`: listens to both
    - Guard for environments without `BroadcastChannel`
 5. `src/lib/storage/boardsRepo.ts`:
@@ -63,7 +63,7 @@ IndexedDB storage for board metadata and image assets, change notifications acro
 - create: `src/lib/storage/{types,db,channels,boardsRepo,assetsRepo,persist}.ts`, `src/lib/home/boards.svelte.ts`, tests
 
 ## Tests
-Use `fake-indexeddb` (already in the setup). Call `resetDBForTests()` and `indexedDB.deleteDatabase('smthng')` in `beforeEach`.
+Use `fake-indexeddb` (already in the setup). Call `resetDBForTests()` and `indexedDB.deleteDatabase('spacy')` in `beforeEach`.
 - `boardsRepo.test.ts`: create defaults; rename trims and ignores empty; each filter; each sort; query; trash/restore; purge removes only items older than 30 days; destroy also removes assets; notifications fire (spy on `onBoardsChanged`).
 - `assetsRepo.test.ts`: put/get; listByBoard; copyToBoard returns an id map and the copied blobs have equal size.
 - `boards.svelte.test.ts`: `BoardsQuery.refresh` loads items; changing the filter updates items (use `flushSync` / await ticks).

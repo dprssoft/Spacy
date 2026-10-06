@@ -19,7 +19,7 @@ for (const width of [360, 412]) {
 		test.use({ viewport: { width, height: 800 } });
 
 		test('the start page fits, with every view and action reachable', async ({ page }) => {
-			await page.addInitScript(() => localStorage.setItem('smthng:onboarded', 'true'));
+			await page.addInitScript(() => localStorage.setItem('spacy:onboarded', 'true'));
 			await page.goto('/');
 			await expect(page.getByRole('button', { name: /New board/ })).toBeVisible();
 			expect(await noOverflow(page)).toBe(true);
@@ -102,10 +102,10 @@ test('Back to origin returns the view to the origin at 100 %', async ({ page }) 
 	await createBoard(page);
 	await waitForHooks(page);
 	await waitForInitialView(page);
-	const home = await page.evaluate(() => window.__smthng!.ctx.viewport.vp);
-	await page.evaluate(() => window.__smthng!.ctx.viewport.set({ x: -3000, y: 2000, zoom: 0.4 }));
+	const home = await page.evaluate(() => window.__spacy!.ctx.viewport.vp);
+	await page.evaluate(() => window.__spacy!.ctx.viewport.set({ x: -3000, y: 2000, zoom: 0.4 }));
 	await page.getByRole('button', { name: 'Back to origin' }).click();
-	await expect.poll(() => page.evaluate(() => window.__smthng!.ctx.viewport.vp)).toEqual(home);
+	await expect.poll(() => page.evaluate(() => window.__spacy!.ctx.viewport.vp)).toEqual(home);
 });
 
 test('the outline opens as a sheet on phones', async ({ page }) => {

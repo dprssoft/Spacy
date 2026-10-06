@@ -30,7 +30,7 @@ Every media element, whether YouTube, Vimeo or an audio/video file, gets the sam
   - **No third-party script runs in our page** (no IFrame API loader, no Vimeo SDK), so `script-src` stays `'self'`. Messages are accepted only when `event.source` is that iframe's window and `event.origin` is the provider's origin; malformed data is ignored.
   - **Fallback:** if a provider doesn't answer the handshake within 4 s, reload its iframe with the provider's own controls and hide ours ("Using the player's controls").
 - **Clip and loop** (stored on the element: `start`, `end`, `loop` from step 35's model): playback begins at `start`. On reaching `end` (or the end of the media) it stops there, or jumps back to `start` when `loop` is on. The adapters enforce this from time updates, so it works the same everywhere.
-- **Personal settings** (`localPrefs` `smthng:media` = `{ volume, muted, rate }`): applied to every player when it starts. They're never written to the board.
+- **Personal settings** (`localPrefs` `spacy:media` = `{ volume, muted, rate }`): applied to every player when it starts. They're never written to the board.
 - **One player at a time**: starting playback pauses any other playing media on the board (a setting, on by default).
 
 ## Tasks
@@ -60,7 +60,7 @@ Every media element, whether YouTube, Vimeo or an audio/video file, gets the sam
 - e2e `media-controls.spec.ts`, network-free: a local `.webm` fixture for native playback. For YouTube and Vimeo, `page.route` serves small fake player pages (`tests/e2e/fixtures/fake-youtube.html`, `fake-vimeo.html`) that speak the subset of the postMessage protocol we use.
   - play/pause/seek by clicking the scrubber; time display updates
   - Set start / Set end / Loop → the clip markers show, playback loops; undo restores the previous clip
-  - volume and speed survive a reload (personal prefs) but aren't in the exported `.smthng`
+  - volume and speed survive a reload (personal prefs) but aren't in the exported `.spacy`
   - starting a second media pauses the first
   - keyboard: Space, ←/→, M while selected; Space in a doc card still types a space
   - controls keep the same pixel size at 25 % and 200 % zoom

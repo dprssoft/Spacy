@@ -44,10 +44,7 @@ test('clicking toolbar buttons selects tools; the hand tool pans', async ({ page
 	await enableTestHooks(page);
 	await createBoard(page);
 	await waitForHooks(page);
-	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
-		el.shape('probe', 0, 0)
-	);
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), el.shape('probe', 0, 0));
 	const probe = page.locator('[data-element-id="probe"]');
 	const before = (await probe.boundingBox())!;
 
@@ -67,10 +64,10 @@ test('clicking an element selects it, Shift toggles, empty canvas clears', async
 	await createBoard(page);
 	await waitForHooks(page);
 	await page.evaluate(
-		(els) => window.__smthng!.createElements(els as never),
+		(els) => window.__spacy!.createElements(els as never),
 		[el.shape('a', -300, -50), el.shape('b', 100, -50)]
 	);
-	const selected = () => page.evaluate(() => [...window.__smthng!.ctx.selection.ids].sort());
+	const selected = () => page.evaluate(() => [...window.__spacy!.ctx.selection.ids].sort());
 
 	await clickElement(page, 'a');
 	expect(await selected()).toEqual(['a']);

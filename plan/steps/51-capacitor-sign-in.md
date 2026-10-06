@@ -2,7 +2,7 @@
 
 Phase: L. Sync · Depends on: 50 · Estimate: 2 days
 
-> **Blocked until the human has decided** the app name and bundle id (for example `com.example.<name>`), and has created Android and iOS OAuth clients in the same Google Cloud project.
+> **Blocked until the human has decided** the bundle id (for example `com.example.spacy`; the app name is decided: **Spacy**), and has created Android and iOS OAuth clients in the same Google Cloud project.
 
 ## Goal
 The same app as an Android and iOS app (Capacitor) that syncs with the web app through the same Google Drive app folder.

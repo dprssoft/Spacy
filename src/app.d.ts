@@ -4,7 +4,7 @@ declare global {
 	/** The app version from package.json (vite `define`). */
 	const __APP_VERSION__: string;
 
-	/** File Handling API (installed PWA opened with `.smthng` files; Chromium). */
+	/** File Handling API (installed PWA opened with `.spacy` files; Chromium). */
 	interface LaunchParams {
 		readonly files: readonly { getFile(): Promise<File> }[];
 	}
@@ -14,7 +14,7 @@ declare global {
 
 	interface Window {
 		/** Dev/e2e test hooks (see src/lib/dev/testHooks.ts). */
-		__smthng?: import('$lib/dev/testHooks').TestHooks;
+		__spacy?: import('$lib/dev/testHooks').TestHooks;
 		launchQueue?: LaunchQueue;
 	}
 	namespace App {

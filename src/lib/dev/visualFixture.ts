@@ -1,5 +1,5 @@
 // The board used by the visual regression test: every element type, all routings and markers.
-// Built by `pnpm fixtures` (scripts/make-fixtures.ts) into tests/e2e/fixtures/visual-board.smthng.
+// Built by `pnpm fixtures` (scripts/make-fixtures.ts) into tests/e2e/fixtures/visual-board.spacy.
 import * as Y from 'yjs';
 import { baseStyleFor, STICKY_COLORS } from '$lib/model/defaults';
 import { getDocsMap } from '$lib/model/doc';
@@ -213,7 +213,7 @@ export function buildVisualBoard(): Y.Doc {
 	return doc;
 }
 
-/** The fixture as `.smthng` file content. */
+/** The fixture as `.spacy` file content. */
 export function buildVisualBoardFile(image: {
 	base64: string;
 	width: number;
@@ -221,7 +221,7 @@ export function buildVisualBoardFile(image: {
 }): string {
 	const doc = buildVisualBoard();
 	return JSON.stringify({
-		format: 'smthng',
+		format: 'spacy',
 		version: 1,
 		kind: 'board',
 		exportedAt: 0,

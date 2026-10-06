@@ -13,7 +13,7 @@ test('renaming in the top bar persists and shows on the start page', async ({ pa
 	await createBoard(page);
 	await expect(page.getByText('Saved locally')).toBeVisible();
 	await renameBoard(page, 'Roadmap');
-	await expect(page).toHaveTitle('Roadmap — SMTHNG');
+	await expect(page).toHaveTitle('Roadmap — Spacy');
 
 	await page.reload();
 	await expect(page.getByRole('button', { name: 'Rename board: Roadmap' })).toBeVisible();

@@ -1,4 +1,4 @@
-# Step 27 — `.smthng` files: export, import, backup
+# Step 27 — `.spacy` files: export, import, backup
 
 Phase: G. Sharing · Depends on: 26 · Estimate: 1.5 days
 
@@ -11,11 +11,11 @@ Share and back up boards as files: export one board or all boards, and import th
 
 ## Tasks
 1. **Format module** `src/lib/storage/fileFormat.ts`:
-   - Zod schemas for `SmthngFile` (both kinds), exactly per §10.
+   - Zod schemas for `SpacyFile` (both kinds), exactly per §10.
    - `exportBoardPayload(id): Promise<BoardPayload>` (meta title/createdAt, `loadSnapshot` → base64, assets → base64 via `Blob.arrayBuffer()`).
    - `exportBoardFile(id): Promise<Blob>` (`application/json`, pretty-printed: no, compact).
    - `exportBackup(): Promise<Blob>` (all non-trashed boards). On success set `localPrefs` `lastBackupAt = Date.now()`.
-   - `parseSmthngFile(text: string): SmthngFile` (throws `InvalidFileError` with a user-friendly message; a newer `version` → "This file was created with a newer version of SMTHNG.").
+   - `parseSpacyFile(text: string): SpacyFile` (throws `InvalidFileError` with a user-friendly message; a newer `version` → "This file was created with a newer version of Spacy.").
    - `importPayload(p: BoardPayload): Promise<BoardMeta>`:
      1. `boardsRepo.create({ title: p.title })` (keep `createdAt` from the payload)
      2. put each asset with a new id → map old → new
@@ -25,11 +25,11 @@ Share and back up boards as files: export one board or all boards, and import th
      6. return the meta (and a warning count)
    - `importFile(file: File): Promise<{ boards: BoardMeta[]; warnings: string[] }>`: size guard (reject over 500 MB, confirm over 100 MB), then parse and import each payload **sequentially**.
 2. **Start page UI**
-   - The header Import button (enable it) → a hidden `<input type="file" accept=".smthng,application/json" multiple>` → `importFile` for each → toast "Imported N boards" (with an "Open" action if 1).
-   - **Drop zone:** dragging files over HomePage shows a full-page overlay "Drop .smthng files to import"; the drop imports them.
-   - The card menu "Export" is enabled → `exportBoardFile` → `downloadBlob(blob, slug(title) + '.smthng')`.
-   - Sidebar bottom: "Backup all boards" button → `exportBackup` → `smthng-backup-YYYY-MM-DD.smthng`.
-3. **Board UI:** the TopBar Export menu "Download .smthng" is enabled. If `'showSaveFilePicker' in window`: also "Save to file…" → `showSaveFilePicker({ suggestedName, types: [{ description: 'SMTHNG board', accept: { 'application/json': ['.smthng'] } }] })` → write. Keep the handle in memory for the session; "Save to file" again rewrites the same file without prompting (label it "Save to {filename}"). Guard `AbortError` (user cancelled) silently.
+   - The header Import button (enable it) → a hidden `<input type="file" accept=".spacy,application/json" multiple>` → `importFile` for each → toast "Imported N boards" (with an "Open" action if 1).
+   - **Drop zone:** dragging files over HomePage shows a full-page overlay "Drop .spacy files to import"; the drop imports them.
+   - The card menu "Export" is enabled → `exportBoardFile` → `downloadBlob(blob, slug(title) + '.spacy')`.
+   - Sidebar bottom: "Backup all boards" button → `exportBackup` → `spacy-backup-YYYY-MM-DD.spacy`.
+3. **Board UI:** the TopBar Export menu "Download .spacy" is enabled. If `'showSaveFilePicker' in window`: also "Save to file…" → `showSaveFilePicker({ suggestedName, types: [{ description: 'Spacy board', accept: { 'application/json': ['.spacy'] } }] })` → write. Keep the handle in memory for the session; "Save to file" again rewrites the same file without prompting (label it "Save to {filename}"). Guard `AbortError` (user cancelled) silently.
 4. Import error handling: an invalid JSON or schema → toast error "Couldn't import {file.name}: {reason}". Partial success in a backup → import the valid boards and report the failures.
 
 ## Files
@@ -53,4 +53,4 @@ Share and back up boards as files: export one board or all boards, and import th
 Importing draw.io/Excalidraw/Miro files (not planned). File handler registration (step 29).
 
 ## Commit
-`feat(files): add .smthng board export/import and full backup`
+`feat(files): add .spacy board export/import and full backup`

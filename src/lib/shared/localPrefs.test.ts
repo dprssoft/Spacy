@@ -7,9 +7,9 @@ afterEach(() => {
 });
 
 describe('localPrefs', () => {
-	it('round-trips JSON values under the smthng: prefix', () => {
+	it('round-trips JSON values under the spacy: prefix', () => {
 		setPref('layout', { view: 'grid', count: 3 });
-		expect(localStorage.getItem('smthng:layout')).toBe('{"view":"grid","count":3}');
+		expect(localStorage.getItem('spacy:layout')).toBe('{"view":"grid","count":3}');
 		expect(getPref('layout', null)).toEqual({ view: 'grid', count: 3 });
 	});
 
@@ -18,7 +18,7 @@ describe('localPrefs', () => {
 	});
 
 	it('returns the fallback for invalid JSON', () => {
-		localStorage.setItem('smthng:broken', '{not json');
+		localStorage.setItem('spacy:broken', '{not json');
 		expect(getPref('broken', 42)).toBe(42);
 	});
 

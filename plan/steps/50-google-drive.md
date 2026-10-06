@@ -2,7 +2,7 @@
 
 Phase: L. Sync · Depends on: 49 · Estimate: 2 days
 
-> **Blocked until the human has decided:** the app name and the production domain (both are part of the Google OAuth registration), and has created the OAuth client (see "Human setup"). Steps 47–49 don't need them.
+> **Blocked until the human has decided** the production domain (part of the Google OAuth registration; the app name is decided: **Spacy**), and has created the OAuth client (see "Human setup"). Steps 47–49 don't need them.
 
 ## Goal
 "Connect Google Drive" in Settings turns sync on in one click and a Google sign-in. Boards then sync through a hidden app folder in the user's own Drive, and the app shows the sync state.

@@ -15,9 +15,9 @@ type Snap = {
 	style: { fill: string; opacity: number; font: { size: string; bold: boolean } };
 };
 const byId = async (page: Page, id: string) =>
-	((await page.evaluate(() => window.__smthng!.list())) as Snap[]).find((e) => e.id === id)!;
+	((await page.evaluate(() => window.__spacy!.list())) as Snap[]).find((e) => e.id === id)!;
 const add = (page: Page, els: unknown[]) =>
-	page.evaluate((els) => window.__smthng!.createElements(els as never), els);
+	page.evaluate((els) => window.__spacy!.createElements(els as never), els);
 const sticky = (id: string, x: number, y: number) => ({
 	...el.shape(id, x, y),
 	type: 'sticky',
@@ -96,7 +96,7 @@ test('an opacity drag is one undo step; bold toggles', async ({ page }) => {
 	for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowLeft');
 	expect((await byId(page, 'a')).style.opacity).toBeCloseTo(0.6, 5);
 	await page.keyboard.press('Escape');
-	await page.evaluate(() => window.__smthng!.ctx.history.undo());
+	await page.evaluate(() => window.__spacy!.ctx.history.undo());
 	expect((await byId(page, 'a')).style.opacity).toBe(1);
 
 	await page.getByTestId('style-text').click();

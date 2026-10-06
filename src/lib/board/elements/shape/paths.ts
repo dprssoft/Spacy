@@ -212,7 +212,7 @@ export const SHAPE_KINDS: { kind: ShapeKind; label: string; group: 'Basic' | 'Fl
 ];
 
 /** Drag-and-drop data type for shapes dragged from the library onto the canvas. */
-export const SHAPE_DRAG_TYPE = 'application/x-smthng-shape';
+export const SHAPE_DRAG_TYPE = 'application/x-spacy-shape';
 
 /** A memoized `shapePath` for one view: moves give the element a new snapshot, same geometry. */
 export function shapePathMemo(): typeof shapePath {

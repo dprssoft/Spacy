@@ -14,13 +14,13 @@ import {
 	exportBoardFile,
 	importFile,
 	InvalidFileError,
-	parseSmthngFile
+	parseSpacyFile
 } from './fileFormat';
 import { freshDB } from './testUtils';
 
 beforeEach(freshDB);
 
-const asFile = async (blob: Blob, name = 'board.smthng') =>
+const asFile = async (blob: Blob, name = 'board.spacy') =>
 	new File([await blob.text()], name, { type: 'application/json' });
 
 async function seedBoard(title: string) {
@@ -96,7 +96,7 @@ describe('board files', () => {
 		);
 		getElementsMap(doc).set('bad', new Y.Map([['type', 'shape']]));
 		file.board.doc = bytesToBase64(Y.encodeStateAsUpdate(doc));
-		const result = await importFile(new File([JSON.stringify(file)], 'x.smthng'));
+		const result = await importFile(new File([JSON.stringify(file)], 'x.spacy'));
 		expect(result.warnings).toEqual(['“Broken”: 1 damaged object(s) were skipped']);
 		expect(listElements(await contentOf(result.boards[0]!.id))).toHaveLength(8);
 	});
@@ -132,9 +132,9 @@ describe('boards with pages', () => {
 	});
 });
 
-describe('parseSmthngFile', () => {
+describe('parseSpacyFile', () => {
 	const valid = {
-		format: 'smthng',
+		format: 'spacy',
 		version: 1,
 		kind: 'board',
 		exportedAt: 1,
@@ -142,7 +142,7 @@ describe('parseSmthngFile', () => {
 	};
 	const reason = (input: unknown) => {
 		try {
-			parseSmthngFile(typeof input === 'string' ? input : JSON.stringify(input));
+			parseSpacyFile(typeof input === 'string' ? input : JSON.stringify(input));
 			return null;
 		} catch (err) {
 			expect(err).toBeInstanceOf(InvalidFileError);
@@ -153,11 +153,14 @@ describe('parseSmthngFile', () => {
 	it('accepts a valid file', () => {
 		expect(reason(valid)).toBeNull();
 	});
+	it('accepts files exported before the rename (format "smthng")', () => {
+		expect(reason({ ...valid, format: 'smthng' })).toBeNull();
+	});
 	it('rejects non-JSON, a wrong format, a newer version and malformed base64', () => {
 		expect(reason('not json')).toMatch(/not JSON/);
-		expect(reason({ ...valid, format: 'excalidraw' })).toMatch(/not a SMTHNG file/);
+		expect(reason({ ...valid, format: 'excalidraw' })).toMatch(/not a Spacy file/);
 		expect(reason({ ...valid, version: 2 })).toBe(
-			'This file was created with a newer version of SMTHNG.'
+			'This file was created with a newer version of Spacy.'
 		);
 		expect(reason({ ...valid, board: { ...valid.board, doc: '%%%' } })).toMatch(/base64/);
 	});

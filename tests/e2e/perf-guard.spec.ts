@@ -10,17 +10,17 @@ test('dragging one element re-renders only that element', async ({ page }) => {
 	await enableTestHooks(page);
 	await createBoard(page);
 	await waitForHooks(page);
-	expect(await page.evaluate(() => window.__smthng!.perfMixed(500))).toBeGreaterThan(450);
+	expect(await page.evaluate(() => window.__spacy!.perfMixed(500))).toBeGreaterThan(450);
 	// Created last, so it's on top at the canvas center.
 	await page.evaluate(
-		(e) => window.__smthng!.createElements([e as never]),
+		(e) => window.__spacy!.createElements([e as never]),
 		el.shape('target', -80, -50)
 	);
 	const target = page.locator('[data-element-id="target"]');
 	await expect(target).toBeVisible();
 	await page.waitForTimeout(300); // let image/doc card views settle
 
-	const counts = () => page.evaluate(() => Object.fromEntries(window.__smthng!.renderCounts));
+	const counts = () => page.evaluate(() => Object.fromEntries(window.__spacy!.renderCounts));
 	const before = await counts();
 	const box = (await target.boundingBox())!;
 	const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
@@ -28,7 +28,7 @@ test('dragging one element re-renders only that element', async ({ page }) => {
 	await page.mouse.down();
 	await page.mouse.move(from.x + 90, from.y + 60, { steps: 12 });
 	await page.mouse.up();
-	const moved = await page.evaluate(() => window.__smthng!.ctx.store.get('target')!.x);
+	const moved = await page.evaluate(() => window.__spacy!.ctx.store.get('target')!.x);
 	expect(moved).not.toBe(-80);
 
 	const after = await counts();
@@ -43,10 +43,10 @@ test('zoomed far out over many elements, the board is drawn on one canvas', asyn
 	await enableTestHooks(page);
 	await createBoard(page);
 	await waitForHooks(page);
-	expect(await page.evaluate(() => window.__smthng!.perf(3000))).toBe(3000);
+	expect(await page.evaluate(() => window.__spacy!.perf(3000))).toBe(3000);
 	const zoom = (z: number) =>
 		page.evaluate((z) => {
-			const v = window.__smthng!.ctx.viewport;
+			const v = window.__spacy!.ctx.viewport;
 			v.set({ zoom: z, x: v.size.w / 2, y: v.size.h / 2 });
 		}, z);
 
@@ -108,14 +108,14 @@ test('doc cards show a preview when zoomed far out and an editor when zoomed in'
 	await expect(page.locator('[data-doccard-body] .ProseMirror')).toHaveText('Readable text');
 
 	await page.evaluate(() => {
-		const v = window.__smthng!.ctx.viewport;
+		const v = window.__spacy!.ctx.viewport;
 		v.set({ ...v.vp, zoom: 0.3 });
 	});
 	await expect(page.locator('[data-doccard-preview]')).toBeVisible();
 	await expect(page.locator('.ProseMirror')).toHaveCount(0);
 
 	await page.evaluate(() => {
-		const v = window.__smthng!.ctx.viewport;
+		const v = window.__spacy!.ctx.viewport;
 		v.set({ ...v.vp, zoom: 1 });
 	});
 	await expect(page.locator('[data-doccard-body] .ProseMirror')).toHaveText('Readable text');

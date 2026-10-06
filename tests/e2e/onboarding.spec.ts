@@ -25,5 +25,5 @@ test('first-run tips show once, and again from the help menu', async ({ page }) 
 
 	await page.getByRole('button', { name: 'Help' }).click();
 	await page.getByRole('menuitem', { name: 'About' }).click();
-	await expect(page.getByRole('dialog', { name: 'SMTHNG' })).toContainText('Version');
+	await expect(page.getByRole('dialog', { name: 'Spacy' })).toContainText('Version');
 });

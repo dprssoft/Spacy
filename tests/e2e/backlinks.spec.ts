@@ -27,7 +27,7 @@ async function sceneMentioning(page: Page, dx: number, who: string) {
 test('a character card shows where it is mentioned; a backlink opens the scene at the mention', async ({
 	page
 }) => {
-	await page.evaluate((e) => window.__smthng!.createElements([e as never]), {
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), {
 		...el.shape('mara', -180, -200),
 		type: 'doccard',
 		kind: undefined,
@@ -48,7 +48,7 @@ test('a character card shows where it is mentioned; a backlink opens the scene a
 	await expect(list.getByRole('button')).toHaveCount(2);
 	await expect(list.getByRole('button').first()).toContainText('Meet @Mara at the gate.');
 	await list.getByRole('button').first().click();
-	const selected = await page.evaluate(() => [...window.__smthng!.ctx.selection.ids]);
+	const selected = await page.evaluate(() => [...window.__spacy!.ctx.selection.ids]);
 	expect(selected).toHaveLength(1);
 	expect(selected[0]).not.toBe('mara');
 	await expect(

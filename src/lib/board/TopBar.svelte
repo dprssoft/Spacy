@@ -115,7 +115,7 @@
 					>
 					<DropdownMenu.Separator class="my-1 h-px bg-border" />
 					<DropdownMenu.Item class={item} onSelect={() => downloadBoardFile(ctx.id, title.value)}
-						>Download .smthng</DropdownMenu.Item
+						>Download .spacy</DropdownMenu.Item
 					>
 					{#if canSaveToFile()}
 						<DropdownMenu.Item class={item} onSelect={() => saveTarget.save(ctx.id, title.value)}

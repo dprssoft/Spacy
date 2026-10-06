@@ -14,7 +14,7 @@ import { loadSnapshot, writeSnapshot } from './boardDoc';
 import { destroyBoard } from './boardLifecycle';
 import type { BoardMeta } from './types';
 
-// `.smthng` files (00-architecture.md §10). Imports always create new boards and asset ids.
+// `.spacy` files (00-architecture.md §10). Imports always create new boards and asset ids.
 
 export const FILE_VERSION = 1;
 const MAX_BYTES = 500 * 1024 * 1024;
@@ -44,8 +44,11 @@ const boardPayloadSchema = z.object({
 	assets: z.array(assetSchema)
 });
 
+// Boards exported before the app was renamed from SMTHNG carry the old format name.
+const LEGACY_FORMAT = 'smthng';
+
 const header = {
-	format: z.literal('smthng'),
+	format: z.enum(['spacy', LEGACY_FORMAT]),
 	version: z.literal(FILE_VERSION),
 	exportedAt: z.number()
 };
@@ -55,9 +58,9 @@ const fileSchema = z.discriminatedUnion('kind', [
 ]);
 
 export type BoardPayload = z.infer<typeof boardPayloadSchema>;
-export type SmthngFile =
-	| { format: 'smthng'; version: 1; kind: 'board'; exportedAt: number; board: BoardPayload }
-	| { format: 'smthng'; version: 1; kind: 'backup'; exportedAt: number; boards: BoardPayload[] };
+export type SpacyFile =
+	| { format: 'spacy'; version: 1; kind: 'board'; exportedAt: number; board: BoardPayload }
+	| { format: 'spacy'; version: 1; kind: 'backup'; exportedAt: number; boards: BoardPayload[] };
 
 /** A file that can't be imported; `message` is meant for the user. */
 export class InvalidFileError extends Error {
@@ -90,8 +93,8 @@ export async function exportBoardPayload(id: string): Promise<BoardPayload> {
 const jsonBlob = (data: unknown) => new Blob([JSON.stringify(data)], { type: 'application/json' });
 
 export async function exportBoardFile(id: string): Promise<Blob> {
-	const file: SmthngFile = {
-		format: 'smthng',
+	const file: SpacyFile = {
+		format: 'spacy',
 		version: FILE_VERSION,
 		kind: 'board',
 		exportedAt: Date.now(),
@@ -105,8 +108,8 @@ export async function exportBackup(): Promise<Blob> {
 	const metas = await boardsRepo.list({ filter: 'all', sort: 'created' });
 	const boards: BoardPayload[] = [];
 	for (const m of metas) boards.push(await exportBoardPayload(m.id));
-	const file: SmthngFile = {
-		format: 'smthng',
+	const file: SpacyFile = {
+		format: 'spacy',
 		version: FILE_VERSION,
 		kind: 'backup',
 		exportedAt: Date.now(),
@@ -124,18 +127,18 @@ export type ParsedFile =
 	| { kind: 'backup'; boards: BoardPayload[]; invalid: number };
 
 /** Validates a file. Backups keep their valid boards and count the invalid ones. */
-export function parseSmthngFile(text: string): ParsedFile {
+export function parseSpacyFile(text: string): ParsedFile {
 	let raw: unknown;
 	try {
 		raw = JSON.parse(text);
 	} catch {
-		throw new InvalidFileError('the file is not a SMTHNG file (not JSON)');
+		throw new InvalidFileError('the file is not a Spacy file (not JSON)');
 	}
 	const head = z.object({ format: z.unknown(), version: z.unknown() }).safeParse(raw);
-	if (!head.success || head.data.format !== 'smthng')
-		throw new InvalidFileError('the file is not a SMTHNG file');
+	if (!head.success || (head.data.format !== 'spacy' && head.data.format !== LEGACY_FORMAT))
+		throw new InvalidFileError('the file is not a Spacy file');
 	if (typeof head.data.version === 'number' && head.data.version > FILE_VERSION)
-		throw new InvalidFileError('This file was created with a newer version of SMTHNG.');
+		throw new InvalidFileError('This file was created with a newer version of Spacy.');
 	const parsed = fileSchema.safeParse(raw);
 	if (!parsed.success) throw new InvalidFileError(describe(parsed.error));
 	if (parsed.data.kind === 'board')
@@ -175,7 +178,7 @@ export async function importPayload(
 		migrate(doc);
 	} catch (err) {
 		if (err instanceof NewerSchemaError)
-			throw new InvalidFileError('This file was created with a newer version of SMTHNG.');
+			throw new InvalidFileError('This file was created with a newer version of Spacy.');
 		throw err;
 	}
 
@@ -226,7 +229,7 @@ export interface ImportResult {
 }
 
 /**
- * Imports a `.smthng` file (one board or a backup), board by board. Throws `InvalidFileError`
+ * Imports a `.spacy` file (one board or a backup), board by board. Throws `InvalidFileError`
  * when nothing could be imported; partial problems are returned as warnings.
  */
 export async function importFile(
@@ -236,7 +239,7 @@ export async function importFile(
 	if (file.size > MAX_BYTES) throw new InvalidFileError('the file is larger than 500 MB');
 	if (file.size > CONFIRM_BYTES && opts.confirmLarge && !(await opts.confirmLarge(file)))
 		return { boards: [], warnings: [] };
-	const parsed = parseSmthngFile(await file.text());
+	const parsed = parseSpacyFile(await file.text());
 	const boards: BoardMeta[] = [];
 	const warnings: string[] = [];
 	if (parsed.invalid) warnings.push(`${parsed.invalid} damaged board(s) were skipped`);

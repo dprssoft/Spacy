@@ -5,9 +5,9 @@ import { createBoard, enableTestHooks, waitForHooks } from './helpers';
 type Stroke = { b: string; c: string; s: number; p: number[] };
 const sketches = (page: Page) =>
 	page.evaluate(() => {
-		const { ctx } = window.__smthng!;
+		const { ctx } = window.__spacy!;
 		return window
-			.__smthng!.list()
+			.__spacy!.list()
 			.filter((e) => e.type === 'sketch')
 			.map((e) => ({
 				id: e.id,
@@ -48,7 +48,7 @@ test('a sketching session is one object; each stroke is one undo step', async ({
 	expect(all).toHaveLength(1);
 	expect(all[0]!.strokes.map((s) => s.b)).toEqual(['pen', 'pen', 'marker']);
 	expect(all[0]!.strokes[2]!.c).toBe('#e03131');
-	expect((await page.evaluate(() => window.__smthng!.list())).length).toBe(1);
+	expect((await page.evaluate(() => window.__spacy!.list())).length).toBe(1);
 	await expect(page.getByTestId('status-count')).toHaveText('1 object');
 
 	await page.getByTestId('canvas').focus();
@@ -98,7 +98,7 @@ test('leaving the tool selects the sketch; double-click continues it; "New sketc
 	await wave(page, 240);
 	await page.keyboard.press('v');
 	const [first] = await sketches(page);
-	expect(await page.evaluate(() => [...window.__smthng!.ctx.selection.ids])).toEqual([first!.id]);
+	expect(await page.evaluate(() => [...window.__spacy!.ctx.selection.ids])).toEqual([first!.id]);
 
 	// Double-click a stroke: back in the sketch tool, drawing into the same object.
 	await page.mouse.dblclick(300, 240 + Math.sin(300 / 40) * 15);

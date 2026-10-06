@@ -1,6 +1,6 @@
-# SMTHNG — agent guide
+# Spacy — agent guide
 
-SMTHNG is a browser-only whiteboard web app with two add-ons:
+Spacy is a browser-only whiteboard web app with two add-ons:
 
 - **Diagrams** — any object (shape, sticky, text, image, freehand stroke, frame, doc card) can be connected with smart connectors; basic diagram styling.
 - **Doc cards** — rich-text documents living on the canvas, with a full-page focus mode.
@@ -76,7 +76,7 @@ pnpm verify         # check + lint + test + build — must pass before every com
 - Pointer-driven writes (drag, resize, draw) are batched to at most one Yjs transaction per animation frame, and each gesture is one undo step (`undo.stopCapturing()` at gesture start).
 - Hit-testing is done in TypeScript via the spatial index + geometry, **not** via DOM event targets. Element wrappers have `pointer-events: none` unless they are in text/doc editing mode.
 - Styling: Tailwind utility classes for UI chrome; theme colors via CSS variables (`--bg`, `--surface`, ...) exposed as Tailwind colors. Canvas element appearance comes from element data (inline style / SVG attributes).
-- `localStorage` access only via `src/lib/shared/localPrefs.ts` (wrapped in try/catch). Keys are prefixed `smthng:`.
+- `localStorage` access only via `src/lib/shared/localPrefs.ts` (wrapped in try/catch). Keys are prefixed `spacy:`.
 - Files: `PascalCase.svelte` for components, `camelCase.ts` for modules, `*.svelte.ts` for rune-based state, tests next to code as `*.test.ts`. E2E tests in `tests/e2e/*.spec.ts`.
 - Keep components small (< ~250 lines). Extract logic into `.ts` modules.
 - User-facing text in English, sentence case ("New board", not "New Board").

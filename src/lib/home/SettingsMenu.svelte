@@ -134,8 +134,7 @@
 				>
 			{/if}
 			<DropdownMenu.Separator class={sep} />
-			<DropdownMenu.Item class={item} onSelect={() => (about = true)}
-				>About SMTHNG</DropdownMenu.Item
+			<DropdownMenu.Item class={item} onSelect={() => (about = true)}>About Spacy</DropdownMenu.Item
 			>
 		</DropdownMenu.Content>
 	</DropdownMenu.Portal>
@@ -144,7 +143,7 @@
 <input
 	bind:this={input}
 	type="file"
-	accept=".smthng,application/json"
+	accept=".spacy,.smthng,application/json"
 	multiple
 	hidden
 	onchange={async (e) => {

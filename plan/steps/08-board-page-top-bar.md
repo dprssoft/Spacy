@@ -22,12 +22,12 @@ The board route opens the board document, shows loading, not-found and trashed s
    - On mount: `boardsRepo.get(id)` → missing → notfound; `deletedAt` → trashed (card: "This board is in the trash" + Restore button → `restore` then load + a "Back to boards" link); else `openBoard(id)` → `setBoard(...)` → ready; `boardsRepo.touchOpened(id)`.
    - Because `setContext` must run during component init, render a child `BoardWorkspace.svelte` once ready and pass the `OpenBoard` as a prop; `BoardWorkspace` calls `setBoard` in its script.
    - Cleanup on destroy: `open.close()`.
-   - Loading: a centered spinner after 150 ms (avoid flicker). Error: the message + a "Back to boards" link. `NewerSchemaError` → "This board was created with a newer version of SMTHNG."
+   - Loading: a centered spinner after 150 ms (avoid flicker). Error: the message + a "Back to boards" link. `NewerSchemaError` → "This board was created with a newer version of Spacy."
 4. `src/lib/board/BoardWorkspace.svelte`: layout `h-dvh flex flex-col`: `TopBar` + `<main class="relative flex-1 overflow-hidden bg-[var(--canvas-bg)]">` (canvas placeholder, filled in step 09).
 5. `src/lib/board/TopBar.svelte` (height 48, `bg-surface border-b border-border`):
    - Left: a home button (logo icon, `aria-label="Back to boards"`, link to `/`), then the title via `InlineEditable` (click to edit).
-   - Right: `SaveIndicator`, an Export `DropdownMenu` with disabled items "PNG…", "SVG…", "Download .smthng" (tooltip "Coming soon"), `ThemeToggle`.
-6. **Title sync** `src/lib/board/title.svelte.ts`: `class BoardTitle { value = $state('') }` initialized from `meta.title`, observing `getMeta(doc)` for changes from other tabs. `rename(t)`: `setMeta(doc, 'title', t, LOCAL)` + `boardsRepo.rename(id, t)`. On a remote change of `meta.title`, also update `boardsRepo` (idempotent). Set `document.title = `${title} — SMTHNG``.
+   - Right: `SaveIndicator`, an Export `DropdownMenu` with disabled items "PNG…", "SVG…", "Download .spacy" (tooltip "Coming soon"), `ThemeToggle`.
+6. **Title sync** `src/lib/board/title.svelte.ts`: `class BoardTitle { value = $state('') }` initialized from `meta.title`, observing `getMeta(doc)` for changes from other tabs. `rename(t)`: `setMeta(doc, 'title', t, LOCAL)` + `boardsRepo.rename(id, t)`. On a remote change of `meta.title`, also update `boardsRepo` (idempotent). Set `document.title = `${title} — Spacy``.
    - Note: `setMeta` with `LOCAL` is not tracked by the undo manager (its scope is elements only). That's intended.
 7. `src/lib/board/SaveIndicator.svelte`: listens to `doc.on('update')` for origin `LOCAL` → shows "Saving…" and switches to "Saved locally" (check icon) 600 ms after the last update. Tooltip: "Boards are saved in this browser. Export a backup to keep a copy."
 
