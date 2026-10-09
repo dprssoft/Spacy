@@ -1319,3 +1319,19 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Dependencies added:** none
 **Follow-ups:** `SyncStatus` lives in the leader tab only; step 50 should share it with the other tabs (e.g. over `spacy-sync`). Boards known remotely but not in the local list get their content stored but no list entry until step 48.
 **Verification:** pnpm verify ✅ (965 unit tests; new `engine.test.ts` 13: A→B, concurrent merge, deletions, no echo/no re-download, offline then online, failed upload and download retried, compaction, compaction with an unseen file from another device, two devices compacting at once, newer schema pauses one board, remote changes outside undo, serialised cycles; `runner.test.ts` 4; `leader.test.ts` 3 incl. two tabs uploading once; `idbLocal.test.ts` 4 incl. an open board applying live outside undo). No e2e in this step.
+
+## Step 48 — Board list sync — 2026-10-09
+**Summary:**
+- Approved by the human (the library doc). `storage/sync/library.ts`: the library Y.Doc (`spacy-library`), `reconcile` (both ways, per-board shadow, first-connect merge, tombstones), `openLibrary`. The engine got two hooks: `afterDownload` (reconcile; returns boards it changed, uploaded in the same cycle) and `purgedBoards` (skipped, remote files removed).
+- `createIdbSyncLocal(library)` routes the `library` id to the library doc; the syncing tab reconciles when the board list changes in any tab.
+- Titles: `renameBoard` (start page) writes the list and the board content (`writeTitle`); downloaded content updates the list's title (`readTitle`). Boards from other devices are listed with their id (`boardsRepo.insert`) as "Syncing…" until their content arrives.
+
+**Deviations:**
+- The library doc's shape is documented in §6 (next to the other databases) rather than §5.
+- The "placeholder state" is the "Syncing…" title; no separate card state. `openBoard` never copies that placeholder into content, where it could win over the real title.
+- A board failing to download or upload no longer stops the cycle for other boards (found by the placeholder test: one unreadable board blocked the whole list). The cycle still fails at the end, so backoff works as before.
+- Uploading a board with empty content and no sync history is skipped (placeholders).
+
+**Dependencies added:** none
+**Follow-ups:** none new.
+**Verification:** pnpm verify ✅ (974 unit tests; new `library.test.ts` 9: create/rename/star/trash/restore/purge A→B incl. remote files removed, concurrent star + trash, purge beats an offline edit, first connect merges two lists, placeholder until content arrives, reconcile idempotence; with IndexedDB: list writes reach the library and a delete forever becomes a tombstone, remote boards listed with their id, start-page rename writes the content title) · e2e `home.spec.ts` ✅ chromium (rename path changed).

@@ -46,10 +46,14 @@ describe('whileLeader', () => {
 		stopB();
 	});
 
-	it('runs right away without the Lock API', () => {
-		const start = vi.fn(() => () => {});
-		whileLeader(start, undefined);
+	it('runs right away without the Lock API', async () => {
+		const stop = vi.fn();
+		const start = vi.fn(async () => stop);
+		const stopLeading = whileLeader(start, undefined);
 		expect(start).toHaveBeenCalledOnce();
+		stopLeading();
+		await tick();
+		expect(stop).toHaveBeenCalledOnce();
 	});
 
 	it('two tabs of one browser upload a change once', async () => {

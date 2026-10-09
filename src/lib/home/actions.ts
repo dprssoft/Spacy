@@ -18,7 +18,10 @@ export const setStarred = (board: BoardMeta, starred: boolean) =>
 	attempt(() => boardsRepo.setStarred(board.id, starred), 'Couldn’t update the board');
 
 export const rename = (board: BoardMeta, title: string) =>
-	attempt(() => boardsRepo.rename(board.id, title), 'Couldn’t rename the board');
+	attempt(async () => {
+		const { renameBoard } = await import('$lib/storage/boardLifecycle');
+		await renameBoard(board.id, title);
+	}, 'Couldn’t rename the board');
 
 export const duplicate = (board: BoardMeta) =>
 	attempt(async () => {

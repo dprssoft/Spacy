@@ -12,7 +12,7 @@ import { BoardSaver } from './boardSaver';
 import { boardDbName } from './db';
 import * as assetsRepo from './assetsRepo';
 import * as boardsRepo from './boardsRepo';
-import { markDirty, trackOpenBoard } from './sync/hub';
+import { markDirty, openDoc, trackOpenBoard } from './sync/hub';
 import { createTabSync } from './tabSync';
 import type { BoardMeta } from './types';
 
@@ -52,7 +52,8 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 		doc.destroy();
 		throw err;
 	}
-	if (typeof getMeta(doc).get('title') !== 'string') {
+	// A placeholder title must not reach the content: it would sync to devices with the real one.
+	if (typeof getMeta(doc).get('title') !== 'string' && meta.title !== boardsRepo.SYNCING_TITLE) {
 		doc.transact(() => getMeta(doc).set('title', meta.title), MIGRATION);
 	}
 	pruneOrphanThreads(doc, MIGRATION);
@@ -113,6 +114,44 @@ export async function writeSnapshot(
 	await persistence.destroy();
 	doc.destroy();
 	if (origin !== REMOTE_SYNC) markDirty(id);
+}
+
+/** The title stored in a board's content (`meta.title`), if any. */
+export async function readTitle(id: string): Promise<string | null> {
+	const doc = new Y.Doc();
+	Y.applyUpdate(doc, await loadSnapshot(id));
+	const title = getMeta(doc).get('title');
+	doc.destroy();
+	return typeof title === 'string' && title ? title : null;
+}
+
+/**
+ * Writes a new title into a board's content, so other devices get it with the board (the list's
+ * title is local). An open board in this tab takes it live; other tabs through tab sync.
+ */
+export async function writeTitle(id: string, title: string): Promise<void> {
+	const open = openDoc(id);
+	if (open) {
+		open.transact(() => getMeta(open).set('title', title), LOCAL);
+		return;
+	}
+	const doc = new Y.Doc();
+	Y.applyUpdate(doc, await loadSnapshot(id));
+	if (getMeta(doc).get('title') === title) return doc.destroy();
+	const before = Y.encodeStateVector(doc);
+	doc.transact(() => getMeta(doc).set('title', title), LOCAL);
+	const update = Y.encodeStateAsUpdate(doc, before);
+	doc.destroy();
+	await writeSnapshot(id, update, LOCAL);
+	postToTabs(id, update);
+}
+
+/** Sends an update to tabs that have the board open (they apply it through tab sync). */
+export function postToTabs(id: string, update: Uint8Array): void {
+	if (typeof BroadcastChannel !== 'function') return;
+	const channel = new BroadcastChannel(boardChannelName(id));
+	channel.postMessage({ type: 'update', update });
+	channel.close();
 }
 
 /** Deletes a board's stored content. Open connections in other tabs close themselves. */
