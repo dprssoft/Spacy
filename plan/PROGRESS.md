@@ -1303,3 +1303,19 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Dependencies added:** none
 **Follow-ups:** the repository URL in About is still the placeholder (`your-org/spacy`); "spaCy" is also the name of a well-known Python NLP library, worth checking before registering the domain and the Google OAuth app.
 **Verification:** pnpm verify ✅ (941 unit tests; new `legacyMigration.test.ts`: board list, trashed boards, images and multi-update content copied with the old databases kept; copies only once; creates nothing without SMTHNG data; replaces a partial copy; skips boards without content; `fileFormat.test.ts`: `format: 'smthng'` accepted) · pnpm test:e2e ✅ chromium + mobile 228 passed (the manifest test now expects `.spacy` and `.smthng`); new `migration.spec.ts` (data made in the app, renamed to the SMTHNG names, then dark theme, list layout, the board and its sticky come back, and both copies exist) also ✅ on firefox.
+
+## Step 47 — Sync engine (boards) — 2026-10-09
+**Summary:**
+- Approved by the human (branch `feat/sync`): the "server sync" non-goal is lifted for single-user sync through the user's own cloud storage; `00-architecture.md` §14 added, §6 (`sync` store, DB version 2, `REMOTE_SYNC`, `spacy:sync:device`).
+- `storage/sync/`: `RemoteStore` + `MemoryRemoteStore`, `SyncEngine` (download → apply → upload delta → compact), `SyncRunner` (schedule, debounce, backoff, offline), `whileLeader` (Web Lock), `hub` (open boards and dirty notices across tabs), `idbLocal` (IndexedDB adapters), `SyncStatus`, `startSync`.
+- `openBoard` registers the open doc with the hub; `writeSnapshot` reports non-sync writes (imports, templates, duplicates). Nothing calls `startSync` yet (step 50).
+
+**Deviations:**
+- `syncedSV` is stored as a Yjs snapshot (state vector + delete set): deletions don't advance the state vector, so a state-vector-only check missed them (covered by a test).
+- After downloading into a board with nothing waiting to upload, the synced snapshot moves forward, so downloaded changes aren't uploaded back.
+- Remote files that need a newer schema stay unapplied in the index and are retried each cycle, instead of being skipped by the cursor.
+- The engine talks to the browser through `SyncLocal`/`SyncStateStore` interfaces, so the multi-device tests run on in-memory devices; one integration test runs the engine against fake-indexeddb as two browsers in turn.
+
+**Dependencies added:** none
+**Follow-ups:** `SyncStatus` lives in the leader tab only; step 50 should share it with the other tabs (e.g. over `spacy-sync`). Boards known remotely but not in the local list get their content stored but no list entry until step 48.
+**Verification:** pnpm verify ✅ (965 unit tests; new `engine.test.ts` 13: A→B, concurrent merge, deletions, no echo/no re-download, offline then online, failed upload and download retried, compaction, compaction with an unseen file from another device, two devices compacting at once, newer schema pauses one board, remote changes outside undo, serialised cycles; `runner.test.ts` 4; `leader.test.ts` 3 incl. two tabs uploading once; `idbLocal.test.ts` 4 incl. an open board applying live outside undo). No e2e in this step.

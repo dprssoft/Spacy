@@ -10,11 +10,11 @@ This document is the contract every step builds on. Steps may refine details, bu
 - **Media:** YouTube, Vimeo and audio/video links play in place on the board (click-to-play: nothing is requested from a provider before play).
 - **Templates:** a gallery of built-in layouts (kanban, retrospective, SWOT, mind map…) for new boards or inserted into the current one.
 - **Start page:** Figma-like home with "New board", templates, Recent / Starred / All / Trash, search, sort, grid/list, thumbnails.
-- **No backend.** Data lives in IndexedDB. Sharing = `.spacy` file export/import + PNG/SVG/Markdown export. Installable, offline-capable PWA.
+- **No backend.** Data lives in IndexedDB; optional sync between the user's own devices goes through the user's own cloud storage (§14). Sharing = `.spacy` file export/import + PNG/SVG/Markdown export. Installable, offline-capable PWA.
 - Real-time multi-user collaboration is **not** in scope, but the data layer (Yjs) is chosen so a sync server can be added later by changing only `openBoard()`.
 
 ### Non-goals (do not build)
-Accounts, server sync, version history, UML/BPMN libraries, auto-layout, swimlanes, gradients, user-uploaded fonts (a fixed set of 10 bundled open-licence fonts plus system stacks is offered), custom shape editor, frame clipping, nested frames, nested groups, connector-to-connector junctions, line jumps, page/print layout, tables/images inside doc cards, suggestion mode. (Mobile editing was a non-goal until steps 37–38: phones and tablets are now supported for viewing and editing. Comments were a non-goal until step 45: threads on objects and on doc card text, signed with a per-browser name; no mentions of people or notifications.)
+Accounts, a server of our own, version history, UML/BPMN libraries, auto-layout, swimlanes, gradients, user-uploaded fonts (a fixed set of 10 bundled open-licence fonts plus system stacks is offered), custom shape editor, frame clipping, nested frames, nested groups, connector-to-connector junctions, line jumps, page/print layout, tables/images inside doc cards, suggestion mode. (Server sync was a non-goal until step 47: boards may sync through the user's own cloud storage, §14. Mobile editing was a non-goal until steps 37–38: phones and tablets are now supported for viewing and editing. Comments were a non-goal until step 45: threads on objects and on doc card text, signed with a per-browser name; no mentions of people or notifications.)
 
 ## 2. Tech stack
 
@@ -237,7 +237,7 @@ Rules:
 
 ## 6. Storage
 
-### IndexedDB database `spacy` (via `idb`), version 1
+### IndexedDB database `spacy` (via `idb`), version 2
 
 ```ts
 export interface BoardMeta {
@@ -257,6 +257,7 @@ export interface AssetRecord {
 ```
 - Store `boards` (keyPath `id`; indexes `openedAt`, `updatedAt`, `deletedAt`)
 - Store `assets` (keyPath `id`; index `boardId`)
+- Store `sync` (version 2; out-of-line string keys): the sync engine's bookkeeping, §14
 
 ### Board contents
 - One `y-indexeddb` database per board, name `spacy-board-<id>`.
@@ -273,10 +274,10 @@ export interface AssetRecord {
 - `BroadcastChannel('spacy-board-<id>')` — Yjs updates between tabs with the same board open (origin `REMOTE_TAB`).
 
 ### Transaction origins (`src/lib/model/origins.ts`)
-`LOCAL` (user edits, tracked by undo) · `REMOTE_TAB` · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
+`LOCAL` (user edits, tracked by undo) · `REMOTE_TAB` · `REMOTE_SYNC` (from the user's other devices, §14) · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
 
 ### localStorage keys (via `localPrefs`)
-`spacy:theme`, `spacy:home:sort`, `spacy:home:layout`, `spacy:defaults:<type>`, `spacy:copiedStyle`, `spacy:grid`, `spacy:snap`, `spacy:onboarded`, `spacy:lastBackupAt`, `spacy:backupReminderDismissedAt`, `spacy:testHooks`, `spacy:commentAuthor`, `spacy:comments:<boardId>` (panel open), `spacy:waystones:wrap`, `spacy:migrated` (settings copied from SMTHNG, see §6), `spacy:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by the inline theme script in `src/app.html`; element colors never change).
+`spacy:theme`, `spacy:home:sort`, `spacy:home:layout`, `spacy:defaults:<type>`, `spacy:copiedStyle`, `spacy:grid`, `spacy:snap`, `spacy:onboarded`, `spacy:lastBackupAt`, `spacy:backupReminderDismissedAt`, `spacy:testHooks`, `spacy:commentAuthor`, `spacy:comments:<boardId>` (panel open), `spacy:waystones:wrap`, `spacy:sync:device` (this browser's random sync device id, §14), `spacy:migrated` (settings copied from SMTHNG, see §6), `spacy:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by the inline theme script in `src/app.html`; element colors never change).
 
 ## 7. Yjs → Svelte bridge
 
@@ -440,3 +441,21 @@ Shortcuts are ignored while focus is in `input`, `textarea`, `select`, or `[cont
 | Drag of 1 element among 3,000 | ≥ 55 fps |
 | Board open (1,000 elements, cached) | < 1 s to interactive |
 | Initial JS (gzipped) | home < 150 KB; board < 300 KB excluding lazy TipTap chunk |
+
+## 14. Sync (step 47+)
+
+Optional, single-user sync of boards between the user's own devices through a remote file store (Google Drive at step 50). No accounts or server of ours. The board format doesn't change.
+
+- **`RemoteStore`** (`src/lib/storage/sync/remote.ts`): a flat store of immutable files with string `props`: `changes(cursor)`, `create`, `read` (`RemoteNotFoundError` when gone), `remove`. `MemoryRemoteStore` is the test implementation.
+- **Board files:** `kind=update|snapshot, board=<id>, device=<deviceId>, seq=<n>`, each one Yjs update. Files are only created and deleted, never edited.
+- **`SyncEngine`** (`storage/sync/engine.ts`, pure TS against `SyncLocal` + `SyncStateStore` interfaces; `idbLocal.ts` implements them for this browser). A cycle: list remote changes since the stored cursor into a file index (`{ board, kind, device, applied }`; own files are marked applied, never downloaded) → download unapplied files per board, merge, apply with origin `REMOTE_SYNC` → upload each target board's changes since its last sync → compact. Every step is idempotent and retried on the next cycle.
+- **What to upload:** per board the engine stores `synced:<id>`, the Yjs **snapshot** (state vector + delete set) of what was last uploaded or downloaded. The upload is `diffUpdate(content, synced.sv)`; an equal snapshot means nothing to upload. (The step file said state vector: deletions don't advance it, so the delete set is compared too.) After a download into a board with nothing waiting, `synced` moves forward, so downloads aren't echoed back.
+- **Applying:** to the open `Y.Doc` when the board is open in this tab (registered in `sync/hub.ts` by `openBoard`; its saver stores it, tab sync forwards it); otherwise merged into IndexedDB (`writeSnapshot`, origin `REMOTE_SYNC`) and posted on the board's tab-sync channel for other tabs.
+- **Compaction:** when a board has ≥ 50 known files, the device uploads its full state as `kind=snapshot`, then deletes only the files it had applied. Unseen files from other devices stay.
+- **Schema guard:** if merged remote content has a newer `schemaVersion`, it's not applied, the board's status is `newer-schema` and its uploads pause; the files stay unapplied and are retried by later cycles.
+- **Dirty boards:** `sync/hub.ts` reports a board changed by an open doc (any origin except `REMOTE_SYNC`/`REMOTE_TAB`) or by `writeSnapshot` (except `REMOTE_SYNC`), in this tab and on `BroadcastChannel('spacy-sync')`.
+- **One syncing tab:** the Web Lock `spacy-sync` picks the leader (`sync/leader.ts`); without the Lock API every tab syncs. `startSync(store)` (`sync/index.ts`) wires leader, engine, `SyncRunner` and `SyncStatus`.
+- **Schedule (`SyncRunner`):** every board on start, changed boards 3 s after the last change, on `online` and on becoming visible, every 60 s while visible; failures back off exponentially (5 s → 5 min) and keep their boards queued.
+- **Status (`SyncStatus`):** overall `off | syncing | synced(at) | offline | error(reason)`; per board `syncing | synced(at) | error | newer-schema`.
+- **Bookkeeping** (`spacy` store `sync`): `cursor`, `index`, `seq`, `synced:<boardId>`. Device id: `spacy:sync:device`.
+
