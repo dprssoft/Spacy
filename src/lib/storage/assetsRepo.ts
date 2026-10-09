@@ -20,6 +20,11 @@ export async function put(
 	return record.id;
 }
 
+/** Stores an image that came from another device, keeping its id. */
+export async function putSynced(record: Omit<AssetRecord, 'createdAt'>): Promise<void> {
+	await (await getDB()).put('assets', { ...record, createdAt: Date.now() });
+}
+
 export async function get(id: string): Promise<AssetRecord | undefined> {
 	return (await getDB()).get('assets', id);
 }

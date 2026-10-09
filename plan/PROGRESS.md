@@ -1335,3 +1335,19 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Dependencies added:** none
 **Follow-ups:** none new.
 **Verification:** pnpm verify ✅ (974 unit tests; new `library.test.ts` 9: create/rename/star/trash/restore/purge A→B incl. remote files removed, concurrent star + trash, purge beats an offline edit, first connect merges two lists, placeholder until content arrives, reconcile idempotence; with IndexedDB: list writes reach the library and a delete forever becomes a tombstone, remote boards listed with their id, start-page rename writes the content title) · e2e `home.spec.ts` ✅ chromium (rename path changed).
+
+## Step 49 — Image sync — 2026-10-09
+**Summary:**
+- Engine: image files (`kind=asset`) in the file index with mime and size; `uploadAssets` after the board uploads (skips boards that failed, are paused or purged, and images no board uses); `fetchAsset(id)` downloads one on demand; compaction removes images no longer on the board when all of the board's files are applied; purged boards' images go with their files.
+- `hub.requestAsset` / `serveAssetRequests`: any tab asks the syncing tab for a missing image over `spacy-sync`. `AssetUrlCache` and `ImageView` show "Downloading…" while it's fetched; exports and thumbnails wait up to 15 s.
+- Images over 20 MB are skipped and flagged (`too-large:<id>`); the image's context menu shows "Not synced (too large)" (`sync/assetFlags.ts`).
+
+**Deviations:**
+- No separate persisted upload queue: each cycle uploads local images missing from the remote index, which resumes an interrupted upload by itself. Resuming *inside* one large upload is the Drive store's job (resumable uploads, step 50).
+- Images are uploaded only while their board uses them (found by the compaction test: an orphan removed remotely was uploaded again from the local copy).
+- Without sync, a missing image now waits up to 1.5 s for an answer before showing as missing (and exports wait the same before drawing without it).
+- The e2e test (an image from device A shown on device B after its placeholder) moves to step 50: two browser contexts need a shared remote, which the fake Drive server there provides.
+
+**Dependencies added:** none
+**Follow-ups:** the step 49 e2e in step 50's `sync.spec.ts`.
+**Verification:** pnpm verify ✅ (982 unit tests; new `assets.test.ts` 8: upload once + download on demand, unknown image, interrupted upload resumes, purge deletes images, too large skipped and flagged, compaction removes unused images, a tab asks the syncing tab, no sync gives up fast) · e2e `pen-images`, `files`, `export` ✅ chromium.

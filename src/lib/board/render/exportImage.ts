@@ -1,6 +1,7 @@
 import { toast } from 'svelte-sonner';
 import type { Element } from '$lib/model/types';
 import * as assetsRepo from '$lib/storage/assetsRepo';
+import { requestAsset } from '$lib/storage/sync/hub';
 import type { BoardContext } from '../context';
 import { getDocJSON } from '../doccards/docJson';
 import { docLines, type DocLine } from '../doccards/docLines';
@@ -89,7 +90,11 @@ export async function renderScope(
 }
 
 async function assetDataUrl(id: string): Promise<string | null> {
-	const record = await assetsRepo.get(id).catch(() => undefined);
+	let record = await assetsRepo.get(id).catch(() => undefined);
+	// Not on this device yet: give sync a moment to bring it before drawing without it.
+	if (!record && (await requestAsset(id, { totalMs: 15_000 }))) {
+		record = await assetsRepo.get(id).catch(() => undefined);
+	}
 	return record ? blobToDataUrl(record.blob) : null;
 }
 

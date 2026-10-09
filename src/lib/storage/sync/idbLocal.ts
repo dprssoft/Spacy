@@ -4,6 +4,7 @@ import * as Y from 'yjs';
 import { REMOTE_SYNC } from '$lib/model/origins';
 import { loadSnapshot, postToTabs, readTitle, writeSnapshot } from '../boardDoc';
 import { destroyBoard } from '../boardLifecycle';
+import * as assetsRepo from '../assetsRepo';
 import * as boardsRepo from '../boardsRepo';
 import { getDB } from '../db';
 import type { SyncLocal, SyncStateStore } from './engine';
@@ -55,6 +56,11 @@ export function createIdbSyncLocal(library?: Y.Doc): SyncLocal {
 			if (meta && title && title !== meta.title) await boardsRepo.rename(id, title);
 		},
 		purgedBoards: async () => (library ? purgedIds(library) : new Set()),
+		assets: {
+			ids: async () => (await getDB()).getAllKeys('assets'),
+			read: async (id) => (await assetsRepo.get(id)) ?? null,
+			write: (asset) => assetsRepo.putSynced(asset)
+		},
 		async afterDownload() {
 			if (!library) return [];
 			return (await reconcile(library, idbLocalList, idbSyncState)) ? [LIBRARY_ID] : [];

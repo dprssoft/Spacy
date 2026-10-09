@@ -1,6 +1,8 @@
 import * as Y from 'yjs';
 import { getMeta } from '$lib/model/doc';
 import { SCHEMA_VERSION } from '$lib/model/migrations';
+import { allPageMaps } from '$lib/model/pages';
+import { keyTooLarge } from './assetFlags';
 import { RemoteNotFoundError, type RemoteStore } from './remote';
 import type { SyncStatus } from './status';
 
@@ -18,6 +20,21 @@ export interface SyncLocal {
 	 * changed, which are uploaded in this cycle too.
 	 */
 	afterDownload?(): Promise<Iterable<string>>;
+	/** Images (step 49): never change after they're stored, so each is uploaded once. */
+	assets?: {
+		ids(): Promise<string[]>;
+		read(id: string): Promise<LocalAsset | null>;
+		write(asset: LocalAsset): Promise<void>;
+	};
+}
+
+export interface LocalAsset {
+	id: string;
+	boardId: string;
+	blob: Blob;
+	mime: string;
+	width: number;
+	height: number;
 }
 
 /** Persistent key-value storage for the engine's own bookkeeping. */
@@ -26,18 +43,28 @@ export interface SyncStateStore {
 	set(key: string, value: unknown): Promise<void>;
 }
 
-type FileKind = 'update' | 'snapshot';
+type FileKind = 'update' | 'snapshot' | 'asset';
 
-/** A remote board file this device knows about. `applied`: its content is in the local board. */
+/**
+ * A remote file this device knows about. `applied`: its content is in the local board (images
+ * count as applied: they're downloaded on demand, not by the cycle).
+ */
 interface IndexEntry {
 	board: string;
 	kind: FileKind;
 	device: string;
 	applied: boolean;
+	/** Image files: the asset and what's needed to store it locally. */
+	asset?: string;
+	mime?: string;
+	w?: number;
+	h?: number;
 }
 type FileIndex = Record<string, IndexEntry>;
 
 export const COMPACT_AT = 50;
+/** Larger images stay on the device they were added on. */
+export const MAX_ASSET_BYTES = 20 * 1024 * 1024;
 
 const KEY_CURSOR = 'cursor';
 const KEY_INDEX = 'index';
@@ -105,10 +132,19 @@ export class SyncEngine {
 			await this.removePurged(purged, index);
 			const targets = new Set(boards === 'all' ? await this.o.local.boardIds() : boards);
 			for (const board of changed) targets.add(board);
+			const failed = new Set<string>();
 			for (const board of targets) {
-				if (!this.paused.has(board) && !purged.has(board)) {
-					await each(board, () => this.upload(board, index));
-				}
+				if (this.paused.has(board) || purged.has(board)) continue;
+				const before = errors.length;
+				await each(board, () => this.upload(board, index));
+				if (errors.length > before) failed.add(board);
+			}
+			// After the boards: a device that sees an image file has already seen the board change
+			// that added it (compaction relies on this to tell orphans).
+			try {
+				await this.uploadAssets(index, new Set([...purged, ...failed, ...this.paused]));
+			} catch (err) {
+				errors.push(err);
 			}
 			if (errors.length > 0) throw errors[0];
 			status?.set({ kind: 'synced', at: this.now() });
@@ -125,10 +161,18 @@ export class SyncEngine {
 		const changes = await store.changes(typeof cursor === 'string' ? cursor : null);
 		for (const id of changes.removed) delete index[id];
 		for (const f of changes.files) {
-			const { kind, board } = f.props;
-			if (index[f.id] || !board || (kind !== 'update' && kind !== 'snapshot')) continue;
+			const { kind, board, asset } = f.props;
+			if (index[f.id] || !board) continue;
 			const from = f.props.device ?? '';
-			index[f.id] = { board, kind, device: from, applied: from === device };
+			if (kind === 'update' || kind === 'snapshot') {
+				index[f.id] = { board, kind, device: from, applied: from === device };
+			} else if (kind === 'asset' && asset) {
+				const { mime, w, h } = f.props;
+				index[f.id] = {
+					...{ board, kind, device: from, applied: true, asset, mime },
+					...{ w: Number(w ?? 0), h: Number(h ?? 0) }
+				};
+			}
 		}
 		await state.set(KEY_INDEX, index);
 		await state.set(KEY_CURSOR, changes.cursor);
@@ -205,8 +249,9 @@ export class SyncEngine {
 	 */
 	private async compact(board: string, content: Uint8Array, index: FileIndex): Promise<void> {
 		const { store, state, device } = this.o;
-		const files = Object.entries(index).filter(([, e]) => e.board === board);
+		const files = Object.entries(index).filter(([, e]) => e.board === board && e.kind !== 'asset');
 		if (files.length < (this.o.compactAt ?? COMPACT_AT)) return;
+		const complete = files.every(([, e]) => e.applied);
 		const merged = files.filter(([, e]) => e.applied).map(([id]) => id);
 		const seq = await this.nextSeq();
 		const file = await store.create(
@@ -221,6 +266,86 @@ export class SyncEngine {
 			delete index[id];
 			await state.set(KEY_INDEX, index);
 		}
+		// Images no longer on the board. Only when every board file is in `content`: an image file
+		// is uploaded after the board change that uses it, so none of them can be missing here.
+		if (!complete) return;
+		const used = assetIdsOf(content);
+		for (const [id, e] of Object.entries(index)) {
+			if (e.board !== board || e.kind !== 'asset' || !e.asset || used.has(e.asset)) continue;
+			await store.remove(id);
+			delete index[id];
+			await state.set(KEY_INDEX, index);
+		}
+	}
+
+	private async uploadAssets(index: FileIndex, skipBoards: Set<string>): Promise<void> {
+		const { store, local, state, device } = this.o;
+		if (!local.assets) return;
+		const remote = new Set(Object.values(index).map((e) => e.asset));
+		// Local copies of images removed from a board stay until local clean-up; they don't sync.
+		const used = new Map<string, Set<string>>();
+		const usedOn = async (board: string) => {
+			let ids = used.get(board);
+			if (!ids) used.set(board, (ids = assetIdsOf(await local.read(board))));
+			return ids;
+		};
+		for (const id of await local.assets.ids()) {
+			if (remote.has(id) || (await state.get(keyTooLarge(id)))) continue;
+			const a = await local.assets.read(id);
+			if (!a || skipBoards.has(a.boardId) || !(await usedOn(a.boardId)).has(id)) continue;
+			if (a.blob.size > MAX_ASSET_BYTES) {
+				await state.set(keyTooLarge(id), true);
+				continue;
+			}
+			const file = await store.create(
+				`asset.${id}`,
+				{
+					kind: 'asset',
+					asset: id,
+					board: a.boardId,
+					device,
+					mime: a.mime,
+					w: String(a.width),
+					h: String(a.height)
+				},
+				a.blob
+			);
+			index[file.id] = {
+				...{ board: a.boardId, kind: 'asset', device, applied: true, asset: id },
+				...{ mime: a.mime, w: a.width, h: a.height }
+			};
+			await state.set(KEY_INDEX, index);
+		}
+	}
+
+	/**
+	 * Downloads one image that a board needs. Resolves false when no device has uploaded it (yet).
+	 * Not serialised with cycles: it only reads the index.
+	 */
+	async fetchAsset(assetId: string): Promise<boolean> {
+		const { store, local } = this.o;
+		if (!local.assets) return false;
+		const index = await this.loadIndex();
+		const found = Object.entries(index).find(([, e]) => e.kind === 'asset' && e.asset === assetId);
+		if (!found) return false;
+		const [fileId, entry] = found;
+		let bytes: Uint8Array;
+		try {
+			bytes = await store.read(fileId);
+		} catch (err) {
+			if (err instanceof RemoteNotFoundError) return false;
+			throw err;
+		}
+		const mime = entry.mime ?? 'application/octet-stream';
+		await local.assets.write({
+			id: assetId,
+			boardId: entry.board,
+			blob: new Blob([bytes as BlobPart], { type: mime }),
+			mime,
+			width: entry.w ?? 0,
+			height: entry.h ?? 0
+		});
+		return true;
 	}
 
 	private async purged(): Promise<Set<string>> {
@@ -275,6 +400,19 @@ function snapshotOf(update: Uint8Array): Y.Snapshot {
 	const snap = Y.snapshot(doc);
 	doc.destroy();
 	return snap;
+}
+
+function assetIdsOf(update: Uint8Array): Set<string> {
+	const doc = docOf(update);
+	const ids = new Set<string>();
+	for (const page of allPageMaps(doc)) {
+		for (const el of page.values()) {
+			const id = el.get('type') === 'image' ? el.get('assetId') : null;
+			if (typeof id === 'string') ids.add(id);
+		}
+	}
+	doc.destroy();
+	return ids;
 }
 
 function schemaVersionOf(update: Uint8Array): number {

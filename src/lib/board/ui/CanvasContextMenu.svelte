@@ -22,6 +22,7 @@
 	import { exportDialog } from './exportDialogState.svelte';
 	import { backlinksDialog } from '../writing/backlinksDialogState.svelte';
 	import { formatKeys } from '../tools/formatKeys';
+	import { isAssetTooLarge } from '$lib/storage/sync/assetFlags';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -38,6 +39,25 @@
 	const media = $derived.by(() => {
 		const el = open && ctx.selection.single ? ctx.store.get(ctx.selection.single) : undefined;
 		return el?.type === 'media' ? el : null;
+	});
+	const image = $derived.by(() => {
+		const el = open && ctx.selection.single ? ctx.store.get(ctx.selection.single) : undefined;
+		return el?.type === 'image' ? el : null;
+	});
+	let imageTooLarge = $state(false);
+	$effect(() => {
+		const assetId = image?.assetId;
+		imageTooLarge = false;
+		if (!assetId) return;
+		let alive = true;
+		void isAssetTooLarge(assetId)
+			.catch(() => false)
+			.then((v) => {
+				if (alive) imageTooLarge = v;
+			});
+		return () => {
+			alive = false;
+		};
 	});
 	const docCard = $derived.by(() => {
 		const id = open ? ctx.selection.single : null;
@@ -124,6 +144,10 @@
 						window.open(media.url, '_blank', 'noopener,noreferrer')
 					)}
 					{@render entry('Copy link', null, () => void navigator.clipboard?.writeText(media.url))}
+				{/if}
+				{#if imageTooLarge}
+					<ContextMenu.Separator class={sep} />
+					{@render entry('Not synced (too large)', null, () => {}, true)}
 				{/if}
 				{#if docCard}
 					<ContextMenu.Separator class={sep} />
