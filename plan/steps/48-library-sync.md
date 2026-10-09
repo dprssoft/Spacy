@@ -38,8 +38,8 @@ Creating, renaming, starring, trashing, restoring and deleting boards on one dev
 - `boardsRepo` integration: local writes reach the library.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` passes
-- [ ] `00-architecture.md`: §5 the library doc, §6 `spacy-library`, §14 reconciliation and tombstones
+- [x] `pnpm verify` passes
+- [x] `00-architecture.md`: §5 the library doc, §6 `spacy-library`, §14 reconciliation and tombstones
 
 ## Out of scope
 Images (step 49), Google Drive and UI (step 50).

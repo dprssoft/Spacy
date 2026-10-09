@@ -8,7 +8,9 @@ import * as boardsRepo from '../boardsRepo';
 import { freshDB } from '../testUtils';
 import { SyncEngine } from './engine';
 import { onDirty } from './hub';
-import { idbSyncLocal, idbSyncState } from './idbLocal';
+import { createIdbSyncLocal, idbSyncState } from './idbLocal';
+
+const idbSyncLocal = createIdbSyncLocal();
 import { MemoryRemoteStore } from './remote';
 
 beforeEach(freshDB);

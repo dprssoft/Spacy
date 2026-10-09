@@ -43,7 +43,7 @@ Accounts, a server of our own, version history, UML/BPMN libraries, auto-layout,
 |---|---|---|
 | D1 | **Yjs `Y.Doc` is the source of truth for board content**, even without collaboration | Per-user undo (`Y.UndoManager`), incremental persistence (`y-indexeddb`), multi-tab sync, TipTap integration, and a future server sync without rewriting |
 | D2 | **One `Y.Doc` per board**: `meta`, `elements`, `docs` maps | Atomic load; doc cards and canvas cross-reference safely |
-| D3 | **Metadata (board list) is separate from board docs** — `idb` store `boards` | Start page must list boards without loading every Y.Doc |
+| D3 | **Metadata (board list) is separate from board docs** — `idb` store `boards` | Start page must list boards without loading every Y.Doc. With sync on, a per-user library doc (§14) is reconciled with it; the start page still reads `boards` |
 | D4 | **Rendering:** one CSS-transformed "world" `<div>`; every element is one absolutely positioned wrapper (DOM order = z-order); SVG-type elements render an inner `<svg>`, HTML-type render HTML | Correct z-order between SVG and HTML elements; doc cards are real editors |
 | D5 | **Selection handles, guides and previews render in a screen-space overlay** (not scaled) | Constant handle size at any zoom |
 | D6 | **Hit-testing in TypeScript** (rbush + geometry); element wrappers `pointer-events: none` | Consistent for strokes/connectors/rotated shapes; unit-testable |
@@ -259,6 +259,14 @@ export interface AssetRecord {
 - Store `assets` (keyPath `id`; index `boardId`)
 - Store `sync` (version 2; out-of-line string keys): the sync engine's bookkeeping, §14
 
+### Library doc (step 48)
+One `y-indexeddb` database `spacy-library` holds the synced board list (§14), opened only by the tab that syncs:
+```ts
+library.getMap('boards'): Y.Map<boardId, Y.Map<{
+  createdAt: number; starred: boolean; deletedAt: number | null; purgedAt: number | null;
+}>>
+```
+
 ### Board contents
 - One `y-indexeddb` database per board, name `spacy-board-<id>`.
 - An open board is saved by `BoardSaver` (`src/lib/storage/boardSaver.ts`): the same layout as y-indexeddb (an auto-increment `updates` store of Yjs updates, plus `custom`), but every write is awaited so a failed save is reported ("Not saved" in the top bar, a toast with Retry, a prompt before leaving). Retry writes the full state, because the failed update is missing from storage. One-shot snapshot reads and writes still use `y-indexeddb`.
@@ -458,4 +466,8 @@ Optional, single-user sync of boards between the user's own devices through a re
 - **Schedule (`SyncRunner`):** every board on start, changed boards 3 s after the last change, on `online` and on becoming visible, every 60 s while visible; failures back off exponentially (5 s → 5 min) and keep their boards queued.
 - **Status (`SyncStatus`):** overall `off | syncing | synced(at) | offline | error(reason)`; per board `syncing | synced(at) | error | newer-schema`.
 - **Bookkeeping** (`spacy` store `sync`): `cursor`, `index`, `seq`, `synced:<boardId>`. Device id: `spacy:sync:device`.
+- **Board list (step 48, `sync/library.ts`):** the library doc syncs like a board (files `board=library`). `reconcile(library, localList, state)` runs after every cycle's downloads (`SyncLocal.afterDownload`) and keeps it and the `boards` store in step both ways, using a per-board shadow (`library:shadow` in `sync`: both sides as of the last reconcile) to tell which side changed a field; when both did, the library's merged value wins. First connect merges: a star on either side stays, trash only if both. Synced: `createdAt`, `starred`, `deletedAt`, and the tombstone `purgedAt`. **Title** stays in the board doc (`meta.title`): renaming from the start page writes it there too (`renameBoard`), and downloaded content updates the list's title. `openedAt`, `viewport`, `thumbnail` stay per device.
+- **Tombstones:** a board deleted forever (or expired from the trash) here, i.e. gone from `boards` but in the shadow, gets `purgedAt`. Devices then destroy its local data, never download or upload it again, and remove its remote files (`SyncLocal.purgedBoards`). Tombstones are kept.
+- **Boards from other devices** are listed with their id (`boardsRepo.insert`), titled `Syncing…` until their content arrives; `openBoard` never writes that placeholder into content.
+- **Per-board failures:** a board that fails to download or upload doesn't stop the others; the cycle still fails at the end (backoff) and that board shows `error`.
 

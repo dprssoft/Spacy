@@ -4,6 +4,8 @@ import { getDB } from './db';
 import type { BoardFilter, BoardMeta, BoardSort } from './types';
 
 export const DEFAULT_TITLE = 'Untitled board';
+/** Title of a board from another device whose content hasn't arrived yet. */
+export const SYNCING_TITLE = 'Syncing…';
 const DAY = 24 * 60 * 60 * 1000;
 
 export async function get(id: string): Promise<BoardMeta | undefined> {
@@ -86,6 +88,27 @@ export const setThumbnail = (id: string, thumbnail: Blob | null) =>
 	patch(id, { thumbnail }, notifyBoardsChangedSoon);
 export const setViewport = (id: string, viewport: BoardMeta['viewport']) =>
 	patch(id, { viewport }, notifyBoardsChangedSoon);
+
+/** Lists a board that came from another device (sync), keeping its id and creation time. */
+export async function insert(
+	id: string,
+	init: Pick<BoardMeta, 'title' | 'createdAt' | 'starred' | 'deletedAt'>
+): Promise<void> {
+	const meta: BoardMeta = {
+		id,
+		...init,
+		updatedAt: Date.now(),
+		openedAt: 0,
+		thumbnail: null,
+		viewport: null
+	};
+	await (await getDB()).put('boards', meta);
+	notifyBoardsChanged();
+}
+
+/** Applies starred/trash changes that came from another device. */
+export const setSynced = (id: string, change: Partial<Pick<BoardMeta, 'starred' | 'deletedAt'>>) =>
+	patch(id, change);
 
 /** Removes the board's metadata and assets only. Use `destroyBoard` (boardLifecycle) to delete a board. */
 export async function destroy(id: string): Promise<void> {

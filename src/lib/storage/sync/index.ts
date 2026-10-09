@@ -3,7 +3,9 @@ import { nanoid } from 'nanoid';
 import { getPref, setPref } from '$lib/shared/localPrefs';
 import { SyncEngine } from './engine';
 import { onDirty } from './hub';
-import { idbSyncLocal, idbSyncState } from './idbLocal';
+import { onBoardsChanged } from '../channels';
+import { createIdbSyncLocal, idbSyncState } from './idbLocal';
+import { LIBRARY_ID, openLibrary } from './library';
 import { whileLeader } from './leader';
 import type { RemoteStore } from './remote';
 import { SyncRunner } from './runner';
@@ -34,10 +36,11 @@ export interface SyncSession {
 export function startSync(store: RemoteStore): SyncSession {
 	const status = new SyncStatus();
 	let runner: SyncRunner | null = null;
-	const stopLeading = whileLeader(() => {
+	const stopLeading = whileLeader(async () => {
+		const library = await openLibrary();
 		const engine = new SyncEngine({
 			store,
-			local: idbSyncLocal,
+			local: createIdbSyncLocal(library.doc),
 			state: idbSyncState,
 			device: deviceId(),
 			status
@@ -45,6 +48,8 @@ export function startSync(store: RemoteStore): SyncSession {
 		const r = new SyncRunner(engine, { status });
 		runner = r;
 		const offDirty = onDirty((board) => r.markDirty(board));
+		// The list changed here (or in another tab): the library reconciles in the next cycle.
+		const offBoards = onBoardsChanged(() => r.markDirty(LIBRARY_ID));
 		const wake = () => void r.wake();
 		const onVisible = () => {
 			if (document.visibilityState === 'visible') wake();
@@ -56,6 +61,8 @@ export function startSync(store: RemoteStore): SyncSession {
 			r.stop();
 			runner = null;
 			offDirty();
+			offBoards();
+			void library.close();
 			removeEventListener('online', wake);
 			document.removeEventListener('visibilitychange', onVisible);
 		};

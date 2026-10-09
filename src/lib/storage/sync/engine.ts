@@ -11,6 +11,13 @@ export interface SyncLocal {
 	read(boardId: string): Promise<Uint8Array>;
 	/** Merges remote changes into the board (origin `REMOTE_SYNC`). */
 	apply(boardId: string, update: Uint8Array): Promise<void>;
+	/** Boards deleted forever: never downloaded or uploaded again, their remote files removed. */
+	purgedBoards?(): Promise<Set<string>>;
+	/**
+	 * Runs after downloads, before uploads (the board list reconciles here). Returns boards it
+	 * changed, which are uploaded in this cycle too.
+	 */
+	afterDownload?(): Promise<Iterable<string>>;
 }
 
 /** Persistent key-value storage for the engine's own bookkeeping. */
@@ -78,15 +85,35 @@ export class SyncEngine {
 			for (const [id, e] of Object.entries(index)) {
 				if (!e.applied) pending.set(e.board, [...(pending.get(e.board) ?? []), id]);
 			}
-			for (const [board, ids] of pending) await this.download(board, ids, index);
-
-			const targets = new Set(boards === 'all' ? await this.o.local.boardIds() : boards);
-			for (const board of targets) {
-				if (!this.paused.has(board)) await this.upload(board, index);
+			// One board failing doesn't hold up the others; the cycle still fails at the end.
+			const errors: unknown[] = [];
+			const each = async (board: string, step: () => Promise<void>) => {
+				try {
+					await step();
+				} catch (err) {
+					errors.push(err);
+					status?.setBoard(board, { kind: 'error', reason: messageOf(err) });
+				}
+			};
+			let purged = await this.purged();
+			for (const [board, ids] of pending) {
+				if (!purged.has(board)) await each(board, () => this.download(board, ids, index));
 			}
+
+			const changed = (await this.o.local.afterDownload?.()) ?? [];
+			purged = await this.purged();
+			await this.removePurged(purged, index);
+			const targets = new Set(boards === 'all' ? await this.o.local.boardIds() : boards);
+			for (const board of changed) targets.add(board);
+			for (const board of targets) {
+				if (!this.paused.has(board) && !purged.has(board)) {
+					await each(board, () => this.upload(board, index));
+				}
+			}
+			if (errors.length > 0) throw errors[0];
 			status?.set({ kind: 'synced', at: this.now() });
 		} catch (err) {
-			status?.set({ kind: 'error', reason: err instanceof Error ? err.message : String(err) });
+			status?.set({ kind: 'error', reason: messageOf(err) });
 			throw err;
 		}
 	}
@@ -138,7 +165,7 @@ export class SyncEngine {
 			// Nothing local was waiting to upload: what we hold now is all on the remote too.
 			const synced = await this.syncedSnapshot(board);
 			const was = snapshotOf(before);
-			if (synced ? Y.equalSnapshots(synced, was) : was.sv.size === 0 && was.ds.clients.size === 0) {
+			if (synced ? Y.equalSnapshots(synced, was) : isEmpty(was)) {
 				await state.set(keySynced(board), Y.encodeSnapshot(snapshotOf(merged)));
 			}
 			for (const id of got) {
@@ -154,6 +181,7 @@ export class SyncEngine {
 		const content = await local.read(board);
 		const snap = snapshotOf(content);
 		const synced = await this.syncedSnapshot(board);
+		if (!synced && isEmpty(snap)) return;
 		if (!synced || !Y.equalSnapshots(synced, snap)) {
 			status?.setBoard(board, { kind: 'syncing' });
 			const delta = synced ? Y.diffUpdate(content, Y.encodeStateVector(synced.sv)) : content;
@@ -195,6 +223,19 @@ export class SyncEngine {
 		}
 	}
 
+	private async purged(): Promise<Set<string>> {
+		return (await this.o.local.purgedBoards?.()) ?? new Set();
+	}
+
+	private async removePurged(purged: Set<string>, index: FileIndex): Promise<void> {
+		for (const [id, e] of Object.entries(index)) {
+			if (!purged.has(e.board)) continue;
+			await this.o.store.remove(id);
+			delete index[id];
+			await this.o.state.set(KEY_INDEX, index);
+		}
+	}
+
 	private async loadIndex(): Promise<FileIndex> {
 		const v = await this.o.state.get(KEY_INDEX);
 		return v && typeof v === 'object' ? { ...(v as FileIndex) } : {};
@@ -218,6 +259,10 @@ export class SyncEngine {
 		return (this.o.now ?? Date.now)();
 	}
 }
+
+const messageOf = (err: unknown) => (err instanceof Error ? err.message : String(err));
+
+const isEmpty = (snap: Y.Snapshot) => snap.sv.size === 0 && snap.ds.clients.size === 0;
 
 function docOf(update: Uint8Array): Y.Doc {
 	const doc = new Y.Doc();
