@@ -8,13 +8,16 @@
 	let { el }: ElementViewProps<ImageElement> = $props();
 
 	const { assets } = getBoard();
-	let status = $state<'loading' | 'ready' | 'missing'>('loading');
+	let status = $state<'loading' | 'downloading' | 'ready' | 'missing'>('loading');
 	let url = $state<string | null>(null);
 
 	$effect(() => {
 		let alive = true;
 		status = 'loading';
-		void assets.get(el.assetId).then((u) => {
+		const downloading = () => {
+			if (alive) status = 'downloading';
+		};
+		void assets.get(el.assetId, downloading).then((u) => {
 			if (!alive) return;
 			url = u;
 			status = u ? 'ready' : 'missing';
@@ -37,6 +40,12 @@
 			class="block size-full select-none"
 			style:object-fit="fill"
 		/>
+	{:else if status === 'downloading'}
+		<div
+			class="flex size-full animate-pulse items-center justify-center bg-surface-2 text-sm text-muted"
+		>
+			Downloading…
+		</div>
 	{:else if status === 'missing'}
 		<div class="flex size-full items-center justify-center bg-surface-2 text-muted">
 			<ImageOff class="size-6" aria-hidden="true" />

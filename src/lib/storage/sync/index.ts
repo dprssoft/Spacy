@@ -2,7 +2,7 @@
 import { nanoid } from 'nanoid';
 import { getPref, setPref } from '$lib/shared/localPrefs';
 import { SyncEngine } from './engine';
-import { onDirty } from './hub';
+import { onDirty, serveAssetRequests } from './hub';
 import { onBoardsChanged } from '../channels';
 import { createIdbSyncLocal, idbSyncState } from './idbLocal';
 import { LIBRARY_ID, openLibrary } from './library';
@@ -48,6 +48,7 @@ export function startSync(store: RemoteStore): SyncSession {
 		const r = new SyncRunner(engine, { status });
 		runner = r;
 		const offDirty = onDirty((board) => r.markDirty(board));
+		const offAssets = serveAssetRequests((asset) => engine.fetchAsset(asset));
 		// The list changed here (or in another tab): the library reconciles in the next cycle.
 		const offBoards = onBoardsChanged(() => r.markDirty(LIBRARY_ID));
 		const wake = () => void r.wake();
@@ -61,6 +62,7 @@ export function startSync(store: RemoteStore): SyncSession {
 			r.stop();
 			runner = null;
 			offDirty();
+			offAssets();
 			offBoards();
 			void library.close();
 			removeEventListener('online', wake);
