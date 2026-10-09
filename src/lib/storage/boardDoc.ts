@@ -6,12 +6,13 @@ import * as Y from 'yjs';
 import { getDocsMap, getMeta, getSketchesMap } from '$lib/model/doc';
 import { migrate } from '$lib/model/migrations';
 import { allPageMaps, pruneOrphanThreads } from '$lib/model/pages';
-import { IMPORT, LOCAL, MIGRATION, type Origin } from '$lib/model/origins';
+import { IMPORT, LOCAL, MIGRATION, REMOTE_SYNC, type Origin } from '$lib/model/origins';
 import { debounce } from '$lib/shared/debounce';
 import { BoardSaver } from './boardSaver';
 import { boardDbName } from './db';
 import * as assetsRepo from './assetsRepo';
 import * as boardsRepo from './boardsRepo';
+import { markDirty, trackOpenBoard } from './sync/hub';
 import { createTabSync } from './tabSync';
 import type { BoardMeta } from './types';
 
@@ -43,7 +44,6 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 
 	const doc = new Y.Doc();
 	const saver = await BoardSaver.open(boardDbName(id), doc);
-	// Future: add a network provider (e.g. HocuspocusProvider) here.
 
 	try {
 		migrate(doc);
@@ -58,6 +58,7 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 	pruneOrphanThreads(doc, MIGRATION);
 
 	const stopTabSync = createTabSync(doc, boardChannelName(id));
+	const untrackSync = trackOpenBoard(id, doc);
 	ensureOutlineMap(doc);
 	const undo = createBoardUndo(doc);
 
@@ -79,6 +80,7 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 			doc.off('update', onUpdate);
 			await touch.flush();
 			undo.destroy();
+			untrackSync();
 			stopTabSync();
 			await saver.destroy();
 			doc.destroy();
@@ -110,6 +112,7 @@ export async function writeSnapshot(
 	await persistence.whenSynced;
 	await persistence.destroy();
 	doc.destroy();
+	if (origin !== REMOTE_SYNC) markDirty(id);
 }
 
 /** Deletes a board's stored content. Open connections in other tabs close themselves. */

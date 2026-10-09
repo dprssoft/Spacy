@@ -17,20 +17,21 @@ export interface SpacyDB extends DBSchema {
 		value: AssetRecord;
 		indexes: { boardId: string };
 	};
+	/** The sync engine's bookkeeping (`storage/sync`), keyed by name. */
+	sync: {
+		key: string;
+		value: unknown;
+	};
 }
 
 let dbPromise: Promise<IDBPDatabase<SpacyDB>> | null = null;
 
 export function getDB(): Promise<IDBPDatabase<SpacyDB>> {
 	dbPromise ??= migrateLegacy().then(() =>
-		openDB<SpacyDB>(DB_NAME, 1, {
-			upgrade(db) {
-				const boards = db.createObjectStore('boards', { keyPath: 'id' });
-				boards.createIndex('openedAt', 'openedAt');
-				boards.createIndex('updatedAt', 'updatedAt');
-				boards.createIndex('deletedAt', 'deletedAt');
-				const assets = db.createObjectStore('assets', { keyPath: 'id' });
-				assets.createIndex('boardId', 'boardId');
+		openDB<SpacyDB>(DB_NAME, 2, {
+			upgrade(db, oldVersion) {
+				if (oldVersion < 1) createV1Stores(db);
+				if (oldVersion < 2) db.createObjectStore('sync');
 			},
 			blocking() {
 				// Another tab needs a newer version: let it upgrade, reconnect on next use.
@@ -40,6 +41,15 @@ export function getDB(): Promise<IDBPDatabase<SpacyDB>> {
 		})
 	);
 	return dbPromise;
+}
+
+function createV1Stores(db: IDBPDatabase<SpacyDB>): void {
+	const boards = db.createObjectStore('boards', { keyPath: 'id' });
+	boards.createIndex('openedAt', 'openedAt');
+	boards.createIndex('updatedAt', 'updatedAt');
+	boards.createIndex('deletedAt', 'deletedAt');
+	const assets = db.createObjectStore('assets', { keyPath: 'id' });
+	assets.createIndex('boardId', 'boardId');
 }
 
 // Boards made while the app was called SMTHNG are copied over before the database first opens. If

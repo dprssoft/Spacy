@@ -46,8 +46,8 @@ A storage-agnostic engine that keeps every board's Yjs document in sync with a r
 - Leader election: two engines on one "browser" sync once.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` passes
-- [ ] `00-architecture.md`: the non-goal lifted, §14 Sync (file layout, state-vector upload, compaction, leader tab, origins), §6 the `sync` store
+- [x] `pnpm verify` passes
+- [x] `00-architecture.md`: the non-goal lifted, §14 Sync (file layout, state-vector upload, compaction, leader tab, origins), §6 the `sync` store
 
 ## Out of scope
 The board list (step 48), images (step 49), Google Drive and UI (step 50).
