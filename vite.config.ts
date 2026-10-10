@@ -4,20 +4,28 @@ import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import pkg from './package.json' with { type: 'json' };
 
 // The SPA fallback for client-only routes; index.html is the prerendered start page.
 const FALLBACK = '200.html';
 const BUILD_ID = `${pkg.version}-${Date.now().toString(36)}`;
+// PUBLIC_* settings from the environment, or from .env / .env.local (the environment wins). Unit
+// tests ignore the files, so a developer's local settings don't change what they test.
+const env = {
+	...(process.env.VITEST
+		? {}
+		: loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), 'PUBLIC_')),
+	...process.env
+};
 
 export default defineConfig({
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version),
 		// Live sharing relays (plan/steps/52); unset hides the Share button.
-		__SIGNALING_URLS__: JSON.stringify(process.env.PUBLIC_SIGNALING_URLS ?? ''),
+		__SIGNALING_URLS__: JSON.stringify(env.PUBLIC_SIGNALING_URLS ?? ''),
 		// Google Drive sync (plan/steps/50); unset hides it.
-		__GOOGLE_CLIENT_ID__: JSON.stringify(process.env.PUBLIC_GOOGLE_CLIENT_ID ?? '')
+		__GOOGLE_CLIENT_ID__: JSON.stringify(env.PUBLIC_GOOGLE_CLIENT_ID ?? '')
 	},
 	plugins: [
 		tailwindcss(),
