@@ -6,7 +6,8 @@ import { getMeta } from '$lib/model/doc';
 import type { ShareInfo } from '$lib/model/share';
 import { loadSnapshot, writeMeta, writeSnapshot } from '../boardDoc';
 import * as boardsRepo from '../boardsRepo';
-import { SIGNALING_URLS } from './config';
+import { PeerSync } from './peerSync';
+import { joinLiveRoom } from './room';
 
 const hasContent = (update: Uint8Array) => {
 	const doc = new Y.Doc();
@@ -41,12 +42,8 @@ export async function joinShared(
 }
 
 async function fetchFirst(share: ShareInfo, signal?: AbortSignal): Promise<Uint8Array> {
-	const { WebrtcProvider } = await import('y-webrtc');
 	const doc = new Y.Doc();
-	const provider = new WebrtcProvider(`spacy-${share.room}`, doc, {
-		signaling: [...SIGNALING_URLS],
-		password: share.key
-	});
+	const sync = new PeerSync(doc, await joinLiveRoom(share.room, share.key));
 	try {
 		await new Promise<void>((resolve, reject) => {
 			const check = () => {
@@ -59,10 +56,7 @@ async function fetchFirst(share: ShareInfo, signal?: AbortSignal): Promise<Uint8
 		});
 		return Y.encodeStateAsUpdate(doc);
 	} finally {
-		provider.destroy();
-		await provider.key;
-		// y-webrtc frees the room name in a callback queued on `key`; let it run.
-		await Promise.resolve();
+		await sync.destroy();
 		doc.destroy();
 	}
 }

@@ -14,7 +14,6 @@ import * as assetsRepo from './assetsRepo';
 import * as boardsRepo from './boardsRepo';
 import { markDirty, openDoc, trackOpenBoard } from './sync/hub';
 import { createTabSync } from './tabSync';
-import { SIGNALING_URLS } from './live/config';
 import { LiveSession } from './live/session';
 import type { BoardMeta } from './types';
 
@@ -34,8 +33,8 @@ export interface OpenBoard {
 	undo: Y.UndoManager;
 	/** Whether changes are reaching storage; retry after a failure. */
 	saver: BoardSaver;
-	/** Live sharing on this board; null when no relay is configured. */
-	live: LiveSession | null;
+	/** Live sharing on this board (connected while `meta.share` is set). */
+	live: LiveSession;
 	close(): Promise<void>;
 }
 
@@ -64,7 +63,7 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 
 	const stopTabSync = createTabSync(doc, boardChannelName(id));
 	const untrackSync = trackOpenBoard(id, doc);
-	const live = SIGNALING_URLS.length > 0 ? new LiveSession(id, doc, SIGNALING_URLS) : null;
+	const live = new LiveSession(id, doc);
 	ensureOutlineMap(doc);
 	const undo = createBoardUndo(doc);
 

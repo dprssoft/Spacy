@@ -101,7 +101,7 @@
 		sketch: new SketchSettings(),
 		playback: new PlaybackState(),
 		save: new SaveStatus(board.saver),
-		live: board.live ? new LiveShare(board.id, board.doc, board.live) : null
+		live: new LiveShare(board.id, board.doc, board.live)
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);
@@ -115,7 +115,7 @@
 	ctx.waystones = new WaystonesState(ctx);
 	onDestroy(() => {
 		ctx.save.destroy();
-		ctx.live?.destroy();
+		ctx.live.destroy();
 		ctx.comments.destroy();
 		ctx.words.destroy();
 		ctx.outline.destroy();
@@ -331,9 +331,7 @@
 						<SelectionOverlay />
 						<QuickCreateButtons />
 						<PulseHighlight />
-						{#if ctx.live}
-							<LiveCursors live={ctx.live} />
-						{/if}
+						<LiveCursors live={ctx.live} />
 						<StylePopover />
 						<MediaOverlay />
 						<CommentBadges />

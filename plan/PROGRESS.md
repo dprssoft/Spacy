@@ -1398,3 +1398,18 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Follow-ups:** the human's setup (domain, Google Cloud project, consent screen with `drive.appdata` and the `/privacy` URL, Web client id, verification) and the manual two-browser check with a real account; showing `newer-schema` on the board.
 **Verification:** pnpm verify ✅ (1001 unit tests; new `drive.test.ts` 6: create/list/read/remove and the changes cursor, resumable upload, 401 renewal then AuthRequiredError, rate-limit backoff and no retry on a plain 403, account email and removeAll, the engine between two devices on Drive) · e2e `sync.spec.ts` ✅ chromium + firefox (connect in A and B → A's board in B's list and content → an image from A shows on B → a rename reaches B → reload → "Sign in again" → click → synced → offline edit on A catches up; disconnect with "also delete" empties the fake Drive, boards stay, axe on the dialog).
 - Full e2e (chromium, mobile, firefox) with step 50: 429 passed, 25 skipped, 1 failed — `compile.spec.ts` on Firefox timed out at 30 s under the full run and passed 2/2 alone (the same load-related timeouts as `home.spec.ts` before).
+
+## Step 52 rework — live sharing without servers (Trystero) — 2026-10-10
+**Summary:**
+- The human asked for no hosted services at all. Live sharing now finds peers through public Nostr relays with Trystero; `relay/` (Cloudflare Worker), `y-webrtc`, its patch and `PUBLIC_SIGNALING_URLS` are removed. The Share button is always there.
+- `storage/live/`: `room.ts` (joins a Trystero room; Nostr by default, Trystero's WebSocket relay when `PUBLIC_LIVE_RELAY_URLS` is set), `peerSync.ts` (Yjs sync and awareness over room actions, replacing y-webrtc's provider), `liveAssets.ts` (images over `asset-want`/`asset-file` actions instead of a second Yjs room), `clock.ts` (clock skew from the server's Date header), `fakeRooms.ts` (tests). `session.ts` and `join.ts` use them; presence reads `PeerSync.awareness`.
+- `pnpm relay` now runs Trystero's WebSocket relay (`scripts/live-relay.mjs`); e2e builds use it. CSP `connect-src` allows `wss:` for public relays.
+- Settings can also come from `.env` / `.env.local` (`loadEnv` in `vite.config.ts`, read by `postbuild-csp.mjs` too); unit tests ignore those files.
+
+**Deviations / findings:**
+- Over public Nostr, two Chromium contexts here first failed: this machine's clock is ~2 h 54 min ahead ("System clock synchronized: no", RTC in local time — dual boot), and relays reject events "created_at too late". With the browsers' clock set to real time (Playwright `clock.install`), B joined in 1.7 s and edits went both ways. Hence the clock warning in the Share popover and the joining screen; it compares with the web server's Date header, so it can't detect a wrong clock when the server runs on the same machine (localhost).
+- Firefox e2e for live sharing stays skipped: headless Firefox here still can't complete WebRTC between contexts (also with Trystero).
+- No TURN: peers on networks that block direct connections can't co-edit; the popover says so when Trystero reports a failed connection.
+
+**Dependencies added:** trystero@0.26.0 (peer discovery over Nostr), @trystero-p2p/ws-relay@0.26.0 (local/private relay: client used only with `PUBLIC_LIVE_RELAY_URLS`, server for `pnpm relay`), lib0@^0.2.119 (Yjs's encoder, now imported directly). Removed: y-webrtc.
+**Verification:** pnpm verify ✅ (1009 unit tests; new `peerSync.test.ts` 5, `clock.test.ts` 2; `liveAssets.test.ts` rewritten, 4) · e2e `live.spec.ts` ✅ chromium (local relay) · manual run over public Nostr ✅ chromium with a corrected clock.

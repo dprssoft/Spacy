@@ -35,8 +35,9 @@
 	<h2>Live sharing (optional)</h2>
 	<p>
 		When you share a board live, the browsers that open its link exchange edits directly with each
-		other, encrypted. A relay only helps them find each other; the link's key never reaches it, and
-		it stores nothing. Everyone who opens the link gets a copy of the board.
+		other, encrypted. Public Nostr relays (servers run by third parties) only help them find each
+		other: they see a scrambled room name and when browsers connect, never the board or the link's
+		key. Everyone who opens the link gets a copy of the board.
 	</p>
 
 	<h2>Media links</h2>

@@ -1,22 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import * as Y from 'yjs';
 import type { LocalAsset } from '../sync/engine';
+import { FakeNetwork } from './fakeRooms';
 import { LiveAssets, MAX_LIVE_ASSET_BYTES } from './liveAssets';
 
-/** Two session docs kept in sync in memory, as a provider would. */
-function link(a: Y.Doc, b: Y.Doc): void {
-	a.on('update', (u: Uint8Array, origin: unknown) => origin !== b && Y.applyUpdate(b, u, a));
-	b.on('update', (u: Uint8Array, origin: unknown) => origin !== a && Y.applyUpdate(a, u, b));
-}
-
-function peer(board: string, have: LocalAsset[] = []) {
+function peer(net: FakeNetwork, have: LocalAsset[] = []) {
 	const stored = new Map(have.map((a) => [a.id, a]));
-	const doc = new Y.Doc();
-	const assets = new LiveAssets(doc, board, {
+	const assets = new LiveAssets(net.join(), 'board', {
 		read: async (id) => stored.get(id) ?? null,
 		write: async (a) => void stored.set(a.id, a)
 	});
-	return { doc, assets, stored };
+	return { assets, stored };
 }
 
 const image = (id: string, bytes: number): LocalAsset => ({
@@ -28,35 +21,45 @@ const image = (id: string, bytes: number): LocalAsset => ({
 	height: 10
 });
 
+const settle = () => new Promise((r) => setTimeout(r, 0));
+
 describe('LiveAssets', () => {
-	it('gets a missing image from a peer and cleans up', async () => {
-		const a = peer('board', [image('img', 100)]);
-		const b = peer('board');
-		link(a.doc, b.doc);
+	it('gets a missing image from a peer', async () => {
+		const net = new FakeNetwork();
+		peer(net, [image('img', 100)]);
+		const b = peer(net);
+		await settle();
 		expect(await b.assets.request('img')).toBe(true);
 		const got = b.stored.get('img');
 		expect(got).toMatchObject({ boardId: 'board', mime: 'image/png', width: 20, height: 10 });
 		expect(new Uint8Array(await got!.blob.arrayBuffer())).toEqual(new Uint8Array(100).fill(7));
-		expect([...b.doc.getMap('wants').keys()]).toEqual([]);
-		expect([...b.doc.getMap('files').keys()]).toEqual([]);
+	});
+
+	it('stores an image once when several peers answer', async () => {
+		const net = new FakeNetwork();
+		peer(net, [image('img', 10)]);
+		peer(net, [image('img', 10)]);
+		const c = peer(net);
+		let writes = 0;
+		const write = c.stored.set.bind(c.stored);
+		c.stored.set = (k, v) => (writes++, write(k, v));
+		await settle();
+		expect(await c.assets.request('img')).toBe(true);
+		await settle();
+		expect(writes).toBe(1);
 	});
 
 	it('does not send images over 5 MB', async () => {
-		const a = peer('board', [image('big', MAX_LIVE_ASSET_BYTES + 1)]);
-		const b = peer('board');
-		link(a.doc, b.doc);
+		const net = new FakeNetwork();
+		peer(net, [image('big', MAX_LIVE_ASSET_BYTES + 1)]);
+		const b = peer(net);
+		await settle();
 		expect(await b.assets.request('big', 50)).toBe(false);
-		expect([...b.doc.getMap('wants').keys()]).toEqual([]);
 	});
 
-	it('a peer joining later answers a request already waiting', async () => {
-		const b = peer('board');
-		const pending = b.assets.request('img');
-		const a = peer('board', [image('img', 10)]);
-		Y.applyUpdate(a.doc, Y.encodeStateAsUpdate(b.doc));
-		link(a.doc, b.doc);
-		// The existing want reaches A through a fresh sync.
-		Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
-		expect(await pending).toBe(true);
+	it('answers false at once with nobody else in the room', async () => {
+		const net = new FakeNetwork();
+		const a = peer(net);
+		expect(await a.assets.request('img')).toBe(false);
 	});
 });

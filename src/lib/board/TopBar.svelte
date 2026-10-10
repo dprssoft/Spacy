@@ -94,10 +94,8 @@
 	<div class="ml-auto flex shrink-0 items-center gap-1 max-sm:gap-0">
 		<SaveIndicator />
 		<SyncIndicator />
-		{#if ctx.live}
-			<PeerAvatars peers={ctx.live.presence.peers} />
-			<SharePopover live={ctx.live} />
-		{/if}
+		<PeerAvatars peers={ctx.live.presence.peers} />
+		<SharePopover live={ctx.live} />
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger
 				class="inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-sm font-medium hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none max-sm:px-2 pointer-coarse:h-11 pointer-coarse:min-w-11"

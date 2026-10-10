@@ -1,5 +1,7 @@
 # Step 52 — Live sharing (peer-to-peer)
 
+> **Changed 2026-10-10 (human: "no Cloudflare or other services"):** the transport is now Trystero over public Nostr relays; the `relay/` Worker, `y-webrtc` and its patch are gone. See `00-architecture.md` §14 and PROGRESS. The design below is the original.
+
 Phase: L. Sync · Depends on: 49 · Estimate: 2.5 days
 
 > **Approved by the human (2026-10-09):** live co-editing between browsers through WebRTC, with a tiny signaling relay of our own (free Cloudflare account) that stores nothing; `meta.share = { room, key }` in the board doc (data model); edit links only; images up to 5 MB sent between browsers. Can run before step 50: it needs no Google setup.
