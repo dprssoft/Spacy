@@ -1367,3 +1367,13 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Dependencies added:** y-webrtc@10.3.0 — WebRTC provider for Yjs (named in the report the human approved); loaded only when a board is shared.
 **Follow-ups:** the human deploys `relay/` (`npx wrangler deploy`) and sets `PUBLIC_SIGNALING_URLS` for production builds; a manual check on two real devices/networks.
 **Verification:** pnpm verify ✅ (new `share.test.ts` 3, `liveAssets.test.ts` 3, `hub.test.ts` 3) · e2e `live.spec.ts` ✅ chromium (share → join from the link in a second context → edits both ways, head count 2, an image sent to the joiner, Stop sharing disconnects), skipped on firefox (above).
+
+## Step 53 — Presence: names and live cursors — 2026-10-10
+**Summary:**
+- `Presence` (`board/live/presence.svelte.ts`) on `ctx.live.presence`: binds to the session's awareness (re-binds when the connection changes), publishes name/color and a throttled pointer, reads the others (`readPeers`, which validates every field).
+- `LiveCursors` in the overlay (arrow + name label per person on the current page), `PeerAvatars` next to Share (up to 4, then "+N").
+
+**Deviations:** cursor colors come from the strong palette (§12), not the sticky colors: pastel arrows with white labels were hard to read.
+**Dependencies added:** none (`y-protocols` already installed)
+**Follow-ups:** none
+**Verification:** pnpm verify ✅ (995 unit tests; new `presenceData.test.ts` 4: peers with name/color/cursor, malformed states, leaving, throttle) · e2e `live.spec.ts` ✅ chromium (B appears as an avatar on A; B's pointer shows on A with its name).

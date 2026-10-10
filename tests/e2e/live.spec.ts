@@ -56,6 +56,16 @@ test('two browsers edit one board live', async ({ page: a, browser, browserName 
 	await expect.poll(async () => (await list(b)).map((e) => e.id)).toContain('fromA');
 	await expect(a.getByTestId('live-peers')).toHaveText('2');
 
+	// Presence: B on A's avatars, and B's pointer with its name on A's board.
+	await expect(a.getByTestId('peer-avatar')).toHaveCount(1);
+	const canvas = (await b.getByTestId('canvas').boundingBox())!;
+	await b.mouse.move(canvas.x + canvas.width / 2, canvas.y + canvas.height / 2);
+	await b.mouse.move(canvas.x + canvas.width / 2 + 40, canvas.y + canvas.height / 2 + 30, {
+		steps: 5
+	});
+	await expect(a.getByTestId('live-cursor')).toHaveText(/Guest \d+$/);
+	await b.mouse.move(0, 0);
+
 	await add(b, sticky('fromB', 300, 0));
 	await expect
 		.poll(async () => (await list(a)).map((e) => e.id).sort())

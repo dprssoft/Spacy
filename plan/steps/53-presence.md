@@ -21,7 +21,7 @@ While a board is shared, everyone sees who else is there and where their pointer
 - e2e in `live.spec.ts`: B's pointer moving shows B's cursor with its name on A.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `pnpm verify` and `pnpm test:e2e` pass (e2e: `live.spec.ts` on Chromium)
 
 ## Commit
 `feat(live): show who is on a shared board and their cursors`
