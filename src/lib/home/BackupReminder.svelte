@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { driveSync } from '$lib/sync/driveSync.svelte';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import { getPref, setPref } from '$lib/shared/localPrefs';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
@@ -40,7 +41,10 @@
 		data-testid="backup-reminder"
 	>
 		<ShieldAlert class="size-5 shrink-0 text-accent" aria-hidden="true" />
-		<p class="min-w-0 flex-1">Your boards live only in this browser. Back up to keep a copy.</p>
+		<p class="min-w-0 flex-1">
+			{#if driveSync.connected}Your boards sync through your Google Drive. A backup file is still a
+				good extra copy.{:else}Your boards live only in this browser. Back up to keep a copy.{/if}
+		</p>
 		<button
 			type="button"
 			class="h-8 rounded-lg px-3 font-medium text-muted hover:bg-surface-2 hover:text-text"

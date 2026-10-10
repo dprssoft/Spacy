@@ -3,6 +3,7 @@ import { getMeta } from '$lib/model/doc';
 import { SCHEMA_VERSION } from '$lib/model/migrations';
 import { allPageMaps } from '$lib/model/pages';
 import { keyTooLarge } from './assetFlags';
+import { AuthRequiredError } from './auth';
 import { RemoteNotFoundError, type RemoteStore } from './remote';
 import type { SyncStatus } from './status';
 
@@ -149,7 +150,11 @@ export class SyncEngine {
 			if (errors.length > 0) throw errors[0];
 			status?.set({ kind: 'synced', at: this.now() });
 		} catch (err) {
-			status?.set({ kind: 'error', reason: messageOf(err) });
+			status?.set(
+				err instanceof AuthRequiredError
+					? { kind: 'signin' }
+					: { kind: 'error', reason: messageOf(err) }
+			);
 			throw err;
 		}
 	}

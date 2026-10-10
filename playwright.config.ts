@@ -17,8 +17,9 @@ export default defineConfig({
 	webServer: [
 		{
 			// The production output, served like a static host with the real security headers (CSP).
-			// Live sharing goes through the local relay below.
-			command: `PUBLIC_SIGNALING_URLS=${RELAY} pnpm build && node scripts/serve-build.mjs 4173`,
+			// Live sharing goes through the local relay below; Google sign-in and Drive are faked by
+			// routes in sync.spec.ts.
+			command: `PUBLIC_SIGNALING_URLS=${RELAY} PUBLIC_GOOGLE_CLIENT_ID=e2e-client pnpm build && node scripts/serve-build.mjs 4173`,
 			port: 4173,
 			reuseExistingServer: !process.env.CI
 		},

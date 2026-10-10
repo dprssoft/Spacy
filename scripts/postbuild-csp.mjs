@@ -23,13 +23,26 @@ const relays = (process.env.PUBLIC_SIGNALING_URLS ?? '')
 	.map((u) => u.trim())
 	.filter((u) => /^wss?:\/\/[^\s;']+$/.test(u))
 	.map((u) => new URL(u).origin);
+// Google Drive sync (PUBLIC_GOOGLE_CLIENT_ID): Google's sign-in script and popup, and the Drive API.
+const google = (process.env.PUBLIC_GOOGLE_CLIENT_ID ?? '').trim() !== '';
+const connect = ["'self'", ...new Set(relays)];
+if (google) connect.push('https://www.googleapis.com', 'https://oauth2.googleapis.com');
 if (!headers.includes("connect-src 'self';"))
 	throw new Error("_headers: connect-src 'self' not found");
 writeFileSync(
 	'build/_headers',
 	headers
-		.replace("script-src 'self';", `script-src 'self' ${[...new Set(hashes)].join(' ')};`)
-		.replace("connect-src 'self';", `connect-src ${["'self'", ...new Set(relays)].join(' ')};`)
+		.replace(
+			"script-src 'self';",
+			`script-src 'self'${google ? ' https://accounts.google.com/gsi/client' : ''} ${[...new Set(hashes)].join(' ')};`
+		)
+		.replace("connect-src 'self';", `connect-src ${connect.join(' ')};`)
+		.replace(
+			"style-src 'self' 'unsafe-inline';",
+			`style-src 'self' 'unsafe-inline'${google ? ' https://accounts.google.com/gsi/style' : ''};`
+		)
+		.replace('frame-src ', `frame-src ${google ? 'https://accounts.google.com ' : ''}`)
 );
+if (google) console.log('CSP: Google sign-in and Drive API allowed');
 if (relays.length) console.log(`CSP: live sharing relays ${relays.join(', ')}`);
 console.log(`CSP: allowed ${new Set(hashes).size} inline script(s) by hash in ${pages.join(', ')}`);

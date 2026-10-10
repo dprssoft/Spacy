@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { driveSync } from '$lib/sync/driveSync.svelte';
 	import { Tooltip } from 'bits-ui';
 	import CloudCheck from '@lucide/svelte/icons/cloud-check';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
@@ -59,7 +60,11 @@
 				Changes aren’t reaching browser storage (it may be full). Click to retry, or download a copy
 				from the menu.
 			{:else}
-				Boards are saved in this browser. Export a backup to keep a copy.
+				{#if driveSync.connected}
+					Boards are saved in this browser and synced through your Google Drive.
+				{:else}
+					Boards are saved in this browser. Export a backup to keep a copy.
+				{/if}
 			{/if}
 		</Tooltip.Content>
 	</Tooltip.Portal>

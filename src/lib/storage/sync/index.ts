@@ -2,7 +2,7 @@
 import { nanoid } from 'nanoid';
 import { getPref, setPref } from '$lib/shared/localPrefs';
 import { SyncEngine } from './engine';
-import { onDirty, serveAssetRequests } from './hub';
+import { announceStatus, onDirty, requestSyncNow, serveAssetRequests, serveStatus } from './hub';
 import { onBoardsChanged } from '../channels';
 import { createIdbSyncLocal, idbSyncState } from './idbLocal';
 import { LIBRARY_ID, openLibrary } from './library';
@@ -49,6 +49,11 @@ export function startSync(store: RemoteStore): SyncSession {
 		runner = r;
 		const offDirty = onDirty((board) => r.markDirty(board));
 		const offAssets = serveAssetRequests((asset) => engine.fetchAsset(asset));
+		const offServe = serveStatus(
+			() => status.overall,
+			() => void r.wake()
+		);
+		const offStatus = status.subscribe(() => announceStatus(status.overall));
 		// The list changed here (or in another tab): the library reconciles in the next cycle.
 		const offBoards = onBoardsChanged(() => r.markDirty(LIBRARY_ID));
 		const wake = () => void r.wake();
@@ -63,6 +68,8 @@ export function startSync(store: RemoteStore): SyncSession {
 			runner = null;
 			offDirty();
 			offAssets();
+			offServe();
+			offStatus();
 			offBoards();
 			void library.close();
 			removeEventListener('online', wake);
@@ -71,10 +78,14 @@ export function startSync(store: RemoteStore): SyncSession {
 	});
 	return {
 		status,
-		syncNow: () => runner?.wake() ?? Promise.resolve(),
+		async syncNow() {
+			if (runner) await runner.wake();
+			else requestSyncNow();
+		},
 		stop() {
 			stopLeading();
 			status.set({ kind: 'off' });
+			announceStatus({ kind: 'off' });
 		}
 	};
 }

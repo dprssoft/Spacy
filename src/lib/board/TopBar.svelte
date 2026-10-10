@@ -14,6 +14,7 @@
 	import ThemeToggle from '$lib/shared/ui/ThemeToggle.svelte';
 	import { getBoard } from './context';
 	import SaveIndicator from './SaveIndicator.svelte';
+	import SyncIndicator from '$lib/sync/SyncIndicator.svelte';
 	import PeerAvatars from './live/PeerAvatars.svelte';
 	import SharePopover from './live/SharePopover.svelte';
 	import { formatKeys } from './tools/formatKeys';
@@ -92,6 +93,7 @@
 
 	<div class="ml-auto flex shrink-0 items-center gap-1 max-sm:gap-0">
 		<SaveIndicator />
+		<SyncIndicator />
 		{#if ctx.live}
 			<PeerAvatars peers={ctx.live.presence.peers} />
 			<SharePopover live={ctx.live} />

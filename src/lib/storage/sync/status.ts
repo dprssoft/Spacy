@@ -5,6 +5,8 @@ export type SyncState =
 	| { kind: 'syncing' }
 	| { kind: 'synced'; at: number }
 	| { kind: 'offline' }
+	/** The sign-in expired; sync waits for the person (a click renews it). */
+	| { kind: 'signin' }
 	| { kind: 'error'; reason: string };
 
 export type BoardSyncState =

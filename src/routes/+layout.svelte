@@ -4,6 +4,7 @@
 	import { Toaster } from 'svelte-sonner';
 	import { pwa } from '$lib/shared/pwa.svelte';
 	import { theme } from '$lib/shared/theme.svelte';
+	import { driveSync } from '$lib/sync/driveSync.svelte';
 
 	let { children } = $props();
 
@@ -16,6 +17,7 @@
 	});
 	$effect(() => theme.init());
 	$effect(() => pwa.init());
+	$effect(() => driveSync.init());
 </script>
 
 <div class="contents" inert={!hydrated}>
