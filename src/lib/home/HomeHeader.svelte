@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SyncIndicator from '$lib/sync/SyncIndicator.svelte';
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
 	import Logo from '$lib/shared/ui/Logo.svelte';
@@ -79,6 +80,7 @@
 		<ImportButton class={iconButton} />
 		<!-- On phones the theme is in Settings. -->
 		<div class="contents max-sm:hidden"><ThemeToggle /></div>
+		<SyncIndicator />
 		<SettingsMenu class={iconButton} />
 	</div>
 </header>

@@ -5,6 +5,8 @@ declare global {
 	const __APP_VERSION__: string;
 	/** Comma-separated live sharing relays, `PUBLIC_SIGNALING_URLS` at build time (vite `define`). */
 	const __SIGNALING_URLS__: string;
+	/** Google OAuth client id for Drive sync, `PUBLIC_GOOGLE_CLIENT_ID` at build time. */
+	const __GOOGLE_CLIENT_ID__: string;
 
 	/** File Handling API (installed PWA opened with `.spacy` files; Chromium). */
 	interface LaunchParams {

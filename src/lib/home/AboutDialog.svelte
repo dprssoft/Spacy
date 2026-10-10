@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { driveSync } from '$lib/sync/driveSync.svelte';
 	import { Dialog } from 'bits-ui';
 	import Logo from '$lib/shared/ui/Logo.svelte';
 
@@ -18,7 +19,11 @@
 			<Dialog.Title class="mt-3 text-base font-semibold">Spacy</Dialog.Title>
 			<p class="text-sm text-muted">Version {__APP_VERSION__}</p>
 			<Dialog.Description class="mt-4 text-sm">
-				Boards are stored only in this browser. Back up regularly.
+				{#if driveSync.connected}
+					Boards are stored in this browser and synced through your Google Drive.
+				{:else}
+					Boards are stored only in this browser. Back up regularly.
+				{/if}
 			</Dialog.Description>
 			<a
 				href={REPOSITORY}

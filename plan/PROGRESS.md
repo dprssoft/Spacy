@@ -1381,3 +1381,20 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 ### Sync branch e2e run — 2026-10-10
 - Full e2e (chromium, mobile, firefox): 425 passed, 25 skipped, 1 failed — `home.spec.ts` board lifecycle on Firefox timed out at 30 s under the full parallel run; it passed 3/3 alone.
 - Fixed from this run: `csp.spec.ts` now expects `connect-src 'self' ws://localhost:4444;` (exactly the relay the e2e build is configured with). On phones (360 px) the Share button left the title 52 px wide (test needs > 60): the "Saved locally" cloud icon is hidden on phones while saved and Share is shown (it still shows while saving and when a save fails).
+
+## Step 50 — Google Drive and sync settings (code; real-account check pending) — 2026-10-10
+**Summary:**
+- Built ahead of the human setup, as asked: everything runs against `FakeDrive`; with no `PUBLIC_GOOGLE_CLIENT_ID` the feature is hidden, so `main` builds are unchanged.
+- `GoogleDriveStore` (Drive v3 REST over fetch: appDataFolder, changes cursor, multipart/resumable uploads, token renewal on 401, backoff on rate limits, removeAll, accountEmail); `SyncAuth` + `GisAuth` (GIS token model, token in memory shared across tabs, renewal on the next gesture); `driveSync` controller; Settings → `SyncDialog`; `SyncIndicator` on the board and start page; `/privacy`; CSP additions when configured; texts that said "only in this browser" follow the connection.
+- Every tab shows the syncing tab's state and can ask it to sync now (hub `status`/`status-request`/`sync-now`), closing the step 47 follow-up.
+
+**Deviations:**
+- Renewal "without a prompt": GIS's token model needs a popup, which browsers allow only in a user gesture. So after a reload, or when the hour runs out, sync waits in "Sign in again" and the next click or key press in any Spacy tab renews it (the popup closes by itself when consent was given), or the indicator's button. A silent renewal would need a server (authorization code flow), which the plan rules out.
+- Resumable uploads are one PUT per file; resuming *within* an interrupted large upload isn't done (the next cycle uploads the image again).
+- A board paused for a newer schema shows only in the engine's per-board status; the board UI doesn't show it yet.
+- The step 49 e2e (an image from A appears on B) is in `sync.spec.ts`.
+
+**Dependencies added:** none
+**Follow-ups:** the human's setup (domain, Google Cloud project, consent screen with `drive.appdata` and the `/privacy` URL, Web client id, verification) and the manual two-browser check with a real account; showing `newer-schema` on the board.
+**Verification:** pnpm verify ✅ (1001 unit tests; new `drive.test.ts` 6: create/list/read/remove and the changes cursor, resumable upload, 401 renewal then AuthRequiredError, rate-limit backoff and no retry on a plain 403, account email and removeAll, the engine between two devices on Drive) · e2e `sync.spec.ts` ✅ chromium + firefox (connect in A and B → A's board in B's list and content → an image from A shows on B → a rename reaches B → reload → "Sign in again" → click → synced → offline edit on A catches up; disconnect with "also delete" empties the fake Drive, boards stay, axe on the dialog).
+- Full e2e (chromium, mobile, firefox) with step 50: 429 passed, 25 skipped, 1 failed — `compile.spec.ts` on Firefox timed out at 30 s under the full run and passed 2/2 alone (the same load-related timeouts as `home.spec.ts` before).

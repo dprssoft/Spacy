@@ -49,9 +49,9 @@ Phase: L. Sync · Depends on: 49 · Estimate: 2 days
 - **Manual check with a real Google test account** on two browsers (record in PROGRESS): create, edit, image, trash, purge, offline edit.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `pnpm verify` and `pnpm test:e2e` pass (against the fake Drive)
 - [ ] The manual two-browser check with a real account passes
-- [ ] `00-architecture.md` §14: Drive layout, auth, CSP
+- [x] `00-architecture.md` §14: Drive layout, auth, CSP
 
 ## Out of scope
 Other providers (Dropbox, OneDrive, WebDAV: the `RemoteStore` interface allows them later), end-to-end encryption, sharing, the Capacitor sign-in (step 51).

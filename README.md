@@ -23,7 +23,9 @@ There is no backend and no account.
 
 ## Data & privacy
 
-Everything is stored **only in this browser** (IndexedDB). Nothing is sent to a server.
+Everything is stored **in this browser** (IndexedDB). Nothing is sent to a server, unless you turn on one of these:
+
+**Google Drive sync** (Settings → "Sync with Google Drive…", when the app is built with a Google client id): boards, the board list and images are also kept in a hidden app folder of **your own** Google Drive, which only Spacy can see, so your other devices get them. See `/privacy`.
 
 **Live sharing** (Share on a board, when the app is built with a relay): edits go directly between the browsers that have the board open, encrypted. The relay only introduces the browsers to each other, and the link's key never reaches it. Each person keeps their own copy.
 
@@ -88,6 +90,8 @@ pnpm dlx wrangler pages deploy build --project-name spacy
 **Any other static host** works if it serves `200.html` for unknown paths (the rewrite in `build/_redirects`; `index.html` is the prerendered start page, not the fallback) and sends the headers from `build/_headers`. The `script-src` hash in that file is written by the build (`scripts/postbuild-csp.mjs`), so always deploy the `_headers` from the same build as the pages.
 
 To check a build locally exactly as it will be served: `pnpm build && pnpm serve`.
+
+**Google Drive sync** needs a Google OAuth client (the steps are in `plan/steps/50-google-drive.md`, "Human setup": a Google Cloud project with the Drive API, the consent screen with the `drive.appdata` scope and the privacy page `/privacy`, and a Web client whose JavaScript origins include your domain). Set `PUBLIC_GOOGLE_CLIENT_ID` for the build; the build adds Google's sign-in and API to the CSP. Without it, sync is hidden.
 
 **Live sharing** needs a relay (free Cloudflare account, see [`relay/README.md`](relay/README.md)). Set `PUBLIC_SIGNALING_URLS=wss://…` for the build (in Pages: an environment variable); the build adds it to the CSP. Without it the Share button is hidden. Locally: `pnpm relay` and `PUBLIC_SIGNALING_URLS=ws://localhost:4444 pnpm dev`.
 

@@ -12,6 +12,8 @@
 	import { formatBytes } from './formatBytes';
 	import { readMediaPrefs, writeMediaPrefs } from '$lib/board/media/mediaPrefs';
 	import { fullscreen } from '$lib/shared/fullscreen.svelte';
+	import { driveSync } from '$lib/sync/driveSync.svelte';
+	import SyncDialog from '$lib/sync/SyncDialog.svelte';
 
 	let { class: className = '' }: { class?: string } = $props();
 
@@ -19,6 +21,7 @@
 	let oneAtATime = $state(readMediaPrefs().oneAtATime);
 	let about = $state(false);
 	let commentName = $state(false);
+	let sync = $state(false);
 	let input = $state<HTMLInputElement>();
 	let storage = $state<{ usage: number; persisted: boolean } | null>(null);
 
@@ -114,6 +117,13 @@
 					>{fullscreen.active ? 'Exit full screen' : 'Full screen'}</DropdownMenu.Item
 				>
 			{/if}
+			{#if driveSync.available}
+				<DropdownMenu.Item class={item} onSelect={() => (sync = true)}
+					>{driveSync.connected
+						? 'Google Drive sync…'
+						: 'Sync with Google Drive…'}</DropdownMenu.Item
+				>
+			{/if}
 			<DropdownMenu.Item class={item} onSelect={() => backupAll()}
 				>Backup all boards</DropdownMenu.Item
 			>
@@ -154,3 +164,6 @@
 />
 <AboutDialog bind:open={about} />
 <CommentNameDialog bind:open={commentName} />
+{#if driveSync.available}
+	<SyncDialog bind:open={sync} />
+{/if}

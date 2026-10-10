@@ -3,13 +3,19 @@
 import type * as Y from 'yjs';
 import { nanoid } from 'nanoid';
 import { REMOTE_SYNC, REMOTE_TAB } from '$lib/model/origins';
+import type { SyncState } from './status';
 
 type Message =
 	| { type: 'dirty'; board: string }
 	| { type: 'asset-request'; asset: string; req: string }
 	/** A responder got the request (no answer at all: sync and sharing are off). */
 	| { type: 'asset-ack'; req: string; from: string }
-	| { type: 'asset-done'; req: string; from: string; ok: boolean };
+	| { type: 'asset-done'; req: string; from: string; ok: boolean }
+	/** The syncing tab's state, for every tab's indicator. */
+	| { type: 'status'; state: SyncState }
+	| { type: 'status-request' }
+	/** "Sync now" in any tab; the syncing tab runs a cycle. */
+	| { type: 'sync-now' };
 
 const local = new EventTarget();
 const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('spacy-sync') : null;
@@ -30,6 +36,31 @@ function listen(cb: (msg: Message) => void): () => void {
 }
 
 const openDocs = new Map<string, Y.Doc>();
+
+export function announceStatus(state: SyncState): void {
+	send({ type: 'status', state });
+}
+
+/** The syncing tab answers tabs that ask for its state, and runs "Sync now" from any tab. */
+export function serveStatus(current: () => SyncState, syncNow: () => void): () => void {
+	announceStatus(current());
+	return listen((msg) => {
+		if (msg.type === 'status-request') announceStatus(current());
+		if (msg.type === 'sync-now') syncNow();
+	});
+}
+
+export function requestSyncNow(): void {
+	send({ type: 'sync-now' });
+}
+
+export function onStatus(cb: (state: SyncState) => void): () => void {
+	const off = listen((msg) => {
+		if (msg.type === 'status') cb(msg.state);
+	});
+	send({ type: 'status-request' });
+	return off;
+}
 
 /** A board changed outside the engine, in this tab or another. */
 export function markDirty(board: string): void {
