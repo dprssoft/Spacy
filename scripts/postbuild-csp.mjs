@@ -3,7 +3,18 @@
 // with every build, so the hashes are added to `script-src` in build/_headers (the source file
 // static/_headers keeps the plain `'self'`).
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+
+// The same PUBLIC_* settings the build used (vite.config.ts): the environment, else .env files.
+const fileEnv = Object.fromEntries(
+	['.env', '.env.local', '.env.production', '.env.production.local']
+		.filter((f) => existsSync(f))
+		.flatMap((f) => readFileSync(f, 'utf8').split('\n'))
+		.map((l) => /^\s*(PUBLIC_\w+)\s*=\s*(.*?)\s*$/.exec(l))
+		.filter((m) => m !== null)
+		.map((m) => [m[1], m[2].replace(/^(['"])(.*)\1$/, '$2')])
+);
+const env = { ...fileEnv, ...process.env };
 
 const pages = readdirSync('build').filter((f) => f.endsWith('.html'));
 const hashes = pages.flatMap((page) =>
@@ -18,13 +29,13 @@ if (!headers.includes("script-src 'self';"))
 	throw new Error("_headers: script-src 'self' not found");
 // Live sharing relays (PUBLIC_SIGNALING_URLS, see relay/README.md) are the only other servers the
 // app connects to.
-const relays = (process.env.PUBLIC_SIGNALING_URLS ?? '')
+const relays = (env.PUBLIC_SIGNALING_URLS ?? '')
 	.split(',')
 	.map((u) => u.trim())
 	.filter((u) => /^wss?:\/\/[^\s;']+$/.test(u))
 	.map((u) => new URL(u).origin);
 // Google Drive sync (PUBLIC_GOOGLE_CLIENT_ID): Google's sign-in script and popup, and the Drive API.
-const google = (process.env.PUBLIC_GOOGLE_CLIENT_ID ?? '').trim() !== '';
+const google = (env.PUBLIC_GOOGLE_CLIENT_ID ?? '').trim() !== '';
 const connect = ["'self'", ...new Set(relays)];
 if (google) connect.push('https://www.googleapis.com', 'https://oauth2.googleapis.com');
 if (!headers.includes("connect-src 'self';"))
