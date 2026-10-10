@@ -1,0 +1,14 @@
+# Deploy: `npx wrangler deploy` in this folder (free Cloudflare account). Then build the app with
+# PUBLIC_SIGNALING_URLS=wss://<name>.<account>.workers.dev
+name = "spacy-relay"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[[durable_objects.bindings]]
+name = "RELAY"
+class_name = "Relay"
+
+# The free plan runs SQLite-backed Durable Objects only; the relay stores nothing in it.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Relay"]

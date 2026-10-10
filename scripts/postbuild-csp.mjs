@@ -16,8 +16,20 @@ const hashes = pages.flatMap((page) =>
 const headers = readFileSync('build/_headers', 'utf8');
 if (!headers.includes("script-src 'self';"))
 	throw new Error("_headers: script-src 'self' not found");
+// Live sharing relays (PUBLIC_SIGNALING_URLS, see relay/README.md) are the only other servers the
+// app connects to.
+const relays = (process.env.PUBLIC_SIGNALING_URLS ?? '')
+	.split(',')
+	.map((u) => u.trim())
+	.filter((u) => /^wss?:\/\/[^\s;']+$/.test(u))
+	.map((u) => new URL(u).origin);
+if (!headers.includes("connect-src 'self';"))
+	throw new Error("_headers: connect-src 'self' not found");
 writeFileSync(
 	'build/_headers',
-	headers.replace("script-src 'self';", `script-src 'self' ${[...new Set(hashes)].join(' ')};`)
+	headers
+		.replace("script-src 'self';", `script-src 'self' ${[...new Set(hashes)].join(' ')};`)
+		.replace("connect-src 'self';", `connect-src ${["'self'", ...new Set(relays)].join(' ')};`)
 );
+if (relays.length) console.log(`CSP: live sharing relays ${relays.join(', ')}`);
 console.log(`CSP: allowed ${new Set(hashes).size} inline script(s) by hash in ${pages.join(', ')}`);

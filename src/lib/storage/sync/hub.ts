@@ -7,9 +7,9 @@ import { REMOTE_SYNC, REMOTE_TAB } from '$lib/model/origins';
 type Message =
 	| { type: 'dirty'; board: string }
 	| { type: 'asset-request'; asset: string; req: string }
-	/** The syncing tab got the request (no answer: sync is off). */
-	| { type: 'asset-ack'; req: string }
-	| { type: 'asset-done'; req: string; ok: boolean };
+	/** A responder got the request (no answer at all: sync and sharing are off). */
+	| { type: 'asset-ack'; req: string; from: string }
+	| { type: 'asset-done'; req: string; from: string; ok: boolean };
 
 const local = new EventTarget();
 const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('spacy-sync') : null;
@@ -61,9 +61,10 @@ export function openDoc(id: string): Y.Doc | undefined {
 }
 
 /**
- * Asks the syncing tab to download an image missing here. Resolves true once it's stored locally;
- * false when sync is off (no answer within `ackMs`), the image isn't on the remote, or `totalMs`
- * passes.
+ * Asks for an image missing here, from whoever can fetch it: the syncing tab (Drive) and a live
+ * session on the board. Resolves true once one of them stored it locally; false when nobody
+ * answers within `ackMs` (sync and sharing are off), every responder came back empty, or
+ * `totalMs` passes.
  */
 export function requestAsset(
 	asset: string,
@@ -74,10 +75,13 @@ export function requestAsset(
 	}: {
 		ackMs?: number;
 		totalMs?: number;
-		/** Sync is on and fetching it. */ onAck?: () => void;
+		/** Someone is fetching it. */ onAck?: () => void;
 	} = {}
 ): Promise<boolean> {
 	const req = nanoid(8);
+	const acked = new Set<string>();
+	const failed = new Set<string>();
+	let ackWindowOver = false;
 	return new Promise((resolve) => {
 		const finish = (ok: boolean) => {
 			off();
@@ -85,26 +89,38 @@ export function requestAsset(
 			clearTimeout(tooLong);
 			resolve(ok);
 		};
+		const settle = () => {
+			if (ackWindowOver && failed.size === acked.size) finish(false);
+		};
 		const off = listen((msg) => {
-			if (msg.type === 'asset-ack' && msg.req === req) {
-				clearTimeout(noAck);
-				onAck?.();
+			if ((msg.type !== 'asset-ack' && msg.type !== 'asset-done') || msg.req !== req) return;
+			if (msg.type === 'asset-ack') {
+				if (acked.size === 0) onAck?.();
+				acked.add(msg.from);
+			} else if (msg.ok) {
+				finish(true);
+			} else {
+				failed.add(msg.from);
+				settle();
 			}
-			if (msg.type === 'asset-done' && msg.req === req) finish(msg.ok);
 		});
-		const noAck = setTimeout(() => finish(false), ackMs);
+		const noAck = setTimeout(() => {
+			ackWindowOver = true;
+			settle();
+		}, ackMs);
 		const tooLong = setTimeout(() => finish(false), totalMs);
 		send({ type: 'asset-request', asset, req });
 	});
 }
 
-/** The syncing tab answers image requests with `fetch`. */
+/** Answers image requests with `fetch` (the syncing tab, a live session). */
 export function serveAssetRequests(fetch: (asset: string) => Promise<boolean>): () => void {
+	const from = nanoid(8);
 	return listen((msg) => {
 		if (msg.type !== 'asset-request') return;
-		send({ type: 'asset-ack', req: msg.req });
+		send({ type: 'asset-ack', req: msg.req, from });
 		void fetch(msg.asset)
 			.catch(() => false)
-			.then((ok) => send({ type: 'asset-done', req: msg.req, ok }));
+			.then((ok) => send({ type: 'asset-done', req: msg.req, from, ok }));
 	});
 }

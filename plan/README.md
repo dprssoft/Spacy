@@ -73,6 +73,8 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 47 | [Sync engine (boards)](./steps/47-sync-engine.md) (**needs approval**: lifts the "server sync" non-goal) | L. Sync | 32 | 2.5d |
 | [x] | 48 | [Board list sync](./steps/48-library-sync.md) (**needs approval**: library doc) | L | 47 | 1.5d |
 | [x] | 49 | [Image sync](./steps/49-asset-sync.md) | L | 48 | 1d |
+| [x] | 52 | [Live sharing (peer-to-peer)](./steps/52-live-sharing.md) (approved 2026-10-09) | L | 49 | 2.5d |
+| [ ] | 53 | [Presence: names and live cursors](./steps/53-presence.md) | L | 52 | 1d |
 | [ ] | 50 | [Google Drive and sync settings](./steps/50-google-drive.md) (**blocked**: domain, OAuth client) | L | 49 | 2d |
 | [ ] | 51 | [Capacitor app and native Google sign-in](./steps/51-capacitor-sign-in.md) (**blocked**: bundle id) | L | 50 | 2d |
 

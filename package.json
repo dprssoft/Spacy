@@ -9,6 +9,7 @@
 		"icons": "pwa-assets-generator",
 		"dev": "vite dev",
 		"build": "vite build && node scripts/postbuild-csp.mjs",
+		"relay": "PORT=4444 node node_modules/y-webrtc/bin/server.js",
 		"preview": "vite preview",
 		"serve": "node scripts/serve-build.mjs",
 		"prepare": "svelte-kit sync || echo ''",
@@ -92,6 +93,7 @@
 		"workbox-window": "^7.4.1",
 		"y-indexeddb": "^9.0.12",
 		"y-protocols": "^1.0.7",
+		"y-webrtc": "10.3.0",
 		"yjs": "^13.6.33",
 		"zod": "^4.6.5"
 	}

@@ -3,6 +3,8 @@
 declare global {
 	/** The app version from package.json (vite `define`). */
 	const __APP_VERSION__: string;
+	/** Comma-separated live sharing relays, `PUBLIC_SIGNALING_URLS` at build time (vite `define`). */
+	const __SIGNALING_URLS__: string;
 
 	/** File Handling API (installed PWA opened with `.spacy` files; Chromium). */
 	interface LaunchParams {

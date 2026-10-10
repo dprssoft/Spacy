@@ -12,7 +12,11 @@ const FALLBACK = '200.html';
 const BUILD_ID = `${pkg.version}-${Date.now().toString(36)}`;
 
 export default defineConfig({
-	define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+	define: {
+		__APP_VERSION__: JSON.stringify(pkg.version),
+		// Live sharing relays (plan/steps/52); unset hides the Share button.
+		__SIGNALING_URLS__: JSON.stringify(process.env.PUBLIC_SIGNALING_URLS ?? '')
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit({
