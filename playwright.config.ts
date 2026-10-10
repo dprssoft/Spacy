@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/** The live sharing relay for e2e (y-webrtc's Node relay, `pnpm relay`). */
+/** Live sharing in e2e goes through a local Trystero relay (`pnpm relay`), not public Nostr relays. */
 const RELAY = 'ws://localhost:4444';
 
 export default defineConfig({
@@ -19,7 +19,7 @@ export default defineConfig({
 			// The production output, served like a static host with the real security headers (CSP).
 			// Live sharing goes through the local relay below; Google sign-in and Drive are faked by
 			// routes in sync.spec.ts.
-			command: `PUBLIC_SIGNALING_URLS=${RELAY} PUBLIC_GOOGLE_CLIENT_ID=e2e-client pnpm build && node scripts/serve-build.mjs 4173`,
+			command: `PUBLIC_LIVE_RELAY_URLS=${RELAY} PUBLIC_GOOGLE_CLIENT_ID=e2e-client pnpm build && node scripts/serve-build.mjs 4173`,
 			port: 4173,
 			reuseExistingServer: !process.env.CI
 		},

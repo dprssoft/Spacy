@@ -1,2 +1,0 @@
-patchedDependencies:
-  y-webrtc@10.3.0: patches/y-webrtc@10.3.0.patch

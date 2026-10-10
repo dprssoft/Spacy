@@ -27,16 +27,16 @@ const hashes = pages.flatMap((page) =>
 const headers = readFileSync('build/_headers', 'utf8');
 if (!headers.includes("script-src 'self';"))
 	throw new Error("_headers: script-src 'self' not found");
-// Live sharing relays (PUBLIC_SIGNALING_URLS, see relay/README.md) are the only other servers the
-// app connects to.
-const relays = (env.PUBLIC_SIGNALING_URLS ?? '')
+// Live sharing finds peers through public Nostr relays (any wss: host, chosen by Trystero), or
+// only through the relays in PUBLIC_LIVE_RELAY_URLS when that's set (tests, private networks).
+const relays = (env.PUBLIC_LIVE_RELAY_URLS ?? '')
 	.split(',')
 	.map((u) => u.trim())
 	.filter((u) => /^wss?:\/\/[^\s;']+$/.test(u))
 	.map((u) => new URL(u).origin);
 // Google Drive sync (PUBLIC_GOOGLE_CLIENT_ID): Google's sign-in script and popup, and the Drive API.
 const google = (env.PUBLIC_GOOGLE_CLIENT_ID ?? '').trim() !== '';
-const connect = ["'self'", ...new Set(relays)];
+const connect = ["'self'", ...(relays.length ? new Set(relays) : ['wss:'])];
 if (google) connect.push('https://www.googleapis.com', 'https://oauth2.googleapis.com');
 if (!headers.includes("connect-src 'self';"))
 	throw new Error("_headers: connect-src 'self' not found");
@@ -55,5 +55,7 @@ writeFileSync(
 		.replace('frame-src ', `frame-src ${google ? 'https://accounts.google.com ' : ''}`)
 );
 if (google) console.log('CSP: Google sign-in and Drive API allowed');
-if (relays.length) console.log(`CSP: live sharing relays ${relays.join(', ')}`);
+console.log(
+	`CSP: live sharing through ${relays.length ? relays.join(', ') : 'public Nostr relays (wss:)'}`
+);
 console.log(`CSP: allowed ${new Set(hashes).size} inline script(s) by hash in ${pages.join(', ')}`);

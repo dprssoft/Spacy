@@ -24,15 +24,17 @@
 	}
 
 	const status = $derived(
-		live.state.kind === 'live'
-			? `${live.state.peers} other ${live.state.peers === 1 ? 'person' : 'people'} here`
-			: 'Waiting for others to open the link'
+		live.problem && live.state.kind !== 'live'
+			? 'Couldn’t connect to someone: a network on either side may block direct connections.'
+			: live.state.kind === 'live'
+				? `${live.state.peers} other ${live.state.peers === 1 ? 'person' : 'people'} here`
+				: 'Waiting for others to open the link'
 	);
 	const button =
 		'inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none pointer-coarse:h-11';
 </script>
 
-<Popover.Root>
+<Popover.Root onOpenChange={(o) => o && void live.checkClock()}>
 	<Popover.Trigger
 		class="inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-sm font-medium hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none max-sm:px-2 pointer-coarse:h-11 pointer-coarse:min-w-11"
 		data-testid="share"
@@ -57,6 +59,15 @@
 			{#if live.share}
 				<p class="text-sm font-medium">Anyone with the link can edit this board</p>
 				<p class="mt-1 text-xs text-muted" data-testid="live-status">{status}</p>
+				{#if live.clockOff}
+					<p
+						class="mt-2 rounded-md bg-surface-2 p-2 text-xs text-danger"
+						data-testid="clock-warning"
+					>
+						Your computer’s clock is {live.clockOff}, so live sharing can’t connect. Turn on “Set
+						time automatically” in your system’s date and time settings, then reload.
+					</p>
+				{/if}
 				<div class="mt-3 flex gap-2">
 					<input
 						readonly

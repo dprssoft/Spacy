@@ -5,7 +5,7 @@
 	import { replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { parseShareHash } from '$lib/model/share';
-	import { liveSharingAvailable } from '$lib/storage/live/config';
+	import { clockSkewMs, describeSkew, MAX_SKEW_MS } from '$lib/storage/live/clock';
 	import { NewerSchemaError } from '$lib/model/migrations';
 	import { BoardNotFoundError, openBoard, type OpenBoard } from '$lib/storage/boardDoc';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
@@ -28,16 +28,16 @@
 	let destroyed = false;
 	let opened: OpenBoard | null = null;
 	const joinAbort = new AbortController();
+	let clockOff = $state<string | null>(null);
 
 	/** A share link (`#live=…`): add the board here and get its content from the sharer. */
 	async function join(): Promise<boolean> {
 		const share = parseShareHash(location.hash);
 		if (!share) return true;
-		if (!liveSharingAvailable()) {
-			status = { kind: 'error', message: 'Live sharing isn’t available in this version of Spacy.' };
-			return false;
-		}
 		status = { kind: 'joining' };
+		void clockSkewMs().then((skew) => {
+			if (skew !== null && Math.abs(skew) > MAX_SKEW_MS) clockOff = describeSkew(skew);
+		});
 		const { joinShared } = await import('$lib/storage/live/join');
 		await joinShared(id, share, joinAbort.signal);
 		// The key stays out of the address bar and history once used.
@@ -108,6 +108,15 @@
 		<p class="max-w-sm text-sm text-muted">
 			Waiting for someone who has this board open. Ask them to keep it open while you join.
 		</p>
+		{#if clockOff}
+			<p
+				class="max-w-sm rounded-md bg-surface-2 p-3 text-sm text-danger"
+				data-testid="clock-warning"
+			>
+				Your computer’s clock is {clockOff}, so you can’t connect. Turn on “Set time automatically”
+				in your system’s date and time settings, then reload this page.
+			</p>
+		{/if}
 		<a href={resolve('/')} class="{button} mt-2 bg-surface-2 hover:bg-border">Back to boards</a>
 	</main>
 {:else if status.kind === 'loading'}

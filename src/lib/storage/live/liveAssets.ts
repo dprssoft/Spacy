@@ -1,105 +1,106 @@
-// Images between browsers in a live session. Board data carries only asset ids, so a session-only
-// Y.Doc (its own provider room) works as a small request board: `wants` lists images someone is
-// missing, and whoever has one puts it in `files`. The asker stores it and clears both entries.
-import * as Y from 'yjs';
+// Images between browsers in a live session. Board data carries only asset ids, so a browser
+// missing an image asks the room for it ("asset-want"); a peer that has it sends the bytes back
+// to that browser alone ("asset-file"), which stores it locally.
 import type { LocalAsset } from '../sync/engine';
+import type { PeerChannel, PeerRoom } from './peerSync';
 
 export const MAX_LIVE_ASSET_BYTES = 5 * 1024 * 1024;
 const WAIT_MS = 30_000;
-
-interface FileEntry {
-	mime: string;
-	w: number;
-	h: number;
-	data: Uint8Array;
-}
 
 export interface LiveAssetsLocal {
 	read(id: string): Promise<LocalAsset | null>;
 	write(asset: LocalAsset): Promise<void>;
 }
 
+interface FileMeta {
+	id: string;
+	mime: string;
+	w: number;
+	h: number;
+}
+
+const isFileMeta = (m: unknown): m is FileMeta => {
+	const v = m as Partial<FileMeta> | null;
+	return (
+		!!v &&
+		typeof v.id === 'string' &&
+		typeof v.mime === 'string' &&
+		typeof v.w === 'number' &&
+		typeof v.h === 'number'
+	);
+};
+
 export class LiveAssets {
-	private readonly wants: Y.Map<number>;
-	private readonly files: Y.Map<FileEntry>;
-	private readonly me: string;
-	private readonly offering = new Set<string>();
+	private readonly want: PeerChannel<string>;
+	private readonly file: PeerChannel<ArrayBuffer>;
+	private readonly waiting = new Map<
+		string,
+		Set<(f: { data: ArrayBuffer; meta: FileMeta }) => void>
+	>();
 
 	constructor(
-		readonly doc: Y.Doc,
+		private readonly room: PeerRoom,
 		private readonly boardId: string,
 		private readonly local: LiveAssetsLocal
 	) {
-		this.wants = doc.getMap('wants');
-		this.files = doc.getMap('files');
-		this.me = String(doc.clientID);
-		this.wants.observe(this.onWants);
-		this.onWants();
+		this.want = room.makeAction<string>('asset-want');
+		this.file = room.makeAction<ArrayBuffer>('asset-file');
+		this.want.onMessage = (id, { peerId }) => void this.offer(id, peerId).catch(() => {});
+		this.file.onMessage = (data, { metadata }) => {
+			if (!isFileMeta(metadata) || data.byteLength > MAX_LIVE_ASSET_BYTES) return;
+			for (const fn of this.waiting.get(metadata.id) ?? []) fn({ data, meta: metadata });
+		};
 	}
 
 	destroy(): void {
-		this.wants.unobserve(this.onWants);
+		this.want.onMessage = null;
+		this.file.onMessage = null;
+		this.waiting.clear();
 	}
 
 	/** Asks the peers for an image. Resolves true once it's stored locally. */
 	request(assetId: string, waitMs = WAIT_MS): Promise<boolean> {
-		const key = `${assetId}:${this.me}`;
+		if (Object.keys(this.room.getPeers()).length === 0) return Promise.resolve(false);
 		return new Promise((resolve) => {
-			const check = async () => {
-				const f = this.files.get(assetId);
-				if (!f) return;
-				finish();
-				await this.local.write({
-					id: assetId,
-					boardId: this.boardId,
-					blob: new Blob([f.data as BlobPart], { type: f.mime }),
-					mime: f.mime,
-					width: f.w,
-					height: f.h
-				});
-				this.doc.transact(() => {
-					this.wants.delete(key);
-					if (!this.othersWant(assetId)) this.files.delete(assetId);
-				});
-				resolve(true);
-			};
-			const finish = () => {
+			const set = this.waiting.get(assetId) ?? new Set();
+			this.waiting.set(assetId, set);
+			const done = (ok: boolean) => {
 				clearTimeout(timer);
-				this.files.unobserve(onFiles);
+				set.delete(onFile);
+				if (set.size === 0) this.waiting.delete(assetId);
+				resolve(ok);
 			};
-			const onFiles = () => void check().catch(() => resolve(false));
-			const timer = setTimeout(() => {
-				finish();
-				this.wants.delete(key);
-				resolve(false);
-			}, waitMs);
-			this.files.observe(onFiles);
-			this.wants.set(key, Date.now());
-			onFiles();
+			const onFile = ({ data, meta }: { data: ArrayBuffer; meta: FileMeta }) => {
+				// Several peers may answer; the first one wins.
+				if (!set.has(onFile)) return;
+				set.delete(onFile);
+				void this.local
+					.write({
+						id: assetId,
+						boardId: this.boardId,
+						blob: new Blob([data], { type: meta.mime }),
+						mime: meta.mime,
+						width: meta.w,
+						height: meta.h
+					})
+					.then(
+						() => done(true),
+						() => done(false)
+					);
+			};
+			const timer = setTimeout(() => done(false), waitMs);
+			set.add(onFile);
+			void this.want.send(assetId);
 		});
 	}
 
-	private othersWant(assetId: string): boolean {
-		for (const key of this.wants.keys()) {
-			if (key.startsWith(`${assetId}:`) && !key.endsWith(`:${this.me}`)) return true;
-		}
-		return false;
-	}
-
-	private readonly onWants = () => {
-		for (const key of this.wants.keys()) {
-			const [assetId, who] = key.split(':');
-			if (!assetId || who === this.me || this.files.has(assetId) || this.offering.has(assetId))
-				continue;
-			this.offering.add(assetId);
-			void this.offer(assetId).finally(() => this.offering.delete(assetId));
-		}
-	};
-
-	private async offer(assetId: string): Promise<void> {
-		const a = await this.local.read(assetId).catch(() => null);
-		if (!a || a.blob.size > MAX_LIVE_ASSET_BYTES || this.files.has(assetId)) return;
-		const data = new Uint8Array(await a.blob.arrayBuffer());
-		this.files.set(assetId, { mime: a.mime, w: a.width, h: a.height, data });
+	private async offer(assetId: string, peerId: string): Promise<void> {
+		const a = await this.local.read(assetId);
+		if (!a || a.blob.size > MAX_LIVE_ASSET_BYTES) return;
+		const meta: FileMeta = { id: assetId, mime: a.mime, w: a.width, h: a.height };
+		await this.file.send(await a.blob.arrayBuffer(), {
+			target: peerId,
+			metadata: { ...meta }
+		});
 	}
 }

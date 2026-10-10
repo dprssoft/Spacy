@@ -50,8 +50,8 @@ export interface BoardContext {
 	waystones: WaystonesState;
 	sketch: SketchSettings;
 	save: SaveStatus;
-	/** Live sharing; null when no relay is configured (step 52). */
-	live: LiveShare | null;
+	/** Live sharing (step 52). */
+	live: LiveShare;
 }
 
 const KEY = Symbol('board');

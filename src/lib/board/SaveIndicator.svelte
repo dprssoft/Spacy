@@ -7,7 +7,7 @@
 	import { LOCAL } from '$lib/model/origins';
 	import { getBoard } from './context';
 
-	const { doc, save, live } = getBoard();
+	const { doc, save } = getBoard();
 	let saving = $state(false);
 
 	$effect(() => {
@@ -30,7 +30,7 @@
 	<Tooltip.Trigger
 		class="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs text-muted focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none data-[failed]:font-medium data-[failed]:text-danger data-[failed]:hover:bg-surface max-sm:data-[quiet]:hidden"
 		data-failed={save.failed || undefined}
-		data-quiet={(live && !save.failed && !saving) || undefined}
+		data-quiet={(!save.failed && !saving) || undefined}
 		data-testid="save-indicator"
 		onclick={() => {
 			if (save.failed) void save.retry();

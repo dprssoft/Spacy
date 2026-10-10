@@ -22,8 +22,8 @@ const env = {
 export default defineConfig({
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version),
-		// Live sharing relays (plan/steps/52); unset hides the Share button.
-		__SIGNALING_URLS__: JSON.stringify(env.PUBLIC_SIGNALING_URLS ?? ''),
+		// Live sharing through a WebSocket relay instead of public Nostr relays (tests, private networks).
+		__LIVE_RELAY_URLS__: JSON.stringify(env.PUBLIC_LIVE_RELAY_URLS ?? ''),
 		// Google Drive sync (plan/steps/50); unset hides it.
 		__GOOGLE_CLIENT_ID__: JSON.stringify(env.PUBLIC_GOOGLE_CLIENT_ID ?? '')
 	},
