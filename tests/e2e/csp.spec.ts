@@ -21,7 +21,9 @@ test('the app runs under its Content-Security-Policy without violations', async 
 	// may be fetched from other sites.
 	expect(csp).toContain('frame-src https://www.youtube-nocookie.com https://player.vimeo.com;');
 	expect(csp).toContain("media-src 'self' blob: https:;");
-	expect(csp).toContain("connect-src 'self';");
+	// Besides the app itself, only the live sharing relay the build was configured with (the
+	// local one in e2e, see playwright.config.ts).
+	expect(csp).toContain("connect-src 'self' ws://localhost:4444;");
 	expect(res!.headers()['x-content-type-options']).toBe('nosniff');
 
 	// Exercise the heavy paths: template previews (SVG data URLs), a doc card editor (injected
