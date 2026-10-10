@@ -31,6 +31,7 @@
 	import { imagePaste, onCopyEvent, onPasteEvent } from './commands/clipboard';
 	import { AssetUrlCache } from './images/assetUrls';
 	import { LiveShare } from './live/liveState.svelte';
+	import LiveCursors from './live/LiveCursors.svelte';
 	import { gcAssets } from './images/gcAssets';
 	import { importImageFiles } from './images/importImages';
 	import { PagesState } from './pages.svelte';
@@ -330,6 +331,9 @@
 						<SelectionOverlay />
 						<QuickCreateButtons />
 						<PulseHighlight />
+						{#if ctx.live}
+							<LiveCursors live={ctx.live} />
+						{/if}
 						<StylePopover />
 						<MediaOverlay />
 						<CommentBadges />

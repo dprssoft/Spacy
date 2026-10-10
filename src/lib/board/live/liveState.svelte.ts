@@ -3,11 +3,15 @@ import { resolve } from '$app/paths';
 import { getMeta } from '$lib/model/doc';
 import { getShare, newShare, setShare, shareHash, type ShareInfo } from '$lib/model/share';
 import type { LiveSession, LiveState } from '$lib/storage/live/session';
+import { commentAuthor } from '../comments/author.svelte';
+import { Presence } from './presence.svelte';
 
 /** Live sharing for the board UI: whether it's shared, the link, and who's connected. */
 export class LiveShare {
 	share = $state<ShareInfo | null>(null);
 	state = $state<LiveState>({ kind: 'off' });
+	/** Names and pointers of the others (step 53). */
+	readonly presence: Presence;
 	readonly #off: () => void;
 
 	constructor(
@@ -21,7 +25,9 @@ export class LiveShare {
 		read();
 		const offState = session.subscribe(() => (this.state = session.state));
 		this.state = session.state;
+		this.presence = new Presence(session, () => commentAuthor.name);
 		this.#off = () => {
+			this.presence.destroy();
 			meta.unobserve(read);
 			offState();
 		};
