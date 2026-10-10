@@ -1,3 +1,4 @@
+import type { LiveShare } from './live/liveState.svelte';
 import { getContext, setContext } from 'svelte';
 import type * as Y from 'yjs';
 import type { SaveStatus } from './saveStatus.svelte';
@@ -49,6 +50,8 @@ export interface BoardContext {
 	waystones: WaystonesState;
 	sketch: SketchSettings;
 	save: SaveStatus;
+	/** Live sharing; null when no relay is configured (step 52). */
+	live: LiveShare | null;
 }
 
 const KEY = Symbol('board');

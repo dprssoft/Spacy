@@ -30,6 +30,7 @@
 	import { installConnectorHooks } from './diagram/ops';
 	import { imagePaste, onCopyEvent, onPasteEvent } from './commands/clipboard';
 	import { AssetUrlCache } from './images/assetUrls';
+	import { LiveShare } from './live/liveState.svelte';
 	import { gcAssets } from './images/gcAssets';
 	import { importImageFiles } from './images/importImages';
 	import { PagesState } from './pages.svelte';
@@ -98,7 +99,8 @@
 		prefs: new BoardPrefs(),
 		sketch: new SketchSettings(),
 		playback: new PlaybackState(),
-		save: new SaveStatus(board.saver)
+		save: new SaveStatus(board.saver),
+		live: board.live ? new LiveShare(board.id, board.doc, board.live) : null
 	} as BoardContext;
 	ctx.tools = new ToolManager(ctx);
 	ctx.editing = new TextEditing(ctx);
@@ -112,6 +114,7 @@
 	ctx.waystones = new WaystonesState(ctx);
 	onDestroy(() => {
 		ctx.save.destroy();
+		ctx.live?.destroy();
 		ctx.comments.destroy();
 		ctx.words.destroy();
 		ctx.outline.destroy();

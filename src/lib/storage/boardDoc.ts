@@ -14,6 +14,8 @@ import * as assetsRepo from './assetsRepo';
 import * as boardsRepo from './boardsRepo';
 import { markDirty, openDoc, trackOpenBoard } from './sync/hub';
 import { createTabSync } from './tabSync';
+import { SIGNALING_URLS } from './live/config';
+import { LiveSession } from './live/session';
 import type { BoardMeta } from './types';
 
 export { boardDbName };
@@ -32,6 +34,8 @@ export interface OpenBoard {
 	undo: Y.UndoManager;
 	/** Whether changes are reaching storage; retry after a failure. */
 	saver: BoardSaver;
+	/** Live sharing on this board; null when no relay is configured. */
+	live: LiveSession | null;
 	close(): Promise<void>;
 }
 
@@ -60,6 +64,7 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 
 	const stopTabSync = createTabSync(doc, boardChannelName(id));
 	const untrackSync = trackOpenBoard(id, doc);
+	const live = SIGNALING_URLS.length > 0 ? new LiveSession(id, doc, SIGNALING_URLS) : null;
 	ensureOutlineMap(doc);
 	const undo = createBoardUndo(doc);
 
@@ -75,12 +80,14 @@ export async function openBoard(id: string): Promise<OpenBoard> {
 		doc,
 		undo,
 		saver,
+		live,
 		async close() {
 			if (closed) return;
 			closed = true;
 			doc.off('update', onUpdate);
 			await touch.flush();
 			undo.destroy();
+			await live?.destroy();
 			untrackSync();
 			stopTabSync();
 			await saver.destroy();
@@ -129,17 +136,22 @@ export async function readTitle(id: string): Promise<string | null> {
  * Writes a new title into a board's content, so other devices get it with the board (the list's
  * title is local). An open board in this tab takes it live; other tabs through tab sync.
  */
-export async function writeTitle(id: string, title: string): Promise<void> {
+export function writeTitle(id: string, title: string): Promise<void> {
+	return writeMeta(id, 'title', title);
+}
+
+/** Sets one `meta` value of a board, open in this tab or not (other tabs get it through tab sync). */
+export async function writeMeta(id: string, key: string, value: unknown): Promise<void> {
 	const open = openDoc(id);
 	if (open) {
-		open.transact(() => getMeta(open).set('title', title), LOCAL);
+		open.transact(() => getMeta(open).set(key, value), LOCAL);
 		return;
 	}
 	const doc = new Y.Doc();
 	Y.applyUpdate(doc, await loadSnapshot(id));
-	if (getMeta(doc).get('title') === title) return doc.destroy();
+	if (JSON.stringify(getMeta(doc).get(key)) === JSON.stringify(value)) return doc.destroy();
 	const before = Y.encodeStateVector(doc);
-	doc.transact(() => getMeta(doc).set('title', title), LOCAL);
+	doc.transact(() => getMeta(doc).set(key, value), LOCAL);
 	const update = Y.encodeStateAsUpdate(doc, before);
 	doc.destroy();
 	await writeSnapshot(id, update, LOCAL);

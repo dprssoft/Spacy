@@ -25,6 +25,8 @@ There is no backend and no account.
 
 Everything is stored **only in this browser** (IndexedDB). Nothing is sent to a server.
 
+**Live sharing** (Share on a board, when the app is built with a relay): edits go directly between the browsers that have the board open, encrypted. The relay only introduces the browsers to each other, and the link's key never reaches it. Each person keeps their own copy.
+
 That also means your boards are gone if the browser's site data is cleared, and they don't follow you to another device. **Back up regularly:** Settings → "Backup all boards" downloads one `.spacy` file that you can import anywhere.
 
 ## Development
@@ -86,6 +88,8 @@ pnpm dlx wrangler pages deploy build --project-name spacy
 **Any other static host** works if it serves `200.html` for unknown paths (the rewrite in `build/_redirects`; `index.html` is the prerendered start page, not the fallback) and sends the headers from `build/_headers`. The `script-src` hash in that file is written by the build (`scripts/postbuild-csp.mjs`), so always deploy the `_headers` from the same build as the pages.
 
 To check a build locally exactly as it will be served: `pnpm build && pnpm serve`.
+
+**Live sharing** needs a relay (free Cloudflare account, see [`relay/README.md`](relay/README.md)). Set `PUBLIC_SIGNALING_URLS=wss://…` for the build (in Pages: an environment variable); the build adds it to the CSP. Without it the Share button is hidden. Locally: `pnpm relay` and `PUBLIC_SIGNALING_URLS=ws://localhost:4444 pnpm dev`.
 
 ## Fonts
 

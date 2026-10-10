@@ -1351,3 +1351,19 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Dependencies added:** none
 **Follow-ups:** the step 49 e2e in step 50's `sync.spec.ts`.
 **Verification:** pnpm verify ✅ (982 unit tests; new `assets.test.ts` 8: upload once + download on demand, unknown image, interrupted upload resumes, purge deletes images, too large skipped and flagged, compaction removes unused images, a tab asks the syncing tab, no sync gives up fast) · e2e `pen-images`, `files`, `export` ✅ chromium.
+
+## Step 52 — Live sharing (peer-to-peer) — 2026-10-09
+**Summary:**
+- New step, approved by the human: share a board by link and edit it live, peer to peer (`y-webrtc`), with a relay of our own (`relay/`, Cloudflare Worker + Durable Object, free plan) since the public y-webrtc relay (`wss://y-webrtc-eu.fly.dev`) didn't answer. `meta.share = { room, key }` in the board (approved data model change).
+- `model/share.ts` (meta helpers, link hash), `storage/live/` (`config`, `session` following `meta.share`, `join` waiting for a peer's content before the first open, `liveAssets` image exchange ≤ 5 MB), `requestAsset` with several responders, `writeMeta` in `boardDoc`.
+- UI: Share popover in the top bar ("Share live", link + Copy link, "Stop sharing", live head count); a "Joining a shared board" screen while waiting for a peer.
+- Build: `PUBLIC_SIGNALING_URLS` → `__SIGNALING_URLS__` and CSP `connect-src`; `pnpm relay` for dev/e2e; Playwright starts it and builds with it.
+
+**Deviations:**
+- `y-webrtc@10.3.0` is patched (`pnpm patch`): (1) an `answer` addressed to another peer crashed the handler (`existingConn.glareToken` of undefined) — seen when the joining tab's first connection was replaced; (2) after a failed or closed connection it re-announced at once, looping ~1,700 times a minute where WebRTC can't connect; now 1 s doubling to 60 s, reset on connect.
+- `live.spec.ts` is skipped on Firefox: headless Firefox here fails WebRTC's ICE check between two contexts ("ICE failed, add a TURN server"), with loopback and host-address prefs too; Chromium passes. Real Firefox on a normal network isn't affected by this sandbox limit, but it hasn't been checked by hand.
+- No TURN relay: strict networks (some corporate or mobile ones) can't connect peer to peer; out of scope (costs money).
+
+**Dependencies added:** y-webrtc@10.3.0 — WebRTC provider for Yjs (named in the report the human approved); loaded only when a board is shared.
+**Follow-ups:** the human deploys `relay/` (`npx wrangler deploy`) and sets `PUBLIC_SIGNALING_URLS` for production builds; a manual check on two real devices/networks.
+**Verification:** pnpm verify ✅ (new `share.test.ts` 3, `liveAssets.test.ts` 3, `hub.test.ts` 3) · e2e `live.spec.ts` ✅ chromium (share → join from the link in a second context → edits both ways, head count 2, an image sent to the joiner, Stop sharing disconnects), skipped on firefox (above).
