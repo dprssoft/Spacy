@@ -1377,3 +1377,7 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Dependencies added:** none (`y-protocols` already installed)
 **Follow-ups:** none
 **Verification:** pnpm verify ✅ (995 unit tests; new `presenceData.test.ts` 4: peers with name/color/cursor, malformed states, leaving, throttle) · e2e `live.spec.ts` ✅ chromium (B appears as an avatar on A; B's pointer shows on A with its name).
+
+### Sync branch e2e run — 2026-10-10
+- Full e2e (chromium, mobile, firefox): 425 passed, 25 skipped, 1 failed — `home.spec.ts` board lifecycle on Firefox timed out at 30 s under the full parallel run; it passed 3/3 alone.
+- Fixed from this run: `csp.spec.ts` now expects `connect-src 'self' ws://localhost:4444;` (exactly the relay the e2e build is configured with). On phones (360 px) the Share button left the title 52 px wide (test needs > 60): the "Saved locally" cloud icon is hidden on phones while saved and Share is shown (it still shows while saving and when a save fails).
