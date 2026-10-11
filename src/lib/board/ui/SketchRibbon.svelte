@@ -6,6 +6,7 @@
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import { getBoard } from '../context';
+	import { ink } from '../elements/common';
 	import { BRUSHES, MAX_SIZE, MIN_SIZE, type BrushId } from '../sketch/brushes';
 	import ColorSwatches from '../style/controls/ColorSwatches.svelte';
 	import PanelButton from '../style/controls/PanelButton.svelte';
@@ -92,7 +93,7 @@
 				aria-checked={sketch.color === c.value}
 				title={c.name}
 				class="size-5 rounded-full border border-border focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:outline-none aria-checked:ring-2 aria-checked:ring-accent aria-checked:ring-offset-1 aria-checked:ring-offset-surface"
-				style:background={c.value}
+				style:background={ink(c.value)}
 				onclick={() => sketch.set({ color: c.value })}
 			></button>
 		{/each}
@@ -104,13 +105,14 @@
 					class:ring-accent={!quick}
 					style:background={quick
 						? 'conic-gradient(#e03131, #f59f00, #2f9e44, #1971c2, #6741d9, #e03131)'
-						: sketch.color}
+						: ink(sketch.color)}
 				></span>
 			{/snippet}
 			<ColorSwatches
 				value={sketch.color}
 				colors={OPAQUE_SWATCHES}
 				label="Brush color"
+				followTheme
 				onchange={(c) => sketch.set({ color: c })}
 			/>
 		</PanelButton>

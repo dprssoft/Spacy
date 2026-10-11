@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Pipette from '@lucide/svelte/icons/pipette';
 	import type { Mixed } from '../options';
+	import { ink } from '../../elements/common';
 	import { normalizeHex, PALETTE_COLUMNS, type Swatch } from '../palette';
 	import { recentColors } from '../recentColors.svelte';
 
@@ -9,13 +10,16 @@
 		colors,
 		label,
 		onchange,
-		allowCustom = true
+		allowCustom = true,
+		followTheme = false
 	}: {
 		value: string | Mixed;
 		colors: readonly Swatch[];
 		label: string;
 		onchange: (color: string) => void;
 		allowCustom?: boolean;
+		/** Paint the default ink as it renders on the board (light in dark mode). */
+		followTheme?: boolean;
 	} = $props();
 
 	const current = $derived(typeof value === 'string' ? value.toLowerCase() : null);
@@ -51,7 +55,9 @@
 		data-color={c.value}
 		onclick={() => onchange(c.value)}
 		class={swatch}
-		style={c.value === 'transparent' ? checker : `background:${c.value}`}
+		style={c.value === 'transparent'
+			? checker
+			: `background:${followTheme ? ink(c.value) : c.value}`}
 	></button>
 {/snippet}
 
