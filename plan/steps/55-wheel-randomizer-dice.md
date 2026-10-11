@@ -44,9 +44,9 @@ Three chance widgets for workshops and games: a **wheel of fortune**, a **random
 - e2e in `widgets.spec.ts`: select three stickies → "Make a wheel from selection" → Spin → a winner banner with one of the three texts; the randomizer in teams mode → "Place as stickies" → one undo removes them all. Live: B sees the same wheel winner as A.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Two peers spinning the same wheel see the same winner
-- [ ] Reduced motion: no rotation or tumble
+- [x] `pnpm verify` and `pnpm test:e2e` pass (Firefox `home.spec.ts` lifecycle flake as before; WebKit CI only)
+- [x] Two peers spinning the same wheel see the same winner
+- [x] Reduced motion: no rotation or tumble (unit-checked: the wheel stays put until the turn ends; dice and randomizer show "Rolling…" / "Drawing…")
 
 ## Out of scope
 Weighted segments, images on segments, sounds, spin history export.

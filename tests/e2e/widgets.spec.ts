@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createBoard, enableTestHooks, waitForHooks, waitForInitialView } from './helpers';
+import { createBoard, el, enableTestHooks, waitForHooks, waitForInitialView } from './helpers';
 
 test.beforeEach(async ({ page }) => {
 	await enableTestHooks(page);
@@ -95,4 +95,85 @@ test('drag a timer from the Widgets menu onto the canvas', async ({ page }) => {
 		window.__spacy!.list().map((e) => (e.type === 'widget' ? e.kind : e.type))
 	);
 	expect(kinds).toEqual(['timer']);
+});
+
+const sticky = (id: string, x: number, y: number, text: string) => ({
+	...el.shape(id, x, y),
+	type: 'sticky',
+	kind: undefined,
+	text,
+	color: '#ffe066',
+	w: 160,
+	h: 160
+});
+const widgetState = (page: Page, id: string) =>
+	page.evaluate((id) => {
+		const w = window.__spacy!.list().find((e) => e.id === id);
+		return w?.type === 'widget' ? w.state : null;
+	}, id);
+
+test('make a wheel from selected notes and spin it', async ({ page }) => {
+	await page.evaluate(
+		(els) => window.__spacy!.createElements(els as never),
+		[sticky('a', -400, -200, 'Ann'), sticky('b', -400, 0, 'Bea'), sticky('c', -200, -200, 'Cy')]
+	);
+	await page.evaluate(() => window.__spacy!.ctx.selection.set(['a', 'b', 'c']));
+	const box = (await page.locator('[data-element-id="a"]').boundingBox())!;
+	await page.mouse.click(box.x + 40, box.y + 40, { button: 'right' });
+	await page.getByRole('menuitem', { name: 'Make a wheel from selection' }).click();
+	const wheel = page.locator('[data-widget="wheel"]');
+	await expect(wheel).toHaveCount(1);
+	const id = await page.evaluate(() => [...window.__spacy!.ctx.selection.ids][0]!);
+	await expect(wheel.locator('text', { hasText: 'Ann' })).toHaveCount(1);
+
+	// Spin with Enter (it's selected); the banner shows one of the three after it stops.
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('Enter');
+	await expect(wheel.getByText('Spinning…')).toHaveCount(1);
+	const winner = wheel.locator('text[font-weight="700"]');
+	await expect(winner).toHaveText(/^(Ann|Bea|Cy)$/, { timeout: 8000 });
+	const state = (await widgetState(page, id)) as { spin: { winner: number } };
+	const labels = await page.evaluate((id) => {
+		const w = window.__spacy!.list().find((e) => e.id === id);
+		const c = w?.type === 'widget' ? (w.config as { segments: { label: string }[] }) : null;
+		return c?.segments.map((s) => s.label) ?? [];
+	}, id);
+	// Top to bottom, then left to right.
+	expect(labels).toEqual(['Ann', 'Cy', 'Bea']);
+	expect(labels[state.spin.winner]).toBe(await winner.textContent());
+	await expect(page.getByTestId('announcer')).toHaveText(`Wheel: ${await winner.textContent()}`);
+});
+
+test('randomizer makes teams and places them as notes; one undo removes them', async ({ page }) => {
+	const randomizer = {
+		...el.shape('r', -130, -150),
+		type: 'widget',
+		kind: 'randomizer',
+		text: undefined,
+		title: '',
+		w: 260,
+		h: 300,
+		config: { items: ['a', 'b', 'c', 'd', 'e'], mode: 'teams', count: 2 },
+		state: { draw: null }
+	};
+	await page.evaluate((e) => window.__spacy!.createElements([e as never]), randomizer);
+	await expect(page.locator('[data-widget="randomizer"]')).toHaveCount(1);
+	const r = page.locator('[data-widget="randomizer"]');
+	const b = (await r.boundingBox())!;
+	const at = (x: number, y: number) => ({
+		x: b.x + (x / 260) * b.width,
+		y: b.y + (y / 300) * b.height
+	});
+	const draw = at(86, 270);
+	await page.mouse.click(draw.x, draw.y);
+	await expect(r.getByText('Team 2')).toHaveCount(1, { timeout: 3000 });
+	const place = at(204, 270);
+	await page.mouse.click(place.x, place.y);
+	const notes = () =>
+		page.evaluate(() => window.__spacy!.list().filter((e) => e.type === 'sticky').length);
+	await expect.poll(notes).toBe(5);
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('ControlOrMeta+z');
+	await expect.poll(notes).toBe(0);
+	expect(((await widgetState(page, 'r')) as { draw: unknown }).draw).not.toBeNull();
 });

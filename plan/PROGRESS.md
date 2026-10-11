@@ -1434,3 +1434,20 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Follow-ups:** `spacy:participantId` is documented but created by step 56 (its first user); unknown-kind round trip through a saved board and the idle-frame check with the perf fixture are not yet tested end to end.
 **Verification:** pnpm verify ✅ (1053 unit tests; new `model/widgets.test.ts` 9, `timer.test.ts` 9, `layout.test.ts` 5, `widgets.test.ts` 6, a static-SVG widget snapshot; `waystones.test.ts` now expects the current version instead of a fixed 7) · e2e ✅ `widgets.spec.ts` 2, `mobile-widgets.spec.ts` 1, `live.spec.ts` timer in sync on two browsers (±1 s), chromium + mobile · full run (chromium, firefox, mobile): 435 passed, 26 skipped, 1 failed — Firefox `home.spec.ts` board lifecycle, which also fails 4/5 alone without this step's changes (stashed) · screenshot check of the menu, timer and settings.
 
+## Step 55 — Wheel of fortune, randomizer, dice — 2026-10-11
+**Summary:**
+- Framework: kinds can draw their own `art` above the buttons; `perform` gets a 32-bit seed (from `crypto`); actions can be `disabled` (dimmed, ignored); a `place` result creates sticky notes beside the widget in columns, selected, as one undo step. `random.ts`: mulberry32, `shuffle`, `pick`, `teams` (sizes differ by ≤ 1), `mix` for animation steps.
+- Wheel: segments (2–60, label + color), spin stores `{ seed, at, winner, from, end, duration }` so every peer turns the same way and stops on the same segment; the winner is outlined and shown under the wheel; "remove the winner" leaves it out of later spins until reset; Spin is disabled while turning or with fewer than two left. Labels flip to stay upright on the left of the screen.
+- Randomizer: pick N, shuffle, or teams; the draw is stored; "Place" puts the result on the board as notes (one column per team). Dice: 1–6 of d4/d6/d8/d10/d12/d20 or coins, pips on d6, totals.
+- "Use selected" in the wheel and randomizer settings and "Make a wheel from selection" in the context menu take the texts of the selected notes, shapes and texts (top to bottom, then left to right). Results are announced ("Wheel: Ann", "Rolled 3 and 5, total 8", "2 teams ready").
+
+**Deviations:**
+- Reduced motion: instead of a 300 ms fade, nothing moves and the result appears when the animation would have ended, so it appears at the same moment for everyone (a short fade for some viewers would have shown the result earlier on their screen than others').
+- The wheel's removal of the last winner happens when the next spin starts (not when it is won), so the winner stays visible on the wheel until then.
+- The settings popover now measures itself and scrolls, so long settings (the wheel's segment list) stay on screen; fieldsets got `min-w-0` (they wouldn't shrink to the panel).
+- `WidgetView` reads reduced motion through `svelte/reactivity`'s `MediaQuery`, guarded for environments without `matchMedia` (unit tests).
+
+**Dependencies added:** none
+**Follow-ups:** none
+**Verification:** pnpm verify ✅ (1083 unit tests; new `random.test.ts` 5, `wheel.test.ts` 9, `dice.test.ts` 9, `randomizer.test.ts` 3, `chance.test.ts` 4) · e2e ✅ `widgets.spec.ts` (wheel from three selected notes → Enter spins → winner matches its state and is announced; randomizer teams → Place → 5 notes → one undo removes them), `live.spec.ts` (both browsers show the same wheel winner) · full run (chromium, firefox, mobile): 440 passed, 27 skipped, 1 failed — the Firefox `home.spec.ts` lifecycle flake recorded in step 54 · screenshots of the widgets mid-animation, settled, the menu and the wheel settings.
+

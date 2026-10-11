@@ -16,6 +16,8 @@ export interface WidgetAction {
 	/** In the kind's design space (`design`). */
 	rect: Rect;
 	primary?: boolean;
+	/** Shown dimmed; clicking it does nothing (e.g. Spin while the wheel turns). */
+	disabled?: boolean;
 }
 
 /** What the generic face draws: a ring (0..1, or none), a big headline and a caption. */
@@ -34,6 +36,16 @@ export interface WidgetWrite<C, S> {
 	state?: S;
 	/** Spoken through the live announcer. */
 	announce?: string;
+	/** Sticky notes to create next to the widget, one column per inner list (one undo step). */
+	place?: string[][];
+}
+
+/** How the live view (or an export) draws. */
+export interface ArtOptions {
+	/** False with reduced motion: no turning, tumbling or shuffling. */
+	motion: boolean;
+	ink: string;
+	title: string;
 }
 
 export interface WidgetKind<C = unknown, S = unknown> {
@@ -48,7 +60,13 @@ export interface WidgetKind<C = unknown, S = unknown> {
 	defaultState(): S;
 	face(config: C, state: S, now: number, title: string): WidgetFace;
 	actions(config: C, state: S, now: number): WidgetAction[];
-	perform(action: string, config: C, state: S, now: number): WidgetWrite<C, S> | null;
+	/** `seed`: 32 random bits for kinds that draw lots (results are derived from it). */
+	perform(action: string, config: C, state: S, now: number, seed: number): WidgetWrite<C, S> | null;
+	/**
+	 * Its own drawing in the design space, above the buttons, instead of the generic ring,
+	 * headline and caption (which still name it in the zoomed-out view).
+	 */
+	art?(config: C, state: S, now: number, opts: ArtOptions): string;
 	/** True while the face changes with time (the view subscribes to the ticker). */
 	ticking(config: C, state: S, now: number): boolean;
 	/**
@@ -88,20 +106,31 @@ export const UNKNOWN_FACE: WidgetFace = {
 /** The face, actions and ticking of any widget (unknown kinds: a placeholder, no actions). */
 export function widgetView(
 	el: WidgetElement,
-	now: number
+	now: number,
+	motion = true
 ): {
 	face: WidgetFace;
 	actions: WidgetAction[];
 	ticking: boolean;
 	design: { w: number; h: number };
+	art: string | null;
 } {
 	const w = readWidget(el);
-	if (!w) return { face: UNKNOWN_FACE, actions: [], ticking: false, design: { w: el.w, h: el.h } };
+	if (!w)
+		return {
+			face: UNKNOWN_FACE,
+			actions: [],
+			ticking: false,
+			design: { w: el.w, h: el.h },
+			art: null
+		};
 	const { def, config, state } = w;
 	return {
 		face: def.face(config, state, now, el.title),
 		actions: def.actions(config, state, now),
 		ticking: def.ticking(config, state, now),
-		design: def.design
+		design: def.design,
+		art:
+			def.art?.(config, state, now, { motion, ink: el.style.font.color, title: el.title }) ?? null
 	};
 }

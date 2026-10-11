@@ -23,6 +23,8 @@
 	import { backlinksDialog } from '../writing/backlinksDialogState.svelte';
 	import { formatKeys } from '../tools/formatKeys';
 	import { isAssetTooLarge } from '$lib/storage/sync/assetFlags';
+	import { wheelFromSelection } from '../widgets/create';
+	import { selectedTexts } from '../widgets/selectionText';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -125,6 +127,9 @@
 				{@render entry('Select connected', 'Mod+Shift+A', () =>
 					ctx.selection.set(connectedComponent(ctx, ctx.selection.ids))
 				)}
+				{#if selectedTexts(ctx).length >= 2}
+					{@render entry('Make a wheel from selection', null, () => wheelFromSelection(ctx))}
+				{/if}
 				<ContextMenu.Separator class={sep} />
 				{#if ctx.selection.single}
 					{@render entry('Comment', 'Mod+Alt+M', () =>

@@ -79,7 +79,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [ ] | 50 | [Google Drive and sync settings](./steps/50-google-drive.md) (code done and tested against a fake Drive; **waiting for** domain, OAuth client and the real-account check) | L | 49 | 2d |
 | [ ] | 51 | [Capacitor app and native Google sign-in](./steps/51-capacitor-sign-in.md) (**blocked**: bundle id) | L | 50 | 2d |
 | [x] | 54 | [Widget framework and timer](./steps/54-widget-framework-timer.md) (approved 2026-10-11: `widget` type, schema 8, `widgets` map) | M. Widgets | 53 | 2.5d |
-| [ ] | 55 | [Wheel of fortune, randomizer, dice](./steps/55-wheel-randomizer-dice.md) | M. Widgets | 54 | 2d |
+| [x] | 55 | [Wheel of fortune, randomizer, dice](./steps/55-wheel-randomizer-dice.md) | M. Widgets | 54 | 2d |
 | [ ] | 56 | [Dot voting and counter](./steps/56-voting-counter.md) | M. Widgets | 54 | 2d |
 | [ ] | 57 | [Progress, status and deadline](./steps/57-progress-status-deadline.md) | M. Widgets | 54 | 1.5d |
 | [ ] | 58 | [Writer widgets](./steps/58-writer-widgets.md) | M. Widgets | 54 | 2d |

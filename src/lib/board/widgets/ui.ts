@@ -1,5 +1,11 @@
 import type { Component } from 'svelte';
+import Dices from '@lucide/svelte/icons/dices';
+import FerrisWheel from '@lucide/svelte/icons/ferris-wheel';
+import Shuffle from '@lucide/svelte/icons/shuffle';
 import TimerIcon from '@lucide/svelte/icons/timer';
+import DiceSettings from './dice/DiceSettings.svelte';
+import RandomizerSettings from './randomizer/RandomizerSettings.svelte';
+import WheelSettings from './wheel/WheelSettings.svelte';
 import TimerSettings from './timer/TimerSettings.svelte';
 import type { WidgetElement } from '$lib/model/types';
 
@@ -13,7 +19,15 @@ export interface WidgetSettingsProps {
 	disabled: boolean;
 }
 
-export const WIDGET_ICONS: Record<string, typeof TimerIcon> = { timer: TimerIcon };
+export const WIDGET_ICONS: Record<string, typeof TimerIcon> = {
+	timer: TimerIcon,
+	wheel: FerrisWheel,
+	randomizer: Shuffle,
+	dice: Dices
+};
 export const WIDGET_SETTINGS: Record<string, Component<WidgetSettingsProps>> = {
-	timer: TimerSettings
+	timer: TimerSettings,
+	wheel: WheelSettings,
+	randomizer: RandomizerSettings,
+	dice: DiceSettings
 };

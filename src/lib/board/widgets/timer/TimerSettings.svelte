@@ -35,7 +35,7 @@
 />
 
 {#if config.mode === 'countdown'}
-	<fieldset class="flex flex-col gap-2" {disabled}>
+	<fieldset class="flex min-w-0 flex-col gap-2" {disabled}>
 		<legend class="mb-1 text-xs font-medium text-muted">Duration</legend>
 		<div class="flex items-center gap-2 text-sm">
 			<label class="flex items-center gap-1">

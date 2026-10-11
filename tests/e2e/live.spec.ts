@@ -135,3 +135,39 @@ test('a timer started on one browser runs at the same time on the other', async 
 	expect(await a.evaluate(() => window.__spacy!.list().some((e) => e.id === 'timer'))).toBe(true);
 	await b.context().close();
 });
+
+test('both browsers see the same wheel spin and winner', async ({
+	page: a,
+	browser,
+	browserName
+}) => {
+	test.skip(browserName === 'firefox', 'WebRTC ICE fails between headless Firefox contexts');
+	test.setTimeout(60_000);
+	await enableTestHooks(a);
+	await createBoard(a);
+	await waitForHooks(a);
+	await waitForInitialView(a);
+	await add(a, {
+		...el.shape('wheel', -140, -168),
+		type: 'widget',
+		kind: 'wheel',
+		text: undefined,
+		w: 280,
+		h: 336,
+		title: '',
+		config: {
+			segments: ['Ann', 'Bea', 'Cy', 'Dan', 'Eve'].map((label) => ({ label, color: '#74c0fc' })),
+			removeWinner: false,
+			duration: 2
+		},
+		state: { spin: null, removed: [], history: [] }
+	});
+	const link = await share(a);
+	const b = await join(browser, link);
+	await expect(b.locator('[data-widget="wheel"]')).toHaveCount(1);
+	await a.evaluate(() => window.__spacy!.ctx.widgets.run('wheel', 'spin'));
+	const winner = (p: Page) => p.locator('[data-widget="wheel"] text[font-weight="700"]');
+	await expect(winner(a)).toHaveText(/^(Ann|Bea|Cy|Dan|Eve)$/, { timeout: 8000 });
+	await expect(winner(b)).toHaveText((await winner(a).textContent())!, { timeout: 8000 });
+	await b.context().close();
+});
