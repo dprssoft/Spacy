@@ -1,7 +1,9 @@
 // Google sign-in for Drive sync with Google Identity Services' token model: an access token
 // (about an hour) obtained in a popup, kept in memory only and shared with this browser's other
-// tabs. Popups need a user gesture, so an expired token is renewed on the next click or key press
-// (with earlier consent, the popup closes by itself); until then sync waits ("Sign in again").
+// tabs. There is no refresh token without a backend, so renewal needs Google's popup, and popups
+// need a user gesture: in the token's last minutes the next click or key press renews it, before
+// sync has to wait ("Sign in again"). With earlier consent and the account as a hint, the popup
+// closes by itself.
 import { AuthRequiredError, type SyncAuth } from '$lib/storage/sync/auth';
 import { DRIVE_SCOPE, GIS_SRC } from './config';
 
@@ -13,7 +15,7 @@ interface TokenResponse {
 interface TokenClient {
 	callback: (r: TokenResponse) => void;
 	error_callback?: (e: { type?: string }) => void;
-	requestAccessToken(opts?: { prompt?: string }): void;
+	requestAccessToken(opts?: { prompt?: string; login_hint?: string }): void;
 }
 interface Gis {
 	accounts: {
@@ -33,6 +35,8 @@ type Token = { value: string; expiresAt: number };
 type Message = { type: 'token'; token: Token | null } | { type: 'token-request' };
 
 const MARGIN_MS = 5 * 60_000;
+/** How long before the token stops being used that a click renews it. */
+const RENEW_AHEAD_MS = 10 * 60_000;
 let gisLoad: Promise<Gis> | null = null;
 
 function loadGis(): Promise<Gis> {
@@ -60,14 +64,17 @@ export class GisAuth implements SyncAuth {
 	#token: Token | null = null;
 	#client: TokenClient | null = null;
 	#pending: { resolve: () => void; reject: (e: Error) => void } | null = null;
-	#armed = false;
+	#disarm: (() => void) | null = null;
+	#renewTimer: ReturnType<typeof setTimeout> | undefined;
 	readonly #channel =
 		typeof BroadcastChannel === 'function' ? new BroadcastChannel('spacy-sync-auth') : null;
 
 	constructor(
 		private readonly clientId: string,
 		/** A token arrived after sync had to wait for one. */
-		private readonly onRenewed: () => void = () => {}
+		private readonly onRenewed: () => void = () => {},
+		/** The account to sign in with, so Google skips its account chooser. */
+		private readonly loginHint: () => string | null = () => null
 	) {
 		this.#channel?.addEventListener('message', (e: MessageEvent<Message>) => {
 			if (e.data?.type === 'token-request') {
@@ -76,7 +83,7 @@ export class GisAuth implements SyncAuth {
 			}
 			if (e.data?.type !== 'token') return;
 			const waiting = !this.#valid();
-			this.#token = e.data.token;
+			this.#setToken(e.data.token);
 			if (waiting && this.#valid()) this.onRenewed();
 		});
 		// A tab opened later borrows the token another tab already has.
@@ -99,14 +106,15 @@ export class GisAuth implements SyncAuth {
 	signIn(prompt: '' | 'consent' = ''): Promise<void> {
 		if (!this.#client) return Promise.reject(new Error('Call prepare() first'));
 		const client = this.#client;
+		const hint = this.loginHint();
 		return new Promise((resolve, reject) => {
 			this.#pending = { resolve, reject };
-			client.requestAccessToken({ prompt });
+			client.requestAccessToken(hint ? { prompt, login_hint: hint } : { prompt });
 		});
 	}
 
 	async getToken(opts: { force?: boolean } = {}): Promise<string> {
-		if (opts.force) this.#token = null;
+		if (opts.force) this.#setToken(null);
 		if (this.#valid()) return this.#token!.value;
 		this.renewOnNextGesture();
 		throw new AuthRequiredError();
@@ -114,12 +122,15 @@ export class GisAuth implements SyncAuth {
 
 	async signOut(): Promise<void> {
 		const t = this.#token;
-		this.#token = null;
+		this.#setToken(null);
+		this.#disarm?.();
 		this.#channel?.postMessage({ type: 'token', token: null } satisfies Message);
 		if (t) (await loadGis()).accounts.oauth2.revoke(t.value);
 	}
 
 	destroy(): void {
+		clearTimeout(this.#renewTimer);
+		this.#disarm?.();
 		this.#channel?.close();
 	}
 
@@ -127,26 +138,42 @@ export class GisAuth implements SyncAuth {
 		return !!this.#token && this.#token.expiresAt - MARGIN_MS > Date.now();
 	}
 
+	#fresh(): boolean {
+		return !!this.#token && this.#token.expiresAt - MARGIN_MS - RENEW_AHEAD_MS > Date.now();
+	}
+
+	#setToken(token: Token | null): void {
+		this.#token = token;
+		clearTimeout(this.#renewTimer);
+		if (!token) return;
+		const wait = token.expiresAt - MARGIN_MS - RENEW_AHEAD_MS - Date.now();
+		this.#renewTimer = setTimeout(() => this.renewOnNextGesture(), Math.max(0, wait));
+	}
+
 	/** Renews within the person's next click or key press, when the browser allows a popup. */
 	renewOnNextGesture(): void {
-		if (this.#armed || !this.#client || typeof document === 'undefined') return;
-		this.#armed = true;
-		const renew = () => {
+		if (this.#disarm || !this.#client || typeof document === 'undefined') return;
+		const disarm = () => {
 			document.removeEventListener('pointerdown', renew, true);
 			document.removeEventListener('keydown', renew, true);
-			this.#armed = false;
-			if (!this.#valid()) void this.signIn('').then(this.onRenewed, () => {});
+			this.#disarm = null;
+		};
+		const renew = () => {
+			disarm();
+			// Another tab may have renewed it in the meantime.
+			if (!this.#fresh()) void this.signIn('').then(this.onRenewed, () => {});
 		};
 		document.addEventListener('pointerdown', renew, true);
 		document.addEventListener('keydown', renew, true);
+		this.#disarm = disarm;
 	}
 
 	#onToken(r: TokenResponse): void {
 		if (!r.access_token) return this.#fail(new Error(r.error ?? 'Sign-in failed'));
-		this.#token = {
+		this.#setToken({
 			value: r.access_token,
 			expiresAt: Date.now() + Number(r.expires_in ?? 3600) * 1000
-		};
+		});
 		this.#channel?.postMessage({ type: 'token', token: this.#token } satisfies Message);
 		this.#pending?.resolve();
 		this.#pending = null;
