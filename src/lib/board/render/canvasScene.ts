@@ -21,6 +21,8 @@ import { sameNumbers, strokeSvgPath } from '../elements/stroke/strokePath';
 import type { Viewport } from '../engine/viewport';
 import { strokePaint, type SketchStroke } from '../sketch/brushes';
 import { PIN_HEAD, PIN_PATH, PIN_W } from '../waystones/pin';
+import { now } from '../widgets/clock';
+import { widgetView } from '../widgets';
 import { wrapText } from './wrapText';
 
 export interface SceneTheme {
@@ -241,6 +243,16 @@ export class SceneRenderer {
 				c.fillStyle = s.fill;
 				c.fill((this.#pin ??= new Path2D(PIN_PATH)));
 				if (el.name) this.#line(c, el.id, el.name, PIN_W + 6, PIN_HEAD.y, 240, 13, 600, theme.ink);
+				return;
+			}
+			case 'widget': {
+				// Zoomed far out: the card and its headline (the time, the result…).
+				const path = insetRect(el.w, el.h, s);
+				fill(c, s, path);
+				stroke(c, s, path, s.stroke);
+				const { headline } = widgetView(el, now()).face;
+				const size = Math.max(12, Math.min(el.w, el.h) / 6);
+				this.#line(c, el.id, headline, 12, el.h / 2, el.w - 24, size, 700, s.font.color);
 				return;
 			}
 			case 'doccard': {

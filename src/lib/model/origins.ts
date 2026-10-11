@@ -13,3 +13,5 @@ export const MIGRATION: Origin = Object.freeze({ name: 'migration' });
 export const TEMPLATE: Origin = Object.freeze({ name: 'template' });
 /** Page management (deleting a page's content): local, but deliberately not undoable. */
 export const PAGES: Origin = Object.freeze({ name: 'pages' });
+/** Running a widget (start a timer, spin a wheel, vote): local, but deliberately not undoable. */
+export const WIDGET: Origin = Object.freeze({ name: 'widget' });

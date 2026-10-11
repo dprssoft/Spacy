@@ -6,6 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { parseShareHash } from '$lib/model/share';
 	import { clockSkewMs, describeSkew, MAX_SKEW_MS } from '$lib/storage/live/clock';
+	import { setClockSkew } from './widgets/clock';
 	import { NewerSchemaError } from '$lib/model/migrations';
 	import { BoardNotFoundError, openBoard, type OpenBoard } from '$lib/storage/boardDoc';
 	import * as boardsRepo from '$lib/storage/boardsRepo';
@@ -36,6 +37,7 @@
 		if (!share) return true;
 		status = { kind: 'joining' };
 		void clockSkewMs().then((skew) => {
+			setClockSkew(skew);
 			if (skew !== null && Math.abs(skew) > MAX_SKEW_MS) clockOff = describeSkew(skew);
 		});
 		const { joinShared } = await import('$lib/storage/live/join');

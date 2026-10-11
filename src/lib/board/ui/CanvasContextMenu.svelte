@@ -36,6 +36,10 @@
 	const mentionedIn = $derived(
 		open && ctx.selection.single ? ctx.backlinks.of(ctx.selection.single).length : 0
 	);
+	const widget = $derived.by(() => {
+		const el = open && ctx.selection.single ? ctx.store.get(ctx.selection.single) : undefined;
+		return el?.type === 'widget' ? el : null;
+	});
 	const media = $derived.by(() => {
 		const el = open && ctx.selection.single ? ctx.store.get(ctx.selection.single) : undefined;
 		return el?.type === 'media' ? el : null;
@@ -133,6 +137,12 @@
 						`Mentioned in ${mentionedIn}…`,
 						null,
 						() => (backlinksDialog.targetId = ctx.selection.single)
+					)}
+				{/if}
+				{#if widget}
+					<ContextMenu.Separator class={sep} />
+					{@render entry('Widget settings', 'Shift+Enter', () =>
+						ctx.widgets.openSettings(widget.id)
 					)}
 				{/if}
 				{#if media}

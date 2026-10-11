@@ -14,6 +14,7 @@ import type { OutlineState } from './writing/outlineState.svelte';
 import type { BacklinkIndex } from './writing/backlinks.svelte';
 import type { CommentsState } from './comments/commentsState.svelte';
 import type { WaystonesState } from './waystones/waystones.svelte';
+import type { WidgetsState } from './widgets/widgets.svelte';
 import type { PagesState } from './pages.svelte';
 import type { BoardPrefs } from './prefs.svelte';
 import type { SelectionState } from './selection.svelte';
@@ -48,6 +49,7 @@ export interface BoardContext {
 	backlinks: BacklinkIndex;
 	comments: CommentsState;
 	waystones: WaystonesState;
+	widgets: WidgetsState;
 	sketch: SketchSettings;
 	save: SaveStatus;
 	/** Live sharing (step 52). */

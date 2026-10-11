@@ -101,7 +101,7 @@ export type Rect = { x: number; y: number; w: number; h: number };
 
 export type ElementType =
   | 'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'sketch' | 'frame' | 'doccard' | 'connector' | 'media'
-  | 'waystone';
+  | 'waystone' | 'widget';
 
 export type ShapeKind =
   | 'rect' | 'ellipse' | 'diamond'                       // basic (toolbar)
@@ -171,6 +171,14 @@ export interface WaystoneElement extends BaseElement {   // schema version 7
   order: string;            // fractional index: route order on the page (separate from z; ties by id)
 }
 
+export interface WidgetElement extends BaseElement {    // schema version 8
+  type: 'widget';           // a timer, wheel, vote… — not rotatable; content scales with the box
+  kind: string;             // 'timer' (step 54), …; unknown kinds (newer app) are kept as they are
+  title: string;            // ≤ 100 chars; '' = the kind's label
+  config: unknown;          // JSON, parsed per kind: what the user set up (LOCAL, undoable)
+  state: unknown;           // JSON, parsed per kind: what happens while it runs (WIDGET origin, not undoable)
+}
+
 export type Port = 'n' | 'e' | 's' | 'w';
 
 export type Endpoint =
@@ -195,7 +203,8 @@ export interface ConnectorElement extends BaseElement {
 
 export type Element =
   | ShapeElement | StickyElement | TextElement | ImageElement
-  | StrokeElement | FrameElement | DocCardElement | ConnectorElement | MediaElement | WaystoneElement;
+  | StrokeElement | FrameElement | DocCardElement | ConnectorElement | MediaElement | WaystoneElement
+  | WidgetElement;
 ```
 
 ### Y.Doc layout
@@ -214,6 +223,9 @@ doc.getMap('docs')      Y.Map<doccardId, Y.XmlFragment>   (TipTap content)
 doc.getMap('sketches')  Y.Map<sketchId, Y.Array<{ b: brush, c: color, s: size, p: number[] }>>
                         - append-only brush strokes of sketch elements; p = flat [x, y, pressure, …]
                           in the sketch's own coordinates
+doc.getMap('widgets')   Y.Map<'<widgetId>:<participantId>', JSON>             (schema version 8, step 54)
+                        - input many people add at once (votes, counter clicks), one value per person;
+                          flat, so two peers adding a widget's first entries never replace each other's
 doc.getMap('comments')  Y.Map<threadId, Y.Map<{                       (schema version 6, step 45)
                           anchor: { kind: 'element'; elementId } | { kind: 'text'; cardId } (JSON),
                           page: string, resolved: boolean, createdAt: number,
@@ -226,7 +238,7 @@ Rules:
 - Frames render beneath all non-frame elements (own layer); `z` orders frames among themselves.
 - Deleting a doccard deletes its `docs` entry in the same transaction.
 - Deleting an element converts endpoints of connectors attached to it into `free` endpoints at their current resolved position, in the same transaction (step 20).
-- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view). Version 6 added comments (no data moves; an older editor would delete text carrying the `comment` mark). Version 7 added waystones (no data moves; older versions would drop them from their view).
+- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view). Version 6 added comments (no data moves; an older editor would delete text carrying the `comment` mark). Version 7 added waystones (no data moves; older versions would drop them from their view). Version 8 added widgets and the `widgets` map (no data moves).
 - Media (`src/lib/board/media`): which elements are playing is per-tab state (`PlaybackState` in the board context), never stored. A poster is shown until play; playing elements stay mounted when culled or when the scene canvas is shown; page switches stop playback. Double-click / Enter plays and hands the pointer to the player (the editing mode, like doc cards); Escape or a click elsewhere leaves it while playback continues. Exports, thumbnails and the scene canvas draw the poster. CSP: `frame-src https://www.youtube-nocookie.com https://player.vimeo.com; media-src 'self' blob: https:` — `connect-src` stays `'self'` (no oEmbed or thumbnail fetching).
 - Fonts (`src/lib/fonts`): `catalog.ts` lists the fonts (id, label, category, CSS stack); 10 are bundled from `@fontsource*` packages (Latin, Latin Extended and Cyrillic woff2 subsets, ~1 MB in all, precached for offline use) and registered with the `FontFace` API under `Spacy <name>` families, so the browser downloads a subset only when text uses it. Canvas text stores the id in `style.font.family` (optional; no schema bump: an older app shows the default font); doc card text uses the `fontFamily` mark. Exports embed the files of the fonts they use as data URLs.
 - Doc card text formatting (schema version 4): underline, `textColor`, `highlight`, `fontFamily` and `fontSize` marks and an `align` attribute on paragraphs and headings. The marks hold ids from fixed lists (`doccards/formatOptions.ts`), rendered as `data-*` attributes and styled in `prose.css`; text color and highlight also take a `#rrggbb` value (`data-*="custom"` plus a CSS variable in the style attribute). Anything else is dropped on parse. The bump matters: an older editor deletes text carrying marks it doesn't know.
@@ -234,6 +246,7 @@ Rules:
 - Comments (schema version 6, `src/lib/model/comments.ts`; UI in `src/lib/board/comments`): all writes go through its helpers. Text threads are anchored by a `comment` mark (`threadId`, `excludes: ''` so comments may overlap; y-tiptap stores it as the text attribute `comment--<hash>`) in doc card text, so the highlight moves with edits; a text thread whose marked text was all deleted stays as "orphaned" (listed with "The commented text was deleted"). Deleting an element deletes threads anchored to it (and the text threads of a deleted doc card) in the same transaction (a `beforeDeleteHooks` entry); deleting a text thread removes its marks. Paste and duplicate copy the threads of the copied objects (the clipboard payload carries them) and repoint the copied marks (`copyThreadsTo`). The `comments` map is in canvas undo scope; the mark itself is applied by the editor (its own Yjs undo). The author name is a localPref. Exports (PNG/SVG/PDF, compile, Markdown) leave comments out; "Download .md with comments" writes them as footnotes.
 - Live sharing (step 52, `src/lib/model/share.ts`): `meta.share = { room, key } | null` (room 16, key 24 url-safe chars). Set on the board, so every device and person with it joins the same session; not in undo scope. No schema bump: an older app ignores it.
 - Waystones (schema version 7, `src/lib/board/waystones`): named checkpoints on a page, board only (not @-mentionable, never in doc cards). `ctx.waystones` (`WaystonesState`) gives the page's route (`routeOf`: by `order`, ties by id since copies share a key), the bar's position, and flying: `flyTarget` centres the pin's tip at the waystone's zoom via `viewport.animateTo` (reduced motion: no animation). New ones (the W tool, or "Add waystone here" at the view centre) take the current zoom and go to the end of the route. The pin is an ordinary world-size object (hit-testing, selection, connectors and exports agree); below 60 % zoom its number and name are drawn in the screen-space overlay at a constant size (and fly there on click). Image exports leave waystones out unless "Include waystones" is ticked. The waystone bar is docked in the status bar (on phones, a strip just above it), never over the board; presenting (from the list) goes full screen with the board's interface hidden and the bar floating at the bottom centre as the only control; Escape or leaving full screen ends it.
+- Widgets (schema version 8; model writes in `src/lib/model/widgets.ts`, everything else in `src/lib/board/widgets`): `kinds.ts` is the pure kind registry (parse config/state with per-kind zod + defaults, `face`, `actions` = clickable zones in the kind's design space, `perform` → `{ config?, state? }`, `ticking`, `finished`); `face.ts` draws every widget as one SVG string used by the live view, exports and thumbnails; `ui.ts` holds menu icons and settings components. Clicks on a widget's zone run its action through the select tool (no selection change; a drag from a zone moves the widget); Enter runs the primary action, Shift+Enter / double-click (not on a zone) / the context menu open the settings popover. Config writes are LOCAL (one undo step; skipped on a locked widget), state writes use origin `WIDGET` (never undone). State stores absolute times (`startedAt`), read with `widgets/clock.ts` (`Date.now()` corrected by the server clock skew when ≥ 2 s); one shared ticker (≤ 10 Hz) runs only while a mounted widget is ticking. Copies (paste, duplicate, duplicated pages) get `state: null` (the kind's default) and no entries; deleting a widget deletes its entries in the same transaction (in undo scope); deleting a page deletes its widgets' entries. The toolbar's Widgets flyout (groups Facilitation / Team / Writing; drag an item onto the canvas, `WIDGET_DRAG_TYPE`) picks `tools.widgetKind` for the `widget` tool; on phones it's a Widgets submenu of "Insert more". Exports draw a widget as it shows at the moment of export; the scene canvas draws its card and headline.
 - Pages (`src/lib/model/pages.ts`): elements never move between maps; connectors attach only within a page; `docs` is shared and keyed by element id. Anything that must see the whole board (asset cleanup, import, board duplication) uses `allPageMaps` / `listAllElements`. Deleting a page removes its elements and their `docs` entries with origin `PAGES` (not undoable) and clears the undo history.
 
 ## 6. Storage
@@ -283,10 +296,10 @@ library.getMap('boards'): Y.Map<boardId, Y.Map<{
 - `BroadcastChannel('spacy-board-<id>')` — Yjs updates between tabs with the same board open (origin `REMOTE_TAB`).
 
 ### Transaction origins (`src/lib/model/origins.ts`)
-`LOCAL` (user edits, tracked by undo) · `REMOTE_TAB` · `REMOTE_SYNC` (from the user's other devices, §14) · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
+`LOCAL` (user edits, tracked by undo) · `WIDGET` (running a widget: local, not undoable) · `PAGES` (page deletion: local, not undoable) · `REMOTE_TAB` · `REMOTE_SYNC` (from the user's other devices, §14) · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
 
 ### localStorage keys (via `localPrefs`)
-`spacy:theme`, `spacy:home:sort`, `spacy:home:layout`, `spacy:defaults:<type>`, `spacy:copiedStyle`, `spacy:grid`, `spacy:snap`, `spacy:onboarded`, `spacy:lastBackupAt`, `spacy:backupReminderDismissedAt`, `spacy:testHooks`, `spacy:commentAuthor`, `spacy:comments:<boardId>` (panel open), `spacy:waystones:wrap`, `spacy:sync:device` (this browser's random sync device id, §14), `spacy:migrated` (settings copied from SMTHNG, see §6), `spacy:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by the inline theme script in `src/app.html`; element colors never change).
+`spacy:theme`, `spacy:home:sort`, `spacy:home:layout`, `spacy:defaults:<type>`, `spacy:copiedStyle`, `spacy:grid`, `spacy:snap`, `spacy:onboarded`, `spacy:lastBackupAt`, `spacy:backupReminderDismissedAt`, `spacy:testHooks`, `spacy:commentAuthor`, `spacy:comments:<boardId>` (panel open), `spacy:waystones:wrap`, `spacy:participantId` (this browser's id for widget entries, step 56), `spacy:sync:device` (this browser's random sync device id, §14), `spacy:migrated` (settings copied from SMTHNG, see §6), `spacy:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by the inline theme script in `src/app.html`; element colors never change).
 
 ## 7. Yjs → Svelte bridge
 
@@ -336,7 +349,7 @@ export interface ElementDefinition<E extends Element = Element> {
 ### Tools (`src/lib/board/tools/types.ts`)
 ```ts
 export type ToolId = 'select' | 'hand' | 'pen' | 'eraser' | 'shape' | 'connector'
-  | 'text' | 'sticky' | 'doccard' | 'frame' | 'image';
+  | 'text' | 'sticky' | 'doccard' | 'frame' | 'image' | 'sketch' | 'waystone' | 'widget';
 
 export interface CanvasPointerEvent {
   world: Point; screen: Point;
@@ -424,6 +437,7 @@ Files from before the rename (`format: 'smthng'`, `.smthng`) import the same way
 | Arrows (+Shift) | Nudge 1px (10px) | ? | Shortcuts dialog |
 | Shift+T | Insert template | Home | Back to origin (100 %) |
 | Shift+F | Full screen (also a top bar button; in Settings on phones) | Mod+Alt+M | Comment on the selected object |
+| Enter (widget selected) | Run its main button (start/pause…) | Shift+Enter (widget selected) | Widget settings |
 
 **Media keys** apply to the selected media element while it plays, or while its player is in use; then they take precedence over tool keys, arrow nudging and Space-panning:
 Space / K play-pause · J / L ∓10 s · ← / → ∓5 s · ↑ / ↓ volume · M mute · F full screen · `<` / `>` speed · 0–9 jump to 0–90 % · Home / End clip start / end · Shift+L loop. Enter on a selected media element starts it.

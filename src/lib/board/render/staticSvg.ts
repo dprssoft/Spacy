@@ -23,6 +23,9 @@ import { strokePaint, type SketchStroke } from '../sketch/brushes';
 import { expandRect } from '../engine/geometry';
 import { posterSubtitle } from '../media/poster';
 import { PIN_HEAD, PIN_PATH, PIN_W } from '../waystones/pin';
+import { now } from '../widgets/clock';
+import { widgetSvg } from '../widgets/face';
+import '../widgets';
 import { unionBounds } from './bounds';
 import { wrapText, type FontSpec } from './wrapText';
 
@@ -179,6 +182,9 @@ class Renderer {
 						? `<text x="${PIN_W + 6}" y="${n(PIN_HEAD.y + 5)}" font-size="13" font-weight="600" fill="${MUTED}">${escapeXml(this.fit(el.name, 13, 240))}</text>`
 						: '')
 				);
+			case 'widget':
+				// As it shows at the moment of export (a running timer: the time left now).
+				return widgetSvg(el, now());
 		}
 	}
 

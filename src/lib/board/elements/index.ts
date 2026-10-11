@@ -6,6 +6,7 @@ import type {
 	ImageElement,
 	MediaElement,
 	WaystoneElement,
+	WidgetElement,
 	Point,
 	ShapeElement,
 	SketchElement,
@@ -29,6 +30,7 @@ import SketchView from './sketch/SketchView.svelte';
 import ImageView from './image/ImageView.svelte';
 import MediaView from './media/MediaView.svelte';
 import WaystoneView from './waystone/WaystoneView.svelte';
+import WidgetView from './widget/WidgetView.svelte';
 import { registerElement, type ElementDefinition } from './registry';
 import ShapeView from './shape/ShapeView.svelte';
 import StickyView from './sticky/StickyView.svelte';
@@ -161,6 +163,17 @@ registerElement<WaystoneElement>({
 	component: WaystoneView,
 	resizable: false,
 	rotatable: false
+});
+
+registerElement<WidgetElement>({
+	...boxDefaults,
+	type: 'widget',
+	styleOptions: STYLE_OPTIONS.widget,
+	component: WidgetView,
+	// Hit-testing and its buttons assume an unrotated box.
+	rotatable: false,
+	keepAspect: true,
+	sizeLimits: () => ({ minW: 80, minH: 80 })
 });
 
 export { allDefinitions, definitionOf, getDefinition } from './registry';

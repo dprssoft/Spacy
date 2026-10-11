@@ -9,6 +9,7 @@
 	import { createMedia, droppedMediaLink } from '../media/createMedia';
 	import { mediaKeyTarget } from '../media/keys';
 	import { SHAPE_DRAG_TYPE, SHAPE_KINDS } from '../elements/shape/paths';
+	import { createWidgetAt, WIDGET_DRAG_TYPE } from '../widgets/create';
 	import { createShapeAt } from '../tools/create';
 	import { syncFrameMembership } from '../frameMembership';
 	import { pointerRouter } from '../tools/pointerRouter';
@@ -69,7 +70,8 @@
 	// Files dropped onto the canvas (images, text, Markdown, Word) land where they were dropped.
 	let dropping = $state(false);
 	const hasFiles = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files');
-	const hasShape = (e: DragEvent) => !!e.dataTransfer?.types.includes(SHAPE_DRAG_TYPE);
+	const hasShape = (e: DragEvent) =>
+		!!e.dataTransfer?.types.some((t) => t === SHAPE_DRAG_TYPE || t === WIDGET_DRAG_TYPE);
 
 	// A link dragged from a page or the address bar (types are known during the drag, data isn't).
 	const hasLink = (e: DragEvent) =>
@@ -89,6 +91,16 @@
 	}
 
 	function ondrop(e: DragEvent) {
+		const widget = e.dataTransfer?.getData(WIDGET_DRAG_TYPE);
+		if (widget && container) {
+			e.preventDefault();
+			const r = container.getBoundingClientRect();
+			const at = screenToWorld(viewport.vp, { x: e.clientX - r.left, y: e.clientY - r.top });
+			const id = createWidgetAt(ctx, widget, at);
+			ctx.tools.setTool('select');
+			if (id) ctx.selection.set([id]);
+			return;
+		}
 		if (hasShape(e) && container) {
 			e.preventDefault();
 			const kind = SHAPE_KINDS.find(

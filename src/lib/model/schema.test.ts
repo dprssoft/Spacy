@@ -33,7 +33,7 @@ describe('parseElement', () => {
 	it.each([
 		['missing field', () => ({ ...samples.shape(), text: undefined })],
 		['wrong enum', () => ({ ...samples.shape(), kind: 'hexagon' })],
-		['unknown type', () => ({ ...samples.shape(), type: 'widget' })],
+		['unknown type', () => ({ ...samples.shape(), type: 'gadget' })],
 		[
 			'bad stroke width',
 			() => ({ ...samples.shape(), style: { ...samples.shape().style, strokeWidth: 3 } })
