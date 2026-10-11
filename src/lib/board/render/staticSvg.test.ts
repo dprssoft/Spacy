@@ -14,7 +14,8 @@ const TYPES: ElementType[] = [
 	'sketch',
 	'doccard',
 	'connector',
-	'media'
+	'media',
+	'widget'
 ];
 
 function options(
@@ -125,5 +126,23 @@ describe('renderStaticSvg', () => {
 		expect(svg).toContain('>YouTube</text>');
 		expect(svg).not.toContain('youtu');
 		expect(svg).not.toMatch(/<image|<iframe|<video/);
+	});
+
+	it('draws a widget as it shows at the time of export', async () => {
+		const timer = {
+			...samples.widget('w'),
+			x: 0,
+			y: 0,
+			w: 240,
+			h: 240,
+			title: 'Break',
+			config: { mode: 'countdown', duration: 300, sound: true },
+			state: { startedAt: null, elapsed: 90_000 }
+		};
+		const { svg } = await renderStaticSvg(options([timer]));
+		expect(parse(svg).getElementsByTagName('parsererror')).toHaveLength(0);
+		expect(svg).toContain('>3:30</text>');
+		expect(svg).toContain('>Break</text>');
+		expect(svg).toMatchSnapshot();
 	});
 });

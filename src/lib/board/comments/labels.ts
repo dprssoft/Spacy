@@ -11,7 +11,8 @@ const TYPE_NAMES: Record<ElementType, string> = {
 	connector: 'Connector',
 	sketch: 'Sketch',
 	media: 'Media',
-	waystone: 'Waystone'
+	waystone: 'Waystone',
+	widget: 'Widget'
 };
 
 /** A short name for the object a comment is on: its title or first line, else its type. */

@@ -1,6 +1,7 @@
 import * as Y from 'yjs';
 import { cloneElements } from './clone';
 import { copyThreadsTo, deleteThreadsWhere, threadsOn } from './comments';
+import { deleteWidgetEntries } from './widgets';
 import {
 	getActivePageId,
 	getDocsMap,
@@ -123,6 +124,7 @@ export function deletePages(doc: Y.Doc, pageIds: Iterable<string>): boolean {
 			}
 		}
 		deleteThreadsWhere(doc, (id) => removed.has(id));
+		deleteWidgetEntries(doc, removed);
 	}, PAGES);
 	// A stored list must exist from here on: without one, the first page would come back.
 	setPages(doc, kept);

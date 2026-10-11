@@ -1414,3 +1414,23 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Dependencies added:** trystero@0.26.0 (peer discovery over Nostr), @trystero-p2p/ws-relay@0.26.0 (local/private relay: client used only with `PUBLIC_LIVE_RELAY_URLS`, server for `pnpm relay`), lib0@^0.2.119 (Yjs's encoder, now imported directly). Removed: y-webrtc.
 **Verification:** pnpm verify ✅ (1009 unit tests; new `peerSync.test.ts` 5, `clock.test.ts` 2; `liveAssets.test.ts` rewritten, 4) · e2e `live.spec.ts` ✅ chromium (local relay) · manual run over public Nostr ✅ chromium with a corrected clock.
 - Full e2e after the rework (chromium, mobile, firefox): 428 passed, 25 skipped, 2 failed, both on Firefox — `templates.spec.ts` kanban (the known flake recorded on 2026-10-06, before this branch) and `home.spec.ts` board lifecycle timing out at 30 s under the full run (second time on this branch; it passed 3/3 alone; the start-page rename now also writes the board content, worth a look if it keeps happening).
+
+## Step 54 — Widget framework and timer — 2026-10-11
+**Summary:**
+- `widget` element type (schema 8): `kind`, `title`, `config` (LOCAL, undoable), `state` (new origin `WIDGET`, never undone); unknown kinds are kept and drawn as "Needs a newer version of Spacy". `model/widgets.ts` holds every write, the `widgets` entries map (in undo scope, cleared with its widget and with deleted pages) and a clone hook that gives copies `state: null`.
+- `board/widgets`: a pure kind registry (`kinds.ts`: parse, face, action zones in a design space, `perform`, `ticking`, `finished`), one SVG drawing (`face.ts`) shared by the live view, exports and thumbnails, `layout.ts` (fit + zone lookup), a clock corrected by server skew ≥ 2 s, a shared ≤ 10 Hz ticker that runs only while a mounted widget is ticking, `WidgetsState` on `ctx.widgets` (hover, settings, `run`, announcements).
+- Timer: countdown/stopwatch, start/pause/resume/restart, reset, ±1 min (changes the duration before the first start, the time left after), the last 10 s in red, "Time's up" with a pulse (none with reduced motion) and a WebAudio chime once per run per tab (follows the personal media mute/volume), settings with presets 1–25 min.
+- UI: Widgets flyout in the toolbar's Insert group (Facilitation / Team / Writing headings, drag onto the canvas), a Widgets submenu in "Insert more" on phones, settings popover (its buttons repeat the widget's, for keyboard and screen readers), "Widget settings" in the context menu, scene-canvas and SVG export drawing.
+
+**Deviations:**
+- **Entries map is flat** (`widgets['<widgetId>:<participantId>'] = JSON`) instead of a nested Y.Map per widget: the unit test showed two peers creating a widget's nested map at the same time keep only one of them (Yjs map keys are last-writer-wins), losing the other's entries. `00-architecture.md` describes the flat layout.
+- **Enter only, not Space**, runs the primary action: Space is already hold-to-pan.
+- **No registry `actionAt`**: zones are widget-specific, so the select tool asks `widgets/layout.ts` directly; the registry interface is unchanged.
+- Double-click on a button does nothing (two quick clicks on "+1" aren't a request for settings); elsewhere on the widget it opens the settings.
+- The clock is checked when a board is (or becomes) shared and when joining, not only when the Share popover opens.
+- Zoomed far out (scene canvas) widgets aren't mounted: a timer shows its time as of the last redraw and doesn't chime there.
+
+**Dependencies added:** none
+**Follow-ups:** `spacy:participantId` is documented but created by step 56 (its first user); unknown-kind round trip through a saved board and the idle-frame check with the perf fixture are not yet tested end to end.
+**Verification:** pnpm verify ✅ (1053 unit tests; new `model/widgets.test.ts` 9, `timer.test.ts` 9, `layout.test.ts` 5, `widgets.test.ts` 6, a static-SVG widget snapshot; `waystones.test.ts` now expects the current version instead of a fixed 7) · e2e ✅ `widgets.spec.ts` 2, `mobile-widgets.spec.ts` 1, `live.spec.ts` timer in sync on two browsers (±1 s), chromium + mobile · full run (chromium, firefox, mobile): 435 passed, 26 skipped, 1 failed — Firefox `home.spec.ts` board lifecycle, which also fails 4/5 alone without this step's changes (stashed) · screenshot check of the menu, timer and settings.
+

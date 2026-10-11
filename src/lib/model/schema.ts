@@ -173,6 +173,18 @@ export const waystoneSchema = z.object({
 	order: z.string().min(1)
 });
 
+// `config` and `state` are any JSON; each widget kind parses its own (board/widgets).
+const json = z.custom<unknown>((v) => v !== undefined, 'required');
+
+export const widgetSchema = z.object({
+	...base,
+	type: z.literal('widget'),
+	kind: z.string().min(1).max(32),
+	title: z.string().max(100),
+	config: json,
+	state: json
+});
+
 export const elementSchema = z.discriminatedUnion('type', [
 	shapeSchema,
 	stickySchema,
@@ -184,7 +196,8 @@ export const elementSchema = z.discriminatedUnion('type', [
 	docCardSchema,
 	connectorSchema,
 	mediaSchema,
-	waystoneSchema
+	waystoneSchema,
+	widgetSchema
 ]);
 
 // Compile-time guard: the schemas and the hand-written types must describe the same shape.

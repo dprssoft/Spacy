@@ -223,7 +223,10 @@ export function pointerRouter(ctx: BoardContext) {
 		};
 
 		const onPointerLeave = () => {
-			if (active === null) ctx.selection.hoverId = null;
+			if (active === null) {
+				ctx.selection.hoverId = null;
+				ctx.widgets.hover = null;
+			}
 		};
 
 		// Right-click acts on what's under the cursor: select it first (the menu opens afterwards).

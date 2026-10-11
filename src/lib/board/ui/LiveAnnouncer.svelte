@@ -81,6 +81,12 @@
 		return () => map.unobserve(onChange);
 	});
 
+	// Widgets: a timer that ran out, a wheel's winner…
+	$effect(() => {
+		const a = ctx.widgets.announcement;
+		if (a) say(a.text, 2);
+	});
+
 	$effect(() => () => {
 		if (timer) clearTimeout(timer);
 	});

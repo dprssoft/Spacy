@@ -14,6 +14,7 @@ import { OutlineState } from './writing/outlineState.svelte';
 import { BacklinkIndex } from './writing/backlinks.svelte';
 import { CommentsState } from './comments/commentsState.svelte';
 import { WaystonesState } from './waystones/waystones.svelte';
+import { WidgetsState } from './widgets/widgets.svelte';
 import { BoardPrefs } from './prefs.svelte';
 import { PreviewState } from './preview.svelte';
 import { SelectionState } from './selection.svelte';
@@ -49,5 +50,6 @@ export function testCtx(id = 'board-1', doc = new Y.Doc()): BoardContext {
 	ctx.backlinks = new BacklinkIndex(doc);
 	ctx.comments = new CommentsState(ctx);
 	ctx.waystones = new WaystonesState(ctx);
+	ctx.widgets = new WidgetsState(ctx);
 	return ctx;
 }

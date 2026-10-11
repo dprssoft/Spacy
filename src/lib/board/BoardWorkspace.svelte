@@ -57,10 +57,12 @@
 	import { BacklinkIndex } from './writing/backlinks.svelte';
 	import { CommentsState } from './comments/commentsState.svelte';
 	import { WaystonesState } from './waystones/waystones.svelte';
+	import { WidgetsState } from './widgets/widgets.svelte';
 	import WaystonePresenter from './waystones/WaystonePresenter.svelte';
 	import WaystoneLabels from './waystones/WaystoneLabels.svelte';
 	import CommentBadges from './comments/CommentBadges.svelte';
 	import CommentPopover from './comments/CommentPopover.svelte';
+	import WidgetSettings from './widgets/WidgetSettings.svelte';
 	import CommentsPanel from './comments/CommentsPanel.svelte';
 	import { compileDialog } from './writing/compileDialogState.svelte';
 	import OutlinePanel from './writing/OutlinePanel.svelte';
@@ -113,6 +115,7 @@
 	ctx.backlinks = new BacklinkIndex(ctx.doc);
 	ctx.comments = new CommentsState(ctx);
 	ctx.waystones = new WaystonesState(ctx);
+	ctx.widgets = new WidgetsState(ctx);
 	onDestroy(() => {
 		ctx.save.destroy();
 		ctx.live.destroy();
@@ -347,6 +350,7 @@
 			<ShortcutsDialog />
 			<BacklinksDialog />
 			<CommentPopover />
+			<WidgetSettings />
 			<Onboarding />
 			{#if templateGalleryWanted}
 				{#await Promise.all( [import('$lib/shared/ui/TemplateGallery.svelte'), import('$lib/templates/insert')] ) then [{ default: TemplateGallery }, { insertTemplate }]}

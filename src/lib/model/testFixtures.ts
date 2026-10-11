@@ -97,6 +97,14 @@ export const samples: { [T in ElementType]: (id?: string, z?: string) => Element
 		name: 'Act II',
 		zoom: 1,
 		order: 'a0'
+	}),
+	widget: (id = 'widget1', z = 'aA') => ({
+		...base('widget', id, z),
+		type: 'widget',
+		kind: 'timer',
+		title: '',
+		config: { mode: 'countdown', duration: 300, sound: true },
+		state: { startedAt: null, elapsed: 0 }
 	})
 };
 

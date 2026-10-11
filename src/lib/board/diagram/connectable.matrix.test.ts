@@ -33,7 +33,8 @@ describe('every element type is connectable (except connectors)', () => {
 				'doccard',
 				'connector',
 				'media',
-				'waystone'
+				'waystone',
+				'widget'
 			])
 		);
 		for (const d of allDefinitions()) {

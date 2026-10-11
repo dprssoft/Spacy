@@ -4,6 +4,7 @@ import { getMeta } from '$lib/model/doc';
 import { getShare, newShare, setShare, shareHash, type ShareInfo } from '$lib/model/share';
 import type { LiveSession, LiveState } from '$lib/storage/live/session';
 import { clockSkewMs, describeSkew, MAX_SKEW_MS } from '$lib/storage/live/clock';
+import { setClockSkew } from '../widgets/clock';
 import { commentAuthor } from '../comments/author.svelte';
 import { Presence } from './presence.svelte';
 
@@ -26,7 +27,11 @@ export class LiveShare {
 		readonly session: LiveSession
 	) {
 		const meta = getMeta(doc);
-		const read = () => (this.share = getShare(doc));
+		const read = () => {
+			this.share = getShare(doc);
+			// Shared widget timers need this clock corrected (once, when the board is shared).
+			if (this.share) void this.checkClock();
+		};
 		meta.observe(read);
 		read();
 		const offState = session.subscribe(() => {
@@ -56,6 +61,8 @@ export class LiveShare {
 		if (this.#clockChecked) return;
 		this.#clockChecked = true;
 		const skew = await clockSkewMs();
+		// Shared widget timers count from absolute times: correct this clock for them.
+		setClockSkew(skew);
 		this.clockOff = skew !== null && Math.abs(skew) > MAX_SKEW_MS ? describeSkew(skew) : null;
 	}
 

@@ -35,6 +35,8 @@ import { makeEndpoint } from '../diagram/endpoints';
 import { connectorGeometry } from '../diagram/geometry';
 import { nearestT } from '../diagram/routing';
 import { undoGesture } from './gesture';
+import { now } from '../widgets/clock';
+import { actionAt, primaryAction } from '../widgets/layout';
 import { createRafWriter } from './rafBatch';
 import type { CanvasPointerEvent, Tool } from './types';
 
@@ -45,8 +47,18 @@ type Patches = { id: string; patch: ElementPatch }[];
 
 type State =
 	| { kind: 'idle' }
-	/** Pressed on an element; becomes 'moving' past the drag threshold. */
-	| { kind: 'pointing'; start: Point; startScreen: Point; clickedId: string; wasSelected: boolean }
+	/**
+	 * Pressed on an element; becomes 'moving' past the drag threshold. `action`: pressed on a
+	 * widget's button, which runs on release if the pointer didn't move.
+	 */
+	| {
+			kind: 'pointing';
+			start: Point;
+			startScreen: Point;
+			clickedId: string;
+			wasSelected: boolean;
+			action?: string;
+	  }
 	| {
 			kind: 'moving';
 			start: Point;
@@ -351,6 +363,19 @@ export function createSelectTool(ctx: BoardContext): Tool {
 
 			const id = e.hit.elementId;
 			const el = id ? store.get(id) : undefined;
+			const action = el?.type === 'widget' && !e.shift ? actionAt(el, e.world, now()) : null;
+			if (el && action) {
+				// A widget's button: runs on release; the selection stays as it is unless it drags.
+				state = {
+					kind: 'pointing',
+					start: e.world,
+					startScreen: e.screen,
+					clickedId: el.id,
+					wasSelected: false,
+					action: action.id
+				};
+				return;
+			}
 			if (el) {
 				const ids = groupOf(ctx, el);
 				const wasSelected = ids.every((g) => selection.has(g));
@@ -381,7 +406,13 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		onPointerMove(e) {
 			if (!e.dragging) {
 				const h = e.hit.handle;
-				if (h === 'rotate') ui.cursor = 'grab';
+				const hovered = !h && e.hit.elementId ? store.get(e.hit.elementId) : undefined;
+				const action = hovered?.type === 'widget' ? actionAt(hovered, e.world, now()) : null;
+				const hover = action && hovered ? { id: hovered.id, action: action.id } : null;
+				if (ctx.widgets.hover?.id !== hover?.id || ctx.widgets.hover?.action !== hover?.action)
+					ctx.widgets.hover = hover;
+				if (action) ui.cursor = 'pointer';
+				else if (h === 'rotate') ui.cursor = 'grab';
 				else if (h && isResizeHandle(h)) {
 					const single = transformTargets(ctx);
 					ui.cursor = cursorForHandle(h, single.length === 1 ? single[0]!.rotation : 0);
@@ -393,6 +424,11 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				case 'pointing': {
 					const moved = Math.hypot(e.screen.x - s.startScreen.x, e.screen.y - s.startScreen.y);
 					if (moved >= DRAG_THRESHOLD_PX) {
+						if (s.action) {
+							// Dragging from a widget's button moves the widget.
+							const el = store.get(s.clickedId);
+							if (el && !selection.has(el.id)) selection.set(groupOf(ctx, el));
+						}
 						startMoving(e, s.start);
 						if (state.kind === 'moving') move(e, state);
 					}
@@ -451,6 +487,8 @@ export function createSelectTool(ctx: BoardContext): Tool {
 			} else if (s.kind === 'moving' || s.kind === 'resizing' || s.kind === 'rotating') {
 				endTransform(s.snapshot); // the last move already pushed the final position
 				clearGuides();
+			} else if (s.kind === 'pointing' && s.action) {
+				ctx.widgets.run(s.clickedId, s.action);
 			} else if (s.kind === 'pointing' && s.wasSelected && !e.shift) {
 				// Click (no drag) on an element of a multi-selection: select just its group.
 				const el = store.get(s.clickedId);
@@ -489,6 +527,11 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				ctx.tools.setTool('sketch');
 				return;
 			}
+			if (el?.type === 'widget') {
+				// Quick clicks on its buttons aren't a request for its settings.
+				if (!actionAt(el, e.world, now())) ctx.widgets.openSettings(el.id);
+				return;
+			}
 			if (el?.type === 'media') {
 				// Play it and hand the pointer to the player (its own controls).
 				ctx.playback.play(el.id);
@@ -510,9 +553,19 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				cancel();
 				return true;
 			}
-			if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return false;
+			if (e.key !== 'Enter' || e.ctrlKey || e.metaKey || e.altKey) return false;
 			const id = selection.single;
 			const el = id ? store.get(id) : undefined;
+			if (el?.type === 'widget') {
+				// Enter runs its main button; Shift+Enter opens its settings.
+				if (e.shiftKey) ctx.widgets.openSettings(el.id);
+				else {
+					const primary = primaryAction(el, now());
+					if (primary) ctx.widgets.run(el.id, primary.id);
+				}
+				return true;
+			}
+			if (e.shiftKey) return false;
 			if (el?.type === 'media') {
 				ctx.playback.play(el.id);
 				ctx.editing.start(el.id);

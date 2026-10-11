@@ -91,3 +91,47 @@ test('two browsers edit one board live', async ({ page: a, browser, browserName 
 	expect((await list(b)).map((e) => e.id)).not.toContain('afterStop');
 	await b.context().close();
 });
+
+test('a timer started on one browser runs at the same time on the other', async ({
+	page: a,
+	browser,
+	browserName
+}) => {
+	test.skip(browserName === 'firefox', 'WebRTC ICE fails between headless Firefox contexts');
+	test.setTimeout(60_000);
+	await enableTestHooks(a);
+	await createBoard(a);
+	await waitForHooks(a);
+	await waitForInitialView(a);
+	await add(a, {
+		...el.shape('timer', -120, -120),
+		type: 'widget',
+		kind: 'timer',
+		text: undefined,
+		w: 240,
+		h: 240,
+		title: '',
+		config: { mode: 'countdown', duration: 300, sound: false },
+		state: { startedAt: null, elapsed: 0 }
+	});
+	const link = await share(a);
+	const b = await join(browser, link);
+	const time = (p: Page) => p.locator('[data-type="widget"] text').first().textContent();
+	await expect.poll(() => time(b)).toBe('5:00');
+
+	await a.evaluate(() => window.__spacy!.ctx.widgets.run('timer', 'toggle'));
+	await expect.poll(() => time(b), { timeout: 10_000 }).toMatch(/^4:5\d$/);
+	// Same time on both (read together; the display has whole seconds).
+	const seconds = (t: string | null) => {
+		const [m, s] = (t ?? '0:0').split(':').map(Number);
+		return m! * 60 + s!;
+	};
+	const [ta, tb] = await Promise.all([time(a), time(b)]);
+	expect(Math.abs(seconds(ta) - seconds(tb))).toBeLessThanOrEqual(1);
+	// Undo on B doesn't stop A's timer.
+	await b.getByTestId('canvas').focus();
+	await b.keyboard.press('ControlOrMeta+z');
+	await b.waitForTimeout(500);
+	expect(await a.evaluate(() => window.__spacy!.list().some((e) => e.id === 'timer'))).toBe(true);
+	await b.context().close();
+});

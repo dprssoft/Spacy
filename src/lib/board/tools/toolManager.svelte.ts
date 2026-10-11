@@ -12,6 +12,7 @@ import { createSketchTool } from './sketch';
 import { createStickyTool } from './sticky';
 import { createTextTool } from './text';
 import { createWaystoneTool } from './waystone';
+import { createWidgetTool } from './widget';
 import type { Tool, ToolId } from './types';
 
 export type ToolFactory = (ctx: BoardContext) => Tool;
@@ -23,6 +24,8 @@ export class ToolManager {
 	locked = $state(false);
 	/** Shape kind used by the shape tool (R / O / D and the shapes flyout). */
 	shapeKind = $state<ShapeKind>('rect');
+	/** Widget kind placed by the widget tool (the Widgets menu). */
+	widgetKind = $state('timer');
 
 	readonly #ctx: BoardContext;
 	// Registration and instance caches, not UI state.
@@ -45,6 +48,7 @@ export class ToolManager {
 		this.register('doccard', createDocCardTool);
 		this.register('sketch', createSketchTool);
 		this.register('waystone', createWaystoneTool);
+		this.register('widget', createWidgetTool);
 	}
 
 	/** Later steps register their tools here. */

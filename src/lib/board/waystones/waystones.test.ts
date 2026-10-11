@@ -19,8 +19,9 @@ describe('waystone model', () => {
 		const doc = new Y.Doc();
 		doc.transact(() => doc.getMap('meta').set('schemaVersion', 6), IMPORT);
 		migrate(doc);
-		expect(SCHEMA_VERSION).toBe(7);
-		expect(doc.getMap('meta').get('schemaVersion')).toBe(7);
+		// The test was written at version 7; the current version only grows from there.
+		expect(SCHEMA_VERSION).toBeGreaterThanOrEqual(7);
+		expect(doc.getMap('meta').get('schemaVersion')).toBe(SCHEMA_VERSION);
 	});
 });
 

@@ -42,7 +42,8 @@ export const DEFAULT_SIZES: Record<ElementType, { w: number; h: number }> = {
 	doccard: { w: 360, h: 280 },
 	connector: { w: 0, h: 0 },
 	media: { w: 480, h: 270 }, // video; audio uses MEDIA_AUDIO_SIZE
-	waystone: { w: 32, h: 40 }
+	waystone: { w: 32, h: 40 },
+	widget: { w: 240, h: 240 } // each kind has its own size (board/widgets)
 };
 export const MEDIA_AUDIO_SIZE = { w: 360, h: 96 };
 
@@ -91,7 +92,8 @@ const TYPE_TWEAKS: Record<ElementType, StyleTweak> = {
 	},
 	connector: { fill: 'transparent', fillStyle: 'none' },
 	media: { fill: '#18181b', stroke: 'transparent', radius: 'sm', shadow: true },
-	waystone: { fill: '#e8590c', stroke: 'transparent', radius: 'none', font: { color: '#ffffff' } }
+	waystone: { fill: '#e8590c', stroke: 'transparent', radius: 'none', font: { color: '#ffffff' } },
+	widget: { fill: '#ffffff', stroke: '#e3e3e8', strokeWidth: 1, radius: 'lg', shadow: true }
 };
 
 /** The built-in style for new elements of a type (user defaults are layered on top in step 18). */

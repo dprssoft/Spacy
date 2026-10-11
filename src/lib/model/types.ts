@@ -14,7 +14,8 @@ export type ElementType =
 	| 'doccard'
 	| 'connector'
 	| 'media'
-	| 'waystone';
+	| 'waystone'
+	| 'widget';
 
 export type ShapeKind =
 	| 'rect'
@@ -144,6 +145,22 @@ export interface WaystoneElement extends BaseElement {
 	order: string; // fractional index: route order on the page (separate from z)
 }
 
+/**
+ * A small interactive object (schema version 8): a timer, a wheel, a vote… `kind` picks what it
+ * is; kinds this app doesn't know (from a newer version) are kept untouched and shown as a
+ * placeholder. `config` is what the user set up (LOCAL, undoable); `state` is what happens while
+ * it runs (origin WIDGET, not undoable). Both are JSON parsed per kind (board/widgets), so a bad
+ * or older value reads as the kind's defaults. Input many people add at once (votes) lives in
+ * `doc.getMap('widgets')`, one entry per participant.
+ */
+export interface WidgetElement extends BaseElement {
+	type: 'widget';
+	kind: string;
+	title: string; // '' = the kind's label
+	config: unknown;
+	state: unknown;
+}
+
 export type Port = 'n' | 'e' | 's' | 'w';
 
 export type Endpoint =
@@ -177,7 +194,8 @@ export type Element =
 	| DocCardElement
 	| ConnectorElement
 	| MediaElement
-	| WaystoneElement;
+	| WaystoneElement
+	| WidgetElement;
 
 // Helpers for working with the Element union (not part of the stored model).
 export type ElementOf<T extends ElementType> = Extract<Element, { type: T }>;

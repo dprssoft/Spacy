@@ -8,6 +8,7 @@
 	import LayoutTemplate from '@lucide/svelte/icons/layout-template';
 	import Clapperboard from '@lucide/svelte/icons/clapperboard';
 	import Plus from '@lucide/svelte/icons/plus';
+	import Puzzle from '@lucide/svelte/icons/puzzle';
 	import Hand from '@lucide/svelte/icons/hand';
 	import ImageIcon from '@lucide/svelte/icons/image';
 	import Lock from '@lucide/svelte/icons/lock';
@@ -31,6 +32,8 @@
 	import SketchRibbon from './SketchRibbon.svelte';
 	import { templateGallery } from './templateGalleryState.svelte';
 	import { mediaPrompt } from './mediaPromptState.svelte';
+	import WidgetsMenu from '../widgets/WidgetsMenu.svelte';
+	import WidgetMenuItems from '../widgets/WidgetMenuItems.svelte';
 	import { keyboard } from '$lib/shared/keyboard.svelte';
 	import { layout } from '$lib/shared/layout.svelte';
 
@@ -211,6 +214,7 @@
 						{/if}
 					{/each}
 					{#if GROUP_NAMES[gi] === 'Insert'}
+						<WidgetsMenu {button} {tip} item={menuItem} />
 						<MediaLinkPopover {button} {tip} />
 						<Tooltip.Root>
 							<Tooltip.Trigger
@@ -252,6 +256,23 @@
 											<Icon class="size-4" aria-hidden="true" />{it.label}
 										</DropdownMenu.Item>
 									{/each}
+									<DropdownMenu.Sub>
+										<DropdownMenu.SubTrigger class={menuItem} data-widgets-submenu>
+											<Puzzle class="size-4" aria-hidden="true" />Widgets
+										</DropdownMenu.SubTrigger>
+										<DropdownMenu.SubContent
+											data-interactive
+											class="z-50 min-w-48 rounded-lg border border-border bg-surface p-1 shadow-lg"
+										>
+											<WidgetMenuItems
+												item={menuItem}
+												onpick={(kind) => {
+													tools.widgetKind = kind;
+													select('widget');
+												}}
+											/>
+										</DropdownMenu.SubContent>
+									</DropdownMenu.Sub>
 									<DropdownMenu.Item class={menuItem} onSelect={() => (mediaPrompt.open = true)}>
 										<Clapperboard class="size-4" aria-hidden="true" />Media…
 									</DropdownMenu.Item>
