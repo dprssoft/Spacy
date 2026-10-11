@@ -62,7 +62,11 @@ class DriveSync {
 	/** Loads the sync code and Google's script, so a click can open the sign-in popup at once. */
 	async prepare(): Promise<void> {
 		const m = await this.#load();
-		this.#auth ??= new m.gis.GisAuth(GOOGLE_CLIENT_ID, () => void this.syncNow());
+		this.#auth ??= new m.gis.GisAuth(
+			GOOGLE_CLIENT_ID,
+			() => void this.syncNow(),
+			() => this.email
+		);
 		await this.#auth.prepare();
 	}
 
@@ -136,7 +140,11 @@ class DriveSync {
 		if (this.#started) return this.#started;
 		const m = await this.#load();
 		if (this.#started || !this.connected) return this.#started;
-		this.#auth ??= new m.gis.GisAuth(GOOGLE_CLIENT_ID, () => void this.syncNow());
+		this.#auth ??= new m.gis.GisAuth(
+			GOOGLE_CLIENT_ID,
+			() => void this.syncNow(),
+			() => this.email
+		);
 		// Google's script loads now, so a later click can renew the sign-in.
 		void this.#auth.prepare().catch(() => {});
 		const store = new m.drive.GoogleDriveStore(this.#auth);
