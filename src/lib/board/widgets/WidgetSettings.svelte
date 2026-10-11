@@ -30,6 +30,8 @@
 		if (widgets.settingsId && !el) widgets.closeSettings();
 	});
 
+	// Measured, so a tall panel is kept on screen.
+	let height = $state(0);
 	const position = $derived.by(() => {
 		if (!el || layout.compact) return null;
 		void viewport.vp;
@@ -38,7 +40,7 @@
 		const p = worldToScreen(viewport.vp, { x: el.x + el.w, y: el.y });
 		return {
 			left: Math.max(8, Math.min(canvas.left + p.x + 16, window.innerWidth - WIDTH - 8)),
-			top: Math.max(8, Math.min(canvas.top + p.y, window.innerHeight - 420))
+			top: Math.max(8, Math.min(canvas.top + p.y, window.innerHeight - height - 8))
 		};
 	});
 
@@ -71,7 +73,7 @@
 	}
 
 	const button =
-		'h-8 rounded-md border border-border px-2.5 text-sm hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
+		'h-8 rounded-md border border-border px-2.5 text-sm hover:bg-surface-2 disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none';
 </script>
 
 <svelte:window onkeydowncapture={onWindowKeydown} />
@@ -79,12 +81,13 @@
 {#if el && def && (position || layout.compact)}
 	<div
 		bind:this={root}
+		bind:offsetHeight={height}
 		role="dialog"
 		aria-label="{def.label} settings"
 		tabindex="-1"
 		data-interactive
 		data-testid="widget-settings"
-		class="fixed z-40 flex flex-col gap-3 border border-border bg-surface p-3 shadow-lg {layout.compact
+		class="fixed z-40 flex max-h-[calc(100dvh-1rem)] flex-col gap-3 overflow-y-auto border border-border bg-surface p-3 shadow-lg {layout.compact
 			? 'inset-x-0 bottom-0 rounded-t-xl pb-[max(0.75rem,env(safe-area-inset-bottom))]'
 			: 'rounded-lg'}"
 		style:left={position ? `${position.left}px` : undefined}
@@ -109,6 +112,7 @@
 							? 'border-accent bg-accent text-white hover:bg-accent/90'
 							: ''}"
 						data-action={a.id}
+						disabled={a.disabled}
 						onclick={() => widgets.run(el.id, a.id)}>{a.label}</button
 					>
 				{/each}

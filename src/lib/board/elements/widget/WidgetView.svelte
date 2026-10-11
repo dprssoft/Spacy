@@ -1,4 +1,9 @@
 <script lang="ts" module>
+	import { MediaQuery } from 'svelte/reactivity';
+
+	// Not in every environment (unit tests run without `matchMedia`).
+	const reducedMotion =
+		typeof matchMedia === 'function' ? new MediaQuery('prefers-reduced-motion: reduce') : null;
 	// Bookkeeping across mounts, not reactive state.
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
 	const announced = new Set<string>();
@@ -24,9 +29,10 @@
 		void el;
 		return now();
 	});
-	const view = $derived(widgetView(el, t));
+	const motion = $derived(!reducedMotion?.current);
+	const view = $derived(widgetView(el, t, motion));
 	const hover = $derived(ctx.widgets.hover?.id === el.id ? ctx.widgets.hover.action : null);
-	const markup = $derived(widgetSvgDocument(el, t, hover));
+	const markup = $derived(widgetSvgDocument(el, t, hover, motion));
 
 	$effect(() => {
 		if (view.ticking) return ticker.hold();
