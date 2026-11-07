@@ -47,4 +47,24 @@ describe('docLines', () => {
 			{ text: '☐ todo', kind: 'li' }
 		]);
 	});
+
+	it('writes one line per table row, header rows as headings', () => {
+		const cell = (type: string, text: string): DocNode => ({ type, content: [p(t(text))] });
+		const doc: DocNode = {
+			type: 'doc',
+			content: [
+				{
+					type: 'table',
+					content: [
+						{ type: 'tableRow', content: [cell('tableHeader', 'A'), cell('tableHeader', 'B')] },
+						{ type: 'tableRow', content: [cell('tableCell', '1'), cell('tableCell', '2')] }
+					]
+				}
+			]
+		};
+		expect(docLines(doc)).toEqual([
+			{ text: 'A  |  B', kind: 'h' },
+			{ text: '1  |  2', kind: 'p' }
+		]);
+	});
 });

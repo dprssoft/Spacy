@@ -1,6 +1,8 @@
 import * as Y from 'yjs';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createDocEditor, isSafeLink, type Editor } from './editorFactory';
+import { fragmentToJSON } from './fragmentJson';
+import { docToMarkdown } from './markdown';
 
 const editors: Editor[] = [];
 function editorOn(fragment: Y.XmlFragment): Editor {
@@ -54,5 +56,25 @@ describe('isSafeLink', () => {
 		expect(isSafeLink('mailto:a@b.c')).toBe(true);
 		expect(isSafeLink('javascript:alert(1)')).toBe(false);
 		expect(isSafeLink('data:text/html,hi')).toBe(false);
+	});
+});
+
+describe('tables', () => {
+	it('inserts a table that round-trips through the fragment, formatting kept', () => {
+		const frag = new Y.Doc().getXmlFragment('f');
+		const ed = editorOn(frag);
+		ed.commands.insertTable({ rows: 2, cols: 2, withHeaderRow: true });
+		ed.commands.insertContent('Name');
+		ed.commands.goToNextCell();
+		ed.commands.toggleBold();
+		ed.commands.insertContent('Role');
+		const json = fragmentToJSON(frag);
+		const table = json.content?.find((n) => n.type === 'table');
+		expect(table?.content).toHaveLength(2);
+		expect(table?.content?.[0]?.content?.map((c) => c.type)).toEqual([
+			'tableHeader',
+			'tableHeader'
+		]);
+		expect(docToMarkdown(json)).toContain('| Name | **Role** |\n| --- | --- |');
 	});
 });

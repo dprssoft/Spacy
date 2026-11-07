@@ -96,9 +96,40 @@ function block(node: DocNode): string | null {
 		}
 		case 'horizontalRule':
 			return '---';
+		case 'table':
+			return table(node);
 		default:
 			return node.content ? blocks(node.content) || null : null;
 	}
+}
+
+/**
+ * A GFM table. GFM needs a header row, so the first row is one whatever it holds. A cell is one
+ * line: its blocks are joined with `<br>` and its pipes escaped.
+ */
+function table(node: DocNode): string | null {
+	const rows = (node.content ?? []).map((row) =>
+		(row.content ?? []).map((cell) =>
+			(cell.content ?? [])
+				.map((b) => cellBlock(b))
+				.filter(Boolean)
+				.join('<br>')
+				.replace(/\|/g, '\\|')
+		)
+	);
+	const cols = Math.max(0, ...rows.map((r) => r.length));
+	if (cols === 0) return null;
+	const line = (cells: string[]) =>
+		`| ${Array.from({ length: cols }, (_, i) => cells[i] ?? '').join(' | ')} |`;
+	const [head = [], ...body] = rows;
+	return [line(head), line(Array<string>(cols).fill('---')), ...body.map(line)].join('\n');
+}
+
+/** A block inside a table cell, on one line. */
+function cellBlock(node: DocNode): string {
+	if (node.type === 'paragraph' || node.type === 'heading')
+		return inline(node.content ?? []).replace(/ {2}\n/g, '<br>');
+	return (block(node) ?? '').replace(/\n+/g, ' ');
 }
 
 /**

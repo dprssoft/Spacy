@@ -1543,3 +1543,19 @@ Requested by the human: "for links add page preview as toggle"; both a global an
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ (1089 unit tests) · e2e `link-preview.spec.ts` new, on chromium and firefox · `csp.spec.ts` updated to `frame-src https:` · a Pages build served under `/Spacy/` with no headers: home, new board, deep-link reload, service worker and offline reopening checked by hand-run scripts. Doc cards take the pointer only while edited, so hover previews work in edit and focus mode only.
 
+## Step 61 — Tables in doc cards — 2026-11-07
+Requested by the human: "i want to add tables with basic text formating"; chose both doc card tables (this step) and a table element (step 62, planned).
+
+**Summary:**
+- Doc cards (board and focus mode) take tables: TipTap `Table` (no column resizing), `TableRow`, `TableHeader`, `TableCell`. Cells keep all doc card formatting (bubble menu, ribbon, shortcuts); Tab / Shift+Tab move between cells.
+- Insert with the `/table` slash command or the ribbon's table button (Paragraph group). In a table, that button becomes a Table menu: insert row above/below, column left/right, delete row/column, header row toggle, delete table. No table inside a table (slash item hidden there).
+- Board schema 9 (no data moves; older editors would delete table nodes).
+- Markdown export writes a GFM table (first row as header, `|` escaped, several blocks joined with `<br>`); static lines (SVG/PNG/PDF exports, thumbnails) write one line per row, cells joined with `  |  `, header rows bold. Word count, find and replace and Markdown/HTML import see cells through their existing nested walks.
+
+**Deviations:**
+- `widgets.test.ts` pinned `SCHEMA_VERSION` to 8; relaxed to `≥ 8` (the test is about the v7 → v8 migration, not about being the latest version).
+- The table actions are in a `TableMenu` component inside the ribbon's Paragraph group rather than a group of their own, to keep the ribbon narrow.
+
+**Dependencies added:** @tiptap/extension-table@3.31.4 — table nodes and commands, same version as the other TipTap packages
+**Follow-ups:** step 62 (table element). Merged cells pasted from elsewhere export with the cells they have (no colspan in Markdown).
+**Verification:** pnpm verify ✅ (1093 unit tests) · e2e `doccard-tables.spec.ts` ✅ chromium and firefox, with `doc-format`, `doccard` and `markdown` specs rerun ✅ · not committed: the working tree already held uncommitted work in `00-architecture.md` and `PROGRESS.md`.
