@@ -20,6 +20,7 @@
 	import { button, caption, groupBox } from '../ui/ribbon';
 	import DocColorPicker from './DocColorPicker.svelte';
 	import type { Editor } from './editorFactory';
+	import TableMenu from './TableMenu.svelte';
 	import * as fmt from './formatCommands';
 	import {
 		BLOCK_STYLES,
@@ -61,7 +62,8 @@
 			strike: editor.isActive('strike'),
 			bullet: editor.isActive('bulletList'),
 			ordered: editor.isActive('orderedList'),
-			task: editor.isActive('taskList')
+			task: editor.isActive('taskList'),
+			table: editor.isActive('table')
 		};
 	});
 
@@ -250,6 +252,7 @@
 <div role="group" aria-label="Paragraph" class={groupBox} data-doc-popup>
 	<div class="flex items-center gap-0.5">
 		{#each lists as t (t.label)}{@render toggle(t)}{/each}
+		<TableMenu {editor} inTable={at.table} {menu} {menuItem} {refocus} />
 		<div class="mx-1 h-5 w-px bg-border" aria-hidden="true"></div>
 		{#each aligns as a (a.id)}
 			{@render toggle({

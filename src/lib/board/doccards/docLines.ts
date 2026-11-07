@@ -27,6 +27,14 @@ function walk(nodes: DocNode[], out: DocLine[], depth: number) {
 			case 'horizontalRule':
 				out.push({ text: '———', kind: 'p' });
 				break;
+			case 'table':
+				for (const row of node.content ?? []) {
+					const cells = row.content ?? [];
+					const text = cells.map((c) => cellText(c)).join('  |  ');
+					const header = cells.length > 0 && cells.every((c) => c.type === 'tableHeader');
+					out.push({ text: '  '.repeat(depth) + text, kind: header ? 'h' : 'p' });
+				}
+				break;
 			case 'bulletList':
 			case 'orderedList':
 			case 'taskList': {
@@ -63,6 +71,16 @@ function pushText(out: DocLine[], kind: DocLine['kind'], prefix: string, text: s
 	out.push({ text: prefix + first, kind });
 	const pad = ' '.repeat(prefix.length);
 	for (const l of rest) out.push({ text: pad + l, kind });
+}
+
+/** A table cell on one line: its blocks' text, separated by spaces. */
+function cellText(cell: DocNode): string {
+	const lines: DocLine[] = [];
+	walk(cell.content ?? [], lines, 0);
+	return lines
+		.map((l) => l.text.trim())
+		.filter(Boolean)
+		.join(' ');
 }
 
 function inlineText(node: DocNode): string {

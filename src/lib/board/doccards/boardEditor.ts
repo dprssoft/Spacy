@@ -10,6 +10,7 @@ import ListOrdered from '@lucide/svelte/icons/list-ordered';
 import Minus from '@lucide/svelte/icons/minus';
 import Quote from '@lucide/svelte/icons/quote';
 import Square from '@lucide/svelte/icons/square';
+import Table from '@lucide/svelte/icons/table';
 import SquareCode from '@lucide/svelte/icons/square-code';
 import StickyNote from '@lucide/svelte/icons/sticky-note';
 import Type from '@lucide/svelte/icons/type';
@@ -29,7 +30,8 @@ const SLASH_ICONS: Record<SlashId, typeof Square> = {
 	task: ListChecks,
 	quote: Quote,
 	code: SquareCode,
-	divider: Minus
+	divider: Minus,
+	table: Table
 };
 const TYPE_ICONS: Partial<Record<ElementType, typeof Square>> = {
 	frame: Frame,

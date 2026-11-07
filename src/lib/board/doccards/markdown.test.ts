@@ -124,6 +124,25 @@ describe('docToMarkdown', () => {
 		).toBe('> Note\n>\n> - x\n> - y\n');
 	});
 
+	it('writes a table as GFM, the first row as its header', () => {
+		const cell = (type: string, ...content: DocNode[]): DocNode => ({ type, content });
+		const row = (...cells: DocNode[]): DocNode => ({ type: 'tableRow', content: cells });
+		const table: DocNode = {
+			type: 'table',
+			content: [
+				row(
+					cell('tableHeader', p(t('Name'))),
+					cell('tableHeader', p(t('Note'))),
+					cell('tableHeader')
+				),
+				row(cell('tableCell', p(t('Ann', 'bold'))), cell('tableCell', p(t('a|b')), p(t('c'))))
+			]
+		};
+		expect(md(p(t('Before')), table)).toBe(
+			'Before\n\n| Name | Note |  |\n| --- | --- | --- |\n| **Ann** | a\\|b<br>c |  |\n'
+		);
+	});
+
 	it('escapes Markdown characters', () => {
 		expect(md(p(t('# not a heading')))).toBe('\\# not a heading\n');
 		expect(md(p(t('*stars* and _under_ [x]')))).toBe('\\*stars\\* and \\_under\\_ \\[x\\]\n');

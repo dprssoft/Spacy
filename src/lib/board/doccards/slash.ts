@@ -3,12 +3,14 @@ import { PluginKey } from '@tiptap/pm/state';
 import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
 
 export type SlashId =
-	'h1' | 'h2' | 'h3' | 'bullet' | 'ordered' | 'task' | 'quote' | 'code' | 'divider';
+	'h1' | 'h2' | 'h3' | 'bullet' | 'ordered' | 'task' | 'quote' | 'code' | 'divider' | 'table';
 
 export interface SlashItem {
 	id: SlashId;
 	title: string;
 	keywords: string[];
+	/** Hidden where it can't be used (no table inside a table). */
+	inTable?: false;
 	run(editor: Editor, range: Range): void;
 }
 
@@ -68,6 +70,13 @@ export const SLASH_ITEMS: readonly SlashItem[] = [
 		title: 'Divider',
 		keywords: ['hr', 'line', 'separator'],
 		run: (e, r) => block(e, r).setHorizontalRule().run()
+	},
+	{
+		id: 'table',
+		title: 'Table',
+		keywords: ['grid', 'columns'],
+		inTable: false,
+		run: (e, r) => block(e, r).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
 	}
 ];
 
@@ -98,7 +107,10 @@ export function slashExtension(render: SlashRender) {
 					char: '/',
 					pluginKey: slashPluginKey,
 					allowedPrefixes: [' '],
-					items: ({ query }) => filterSlash(query),
+					items: ({ query, editor }) => {
+						const inTable = editor.isActive('table');
+						return filterSlash(query).filter((i) => !(inTable && i.inTable === false));
+					},
 					command: ({ editor, range, props }) => props.run(editor, range),
 					render
 				})

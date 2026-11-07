@@ -264,3 +264,34 @@
 	border-bottom: 2px solid #fab005;
 	cursor: pointer;
 }
+
+/* Tables (step 61): columns share the width; no drag-resizing on a zoomable board. */
+.doc-prose .tableWrapper {
+	overflow-x: auto;
+}
+.doc-prose table {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: collapse;
+}
+.doc-prose :is(td, th) {
+	position: relative;
+	border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+	padding: 0.3em 0.5em;
+	vertical-align: top;
+	text-align: left;
+}
+.doc-prose th {
+	font-weight: 650;
+	background: var(--prose-faint);
+}
+.doc-prose :is(td, th) > * + * {
+	margin-top: 0.3em;
+}
+.doc-prose .selectedCell::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: color-mix(in srgb, var(--accent) 18%, transparent);
+	pointer-events: none;
+}

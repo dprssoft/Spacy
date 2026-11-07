@@ -3,6 +3,7 @@ import { Editor, type Extensions } from '@tiptap/core';
 import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 import Collaboration from '@tiptap/extension-collaboration';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
+import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import { Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import type * as Y from 'yjs';
@@ -53,6 +54,11 @@ export function docExtensions(fragment: Y.XmlFragment, opts: DocExtensionOptions
 		}),
 		TaskList,
 		TaskItem.configure({ nested: true }),
+		// Column drag-resizing measures screen pixels, which a zoomed board breaks.
+		Table.configure({ resizable: false }),
+		TableRow,
+		TableHeader,
+		TableCell,
 		...formatExtensions(),
 		LinkPreview,
 		Placeholder.configure({ placeholder: opts.placeholder ?? 'Write something…' }),

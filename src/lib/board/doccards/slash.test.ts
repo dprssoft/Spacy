@@ -18,6 +18,11 @@ describe('filterSlash', () => {
 		expect(ids('list')).toEqual(['bullet', 'ordered', 'task']); // Checklist by substring
 	});
 
+	it('finds the table by name and keyword', () => {
+		expect(ids('tab')).toEqual(['table']);
+		expect(ids('grid')).toEqual(['table']);
+	});
+
 	it('falls back to substrings after prefixes', () => {
 		expect(ids('ode')).toEqual(['code']);
 		expect(ids('zzz')).toEqual([]);

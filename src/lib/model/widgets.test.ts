@@ -45,8 +45,8 @@ describe('widget elements', () => {
 		const doc = new Y.Doc();
 		doc.transact(() => doc.getMap('meta').set('schemaVersion', 7), IMPORT);
 		migrate(doc);
-		expect(SCHEMA_VERSION).toBe(8);
-		expect(doc.getMap('meta').get('schemaVersion')).toBe(8);
+		expect(SCHEMA_VERSION).toBeGreaterThanOrEqual(8);
+		expect(doc.getMap('meta').get('schemaVersion')).toBe(SCHEMA_VERSION);
 	});
 });
 
