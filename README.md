@@ -87,7 +87,7 @@ pnpm dlx wrangler pages deploy build --project-name spacy
 
 **Netlify:** the same settings (build command `pnpm build`, publish directory `build`, Node 22).
 
-**GitHub Pages:** in the repository, Settings → Pages → Source: GitHub Actions. Every push to `main` then deploys through `.github/workflows/pages.yml`, which builds for `/<repo>/`. Pages can't send headers, so the build puts the CSP in each page as a meta tag (without `frame-ancestors`, so other sites can frame the app there) and uses `404.html` as the fallback. Pages can't send headers for caching either.
+**GitHub Pages:** in the repository, Settings → Pages → Source: GitHub Actions. Every push to `main` then deploys through `.github/workflows/pages.yml`, which builds for `/<repo>/`. Pages can't send headers, so the build puts the CSP in each page as a meta tag (without `frame-ancestors`, so other sites can frame the app there) and uses `404.html` as the fallback. Pages can't send headers for caching either. For Google Drive sync, add `PUBLIC_GOOGLE_CLIENT_ID` under Settings → Secrets and variables → Actions → Variables.
 
 **Any other static host** works if it serves `200.html` for unknown paths (the rewrite in `build/_redirects`; `index.html` is the prerendered start page, not the fallback) and sends the headers from `build/_headers`. The `script-src` hash in that file is written by the build (`scripts/postbuild-csp.mjs`), so always deploy the `_headers` from the same build as the pages.
 

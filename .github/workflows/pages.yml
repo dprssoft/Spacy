@@ -32,6 +32,8 @@ jobs:
       - run: pnpm build
         env:
           PAGES: 'true'
+          # Google Drive sync: Settings → Secrets and variables → Actions → Variables. Unset hides sync.
+          PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.PUBLIC_GOOGLE_CLIENT_ID }}
           # A project site lives under /<repo>; a <user>.github.io repo lives at the root.
           BASE_PATH: ${{ endsWith(github.event.repository.name, '.github.io') && '' || format('/{0}', github.event.repository.name) }}
       - uses: actions/upload-pages-artifact@v3
