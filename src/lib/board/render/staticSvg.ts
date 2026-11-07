@@ -14,7 +14,7 @@ import { fontStack } from '$lib/fonts/catalog';
 import { connectorGeometry } from '../diagram/geometry';
 import { markerShape, markerSize, markerTransform } from '../diagram/markers';
 import { pointAt } from '../diagram/routing';
-import { dashArray } from '../elements/common';
+import { dashArray, fillColor } from '../elements/common';
 import { pureWorld } from '../elements/connectables';
 import { FRAME_TITLE_FONT, FRAME_TITLE_H } from '../elements/frame/geometry';
 import { isLineArt, shapePath } from '../elements/shape/paths';
@@ -270,7 +270,12 @@ class Renderer {
 		}
 		const sx = el.w / el.nw;
 		const sy = el.h / el.nh;
-		return `<g transform="scale(${n(sx)} ${n(sy)}) translate(${n(-el.bx)} ${n(-el.by)})">${body}</g>`;
+		// Outside the erasers' masks: erasing a stroke shows the sheet, not a hole in it.
+		const sheet =
+			fillColor(el.style) === 'transparent'
+				? ''
+				: `<rect width="${n(el.w)}" height="${n(el.h)}" ${fillAttrs(el.style)}/>`;
+		return `${sheet}<g transform="scale(${n(sx)} ${n(sy)}) translate(${n(-el.bx)} ${n(-el.by)})">${body}</g>`;
 	}
 
 	connector(el: ConnectorElement): string {

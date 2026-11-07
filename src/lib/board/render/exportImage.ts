@@ -17,6 +17,18 @@ import { createCanvasMeasurer } from './wrapText';
 export type ExportScope = { kind: 'board' } | { kind: 'selection' } | { kind: 'frame'; id: string };
 export type ExportBackground = 'transparent' | string;
 
+export type RasterFormat = 'png' | 'jpg' | 'webp';
+const MIME: Record<RasterFormat, string> = {
+	png: 'image/png',
+	jpg: 'image/jpeg',
+	webp: 'image/webp'
+};
+const LOSSY_QUALITY = 0.92;
+
+/** The file extension of a raster blob: browsers without a WebP encoder hand back a PNG. */
+export const rasterExtension = (blob: Blob): RasterFormat =>
+	blob.type === MIME.jpg ? 'jpg' : blob.type === MIME.webp ? 'webp' : 'png';
+
 const MAX_SIDE = 16_384;
 const MAX_AREA = 120_000_000; // stays under browsers' canvas area limits
 
@@ -119,12 +131,14 @@ export async function exportSvg(
 	return out ? svgBlob(out.svg) : null;
 }
 
-export async function exportPng(
+export async function exportRaster(
 	ctx: BoardContext,
 	scope: ExportScope,
+	format: RasterFormat,
 	scale: number,
 	background: ExportBackground,
-	waystones = false
+	waystones = false,
+	quiet = false
 ): Promise<Blob | null> {
 	const out = await renderScope(ctx, scope, { background, waystones });
 	if (!out) return null;
@@ -134,8 +148,41 @@ export async function exportPng(
 		MAX_SIDE / out.height,
 		Math.sqrt(MAX_AREA / (out.width * out.height))
 	);
-	if (fit < scale) toast(`The image is too large: exported at ${Math.round(fit * 100)} % instead.`);
-	return rasterize(out.svg, Math.round(out.width * fit), Math.round(out.height * fit), 'image/png');
+	if (fit < scale && !quiet)
+		toast(`The image is too large: exported at ${Math.round(fit * 100)} % instead.`);
+	return rasterize(
+		out.svg,
+		Math.round(out.width * fit),
+		Math.round(out.height * fit),
+		MIME[format],
+		format === 'png' ? undefined : LOSSY_QUALITY
+	);
+}
+
+/**
+ * Puts a scope on the system clipboard as a PNG, the one image type browsers accept there.
+ * Must be called from a user gesture: the blob is handed over as a promise so that Safari still
+ * counts the write as part of the gesture. Says how it went in a toast.
+ */
+export async function copyImage(
+	ctx: BoardContext,
+	scope: ExportScope,
+	scale: number,
+	background: ExportBackground,
+	waystones = false
+): Promise<boolean> {
+	try {
+		const png = exportRaster(ctx, scope, 'png', scale, background, waystones).then((blob) => {
+			if (!blob) throw new Error('Nothing to copy');
+			return blob;
+		});
+		await navigator.clipboard.write([new ClipboardItem({ [MIME.png]: png })]);
+		toast('Image copied');
+		return true;
+	} catch {
+		toast.error("Couldn't copy the image. Try downloading it instead.");
+		return false;
+	}
 }
 
 /** Draws an SVG onto a canvas of the given size (stretching the SVG to it). */

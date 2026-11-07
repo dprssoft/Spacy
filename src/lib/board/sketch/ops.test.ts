@@ -6,7 +6,10 @@ import { duplicateSelection, deleteSelection } from '../commands/edit';
 import { renderStaticSvg } from '../render/staticSvg';
 import { testCtx } from '../testCtx';
 import { readStrokes } from './data';
-import { sketchHit } from './geometry';
+import { getDefinition } from '../elements/registry';
+import '../elements';
+import { applyStyle } from '../style/applyStyle';
+import { SHEET_MARGIN, sketchHit } from './geometry';
 import { commitStroke } from './ops';
 
 const pen = { id: 'pen' as const, size: 6, color: '#1e1e1e' };
@@ -48,12 +51,13 @@ describe('commitStroke', () => {
 		const ctx = testCtx();
 		const id = commitStroke(ctx, null, { ...pen, id: 'marker', size: 10 }, line(0, 0, 100, 0))!;
 		const first = sketches(ctx)[0]!;
-		expect(first).toMatchObject({ x: -5, y: -5, w: 110 });
+		const m = SHEET_MARGIN;
+		expect(first).toMatchObject({ x: -5 - m, y: -5 - m, w: 110 + 2 * m });
 		commitStroke(ctx, id, { ...pen, id: 'marker', size: 10 }, line(-200, 300, -100, 300));
 		const grown = sketches(ctx)[0]!;
-		expect(grown.x).toBe(-205);
-		expect(grown.y).toBe(-5);
-		expect(grown.w).toBe(310);
+		expect(grown.x).toBe(-205 - m);
+		expect(grown.y).toBe(-5 - m);
+		expect(grown.w).toBe(310 + 2 * m);
 		expect(grown.h).toBeGreaterThan(300);
 		// The first stroke is stored unchanged.
 		expect(readStrokes(ctx.doc, id)[0]!.p.slice(0, 2)).toEqual([0, 0]);
@@ -69,7 +73,7 @@ describe('commitStroke', () => {
 		commitStroke(ctx, id, marker, line(1010, 1010, 1110, 1010));
 		const added = readStrokes(ctx.doc, id)[1]!;
 		expect(added.s).toBe(5); // half the size in sketch units = the same 10 on the board
-		expect(added.p[0]).toBe(0); // (1010 - 1000) / 2 + bx(-5)
+		expect(added.p[0]).toBe(5 + el.bx); // (1010 - 1000) / 2 + bx
 	});
 
 	it('an eraser only works inside an existing sketch and never grows it', () => {
@@ -94,6 +98,44 @@ describe('commitStroke', () => {
 			sketchHit(el, ctx.store.world.strokes!(el.id), { x, y }, 2);
 		expect(hit(100, 1)).toBe(true);
 		expect(hit(100, 100)).toBe(false); // empty middle of the box
+	});
+
+	it('a colored sheet is hit on its whole box, and transparent again on its strokes only', () => {
+		const ctx = testCtx();
+		const id = commitStroke(ctx, null, pen, line(0, 0, 200, 0))!;
+		commitStroke(ctx, id, pen, line(0, 200, 200, 200));
+		const hit = () =>
+			getDefinition('sketch').hitTest(sketches(ctx)[0]!, { x: 100, y: 100 }, 2, ctx.store.world);
+		expect(hit()).toBe(false);
+		applyStyle(ctx, [id], { style: { fill: '#ffec99' } });
+		expect(sketches(ctx)[0]!.style).toMatchObject({ fill: '#ffec99', fillStyle: 'solid' });
+		expect(hit()).toBe(true);
+		applyStyle(ctx, [id], { style: { fill: 'transparent' } });
+		expect(hit()).toBe(false);
+	});
+
+	it('exports the sheet under the strokes, outside the masks of erasers', async () => {
+		const ctx = testCtx();
+		const id = commitStroke(ctx, null, pen, line(0, 0, 200, 0))!;
+		commitStroke(ctx, id, { ...pen, id: 'eraser' }, line(50, -10, 50, 10));
+		const svg = async () => {
+			const el = sketches(ctx)[0]!;
+			const out = await renderStaticSvg({
+				elements: [el],
+				lookup: (i) => ctx.store.get(i),
+				background: '#ffffff',
+				measure: () => 0,
+				assetDataUrl: async () => null,
+				docLines: async () => [],
+				sketchStrokes: (i) => ctx.store.world.strokes!(i)
+			});
+			return out.svg;
+		};
+		expect(await svg()).not.toContain('#ffec99');
+		applyStyle(ctx, [id], { style: { fill: '#ffec99' } });
+		expect(await svg()).toMatch(
+			/<rect width="[\d.]+" height="[\d.]+" fill="#ffec99"[^>]*\/><g transform/
+		);
 	});
 
 	it('duplicate copies the strokes; delete and undo remove and restore them', async () => {

@@ -62,7 +62,7 @@ export const toolShortcuts: Shortcut[] = [
 	tool('sticky', 'S', 'Sticky note', 'sticky'),
 	tool('doccard', 'N', 'Doc card', 'doccard'),
 	tool('frame', 'F', 'Frame', 'frame'),
-	tool('waystone', 'W', 'Waystone', 'waystone'),
+	tool('waystone', 'W', 'Tab', 'waystone'),
 	{
 		id: 'tool.image',
 		keys: ['Mod+Shift+I'],
@@ -96,7 +96,7 @@ export const waystoneShortcuts: Shortcut[] = [
 	{
 		id: 'waystone.next',
 		keys: ['PageDown', 'Alt+ArrowRight'],
-		label: 'Next waystone',
+		label: 'Next tab',
 		group: 'View',
 		when: hasWaystones,
 		run: (ctx) => ctx.waystones.step(1)
@@ -104,7 +104,7 @@ export const waystoneShortcuts: Shortcut[] = [
 	{
 		id: 'waystone.prev',
 		keys: ['PageUp', 'Alt+ArrowLeft'],
-		label: 'Previous waystone',
+		label: 'Previous tab',
 		group: 'View',
 		when: hasWaystones,
 		run: (ctx) => ctx.waystones.step(-1)
@@ -112,7 +112,7 @@ export const waystoneShortcuts: Shortcut[] = [
 	...Array.from({ length: 9 }, (_, i): Shortcut => ({
 		id: `waystone.go${i + 1}`,
 		keys: [`Alt+${i + 1}`],
-		label: `Go to waystone ${i + 1}`,
+		label: `Go to tab ${i + 1}`,
 		group: 'View',
 		hidden: true,
 		when: (ctx) => ctx.waystones.route.length > i,

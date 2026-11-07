@@ -37,7 +37,7 @@ describe('WaystonesState', () => {
 		expect(anchorOf(route[0]!)).toEqual({ x: 0, y: 0 });
 		expect(route[0]!.zoom).toBe(2);
 		expect(anchorOf(route[1]!)).toEqual({ x: 300, y: 200 });
-		expect(route.map((w) => w.name)).toEqual(['Waystone 1', 'Waystone 2']);
+		expect(route.map((w) => w.name)).toEqual(['Tab 1', 'Tab 2']);
 		ctx.history.undo();
 		expect(ctx.waystones.route.map((w) => w.id)).toEqual([a]);
 	});
@@ -68,7 +68,7 @@ describe('WaystonesState', () => {
 		expect(ctx.waystones.route.map((w) => w.id)).toEqual([c, a, b]);
 		expect(ctx.store.get(b!)).toMatchObject({ name: 'Act II' });
 		ctx.viewport.set({ x: 0, y: 0, zoom: 3 });
-		ctx.waystones.updateZoom(a!);
+		ctx.waystones.updateView(a!);
 		expect(ctx.store.get(a!)).toMatchObject({ zoom: 3 });
 		ctx.history.undo();
 		expect(ctx.store.get(a!)).toMatchObject({ zoom: 1 });

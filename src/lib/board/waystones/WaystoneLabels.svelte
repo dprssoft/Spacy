@@ -29,7 +29,7 @@
 		style:background="color-mix(in srgb, var(--surface) 90%, transparent)"
 		data-interactive
 		data-waystone-label={l.id}
-		aria-label="Go to waystone {l.i + 1}: {l.name}"
+		aria-label="Go to tab {l.i + 1}: {l.name}"
 		onclick={() => waystones.go(l.i)}
 	>
 		<span

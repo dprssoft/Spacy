@@ -3,7 +3,7 @@
 // with every build, so the hashes are added to `script-src` in build/_headers (the source file
 // static/_headers keeps the plain `'self'`).
 import { createHash } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 // The same PUBLIC_* settings the build used (vite.config.ts): the environment, else .env files.
 const fileEnv = Object.fromEntries(
@@ -54,6 +54,21 @@ writeFileSync(
 		)
 		.replace('frame-src ', `frame-src ${google ? 'https://accounts.google.com ' : ''}`)
 );
+// GitHub Pages ignores _headers and _redirects: the policy goes in each page instead (a meta tag
+// can't carry frame-ancestors), and a host's 404 page is its only SPA fallback.
+if (process.env.PAGES === 'true') {
+	const csp = /Content-Security-Policy: (.+)/.exec(readFileSync('build/_headers', 'utf8'))?.[1];
+	if (!csp) throw new Error('_headers: Content-Security-Policy not found');
+	const policy = csp.replace(/;?\s*frame-ancestors [^;]*/, '');
+	const meta = `<meta http-equiv="Content-Security-Policy" content="${policy.replaceAll('"', '&quot;')}">`;
+	for (const page of pages) {
+		const html = readFileSync(`build/${page}`, 'utf8');
+		if (!html.includes('<head>')) throw new Error(`${page}: <head> not found`);
+		writeFileSync(`build/${page}`, html.replace('<head>', `<head>${meta}`));
+	}
+	copyFileSync('build/200.html', 'build/404.html');
+	console.log('CSP: added to the pages as a meta tag; 404.html is the SPA fallback (GitHub Pages)');
+}
 if (google) console.log('CSP: Google sign-in and Drive API allowed');
 console.log(
 	`CSP: live sharing through ${relays.length ? relays.join(', ') : 'public Nostr relays (wss:)'}`

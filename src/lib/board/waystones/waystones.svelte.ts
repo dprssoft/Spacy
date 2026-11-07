@@ -71,7 +71,7 @@ export class WaystonesState {
 				groupId: null,
 				locked: false,
 				style: baseStyleFor('waystone'),
-				name: `Waystone ${route.length + 1}`,
+				name: `Tab ${route.length + 1}`,
 				zoom: clampWaystoneZoom(viewport.zoom),
 				order: orderAfter(route)
 			}
@@ -94,9 +94,12 @@ export class WaystonesState {
 		if (order) this.#write(() => updateElement(this.#ctx.doc, id, { order }));
 	}
 
-	updateZoom(id: string): void {
-		const zoom = clampWaystoneZoom(this.#ctx.viewport.zoom);
-		this.#write(() => updateElement(this.#ctx.doc, id, { zoom }));
+	/** Points a tab at what's on screen now: the view centre, at the current zoom. */
+	updateView(id: string): void {
+		const { doc, viewport } = this.#ctx;
+		const tip = screenToWorld(viewport.vp, viewport.center);
+		const zoom = clampWaystoneZoom(viewport.zoom);
+		this.#write(() => updateElement(doc, id, { ...boxAt(tip), zoom }));
 	}
 
 	remove(id: string): void {

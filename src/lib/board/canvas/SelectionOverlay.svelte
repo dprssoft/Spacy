@@ -1,5 +1,7 @@
 <script lang="ts">
+	import ImageIcon from '@lucide/svelte/icons/image';
 	import Lock from '@lucide/svelte/icons/lock';
+	import PenLine from '@lucide/svelte/icons/pen-line';
 	import type { Element, Point } from '$lib/model/types';
 	import { getBoard } from '../context';
 	import { rectCorners } from '../engine/geometry';
@@ -62,6 +64,20 @@
 		if (!id || selection.has(id) || selection.transforming || selection.marquee) return null;
 		const el = store.get(id);
 		return el && el.type !== 'connector' ? el : null;
+	});
+	// Tells a live drawing from a flat picture: they can look identical on the board.
+	const pointedAt = $derived(
+		[hover, selected.length === 1 ? selected[0]! : null].find(
+			(el) => el?.type === 'sketch' || el?.type === 'image'
+		)
+	);
+	const singleSketch = $derived(selected.length === 1 && selected[0]!.type === 'sketch');
+	const kindBadge = $derived.by(() => {
+		const el = pointedAt;
+		if (el?.type !== 'sketch' && el?.type !== 'image') return null;
+		if (selection.transforming || selection.marquee || tools.current !== 'select') return null;
+		const b = targetsBox([el]);
+		return b ? { type: el.type, ...toScreen({ x: b.x, y: b.y + b.h }) } : null;
 	});
 	const marqueeRect = $derived.by(() => {
 		const m = selection.marquee;
@@ -162,6 +178,7 @@
 	{#if hover}
 		<polygon
 			points={outline(hover)}
+			stroke-dasharray={hover.type === 'sketch' ? '6 4' : undefined}
 			fill="none"
 			stroke="var(--selection)"
 			stroke-opacity="0.5"
@@ -172,7 +189,13 @@
 		<path d={memberOutlines} fill="none" stroke="var(--selection)" stroke-width="1" />
 	{/if}
 	{#if box && !selection.editingId}
-		<polygon points={boxPolygon} fill="none" stroke="var(--selection)" stroke-width="1.5" />
+		<polygon
+			points={boxPolygon}
+			fill="none"
+			stroke="var(--selection)"
+			stroke-width="1.5"
+			stroke-dasharray={singleSketch ? '6 4' : undefined}
+		/>
 	{/if}
 	{#each connectorLines as line (line.id)}
 		<polyline
@@ -259,6 +282,21 @@
 		{/if}
 	{/each}
 </svg>
+{#if kindBadge}
+	<div
+		class="absolute mt-1.5 flex items-center gap-1 rounded-md bg-surface px-1.5 py-0.5 text-xs text-muted shadow"
+		style:left="{kindBadge.x}px"
+		style:top="{kindBadge.y}px"
+		data-testid="kind-badge"
+		data-kind={kindBadge.type}
+	>
+		{#if kindBadge.type === 'sketch'}
+			<PenLine class="size-3" aria-hidden="true" />Editable sketch
+		{:else}
+			<ImageIcon class="size-3" aria-hidden="true" />Image
+		{/if}
+	</div>
+{/if}
 {#if lockBadge}
 	<div
 		class="absolute flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-surface text-muted shadow"

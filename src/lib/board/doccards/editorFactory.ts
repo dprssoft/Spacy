@@ -8,6 +8,7 @@ import StarterKit from '@tiptap/starter-kit';
 import type * as Y from 'yjs';
 import { formatExtensions } from './formatting';
 import { isSafeLink } from './links';
+import { LinkPreview } from './linkPreview';
 
 export { isSafeLink };
 
@@ -53,6 +54,7 @@ export function docExtensions(fragment: Y.XmlFragment, opts: DocExtensionOptions
 		TaskList,
 		TaskItem.configure({ nested: true }),
 		...formatExtensions(),
+		LinkPreview,
 		Placeholder.configure({ placeholder: opts.placeholder ?? 'Write something…' }),
 		Collaboration.configure({ fragment }),
 		...bubble,

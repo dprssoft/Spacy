@@ -3,7 +3,7 @@ import { createElements } from '$lib/model/ops';
 import { samples } from '$lib/model/testFixtures';
 import type { ConnectorElement, Element } from '$lib/model/types';
 import { testCtx } from '../testCtx';
-import { scopeElements } from './exportImage';
+import { rasterExtension, scopeElements } from './exportImage';
 
 function setup() {
 	const ctx = testCtx();
@@ -29,6 +29,15 @@ function setup() {
 }
 
 const ids = (els: Element[]) => els.map((e) => e.id);
+
+describe('rasterExtension', () => {
+	it('names the file after what the browser really wrote', () => {
+		const of = (type: string) => rasterExtension(new Blob([], { type }));
+		expect(of('image/jpeg')).toBe('jpg');
+		expect(of('image/webp')).toBe('webp');
+		expect(of('image/png')).toBe('png');
+	});
+});
 
 describe('scopeElements', () => {
 	it('board: everything, frames first then by z', () => {

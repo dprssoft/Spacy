@@ -19,6 +19,9 @@ const env = {
 	...process.env
 };
 
+// A project site on GitHub Pages lives under /<repo> (see .github/workflows/pages.yml).
+const BASE = (process.env.BASE_PATH ?? '') as '' | `/${string}`;
+
 export default defineConfig({
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version),
@@ -38,23 +41,24 @@ export default defineConfig({
 			// SPA mode: routes fall back to 200.html; `/` is prerendered (see plan/00-architecture.md §2).
 			adapter: adapter({ fallback: FALLBACK }),
 			// Absolute asset URLs: the service worker serves the same page for every route when offline.
-			paths: { relative: false }
+			paths: { relative: false, base: BASE }
 		}),
 		SvelteKitPWA({
 			// 'prompt': a new version waits until the user reloads (never mid-edit).
 			registerType: 'prompt',
 			kit: {
 				adapterFallback: FALLBACK,
+				base: `${BASE}/`,
 				// The fallback page changes with every build (it references hashed assets). The
 				// prerendered start page is precached as '/' by the plugin.
-				spa: { fallbackMapping: '/200.html', fallbackRevision: async () => BUILD_ID }
+				spa: { fallbackMapping: `${BASE}/200.html`, fallbackRevision: async () => BUILD_ID }
 			},
 			manifest: {
 				name: 'Spacy',
 				short_name: 'Spacy',
 				description: 'A whiteboard with diagrams and docs that lives in your browser.',
-				start_url: '/',
-				scope: '/',
+				start_url: `${BASE}/`,
+				scope: `${BASE}/`,
 				display: 'standalone',
 				theme_color: '#4f46e5',
 				background_color: '#f7f7f8',
@@ -69,7 +73,9 @@ export default defineConfig({
 						purpose: 'maskable'
 					}
 				],
-				file_handlers: [{ action: '/', accept: { 'application/x-spacy': ['.spacy', '.smthng'] } }]
+				file_handlers: [
+					{ action: `${BASE}/`, accept: { 'application/x-spacy': ['.spacy', '.smthng'] } }
+				]
 			},
 			workbox: {
 				// Everything the client needs, so any route (the SPA fallback) works offline.
@@ -79,7 +85,7 @@ export default defineConfig({
 				],
 				// The start page's data (__data.json) is fetched with SvelteKit's own query parameters.
 				ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^x-sveltekit-/],
-				navigateFallback: '/200.html'
+				navigateFallback: `${BASE}/200.html`
 			}
 		}),
 		// `pnpm analyze` writes stats.html (a treemap of the client bundle).

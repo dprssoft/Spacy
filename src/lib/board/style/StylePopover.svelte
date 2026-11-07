@@ -3,6 +3,7 @@
 	import AlignLeft from '@lucide/svelte/icons/align-left';
 	import AlignRight from '@lucide/svelte/icons/align-right';
 	import Bold from '@lucide/svelte/icons/bold';
+	import Download from '@lucide/svelte/icons/download';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import LayoutPanelLeft from '@lucide/svelte/icons/layout-panel-left';
 	import Palette from '@lucide/svelte/icons/palette';
@@ -12,6 +13,7 @@
 	import { unionRects } from '../engine/geometry';
 	import { worldToScreen } from '../engine/viewport';
 	import { transformTargets } from '../selectionInfo';
+	import { exportDialog } from '../ui/exportDialogState.svelte';
 	import { applyStyle, type AppearancePatch } from './applyStyle';
 	import ArrangePanel from './ArrangePanel.svelte';
 	import ConnectorPanel from './ConnectorPanel.svelte';
@@ -250,6 +252,17 @@
 				{/if}
 			</PanelButton>
 		{/if}
+
+		<button
+			type="button"
+			aria-label="Save as image"
+			title="Save as image"
+			data-testid="style-export"
+			class="inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+			onclick={() => exportDialog.show(exportDialog.format, 'selection')}
+		>
+			<Download class="size-4" aria-hidden="true" />
+		</button>
 
 		{#if opts.has('stroke')}
 			<PanelButton label="Stroke" testId="style-stroke">

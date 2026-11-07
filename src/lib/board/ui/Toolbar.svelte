@@ -64,7 +64,7 @@
 			{ id: 'doccard', label: 'Doc card', keys: 'N', icon: FileText, secondary: true },
 			{ id: 'frame', label: 'Frame', keys: 'F', icon: Frame, secondary: true },
 			{ id: 'image', label: 'Image', keys: 'Ctrl+Shift+I', icon: ImageIcon, secondary: true },
-			{ id: 'waystone', label: 'Waystone', keys: 'W', icon: MapPin, secondary: true }
+			{ id: 'waystone', label: 'Tab', keys: 'W', icon: MapPin, secondary: true }
 		]
 	];
 

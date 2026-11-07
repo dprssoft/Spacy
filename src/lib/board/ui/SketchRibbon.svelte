@@ -7,10 +7,11 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import { getBoard } from '../context';
 	import { ink } from '../elements/common';
+	import { applyStyle } from '../style/applyStyle';
 	import { BRUSHES, MAX_SIZE, MIN_SIZE, type BrushId } from '../sketch/brushes';
 	import ColorSwatches from '../style/controls/ColorSwatches.svelte';
 	import PanelButton from '../style/controls/PanelButton.svelte';
-	import { OPAQUE_SWATCHES } from '../style/palette';
+	import { OPAQUE_SWATCHES, PALETTE_SWATCHES } from '../style/palette';
 
 	// The contextual part of the ribbon while the sketch tool is active.
 	let { groupBox, caption, button }: { groupBox: string; caption: string; button: string } =
@@ -40,6 +41,14 @@
 	];
 	const colors = OPAQUE_SWATCHES.filter((c) => QUICK.includes(c.name));
 	const quick = $derived(colors.some((c) => c.value === sketch.color));
+
+	// The style bar is hidden while drawing, so the sheet of the active sketch is set from here.
+	const active = $derived.by(() => {
+		void ctx.store.version;
+		const el = sketch.activeId ? ctx.store.get(sketch.activeId) : undefined;
+		return el?.type === 'sketch' && !el.locked ? el : null;
+	});
+	const sheet = $derived(active?.style.fillStyle === 'none' ? 'transparent' : active?.style.fill);
 
 	function newSketch() {
 		sketch.activeId = null;
@@ -120,15 +129,30 @@
 	<span class={caption} aria-hidden="true">Color</span>
 </div>
 <div role="group" aria-label="Sketch" class={groupBox}>
-	<button
-		type="button"
-		class="{button} w-auto gap-1.5 px-2 text-xs"
-		title="The next stroke starts a new sketch object"
-		disabled={!sketch.activeId}
-		onclick={newSketch}
-	>
-		<FilePlus class="size-[18px]" aria-hidden="true" />New sketch
-	</button>
+	<div class="flex items-center gap-1">
+		{#if active}
+			<PanelButton label="Sheet color" testId="sketch-sheet">
+				{#snippet trigger()}
+					<span class="size-5 rounded border border-border" style:background={sheet}></span>
+				{/snippet}
+				<ColorSwatches
+					value={sheet ?? 'transparent'}
+					colors={PALETTE_SWATCHES}
+					label="Sheet color"
+					onchange={(c) => applyStyle(ctx, [active.id], { style: { fill: c } })}
+				/>
+			</PanelButton>
+		{/if}
+		<button
+			type="button"
+			class="{button} w-auto gap-1.5 px-2 text-xs"
+			title="The next stroke starts a new sketch object"
+			disabled={!sketch.activeId}
+			onclick={newSketch}
+		>
+			<FilePlus class="size-[18px]" aria-hidden="true" />New sketch
+		</button>
+	</div>
 	<span class={caption} aria-hidden="true"
 		>{sketch.activeId ? 'Drawing into one object' : 'Sketch'}</span
 	>

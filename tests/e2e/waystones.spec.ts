@@ -28,16 +28,16 @@ test('place waystones with W, fly between them, reorder, and keep the order afte
 	page
 }) => {
 	const bar = page.getByTestId('waystone-bar');
-	await expect(bar).toHaveCount(0);
+	await expect(bar).toContainText('Tabs'); // always there, even with no tabs yet
 	await place(page, -200);
 	await setView(page, { x: 300, y: 300, zoom: 2 });
 	await place(page, 0);
 	await setView(page, { x: 300, y: 300, zoom: 0.5 });
 	await place(page, 200);
 	expect(await route(page)).toEqual([
-		{ name: 'Waystone 1', zoom: 1 },
-		{ name: 'Waystone 2', zoom: 2 },
-		{ name: 'Waystone 3', zoom: 0.5 }
+		{ name: 'Tab 1', zoom: 1 },
+		{ name: 'Tab 2', zoom: 2 },
+		{ name: 'Tab 3', zoom: 0.5 }
 	]);
 	const position = page.getByTestId('waystone-position');
 	await expect(position).toHaveText('3 / 3');
@@ -52,7 +52,7 @@ test('place waystones with W, fly between them, reorder, and keep the order afte
 	await expect.poll(() => zoom(page)).toBe(1);
 	await page.keyboard.press('PageDown');
 	await expect(position).toHaveText('2 / 3');
-	await expect(page.getByTestId('waystone-current')).toContainText('Waystone 2');
+	await expect(page.getByTestId('waystone-current')).toContainText('Tab 2');
 	await expect.poll(() => zoom(page)).toBe(2);
 	await page.keyboard.press('Alt+3');
 	await expect.poll(() => zoom(page)).toBe(0.5);
@@ -64,12 +64,12 @@ test('place waystones with W, fly between them, reorder, and keep the order afte
 	// The list: rename, reorder with Alt+↓.
 	await page.getByTestId('waystone-current').click();
 	const list = page.getByTestId('waystone-list');
-	await list.getByRole('button', { name: 'Rename Waystone 1' }).click();
-	await list.getByRole('textbox', { name: 'Waystone name' }).fill('Prologue');
+	await list.getByRole('button', { name: 'Rename Tab 1' }).click();
+	await list.getByRole('textbox', { name: 'Tab name' }).fill('Prologue');
 	await page.keyboard.press('Enter');
 	await list.locator('[data-go]').first().focus();
 	await page.keyboard.press('Alt+ArrowDown');
-	await expect(list.locator('[data-go]')).toHaveText(['Waystone 2', 'Prologue', 'Waystone 3']);
+	await expect(list.locator('[data-go]')).toHaveText(['Tab 2', 'Prologue', 'Tab 3']);
 
 	// Presenting: only the bar is left, floating over the board.
 	await page.keyboard.press('Escape');
@@ -84,7 +84,7 @@ test('place waystones with W, fly between them, reorder, and keep the order afte
 
 	await page.reload();
 	await waitForHooks(page);
-	expect((await route(page)).map((w) => w.name)).toEqual(['Waystone 2', 'Prologue', 'Waystone 3']);
+	expect((await route(page)).map((w) => w.name)).toEqual(['Tab 2', 'Prologue', 'Tab 3']);
 	await expect(page.getByTestId('waystone-position')).toHaveText('– / 3');
 });
 
@@ -98,4 +98,27 @@ test('waystones stay out of image exports unless included', async ({ page }) => 
 	await expect(dialog.getByText('Nothing to export')).toBeVisible();
 	await dialog.getByTestId('export-waystones').check();
 	await expect(dialog.getByRole('img', { name: 'Export preview' })).toBeVisible();
+});
+
+test('the tabs dropdown saves a spot, names it and travels back', async ({ page }) => {
+	const trigger = page.getByTestId('waystone-current');
+	await expect(trigger).toContainText('Tabs');
+	await trigger.click();
+	await page.getByRole('button', { name: 'Add tab here' }).click();
+	await page.getByRole('textbox', { name: 'Tab name' }).fill('Intro');
+	await page.keyboard.press('Enter');
+	expect((await route(page)).map((w) => w.name)).toEqual(['Intro']);
+
+	await page.keyboard.press('Escape');
+	const view = () => page.evaluate(() => window.__spacy!.ctx.viewport.x);
+	const start = await view();
+	await page.getByTestId('canvas').focus();
+	await page.mouse.move(600, 400);
+	await page.mouse.wheel(300, 0);
+	await expect.poll(view).not.toBe(start);
+
+	await trigger.click();
+	await page.getByTestId('waystone-list').getByRole('button', { name: 'Intro' }).first().click();
+	await expect(page.getByTestId('waystone-list')).toBeHidden();
+	await expect.poll(view).toBeCloseTo(start, 0);
 });

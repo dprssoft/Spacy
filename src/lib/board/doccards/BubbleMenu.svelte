@@ -6,10 +6,12 @@
 	import Heading2 from '@lucide/svelte/icons/heading-2';
 	import Heading3 from '@lucide/svelte/icons/heading-3';
 	import Italic from '@lucide/svelte/icons/italic';
+	import Eye from '@lucide/svelte/icons/eye';
 	import Link from '@lucide/svelte/icons/link';
 	import MessageSquarePlus from '@lucide/svelte/icons/message-square-plus';
 	import Strikethrough from '@lucide/svelte/icons/strikethrough';
 	import type { Editor } from './editorFactory';
+	import { canPreview, toggleLinkPreview } from './linkPreview';
 	import LinkPopover from './LinkPopover.svelte';
 
 	let {
@@ -126,6 +128,19 @@
 			>
 				<Link class="size-4" aria-hidden="true" />
 			</button>
+			{#if isOn(() => canPreview(editor!.getAttributes('link').href))}
+				<button
+					type="button"
+					class={button}
+					aria-label="Page preview"
+					title="Show the page under this link"
+					aria-pressed={isOn(() => editor!.getAttributes('link').preview === true)}
+					onmousedown={(e) => e.preventDefault()}
+					onclick={() => toggleLinkPreview(editor!)}
+				>
+					<Eye class="size-4" aria-hidden="true" />
+				</button>
+			{/if}
 			{#if oncomment}
 				<button
 					type="button"

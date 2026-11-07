@@ -11,7 +11,7 @@ const TYPE_NAMES: Record<ElementType, string> = {
 	connector: 'Connector',
 	sketch: 'Sketch',
 	media: 'Media',
-	waystone: 'Waystone',
+	waystone: 'Tab',
 	widget: 'Widget'
 };
 

@@ -6,7 +6,7 @@
 	import { getBoard } from '../../context';
 	import { strokePaint, type SketchStroke, type StrokePaint } from '../../sketch/brushes';
 	import { readStrokes } from '../../sketch/data';
-	import { DEFAULT_INK } from '../common';
+	import { DEFAULT_INK, fillColor } from '../common';
 	import type { ElementViewProps } from '../registry';
 
 	let { el }: ElementViewProps<SketchElement> = $props();
@@ -105,4 +105,10 @@
 	});
 </script>
 
-<canvas bind:this={canvas} class="absolute inset-0 size-full" aria-hidden="true"></canvas>
+<!-- The sheet is the canvas's CSS background, so the eraser's destination-out leaves it alone. -->
+<canvas
+	bind:this={canvas}
+	class="absolute inset-0 size-full"
+	style:background={fillColor(el.style)}
+	aria-hidden="true"
+></canvas>
