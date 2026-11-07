@@ -14,7 +14,8 @@ export type ToolId =
 	| 'frame'
 	| 'image'
 	| 'waystone'
-	| 'widget';
+	| 'widget'
+	| 'table';
 
 export type HandleId = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'rotate' | (string & {});
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { samples } from '$lib/model/testFixtures';
 import type { Element, ElementType } from '$lib/model/types';
 import { sampleElements } from '../elements/fixtures';
+import type { DocNode } from '../doccards/markdown';
 import { renderStaticSvg, type StaticRenderOptions } from './staticSvg';
 
 const TYPES: ElementType[] = [
@@ -15,7 +16,8 @@ const TYPES: ElementType[] = [
 	'doccard',
 	'connector',
 	'media',
-	'widget'
+	'widget',
+	'table'
 ];
 
 function options(
@@ -144,5 +146,44 @@ describe('renderStaticSvg', () => {
 		expect(svg).toContain('>3:30</text>');
 		expect(svg).toContain('>Break</text>');
 		expect(svg).toMatchSnapshot();
+	});
+
+	it('draws a table: its grid, header fill and formatted cell text', async () => {
+		const table = { ...samples.table('t'), x: 0, y: 0, w: 200, h: 40 };
+		const cell = (type: string, ...content: DocNode[]): DocNode => ({
+			type,
+			content: [{ type: 'paragraph', content }]
+		});
+		const json: DocNode = {
+			type: 'doc',
+			content: [
+				{
+					type: 'table',
+					content: [
+						{
+							type: 'tableRow',
+							content: [
+								cell('tableHeader', { type: 'text', text: 'Name' }),
+								cell('tableHeader', { type: 'text', text: 'Role' })
+							]
+						},
+						{
+							type: 'tableRow',
+							content: [
+								cell('tableCell', { type: 'text', text: 'Ann', marks: [{ type: 'bold' }] }),
+								cell('tableCell', { type: 'text', text: 'Lead & co', marks: [{ type: 'italic' }] })
+							]
+						}
+					]
+				}
+			]
+		};
+		const { svg } = await renderStaticSvg(options([table], { docJson: () => json }));
+		expect(parse(svg).getElementsByTagName('parsererror')).toHaveLength(0);
+		expect(svg).toContain('>Name</tspan>');
+		expect(svg).toContain('<tspan font-weight="700">Ann</tspan>');
+		expect(svg).toContain('<tspan font-style="italic">Lead &#38; co</tspan>');
+		// The column line between the cells and the row line under the header.
+		expect(svg).toMatch(/<path d="M100 0V[\d.]+M0 [\d.]+H100/);
 	});
 });

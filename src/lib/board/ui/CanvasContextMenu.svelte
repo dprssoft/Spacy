@@ -71,6 +71,11 @@
 		return id && ctx.store.get(id)?.type === 'doccard' ? id : null;
 	});
 
+	const table = $derived.by(() => {
+		const id = open ? ctx.selection.single : null;
+		return id && ctx.store.get(id)?.type === 'table' ? id : null;
+	});
+
 	const item =
 		'flex h-8 pointer-coarse:h-11 cursor-default items-center justify-between gap-8 rounded-md px-2 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-surface-2';
 	const sep = 'my-1 h-px bg-border';
@@ -179,6 +184,10 @@
 							downloadMarkdown(ctx, docCard, { comments: true })
 						)}
 					{/if}
+				{/if}
+				{#if table}
+					<ContextMenu.Separator class={sep} />
+					{@render entry('Copy as Markdown', null, () => copyMarkdown(ctx, table))}
 				{/if}
 			{:else}
 				{@render entry('Paste', 'Mod+V', () => pasteFromClipboard(ctx))}

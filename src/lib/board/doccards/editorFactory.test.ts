@@ -1,8 +1,11 @@
 import * as Y from 'yjs';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createDocEditor, isSafeLink, type Editor } from './editorFactory';
+import { CellSelection } from '@tiptap/pm/tables';
 import { fragmentToJSON } from './fragmentJson';
 import { docToMarkdown } from './markdown';
+import { writeDocJSON } from './fragmentWrite';
+import { newTableJSON } from '../tables/content';
 
 const editors: Editor[] = [];
 function editorOn(fragment: Y.XmlFragment): Editor {
@@ -76,5 +79,75 @@ describe('tables', () => {
 			'tableHeader'
 		]);
 		expect(docToMarkdown(json)).toContain('| Name | **Role** |\n| --- | --- |');
+	});
+});
+
+describe('table element editor', () => {
+	function tableEditor() {
+		const doc = new Y.Doc();
+		const frag = doc.getXmlFragment('t');
+		writeDocJSON(frag, newTableJSON(2, 2));
+		const ed = createDocEditor({
+			element: document.createElement('div'),
+			fragment: frag,
+			editable: true,
+			table: true
+		});
+		editors.push(ed);
+		return { ed, frag };
+	}
+
+	it('opens its stored table and formats cell text', () => {
+		const { ed, frag } = tableEditor();
+		ed.commands.focus('start');
+		ed.commands.toggleBold();
+		ed.commands.insertContent('Owner');
+		ed.commands.goToNextCell();
+		ed.commands.toggleUnderline();
+		ed.commands.insertContent('Due');
+		const json = fragmentToJSON(frag);
+		expect(json.content?.map((n) => n.type)).toEqual(['table']);
+		expect(docToMarkdown(json)).toContain('| **Owner** | Due |');
+		expect(frag.toString()).toContain('underline');
+	});
+
+	it('keeps cells to paragraphs: no headings or lists from Markdown shortcuts', () => {
+		const { ed } = tableEditor();
+		ed.commands.focus('start');
+		ed.commands.insertContent('<h1>Big</h1><ul><li><p>item</p></li></ul>');
+		const types = new Set<string>();
+		ed.state.doc.descendants((n) => void types.add(n.type.name));
+		expect(types.has('heading')).toBe(false);
+		expect(types.has('bulletList')).toBe(false);
+		expect(ed.getText()).toContain('Big');
+	});
+
+	it('merges selected cells and splits them again', () => {
+		const { ed, frag } = tableEditor();
+		// The two header cells: a cell selection from the first to the second.
+		const cells: number[] = [];
+		ed.state.doc.descendants((n, pos) => {
+			if (n.type.name === 'tableHeader') cells.push(pos);
+		});
+		ed.view.dispatch(
+			ed.state.tr.setSelection(CellSelection.create(ed.state.doc, cells[0]!, cells[1]!))
+		);
+		expect(ed.can().mergeCells()).toBe(true);
+		ed.commands.mergeCells();
+		const header = () => fragmentToJSON(frag).content![0]!.content![0]!.content!;
+		expect(header()).toHaveLength(1);
+		expect(header()[0]!.attrs?.colspan).toBe(2);
+		expect(ed.can().splitCell()).toBe(true);
+		ed.commands.splitCell();
+		expect(header()).toHaveLength(2);
+	});
+
+	it('always holds one table, even after everything is deleted', () => {
+		const { ed } = tableEditor();
+		ed.commands.selectAll();
+		ed.commands.deleteSelection();
+		ed.commands.deleteTable();
+		expect(ed.state.doc.childCount).toBe(1);
+		expect(ed.state.doc.firstChild?.type.name).toBe('table');
 	});
 });

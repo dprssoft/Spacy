@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { z } from '$lib/shared/zod';
-import { getDocsMap, getMeta, readElement } from '$lib/model/doc';
+import { getDocsMap, getMeta, hasDocContent, readElement } from '$lib/model/doc';
 import { allPageMaps } from '$lib/model/pages';
 import { migrate, NewerSchemaError } from '$lib/model/migrations';
 import { IMPORT } from '$lib/model/origins';
@@ -206,7 +206,7 @@ export async function importPayload(
 						const next = assetIds.get(el.assetId);
 						if (next) value.set('assetId', next);
 					}
-					if (el.type === 'doccard' && !(docs.get(id) instanceof Y.XmlFragment))
+					if (hasDocContent(el.type) && !(docs.get(id) instanceof Y.XmlFragment))
 						docs.set(id, new Y.XmlFragment());
 				}
 			getMeta(doc).set('title', meta.title);

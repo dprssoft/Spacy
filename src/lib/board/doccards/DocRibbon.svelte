@@ -35,6 +35,9 @@
 	// Word-like formatting groups for the doc card being edited (in the ribbon, and in focus mode).
 	let { editor }: { editor: Editor } = $props();
 
+	// A table element's editor has no headings, lists or quotes, and is always one table.
+	const tableOnly = $derived(!editor.schema.nodes.heading);
+
 	// Bumped on every transaction so the controls show the formatting at the caret.
 	let tick = $state(0);
 	$effect(() => {
@@ -182,39 +185,45 @@
 	</DropdownMenu.Root>
 {/snippet}
 
-<div role="group" aria-label="Text style" class={groupBox} data-doc-popup data-doc-ribbon>
-	<DropdownMenu.Root>
-		<DropdownMenu.Trigger
-			class="{select} w-32"
-			aria-label="Style: {labelOf(BLOCK_STYLES, at.block, 'Normal text')}"
-			title="Style"
-			data-doc-format="style"
-		>
-			<span class="truncate">{labelOf(BLOCK_STYLES, at.block, 'Normal text')}</span>
-			<ChevronDown class="size-3 shrink-0 opacity-60" aria-hidden="true" />
-		</DropdownMenu.Trigger>
-		<DropdownMenu.Portal>
-			<DropdownMenu.Content
-				align="start"
-				sideOffset={4}
-				class="{menu} min-w-44"
-				data-interactive
-				data-doc-popup
-				onCloseAutoFocus={refocus}
+{#if !tableOnly}<div
+		role="group"
+		aria-label="Text style"
+		class={groupBox}
+		data-doc-popup
+		data-doc-ribbon
+	>
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger
+				class="{select} w-32"
+				aria-label="Style: {labelOf(BLOCK_STYLES, at.block, 'Normal text')}"
+				title="Style"
+				data-doc-format="style"
 			>
-				{#each BLOCK_STYLES as s (s.id)}
-					<DropdownMenu.Item class={menuItem} onSelect={() => fmt.setBlockStyle(editor, s.id)}>
-						<span class="w-4 shrink-0">
-							{#if s.id === at.block}<Check class="size-4" aria-hidden="true" />{/if}
-						</span>
-						{s.label}
-					</DropdownMenu.Item>
-				{/each}
-			</DropdownMenu.Content>
-		</DropdownMenu.Portal>
-	</DropdownMenu.Root>
-	<span class={caption} aria-hidden="true">Style</span>
-</div>
+				<span class="truncate">{labelOf(BLOCK_STYLES, at.block, 'Normal text')}</span>
+				<ChevronDown class="size-3 shrink-0 opacity-60" aria-hidden="true" />
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Portal>
+				<DropdownMenu.Content
+					align="start"
+					sideOffset={4}
+					class="{menu} min-w-44"
+					data-interactive
+					data-doc-popup
+					onCloseAutoFocus={refocus}
+				>
+					{#each BLOCK_STYLES as s (s.id)}
+						<DropdownMenu.Item class={menuItem} onSelect={() => fmt.setBlockStyle(editor, s.id)}>
+							<span class="w-4 shrink-0">
+								{#if s.id === at.block}<Check class="size-4" aria-hidden="true" />{/if}
+							</span>
+							{s.label}
+						</DropdownMenu.Item>
+					{/each}
+				</DropdownMenu.Content>
+			</DropdownMenu.Portal>
+		</DropdownMenu.Root>
+		<span class={caption} aria-hidden="true">Style</span>
+	</div>{/if}
 <div role="group" aria-label="Font" class={groupBox} data-doc-popup>
 	<div class="flex items-center gap-0.5">
 		{@render choiceMenu('Font', 'fontFamily', FONTS, at.font, 'Default', 'w-36')}
@@ -251,8 +260,8 @@
 </div>
 <div role="group" aria-label="Paragraph" class={groupBox} data-doc-popup>
 	<div class="flex items-center gap-0.5">
-		{#each lists as t (t.label)}{@render toggle(t)}{/each}
-		<TableMenu {editor} inTable={at.table} {menu} {menuItem} {refocus} />
+		{#if !tableOnly}{#each lists as t (t.label)}{@render toggle(t)}{/each}{/if}
+		<TableMenu {editor} inTable={at.table} canDelete={!tableOnly} {menu} {menuItem} {refocus} />
 		<div class="mx-1 h-5 w-px bg-border" aria-hidden="true"></div>
 		{#each aligns as a (a.id)}
 			{@render toggle({

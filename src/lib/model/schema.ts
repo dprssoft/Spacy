@@ -185,6 +185,8 @@ export const widgetSchema = z.object({
 	state: json
 });
 
+export const tableSchema = z.object({ ...base, type: z.literal('table') });
+
 export const elementSchema = z.discriminatedUnion('type', [
 	shapeSchema,
 	stickySchema,
@@ -197,7 +199,8 @@ export const elementSchema = z.discriminatedUnion('type', [
 	connectorSchema,
 	mediaSchema,
 	waystoneSchema,
-	widgetSchema
+	widgetSchema,
+	tableSchema
 ]);
 
 // Compile-time guard: the schemas and the hand-written types must describe the same shape.

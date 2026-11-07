@@ -2,7 +2,7 @@ import * as Y from 'yjs';
 import { copyThreadsTo, parseThreads, threadsOn, type CommentThread } from '$lib/model/comments';
 import { cloneElements } from '$lib/model/clone';
 import { DEFAULT_SIZES, FONT_SIZE_PX, LINE_HEIGHT, newElementBase } from '$lib/model/defaults';
-import { getDocsMap } from '$lib/model/doc';
+import { getDocsMap, hasDocContent } from '$lib/model/doc';
 import { rawStrokes } from '../sketch/data';
 import { newId } from '$lib/model/ids';
 import { createElements } from '$lib/model/ops';
@@ -44,7 +44,7 @@ export function serializeElements(ctx: BoardContext, els: readonly Element[]): s
 	const docs = getDocsMap(ctx.doc);
 	const tempDocs = getDocsMap(temp);
 	for (const el of els) {
-		const frag = el.type === 'doccard' ? docs.get(el.id) : undefined;
+		const frag = hasDocContent(el.type) ? docs.get(el.id) : undefined;
 		if (frag) tempDocs.set(el.id, frag.clone());
 	}
 	const sketches: Record<string, unknown[]> = {};

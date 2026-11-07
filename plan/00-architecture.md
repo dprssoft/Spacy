@@ -101,7 +101,7 @@ export type Rect = { x: number; y: number; w: number; h: number };
 
 export type ElementType =
   | 'shape' | 'sticky' | 'text' | 'image' | 'stroke' | 'sketch' | 'frame' | 'doccard' | 'connector' | 'media'
-  | 'waystone' | 'widget';
+  | 'waystone' | 'widget' | 'table';
 
 export type ShapeKind =
   | 'rect' | 'ellipse' | 'diamond'                       // basic (toolbar)
@@ -179,6 +179,10 @@ export interface WidgetElement extends BaseElement {    // schema version 8
   state: unknown;           // JSON, parsed per kind: what happens while it runs (WIDGET origin, not undoable)
 }
 
+export interface TableElement extends BaseElement {     // schema version 10
+  type: 'table';            // cells live in docs[id] (one table node); not rotatable; h follows the content
+}
+
 export type Port = 'n' | 'e' | 's' | 'w';
 
 export type Endpoint =
@@ -204,7 +208,7 @@ export interface ConnectorElement extends BaseElement {
 export type Element =
   | ShapeElement | StickyElement | TextElement | ImageElement
   | StrokeElement | FrameElement | DocCardElement | ConnectorElement | MediaElement | WaystoneElement
-  | WidgetElement;
+  | WidgetElement | TableElement;
 ```
 
 ### Y.Doc layout
@@ -219,7 +223,7 @@ doc.getMap('page:<id>') same shape, one map per additional page
                         - one nested Y.Map per element; each top-level field is one key
                         - object/array fields (style, from, to, label, waypoints, points) are stored
                           as plain JSON values and replaced as a whole on change
-doc.getMap('docs')      Y.Map<doccardId, Y.XmlFragment>   (TipTap content)
+doc.getMap('docs')      Y.Map<doccardId | tableId, Y.XmlFragment>   (TipTap content; `hasDocContent(type)`)
 doc.getMap('sketches')  Y.Map<sketchId, Y.Array<{ b: brush, c: color, s: size, p: number[] }>>
                         - append-only brush strokes of sketch elements; p = flat [x, y, pressure, …]
                           in the sketch's own coordinates
@@ -238,7 +242,7 @@ Rules:
 - Frames render beneath all non-frame elements (own layer); `z` orders frames among themselves.
 - Deleting a doccard deletes its `docs` entry in the same transaction.
 - Deleting an element converts endpoints of connectors attached to it into `free` endpoints at their current resolved position, in the same transaction (step 20).
-- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view). Version 6 added comments (no data moves; an older editor would delete text carrying the `comment` mark). Version 7 added waystones (no data moves; older versions would drop them from their view). Version 8 added widgets and the `widgets` map (no data moves). Version 9 added tables in doc cards (no data moves; an older editor would delete table nodes it doesn't know).
+- `meta.schemaVersion` is set on first open; `migrate(doc)` runs on every open. Version 2 added pages (no data moves; the bump keeps older app versions from opening multi-page boards). Version 5 added media elements (no data moves; older versions would drop them from their view). Version 6 added comments (no data moves; an older editor would delete text carrying the `comment` mark). Version 7 added waystones (no data moves; older versions would drop them from their view). Version 8 added widgets and the `widgets` map (no data moves). Version 9 added tables in doc cards (no data moves; an older editor would delete table nodes it doesn't know). Version 10 added table elements (no data moves; older versions would drop them from their view).
 - Media (`src/lib/board/media`): which elements are playing is per-tab state (`PlaybackState` in the board context), never stored. A poster is shown until play; playing elements stay mounted when culled or when the scene canvas is shown; page switches stop playback. Double-click / Enter plays and hands the pointer to the player (the editing mode, like doc cards); Escape or a click elsewhere leaves it while playback continues. Exports, thumbnails and the scene canvas draw the poster. CSP: `frame-src https:` (for link previews; media embeds are still built only from provider ids); `media-src 'self' blob: https:` — `connect-src` stays `'self'` (no oEmbed or thumbnail fetching).
 - Fonts (`src/lib/fonts`): `catalog.ts` lists the fonts (id, label, category, CSS stack); 10 are bundled from `@fontsource*` packages (Latin, Latin Extended and Cyrillic woff2 subsets, ~1 MB in all, precached for offline use) and registered with the `FontFace` API under `Spacy <name>` families, so the browser downloads a subset only when text uses it. Canvas text stores the id in `style.font.family` (optional; no schema bump: an older app shows the default font); doc card text uses the `fontFamily` mark. Exports embed the files of the fonts they use as data URLs.
 - Doc card text formatting (schema version 4): underline, `textColor`, `highlight`, `fontFamily` and `fontSize` marks and an `align` attribute on paragraphs and headings. The marks hold ids from fixed lists (`doccards/formatOptions.ts`), rendered as `data-*` attributes and styled in `prose.css`; text color and highlight also take a `#rrggbb` value (`data-*="custom"` plus a CSS variable in the style attribute). Anything else is dropped on parse. The bump matters: an older editor deletes text carrying marks it doesn't know.
@@ -246,6 +250,8 @@ Rules:
 - Comments (schema version 6, `src/lib/model/comments.ts`; UI in `src/lib/board/comments`): all writes go through its helpers. Text threads are anchored by a `comment` mark (`threadId`, `excludes: ''` so comments may overlap; y-tiptap stores it as the text attribute `comment--<hash>`) in doc card text, so the highlight moves with edits; a text thread whose marked text was all deleted stays as "orphaned" (listed with "The commented text was deleted"). Deleting an element deletes threads anchored to it (and the text threads of a deleted doc card) in the same transaction (a `beforeDeleteHooks` entry); deleting a text thread removes its marks. Paste and duplicate copy the threads of the copied objects (the clipboard payload carries them) and repoint the copied marks (`copyThreadsTo`). The `comments` map is in canvas undo scope; the mark itself is applied by the editor (its own Yjs undo). The author name is a localPref. Exports (PNG/SVG/PDF, compile, Markdown) leave comments out; "Download .md with comments" writes them as footnotes.
 - Live sharing (step 52, `src/lib/model/share.ts`): `meta.share = { room, key } | null` (room 16, key 24 url-safe chars). Set on the board, so every device and person with it joins the same session; not in undo scope. No schema bump: an older app ignores it.
 - Doc card tables (schema version 9, step 61): TipTap `table`, `tableRow`, `tableHeader`, `tableCell` nodes (`@tiptap/extension-table`), cells hold blocks with the usual formatting. No column resizing (it measures screen pixels, which a zoomed board breaks): columns share the width. No table inside a table. Markdown export writes a GFM table (first row as header); static lines write one line per row.
+- Table elements (schema version 10, step 62; `elements/table`, `tables/`, `render/tableLayout.ts`): content is `docs[id]`, edited by `tableExtensions` (top node `doc` = exactly one `table`; cells are `paragraph+`; no headings, lists, quotes, code blocks, slash commands or mentions). Double-click / Enter edits (caret at the pointer), Escape or a click outside leaves; the doc card ribbon shows only what applies (no text styles, lists or "Delete table"). The box's height follows the content: measured from the editor and written with origin `LAYOUT` (local, not undoable — it's derived), only by the tab that edits or has the table selected, so peers whose fonts measure differently don't fight. The `G` tool places a 3 × 3 table with a header row, created with its content in one LOCAL transaction. Static SVG draws the real grid (equal columns, rows sized by wrapped text, bold/italic/underline/strike and `#rrggbb` colors per run); the scene canvas draws the box and row lines. "Copy as Markdown" gives the GFM table. Word count and find and replace include table text. A selected table's "+" buttons add a column (left, right) or row (top, bottom) with plain Yjs (`model/tables.ts`, one LOCAL step; new cells copy their neighbours' type); dragging one still draws a connector.
+- Merged cells (doc card tables and table elements): `mergeCells` / `splitCell` from the ribbon's Table menu on a cell selection (drag across cells); stored as `colspan` / `rowspan` cell attributes (numbers). `model/tableGrid.ts` places cells around spans for the "+" edits, the static layout (a merged cell covers its columns; its last row grows to fit) and Markdown (GFM has no spans: the text goes in the first slot, covered slots stay empty).
 - Link previews (`doccards/linkPreview.ts`): the doc `link` mark has an optional `preview: true` attribute (no schema bump: an older editor just drops the attribute), which shows the page in a frame below the link. `spacy:linkPreview` (default off) shows it on hover. Frames are sandboxed, with no referrer, https only, never this app's origin. Nothing contacts the site until the user turns a preview on.
 - Waystones are called **Tabs** in the interface (dropdown in the status bar, always shown; `Add tab here` then name it; choosing a row travels and closes the list); the code and stored data keep the name `waystone`.
 - Waystones (schema version 7, `src/lib/board/waystones`): named checkpoints on a page, board only (not @-mentionable, never in doc cards). `ctx.waystones` (`WaystonesState`) gives the page's route (`routeOf`: by `order`, ties by id since copies share a key), the bar's position, and flying: `flyTarget` centres the pin's tip at the waystone's zoom via `viewport.animateTo` (reduced motion: no animation). New ones (the W tool, or "Add waystone here" at the view centre) take the current zoom and go to the end of the route. The pin is an ordinary world-size object (hit-testing, selection, connectors and exports agree); below 60 % zoom its number and name are drawn in the screen-space overlay at a constant size (and fly there on click). Image exports leave waystones out unless "Include waystones" is ticked. The waystone bar is docked in the status bar (on phones, a strip just above it), never over the board; presenting (from the list) goes full screen with the board's interface hidden and the bar floating at the bottom centre as the only control; Escape or leaving full screen ends it.
@@ -299,7 +305,7 @@ library.getMap('boards'): Y.Map<boardId, Y.Map<{
 - `BroadcastChannel('spacy-board-<id>')` — Yjs updates between tabs with the same board open (origin `REMOTE_TAB`).
 
 ### Transaction origins (`src/lib/model/origins.ts`)
-`LOCAL` (user edits, tracked by undo) · `WIDGET` (running a widget: local, not undoable) · `PAGES` (page deletion: local, not undoable) · `REMOTE_TAB` · `REMOTE_SYNC` (from the user's other devices, §14) · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
+`LOCAL` (user edits, tracked by undo) · `WIDGET` (running a widget: local, not undoable) · `PAGES` (page deletion: local, not undoable) · `LAYOUT` (sizes that follow content, a table's height: local, not undoable) · `REMOTE_TAB` · `REMOTE_SYNC` (from the user's other devices, §14) · `IMPORT` · `MIGRATION` · `TEMPLATE`. Each is a unique frozen object compared by identity.
 
 ### localStorage keys (via `localPrefs`)
 `spacy:theme`, `spacy:home:sort`, `spacy:home:layout`, `spacy:defaults:<type>`, `spacy:copiedStyle`, `spacy:grid`, `spacy:snap`, `spacy:onboarded`, `spacy:lastBackupAt`, `spacy:backupReminderDismissedAt`, `spacy:testHooks`, `spacy:commentAuthor`, `spacy:comments:<boardId>` (panel open), `spacy:linkPreview`, `spacy:waystones:wrap`, `spacy:participantId` (this browser's id for widget entries, step 56), `spacy:sync:device` (this browser's random sync device id, §14), `spacy:migrated` (settings copied from SMTHNG, see §6), `spacy:palette` (UI palette: `default` (indigo), `terracotta`, `graphite`, `petrol`, `plum`, `moss`; `html[data-palette]` overrides the theme tokens in `app.css`, light and dark; set before first paint by the inline theme script in `src/app.html`; element colors never change). `spacy:glass` (Liquid glass on or off: `html[data-glass]`, also set before first paint; a look over any theme and palette, in `app.css`; off under reduced transparency or more contrast).

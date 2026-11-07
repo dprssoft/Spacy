@@ -44,7 +44,7 @@ Approved by the human on 2026-11-07: this lifts the "tables inside doc cards" no
 - [x] Markdown export of a card with a table is a valid GFM table
 
 ## Out of scope
-Merging and splitting cells, column resizing, cell background colors, sorting, tables in the board's table element (step 62).
+Column resizing (merging and splitting came with step 62, on request), cell background colors, sorting, tables in the board's table element (step 62).
 
 ## Commit
 `feat(doccards): tables`

@@ -1,5 +1,6 @@
 // Deterministic Markdown (CommonMark + GFM task lists) for the doc card schema. Pure: works on the
 // editor's JSON, no TipTap import.
+import { spanOf, tableGrid } from '$lib/model/tableGrid';
 
 export interface DocMark {
 	type: string;
@@ -108,21 +109,26 @@ function block(node: DocNode): string | null {
  * line: its blocks are joined with `<br>` and its pipes escaped.
  */
 function table(node: DocNode): string | null {
-	const rows = (node.content ?? []).map((row) =>
-		(row.content ?? []).map((cell) =>
-			(cell.content ?? [])
-				.map((b) => cellBlock(b))
-				.filter(Boolean)
-				.join('<br>')
-				.replace(/\|/g, '\\|')
+	const rows = (node.content ?? []).map((row) => row.content ?? []);
+	const grid = tableGrid(
+		rows.map((r) =>
+			r.map((c) => ({ colspan: spanOf(c.attrs?.colspan), rowspan: spanOf(c.attrs?.rowspan) }))
 		)
 	);
-	const cols = Math.max(0, ...rows.map((r) => r.length));
-	if (cols === 0) return null;
-	const line = (cells: string[]) =>
-		`| ${Array.from({ length: cols }, (_, i) => cells[i] ?? '').join(' | ')} |`;
-	const [head = [], ...body] = rows;
-	return [line(head), line(Array<string>(cols).fill('---')), ...body.map(line)].join('\n');
+	if (grid.cols === 0) return null;
+	const text = (cell: DocNode) =>
+		(cell.content ?? [])
+			.map((b) => cellBlock(b))
+			.filter(Boolean)
+			.join('<br>')
+			.replace(/\|/g, '\\|');
+	// A merged cell's text goes in its first slot; the slots it covers stay empty.
+	const lines = grid.at.map((slots, r) =>
+		slots.map((p, c) => (p && p.row === r && p.col === c ? text(rows[r]![p.index]!) : ''))
+	);
+	const line = (cells: string[]) => `| ${cells.join(' | ')} |`;
+	const [head = [], ...body] = lines;
+	return [line(head), line(Array<string>(grid.cols).fill('---')), ...body.map(line)].join('\n');
 }
 
 /** A block inside a table cell, on one line. */

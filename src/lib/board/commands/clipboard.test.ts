@@ -7,6 +7,7 @@ import { samples } from '$lib/model/testFixtures';
 import * as assetsRepo from '$lib/storage/assetsRepo';
 import { freshDB } from '$lib/storage/testUtils';
 import { testCtx } from '../testCtx';
+import { createTable } from '../tools/create';
 import {
 	CLIPBOARD_PREFIX,
 	copySelectionText,
@@ -38,6 +39,19 @@ describe('clipboard payloads', () => {
 		expect(pasted.some((e) => e.id === 's' || e.id === 'd')).toBe(false);
 		const card = pasted.find((e) => e.type === 'doccard')!;
 		expect(getDocsMap(dst.doc).get(card.id)?.toString()).toContain('Card text');
+	});
+
+	it('round-trips a table element with its cells', async () => {
+		const src = testCtx('board-a');
+		createTable(src, { x: 0, y: 0 });
+		const id = [...src.store.elements.keys()][0]!;
+		src.selection.set([id]);
+		const dst = testCtx('board-b');
+		await pasteText(dst, copySelectionText(src)!);
+		const [copy] = [...dst.selection.ids];
+		expect(copy).not.toBe(id);
+		expect(dst.store.get(copy!)?.type).toBe('table');
+		expect(getDocsMap(dst.doc).get(copy!)?.toString()).toContain('<tableheader>');
 	});
 
 	it('pasting a commented object copies its threads onto the copy', async () => {

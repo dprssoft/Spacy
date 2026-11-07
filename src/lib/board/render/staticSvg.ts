@@ -27,6 +27,8 @@ import { now } from '../widgets/clock';
 import { widgetSvg } from '../widgets/face';
 import '../widgets';
 import { unionBounds } from './bounds';
+import type { DocNode } from '../doccards/markdown';
+import { layoutTable, tableModel, type TableRun } from './tableLayout';
 import { wrapText, type FontSpec } from './wrapText';
 
 export type DocLine = { text: string; kind: 'h' | 'p' | 'li' };
@@ -42,6 +44,8 @@ export interface StaticRenderOptions {
 	measure: (text: string, font: FontSpec) => number;
 	assetDataUrl: (assetId: string) => Promise<string | null>;
 	docLines: (doccardId: string) => Promise<DocLine[]>;
+	/** The content of a table element (its `docs` fragment as editor JSON). */
+	docJson?: (id: string) => DocNode | null;
 	/** Brush strokes of a sketch element. */
 	sketchStrokes?: (sketchId: string) => readonly SketchStroke[];
 	/** `@font-face` rules that embed the fonts used, so the file shows them anywhere. */
@@ -185,7 +189,70 @@ class Renderer {
 			case 'widget':
 				// As it shows at the moment of export (a running timer: the time left now).
 				return widgetSvg(el, now());
+			case 'table':
+				return this.table(el);
 		}
+	}
+
+	/** A table: background, cell text with its formatting, then the grid lines on top. */
+	table(el: Extract<Element, { type: 'table' }>): string {
+		const s = el.style;
+		const size = FONT_SIZE_PX[s.font.size];
+		const family = fontStack(s.font.family);
+		const json = this.o.docJson?.(el.id);
+		const t = layoutTable(json ? tableModel(json) : [], {
+			width: el.w,
+			fontSize: size,
+			family,
+			measure: this.o.measure
+		});
+		const h = Math.max(el.h, t.height);
+		const bg = `<rect width="${n(el.w)}" height="${n(h)}" ${fillAttrs(s)}/>`;
+		const headers = t.cells
+			.filter((c) => c.header)
+			.map(
+				(c) =>
+					`<rect x="${n(c.x)}" y="${n(c.y)}" width="${n(c.w)}" height="${n(c.h)}" fill="${escapeXml(s.font.color)}" fill-opacity="0.06"/>`
+			)
+			.join('');
+		const color = escapeXml(s.font.color);
+		const texts: string[] = [];
+		for (const cell of t.cells) {
+			for (const line of cell.lines) {
+				if (line.runs.length === 0) continue;
+				const pad = size * 0.5;
+				const [x, anchor] =
+					line.align === 'center'
+						? [cell.x + cell.w / 2, ' text-anchor="middle"']
+						: line.align === 'right'
+							? [cell.x + cell.w - pad, ' text-anchor="end"']
+							: [line.x, ''];
+				const spans = line.runs.map((r) => tspan(r)).join('');
+				texts.push(
+					`<text x="${n(x)}" y="${n(line.y + t.lineHeight / 2 + size * 0.35)}" font-size="${size}"${familyAttr(family)}${cell.header ? ' font-weight="650"' : ''}${anchor} fill="${color}" xml:space="preserve">${spans}</text>`
+				);
+			}
+		}
+		const grid = s.stroke === 'transparent' ? '' : this.tableGrid(el.w, h, t.cells, s);
+		return bg + headers + texts.join('') + grid;
+	}
+
+	/** Each cell's right and bottom edges inside the table (merged cells have none inside), then the outline. */
+	tableGrid(w: number, h: number, cells: readonly Rect[], s: Style): string {
+		const lines: string[] = [];
+		const eps = 0.01;
+		for (const c of cells) {
+			if (c.x + c.w < w - eps) lines.push(`M${n(c.x + c.w)} ${n(c.y)}V${n(c.y + c.h)}`);
+			if (c.y + c.h < h - eps) lines.push(`M${n(c.x)} ${n(c.y + c.h)}H${n(c.x + c.w)}`);
+		}
+		const inner = lines.length
+			? `<path d="${lines.join('')}" fill="none" stroke="${escapeXml(s.stroke)}" stroke-width="${s.strokeWidth}"/>`
+			: '';
+		const half = s.strokeWidth / 2;
+		return (
+			inner +
+			`<rect x="${n(half)}" y="${n(half)}" width="${n(Math.max(0, w - s.strokeWidth))}" height="${n(Math.max(0, h - s.strokeWidth))}" fill="none" ${strokeAttrs(s)}/>`
+		);
 	}
 
 	/** A media element's poster (exports never play anything). */
@@ -369,6 +436,18 @@ class Renderer {
 }
 
 /** Fill as SVG attributes (semi = 25 % of the color, like the canvas's color-mix). */
+function tspan(r: TableRun): string {
+	const attrs = [
+		r.bold ? ' font-weight="700"' : '',
+		r.italic ? ' font-style="italic"' : '',
+		r.underline || r.strike
+			? ` text-decoration="${[r.underline && 'underline', r.strike && 'line-through'].filter(Boolean).join(' ')}"`
+			: '',
+		r.color ? ` fill="${escapeXml(r.color)}"` : ''
+	].join('');
+	return `<tspan${attrs}>${escapeXml(r.text)}</tspan>`;
+}
+
 function fillAttrs(s: Style): string {
 	if (s.fillStyle === 'none' || s.fill === 'transparent') return 'fill="none"';
 	return s.fillStyle === 'semi'

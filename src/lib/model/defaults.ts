@@ -43,7 +43,8 @@ export const DEFAULT_SIZES: Record<ElementType, { w: number; h: number }> = {
 	connector: { w: 0, h: 0 },
 	media: { w: 480, h: 270 }, // video; audio uses MEDIA_AUDIO_SIZE
 	waystone: { w: 32, h: 40 },
-	widget: { w: 240, h: 240 } // each kind has its own size (board/widgets)
+	widget: { w: 240, h: 240 }, // each kind has its own size (board/widgets)
+	table: { w: 360, h: 96 } // the height follows the content
 };
 export const MEDIA_AUDIO_SIZE = { w: 360, h: 96 };
 
@@ -93,7 +94,14 @@ const TYPE_TWEAKS: Record<ElementType, StyleTweak> = {
 	connector: { fill: 'transparent', fillStyle: 'none' },
 	media: { fill: '#18181b', stroke: 'transparent', radius: 'sm', shadow: true },
 	waystone: { fill: '#e8590c', stroke: 'transparent', radius: 'none', font: { color: '#ffffff' } },
-	widget: { fill: '#ffffff', stroke: '#e3e3e8', strokeWidth: 1, radius: 'lg', shadow: true }
+	widget: { fill: '#ffffff', stroke: '#e3e3e8', strokeWidth: 1, radius: 'lg', shadow: true },
+	table: {
+		fill: '#ffffff',
+		stroke: '#adb5bd',
+		strokeWidth: 1,
+		radius: 'none',
+		font: { align: 'l', valign: 't', size: 's' }
+	}
 };
 
 /** The built-in style for new elements of a type (user defaults are layered on top in step 18). */

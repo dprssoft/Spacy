@@ -1558,4 +1558,23 @@ Requested by the human: "i want to add tables with basic text formating"; chose 
 
 **Dependencies added:** @tiptap/extension-table@3.31.4 — table nodes and commands, same version as the other TipTap packages
 **Follow-ups:** step 62 (table element). Merged cells pasted from elsewhere export with the cells they have (no colspan in Markdown).
-**Verification:** pnpm verify ✅ (1093 unit tests) · e2e `doccard-tables.spec.ts` ✅ chromium and firefox, with `doc-format`, `doccard` and `markdown` specs rerun ✅ · not committed: the working tree already held uncommitted work in `00-architecture.md` and `PROGRESS.md`.
+**Verification:** pnpm verify ✅ (1093 unit tests) · e2e `doccard-tables.spec.ts` ✅ chromium and firefox, with `doc-format`, `doccard` and `markdown` specs rerun ✅ · committed separately from the earlier uncommitted work (sketch sheet, picture copy, glass, tabs, link previews), which got its own commit first.
+
+## Step 62 — Table element — 2026-11-07
+**Summary:**
+- `table` element (schema 10): cells live in `docs[id]`, one table node edited by a slimmer TipTap setup (`tableExtensions`: the document is exactly one table, cells are paragraphs; formatting marks, alignment, links; no headings, lists, quotes, code, slash commands or mentions). Tool `G` (toolbar, "Insert more" on phones, keyboard creation) places a 3 × 3 table with a header row and starts typing in it.
+- Double-click edits at the pointer; Escape or a click outside leaves. The ribbon shows only what applies (no text styles, lists or "Delete table"). The box's height follows the content, written with a new `LAYOUT` origin (not undoable, derived) by the tab that edits or has it selected.
+- A selected table's "+" buttons add a column on the left/right and a row above/below (requested: "i cant add rows and columns, its creates connections", then "from left and top too"); dragging a "+" still connects.
+- Merging and splitting cells (requested: "i want to have feature to merge and split cells"): "Merge cells" / "Split cell" in the Table menu, for doc card tables too; spans handled by the "+" edits, SVG layout and Markdown (`model/tableGrid.ts`).
+- Static SVG draws the real grid with formatted runs (`render/tableLayout.ts`); the scene canvas draws the box with row lines; "Copy as Markdown" in the context menu; word count and find and replace include table text.
+
+**Deviations:**
+- Key `G`, not `B` (taken by the sketch tool).
+- Click to place only; no drag-to-set-width (resize after placing). Dragging the height handle snaps back to the content height.
+- Exports draw custom `#rrggbb` text colors; named color ids and highlights fall back to the default color (their values live in CSS).
+- No step-specific "auto height written once editing ends": it is written as it changes, with the non-undoable `LAYOUT` origin, so canvas undo never steps through heights.
+
+**Test changes:** `mobile-waystones.spec.ts` matched the menu item `/^Tab/`, which "Table" now matches too; tightened to `/^Tab(?!le)/` (it still clicks the Tab tool). `fileFormat.test.ts` seeds a table too (9 elements instead of 8) and checks its cells survive. `staticSvg.test.ts` and `connectable.matrix.test.ts` list the new type.
+**Dependencies added:** none
+**Follow-ups:** no size picker when inserting (always 3 × 3); peers with different fonts may show a table a few pixels taller or shorter until one of them selects it.
+**Verification:** pnpm verify ✅ (1124 unit tests) · e2e `table-element.spec.ts` (4) and `doccard-tables.spec.ts` (2) ✅ chromium and firefox, `mobile-waystones.spec.ts` ✅ · full run before the "+" and merge changes (chromium, firefox, mobile): 467 passed, 5 failed — `visual.spec.ts` (3, also failing on clean HEAD), the Firefox `home.spec.ts` flake, and `mobile-waystones` (fixed above) · screenshots of a table being edited and idle.

@@ -24,7 +24,7 @@ export interface TableElement extends BaseElement {   // schema version 10
 ## Tasks
 1. Types, zod schema, migration 10, `hasDocContent`.
 2. Element view: the table rendered by a TipTap editor (read-only until edited), like a doc card without the header. Double-click a cell → editing with the caret in that cell; Escape leaves. The box's height follows the content (written once editing ends, one undo step with the edit); the width is the user's.
-3. Tool and toolbar: "Table" (key `B`) in the toolbar's secondary tools; click → a 3 × 3 table with a header row, 360 × auto; drag → that width. Also in "Insert more" on phones and in the a11y creation tools.
+3. Tool and toolbar: "Table" (key `G`; `B` is the sketch tool) in the toolbar's secondary tools; click → a 3 × 3 table with a header row, 360 × auto; drag → that width. Also in "Insert more" on phones and in the a11y creation tools.
 4. Formatting: the doc card bubble menu (bold, italic, underline, strikethrough, color, highlight, link) and a slim ribbon with alignment and the step 61 row/column menu. Style bar: stroke (grid lines) color and width, fill, font size and family, opacity.
 5. Rendering: static SVG draws the real grid (column widths equal, row heights from wrapped text), with bold/italic per run; the scene canvas draws the grid and skeleton bars when zoomed out.
 6. Markdown: "Copy as Markdown" in the context menu gives the GFM table.
@@ -36,12 +36,12 @@ export interface TableElement extends BaseElement {   // schema version 10
 - e2e `table-element.spec.ts`: B, click → table; double-click a cell, type, Tab, Ctrl+I; Escape; connect a connector to it; duplicate keeps the content; undo removes it; export SVG contains the cell text.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and the new e2e spec pass
-- [ ] Table survives reload, duplicate, copy/paste, page duplication and `.spacy` export/import
-- [ ] Connectors attach to the table like to any box
+- [x] `pnpm verify` and the new e2e spec pass (chromium, firefox; WebKit CI only)
+- [x] Table survives reload, duplicate, copy/paste and `.spacy` export/import (page duplication copies `docs` by id like doc cards; not tested separately)
+- [x] Connectors attach to the table like to any box (connectable matrix test; dragging a "+" draws one)
 
 ## Out of scope
-Merged cells, per-cell fills, column resizing by drag, formulas, sorting, CSV import.
+Per-cell fills, column resizing by drag, formulas, sorting, CSV import.
 
 ## Commit
 `feat(tables): table element`

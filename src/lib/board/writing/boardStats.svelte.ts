@@ -71,6 +71,7 @@ export class BoardWordStats {
 			case 'text':
 				return countWords(el.text);
 			case 'doccard':
+			case 'table':
 				return this.cardWords(el.id);
 			default:
 				return 0;

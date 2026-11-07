@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
+import { writeDocJSON } from '$lib/board/doccards/fragmentWrite';
+import { newTableJSON } from '$lib/board/tables/content';
 import { getDocsMap, getElementsMap, listElements } from '$lib/model/doc';
 import { createElements } from '$lib/model/ops';
 import { addPage, getPages, listAllElements, pageOfElement, setActivePage } from '$lib/model/pages';
@@ -36,7 +38,8 @@ async function seedBoard(title: string) {
 		samples.stroke('k'),
 		samples.frame('f'),
 		samples.doccard('d'),
-		samples.connector('c')
+		samples.connector('c'),
+		samples.table('tb')
 	];
 	createElements(board.doc, els);
 	const frag = getDocsMap(board.doc).get('d')!;
@@ -44,6 +47,7 @@ async function seedBoard(title: string) {
 		const p = new Y.XmlElement('paragraph');
 		p.insert(0, [new Y.XmlText('Doc card text')]);
 		frag.insert(0, [p]);
+		writeDocJSON(getDocsMap(board.doc).get('tb')!, newTableJSON(2, 2));
 	});
 	await board.close();
 	return { meta, assetId };
@@ -67,15 +71,16 @@ describe('board files', () => {
 
 		const doc = await contentOf(copy!.id);
 		const els = listElements(doc);
-		expect(els).toHaveLength(8);
+		expect(els).toHaveLength(9);
 		const image = els.find((e) => e.type === 'image');
 		expect(image?.type === 'image' && image.assetId).not.toBe(assetId);
 		const asset = await assetsRepo.get(image?.type === 'image' ? image.assetId : '');
 		expect(asset?.boardId).toBe(copy!.id);
 		expect(asset?.blob.size).toBe(300);
 		expect(getDocsMap(doc).get('d')?.toString()).toContain('Doc card text');
+		expect(getDocsMap(doc).get('tb')?.toString()).toContain('<tablecell>');
 		// The original is untouched.
-		expect(listElements(await contentOf(meta.id))).toHaveLength(8);
+		expect(listElements(await contentOf(meta.id))).toHaveLength(9);
 		expect((await boardsRepo.list({ filter: 'all', sort: 'created' })).length).toBe(2);
 	});
 
@@ -98,7 +103,7 @@ describe('board files', () => {
 		file.board.doc = bytesToBase64(Y.encodeStateAsUpdate(doc));
 		const result = await importFile(new File([JSON.stringify(file)], 'x.spacy'));
 		expect(result.warnings).toEqual(['“Broken”: 1 damaged object(s) were skipped']);
-		expect(listElements(await contentOf(result.boards[0]!.id))).toHaveLength(8);
+		expect(listElements(await contentOf(result.boards[0]!.id))).toHaveLength(9);
 	});
 });
 

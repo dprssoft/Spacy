@@ -29,6 +29,10 @@ export async function renderDocSvg(
 		measure: createCanvasMeasurer(),
 		assetDataUrl: async () => null,
 		sketchStrokes: (id) => readStrokes(doc, id),
+		docJson: (id) => {
+			const frag = docs.get(id);
+			return frag ? fragmentToJSON(frag) : null;
+		},
 		docLines: async (id) => {
 			const frag = docs.get(id);
 			return frag ? docLines(fragmentToJSON(frag)) : [];
