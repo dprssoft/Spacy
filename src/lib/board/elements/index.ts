@@ -12,6 +12,7 @@ import type {
 	SketchElement,
 	StickyElement,
 	StrokeElement,
+	TableElement,
 	TextElement
 } from '$lib/model/types';
 import { boxConnectable } from '../diagram/connectable';
@@ -36,6 +37,7 @@ import ShapeView from './shape/ShapeView.svelte';
 import StickyView from './sticky/StickyView.svelte';
 import { strokeAABB, strokeHitTest } from './stroke/geometry';
 import StrokeView from './stroke/StrokeView.svelte';
+import TableView from './table/TableView.svelte';
 import TextView from './text/TextView.svelte';
 
 const boxDefaults = {
@@ -177,6 +179,17 @@ registerElement<WidgetElement>({
 	rotatable: false,
 	keepAspect: true,
 	sizeLimits: () => ({ minW: 80, minH: 80 })
+});
+
+registerElement<TableElement>({
+	...boxDefaults,
+	type: 'table',
+	styleOptions: STYLE_OPTIONS.table,
+	component: TableView,
+	// A rotated editor is hard to use; the height follows the content.
+	rotatable: false,
+	editableText: true,
+	sizeLimits: () => ({ minW: 120, minH: 32 })
 });
 
 export { allDefinitions, definitionOf, getDefinition } from './registry';

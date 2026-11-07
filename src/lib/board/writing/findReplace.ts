@@ -50,7 +50,7 @@ export function searchBoard(doc: Y.Doc, matcher: Matcher, pageIds: readonly stri
 						...m,
 						context: context(value, m.from, m.to)
 					});
-			if (el.type !== 'doccard') continue;
+			if (el.type !== 'doccard' && el.type !== 'table') continue;
 			const frag = docs.get(el.id);
 			if (!frag) continue;
 			docTexts(frag).forEach((t, textIndex) => {

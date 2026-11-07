@@ -295,3 +295,29 @@
 	background: color-mix(in srgb, var(--accent) 18%, transparent);
 	pointer-events: none;
 }
+
+/* Table element (step 62): the table is the whole object; grid lines take its stroke style. */
+.table-element .ProseMirror {
+	min-height: 0;
+}
+.table-element table {
+	margin: 0;
+}
+.table-element :is(td, th) {
+	border: var(--table-line-w, 1px) solid var(--table-line, currentColor);
+}
+.table-element-preview {
+	border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+	background-image:
+		linear-gradient(
+			to right,
+			color-mix(in srgb, currentColor 18%, transparent) 1px,
+			transparent 1px
+		),
+		linear-gradient(
+			to bottom,
+			color-mix(in srgb, currentColor 18%, transparent) 1px,
+			transparent 1px
+		);
+	background-size: 33.34% 32px;
+}

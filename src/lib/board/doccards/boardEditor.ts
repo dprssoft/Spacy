@@ -68,6 +68,11 @@ export function createBoardDocEditor(
 	});
 }
 
+/** A table element's editor: formatting only, no slash commands or mentions. */
+export function createBoardTableEditor(opts: Omit<DocEditorOptions, 'extra' | 'table'>): Editor {
+	return createDocEditor({ ...opts, table: true });
+}
+
 /** Re-evaluates the "deleted object" styling of mention chips (after elements changed). */
 export function refreshMentions(editor: Editor): void {
 	if (editor.isDestroyed) return;

@@ -105,6 +105,10 @@ export const samples: { [T in ElementType]: (id?: string, z?: string) => Element
 		title: '',
 		config: { mode: 'countdown', duration: 300, sound: true },
 		state: { startedAt: null, elapsed: 0 }
+	}),
+	table: (id = 'table1', z = 'aB') => ({
+		...base('table', id, z),
+		type: 'table'
 	})
 };
 

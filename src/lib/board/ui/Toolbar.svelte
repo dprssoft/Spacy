@@ -18,6 +18,7 @@
 	import Square from '@lucide/svelte/icons/square';
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import StickyNote from '@lucide/svelte/icons/sticky-note';
+	import TableIcon from '@lucide/svelte/icons/table';
 	import Type from '@lucide/svelte/icons/type';
 	import type { ShapeKind } from '$lib/model/types';
 	import { SHAPE_DRAG_TYPE, SHAPE_KINDS, shapePath } from '../elements/shape/paths';
@@ -62,6 +63,7 @@
 			{ id: 'text', label: 'Text', keys: 'T', icon: Type },
 			{ id: 'sticky', label: 'Sticky note', keys: 'S', icon: StickyNote },
 			{ id: 'doccard', label: 'Doc card', keys: 'N', icon: FileText, secondary: true },
+			{ id: 'table', label: 'Table', keys: 'G', icon: TableIcon, secondary: true },
 			{ id: 'frame', label: 'Frame', keys: 'F', icon: Frame, secondary: true },
 			{ id: 'image', label: 'Image', keys: 'Ctrl+Shift+I', icon: ImageIcon, secondary: true },
 			{ id: 'waystone', label: 'Tab', keys: 'W', icon: MapPin, secondary: true }

@@ -19,6 +19,7 @@ export async function cardMarkdown(
 	opts: { comments?: boolean } = {}
 ): Promise<string | null> {
 	const el = ctx.store.get(id);
+	if (el?.type === 'table') return docToMarkdown(getDocJSON(ctx, id));
 	if (el?.type !== 'doccard') return null;
 	return docToMarkdown(getDocJSON(ctx, id), {
 		title: el.title,

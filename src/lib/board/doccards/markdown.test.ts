@@ -143,6 +143,22 @@ describe('docToMarkdown', () => {
 		);
 	});
 
+	it('writes a merged cell in its first slot, the slots it covers empty', () => {
+		const c = (text: string, attrs?: Record<string, unknown>): DocNode => ({
+			type: 'tableCell',
+			...(attrs ? { attrs } : {}),
+			content: [p(t(text))]
+		});
+		const table: DocNode = {
+			type: 'table',
+			content: [
+				{ type: 'tableRow', content: [c('Q1', { colspan: 2 }), c('Q2')] },
+				{ type: 'tableRow', content: [c('a'), c('b'), c('c')] }
+			]
+		};
+		expect(md(table)).toBe('| Q1 |  | Q2 |\n| --- | --- | --- |\n| a | b | c |\n');
+	});
+
 	it('escapes Markdown characters', () => {
 		expect(md(p(t('# not a heading')))).toBe('\\# not a heading\n');
 		expect(md(p(t('*stars* and _under_ [x]')))).toBe('\\*stars\\* and \\_under\\_ \\[x\\]\n');

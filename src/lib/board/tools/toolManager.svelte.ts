@@ -13,6 +13,7 @@ import { createStickyTool } from './sticky';
 import { createTextTool } from './text';
 import { createWaystoneTool } from './waystone';
 import { createWidgetTool } from './widget';
+import { createTableTool } from './table';
 import type { Tool, ToolId } from './types';
 
 export type ToolFactory = (ctx: BoardContext) => Tool;
@@ -49,6 +50,7 @@ export class ToolManager {
 		this.register('sketch', createSketchTool);
 		this.register('waystone', createWaystoneTool);
 		this.register('widget', createWidgetTool);
+		this.register('table', createTableTool);
 	}
 
 	/** Later steps register their tools here. */

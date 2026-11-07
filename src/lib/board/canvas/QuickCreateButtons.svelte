@@ -9,6 +9,7 @@
 	import { definitionOf } from '../elements';
 	import { SHAPE_KINDS } from '../elements/shape/paths';
 	import { screenToWorld, worldToScreen } from '../engine/viewport';
+	import { addTableColumn, addTableRow } from '$lib/model/tables';
 
 	const ctx = getBoard();
 	const { selection, store, viewport, tools } = ctx;
@@ -58,7 +59,10 @@
 		// On a selected element the rotate handle and the style popover occupy the top: no "+" there
 		// (Mod+Alt+Up still works).
 		const selected = selection.size > 0;
-		return PORTS.filter((port) => !(selected && port === 'n')).map((port) => {
+		// A table's "+" buttons add columns (left, right) and rows (top, bottom). It has no rotate
+		// handle, and the style bar sits clear of the top button.
+		const table = source.type === 'table';
+		return PORTS.filter((port) => table || !(selected && port === 'n')).map((port) => {
 			const p = worldToScreen(viewport.vp, ports[port]);
 			const n = c.portNormal(source, port);
 			return { port, x: p.x + n.x * OFFSET_PX, y: p.y + n.y * OFFSET_PX };
@@ -71,6 +75,12 @@
 	});
 
 	const LABELS: Record<Port, string> = { n: 'above', e: 'right', s: 'below', w: 'left' };
+	const TABLE_LABELS: Record<Port, string> = {
+		n: 'Add row above',
+		e: 'Add column right',
+		s: 'Add row below',
+		w: 'Add column left'
+	};
 
 	// Dragging a "+" draws a connector from that side to whatever it's dropped on (any type of
 	// object); a plain click adds a connected copy instead.
@@ -133,6 +143,14 @@
 			suppressClick = false;
 			return;
 		}
+		if (source?.type === 'table') {
+			const at = b.port === 'n' || b.port === 'w' ? 'start' : 'end';
+			ctx.undo.stopCapturing();
+			if (b.port === 'e' || b.port === 'w') addTableColumn(ctx.doc, source.id, at);
+			else addTableRow(ctx.doc, source.id, at);
+			ctx.undo.stopCapturing();
+			return;
+		}
 		if (e.shiftKey) picker = { port: b.port, x: b.x, y: b.y };
 		else create(b.port);
 	}
@@ -165,8 +183,12 @@
 		type="button"
 		data-interactive
 		data-quick-create={b.port}
-		aria-label="Add connected element {LABELS[b.port]}"
-		title="Drag to connect to another object · Click to add a connected copy · Shift+click to choose its type"
+		aria-label={source?.type === 'table'
+			? TABLE_LABELS[b.port]
+			: `Add connected element ${LABELS[b.port]}`}
+		title={source?.type === 'table'
+			? `Click: ${TABLE_LABELS[b.port].toLowerCase()} · Drag to connect to another object`
+			: 'Drag to connect to another object · Click to add a connected copy · Shift+click to choose its type'}
 		class="pointer-events-auto absolute flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent text-accent-contrast opacity-70 shadow transition hover:scale-110 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none pointer-coarse:size-9"
 		class:invisible={drag?.gesture != null}
 		style:left="{b.x}px"

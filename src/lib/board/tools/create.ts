@@ -1,9 +1,13 @@
 import { DEFAULT_SIZES, newElementBase, STICKY_COLORS } from '$lib/model/defaults';
 import { newId } from '$lib/model/ids';
+import { getDocsMap } from '$lib/model/doc';
 import { createElements } from '$lib/model/ops';
+import { LOCAL } from '$lib/model/origins';
 import type { Point, Rect, ShapeKind } from '$lib/model/types';
 import type { BoardContext } from '../context';
+import { writeDocJSON } from '../doccards/fragmentWrite';
 import { getDefaultStyle } from '../style/styleDefaults';
+import { newTableJSON } from '../tables/content';
 
 // Element factories shared by the creation tools (and later quick-create, paste…).
 
@@ -72,5 +76,17 @@ export function createDocCard(ctx: BoardContext, at: Point): string {
 			expandedH: h
 		}
 	]);
+	return id;
+}
+
+/** A 3 × 3 table with a header row, centered on `at`; its content is written in the same step. */
+export function createTable(ctx: BoardContext, at: Point): string {
+	const id = newId();
+	ctx.doc.transact(() => {
+		createElements(ctx.doc, [
+			{ ...newElementBase('table', id, at, getDefaultStyle('table')), type: 'table' }
+		]);
+		writeDocJSON(getDocsMap(ctx.doc).get(id)!, newTableJSON());
+	}, LOCAL);
 	return id;
 }

@@ -86,7 +86,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [ ] | 59 | [Templates for managers](./steps/59-manager-templates.md) | M. Widgets | 56, 57 | 1.5d |
 | [ ] | 60 | [Templates for writers and facilitators](./steps/60-writer-facilitation-templates.md) | M. Widgets | 55, 58 | 1.5d |
 | [x] | 61 | [Tables in doc cards](./steps/61-doc-card-tables.md) (approved 2026-11-07: lifts the non-goal, schema 9) | N. Tables | 45 | 1.5d |
-| [ ] | 62 | [Table element](./steps/62-table-element.md) (approved 2026-11-07: `table` type, schema 10) | N. Tables | 61 | 2.5d |
+| [x] | 62 | [Table element](./steps/62-table-element.md) (approved 2026-11-07: `table` type, schema 10) | N. Tables | 61 | 2.5d |
 
 Total is about 46 working days for one developer, or about 11–12 weeks with a buffer.
 

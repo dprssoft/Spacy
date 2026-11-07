@@ -2,6 +2,7 @@ import * as Y from 'yjs';
 import {
 	forgetWritten,
 	getDocsMap,
+	hasDocContent,
 	getElementsMap,
 	getMeta,
 	getSketchesMap,
@@ -53,7 +54,7 @@ export function createElements(
 			if (!el) throw new InvalidElementError(`Invalid ${input.type} element`, input);
 			if (map.has(el.id)) throw new InvalidElementError(`Duplicate element id ${el.id}`, input);
 			map.set(el.id, toYMap(el));
-			if (el.type === 'doccard' && !docs.has(el.id)) docs.set(el.id, new Y.XmlFragment());
+			if (hasDocContent(el.type) && !docs.has(el.id)) docs.set(el.id, new Y.XmlFragment());
 			if (el.type === 'sketch' && !sketches.has(el.id)) sketches.set(el.id, new Y.Array());
 			created.push(el);
 		}

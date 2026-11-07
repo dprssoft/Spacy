@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 
 test('Insert more → Tab, tap to place; the bar has touch-size buttons', async ({ page }) => {
 	await page.getByRole('button', { name: 'Insert more' }).click();
-	await page.getByRole('menuitem', { name: /^Tab/ }).click();
+	await page.getByRole('menuitem', { name: /^Tab(?!le)/ }).click();
 	const b = (await page.getByTestId('canvas').boundingBox())!;
 	await new Touch(page).tap({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
 	const bar = page.getByTestId('waystone-bar');

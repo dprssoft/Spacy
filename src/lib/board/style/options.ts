@@ -60,7 +60,8 @@ export const STYLE_OPTIONS: Record<ElementType, readonly StyleOption[]> = {
 	connector: ['stroke', 'strokeWidth', 'dash', 'opacity', 'routing', 'markers', 'labelBackground'],
 	media: ['radius', 'shadow'],
 	waystone: ['fill'],
-	widget: ['fill', 'radius', 'shadow']
+	widget: ['fill', 'radius', 'shadow'],
+	table: ['fill', 'stroke', 'strokeWidth', 'textColor', 'fontSize', 'fontFamily', 'opacity']
 };
 
 export const MIXED: unique symbol = Symbol('mixed');

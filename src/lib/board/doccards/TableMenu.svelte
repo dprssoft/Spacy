@@ -11,6 +11,7 @@
 	let {
 		editor,
 		inTable,
+		canDelete = true,
 		menu,
 		menuItem,
 		refocus
@@ -18,16 +19,24 @@
 		editor: Editor;
 		/** The caret is in a table (read by the ribbon on every transaction). */
 		inTable: boolean;
+		/** False for a table element: it is always exactly one table. */
+		canDelete?: boolean;
 		menu: string;
 		menuItem: string;
 		refocus(e: Event): void;
 	} = $props();
 
 	let header = $state(false);
+	// Read when the menu opens: merging needs several selected cells, splitting a merged one.
+	let enabled = $state<Record<string, boolean>>({});
+	function onOpen() {
+		header = hasHeaderRow(editor);
+		enabled = Object.fromEntries(TABLE_ACTIONS.map((a) => [a.id, a.can?.(editor) ?? true]));
+	}
 </script>
 
 {#if inTable}
-	<DropdownMenu.Root onOpenChange={(open) => open && (header = hasHeaderRow(editor))}>
+	<DropdownMenu.Root onOpenChange={(open) => open && onOpen()}>
 		<DropdownMenu.Trigger
 			class="{button} w-auto gap-0.5 px-1.5"
 			aria-label="Table"
@@ -46,9 +55,13 @@
 				data-doc-popup
 				onCloseAutoFocus={refocus}
 			>
-				{#each TABLE_ACTIONS as a (a.id)}
+				{#each TABLE_ACTIONS.filter((a) => canDelete || a.id !== 'deleteTable') as a (a.id)}
 					{#if a.separated}<DropdownMenu.Separator class="my-1 h-px bg-border" />{/if}
-					<DropdownMenu.Item class={menuItem} onSelect={() => a.run(editor)}>
+					<DropdownMenu.Item
+						class="{menuItem} data-[disabled]:opacity-40"
+						disabled={enabled[a.id] === false}
+						onSelect={() => a.run(editor)}
+					>
 						<span class="w-4 shrink-0">
 							{#if a.id === 'headerRow' && header}<Check class="size-4" aria-hidden="true" />{/if}
 						</span>

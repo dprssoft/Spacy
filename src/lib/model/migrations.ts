@@ -2,7 +2,7 @@ import type * as Y from 'yjs';
 import { getMeta } from './doc';
 import { MIGRATION } from './origins';
 
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 
 /** migrations[n] upgrades a doc from version n-1 to n. Version 1 is the initial schema. */
 export const migrations: Record<number, (doc: Y.Doc) => void> = {
@@ -31,7 +31,10 @@ export const migrations: Record<number, (doc: Y.Doc) => void> = {
 	8: () => {},
 	// 9: tables in doc cards. Nothing to convert; an older editor deletes table nodes it doesn't
 	// know, so older versions must not open the board.
-	9: () => {}
+	9: () => {},
+	// 10: table elements (cells in `docs`). Nothing to convert; older versions would drop the
+	// unknown element type from their view, so they must not open the board.
+	10: () => {}
 };
 
 export class NewerSchemaError extends Error {

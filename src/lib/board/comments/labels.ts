@@ -12,7 +12,8 @@ const TYPE_NAMES: Record<ElementType, string> = {
 	sketch: 'Sketch',
 	media: 'Media',
 	waystone: 'Tab',
-	widget: 'Widget'
+	widget: 'Widget',
+	table: 'Table'
 };
 
 /** A short name for the object a comment is on: its title or first line, else its type. */

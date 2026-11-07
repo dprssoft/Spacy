@@ -258,6 +258,14 @@ export class SceneRenderer {
 				this.#line(c, el.id, headline, 12, el.h / 2, el.w - 24, size, 700, s.font.color);
 				return;
 			}
+			case 'table': {
+				// Zoomed out: the box, its outline and a few row lines.
+				const path = insetRect(el.w, el.h, s);
+				fill(c, s, path);
+				stroke(c, s, path, s.stroke);
+				for (let y = 32; y < el.h - 4; y += 32) bar(c, 0, y, el.w, 2, s.stroke, 1);
+				return;
+			}
 			case 'doccard': {
 				const path = insetRect(el.w, el.h, s);
 				fill(c, s, path);

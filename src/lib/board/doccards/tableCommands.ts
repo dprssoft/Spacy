@@ -6,6 +6,8 @@ export interface TableAction {
 	label: string;
 	/** Starts a new group in the menu. */
 	separated?: boolean;
+	/** Whether it applies to the selection now (default: always). */
+	can?(editor: Editor): boolean;
 	run(editor: Editor): boolean;
 }
 
@@ -36,6 +38,19 @@ export const TABLE_ACTIONS: readonly TableAction[] = [
 		run: (e) => e.chain().focus().deleteRow().run()
 	},
 	{ id: 'deleteCol', label: 'Delete column', run: (e) => e.chain().focus().deleteColumn().run() },
+	{
+		id: 'merge',
+		label: 'Merge cells',
+		separated: true,
+		can: (e) => e.can().mergeCells(),
+		run: (e) => e.chain().focus().mergeCells().run()
+	},
+	{
+		id: 'split',
+		label: 'Split cell',
+		can: (e) => e.can().splitCell(),
+		run: (e) => e.chain().focus().splitCell().run()
+	},
 	{
 		id: 'headerRow',
 		label: 'Header row',

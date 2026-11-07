@@ -5,6 +5,7 @@ import { requestAsset } from '$lib/storage/sync/hub';
 import type { BoardContext } from '../context';
 import { getDocJSON } from '../doccards/docJson';
 import { docLines, type DocLine } from '../doccards/docLines';
+import type { DocNode } from '../doccards/markdown';
 import { pointInRotatedRect } from '../engine/geometry';
 import type { SketchStroke } from '../sketch/brushes';
 import { readStrokes } from '../sketch/data';
@@ -74,6 +75,8 @@ export async function renderScope(
 	const lines = new Map<string, DocLine[]>();
 	for (const el of elements)
 		if (el.type === 'doccard') lines.set(el.id, docLines(getDocJSON(ctx, el.id)));
+	const tables = new Map<string, DocNode>();
+	for (const el of elements) if (el.type === 'table') tables.set(el.id, getDocJSON(ctx, el.id));
 	// Read now, like the doc lines: the document may be closing.
 	const strokes = new Map<string, SketchStroke[]>();
 	for (const el of elements)
@@ -96,6 +99,7 @@ export async function renderScope(
 			return p;
 		},
 		docLines: async (id) => lines.get(id) ?? [],
+		docJson: (id) => tables.get(id) ?? null,
 		sketchStrokes: (id) => strokes.get(id) ?? [],
 		fontCss
 	});

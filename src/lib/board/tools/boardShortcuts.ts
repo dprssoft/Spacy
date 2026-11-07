@@ -61,6 +61,7 @@ export const toolShortcuts: Shortcut[] = [
 	tool('text', 'T', 'Text', 'text'),
 	tool('sticky', 'S', 'Sticky note', 'sticky'),
 	tool('doccard', 'N', 'Doc card', 'doccard'),
+	tool('table', 'G', 'Table', 'table'),
 	tool('frame', 'F', 'Frame', 'frame'),
 	tool('waystone', 'W', 'Tab', 'waystone'),
 	{

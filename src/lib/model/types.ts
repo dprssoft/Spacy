@@ -15,7 +15,8 @@ export type ElementType =
 	| 'connector'
 	| 'media'
 	| 'waystone'
-	| 'widget';
+	| 'widget'
+	| 'table';
 
 export type ShapeKind =
 	| 'rect'
@@ -161,6 +162,14 @@ export interface WidgetElement extends BaseElement {
 	state: unknown;
 }
 
+/**
+ * A table on the board (schema version 10). Its cells live in `docs[id]`: a fragment holding one
+ * table node, edited like doc card text. Not rotatable; the height follows the content.
+ */
+export interface TableElement extends BaseElement {
+	type: 'table';
+}
+
 export type Port = 'n' | 'e' | 's' | 'w';
 
 export type Endpoint =
@@ -195,7 +204,8 @@ export type Element =
 	| ConnectorElement
 	| MediaElement
 	| WaystoneElement
-	| WidgetElement;
+	| WidgetElement
+	| TableElement;
 
 // Helpers for working with the Element union (not part of the stored model).
 export type ElementOf<T extends ElementType> = Extract<Element, { type: T }>;

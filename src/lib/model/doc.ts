@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
 import { parseElement } from './schema';
-import type { Element } from './types';
+import type { Element, ElementType } from './types';
 import { compareZ } from './zorder';
 
 export type ElementYMap = Y.Map<unknown>;
@@ -25,6 +25,9 @@ export function setActivePageId(doc: Y.Doc, pageId: string): void {
 /** The elements of the active page: everything that reads or writes elements works on it. */
 export const getElementsMap = (doc: Y.Doc): Y.Map<ElementYMap> =>
 	pageElementsMap(doc, getActivePageId(doc));
+/** Element types whose content lives in the `docs` map (a fragment keyed by the element id). */
+export const hasDocContent = (type: ElementType): boolean => type === 'doccard' || type === 'table';
+
 export const getDocsMap = (doc: Y.Doc): Y.Map<Y.XmlFragment> => doc.getMap('docs');
 /** Brush strokes of sketch elements: one append-only array of plain stroke objects per sketch. */
 export const getSketchesMap = (doc: Y.Doc): Y.Map<Y.Array<unknown>> => doc.getMap('sketches');
