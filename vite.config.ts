@@ -19,7 +19,7 @@ const env = {
 	...process.env
 };
 
-// A project site on GitHub Pages lives under /<repo> (see .github/workflows/pages.yml).
+// A project site on GitHub Pages lives under /<repo>: build with BASE_PATH=/<repo> (README → Deploy).
 const BASE = (process.env.BASE_PATH ?? '') as '' | `/${string}`;
 
 export default defineConfig({
