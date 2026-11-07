@@ -44,7 +44,7 @@
 </script>
 
 <div class="flex items-center gap-2 px-1 pb-1">
-	<p class="text-xs font-semibold text-muted">Waystones</p>
+	<p class="text-xs font-semibold text-muted">Tabs</p>
 	<label class="ml-auto flex items-center gap-1.5 text-xs text-muted">
 		<input
 			type="checkbox"
@@ -53,6 +53,11 @@
 		/>Wrap around
 	</label>
 </div>
+{#if route.length === 0}
+	<p class="px-1 py-2 text-sm text-muted">
+		Save the spot you're looking at, then jump back to it from this list.
+	</p>
+{/if}
 <ol class="flex max-h-72 flex-col overflow-y-auto" data-testid="waystone-list">
 	{#each route as w, i (w.id)}
 		<li
@@ -79,7 +84,7 @@
 				<input
 					class="h-7 min-w-0 flex-1 rounded border border-border bg-surface px-1.5 text-sm outline-none focus:border-accent pointer-coarse:text-base"
 					value={w.name}
-					aria-label="Waystone name"
+					aria-label="Tab name"
 					maxlength="100"
 					{@attach (node: HTMLInputElement) => {
 						node.focus();
@@ -104,8 +109,11 @@
 					class:font-semibold={i === waystones.current}
 					aria-keyshortcuts={i < 9 ? `Alt+${i + 1}` : undefined}
 					data-go
-					onclick={() => waystones.go(i)}
-					onkeydown={(e) => rowKey(e, w.id, i)}>{w.name || `Waystone ${i + 1}`}</button
+					onclick={() => {
+						waystones.go(i);
+						waystones.listOpen = false;
+					}}
+					onkeydown={(e) => rowKey(e, w.id, i)}>{w.name || `Tab ${i + 1}`}</button
 				>
 			{/if}
 			<button
@@ -118,9 +126,9 @@
 			<button
 				type="button"
 				class={icon}
-				aria-label="Update zoom of {w.name} to the current view"
-				title="Update zoom to current view"
-				onclick={() => waystones.updateZoom(w.id)}
+				aria-label="Move {w.name} to the current view"
+				title="Move to current view"
+				onclick={() => waystones.updateView(w.id)}
 				><Locate class="size-3.5" aria-hidden="true" /></button
 			>
 			<button
@@ -138,12 +146,13 @@
 	<button
 		type="button"
 		class="flex h-8 flex-1 items-center gap-1.5 rounded-md px-2 text-sm text-accent hover:bg-surface-2 pointer-coarse:h-11"
-		onclick={() => waystones.add()}
-		><Plus class="size-4" aria-hidden="true" />Add waystone here</button
+		onclick={() => (renaming = waystones.add())}
+		><Plus class="size-4" aria-hidden="true" />Add tab here</button
 	>
 	<button
 		type="button"
-		class="flex h-8 items-center gap-1.5 rounded-md px-2 text-sm hover:bg-surface-2 pointer-coarse:h-11"
+		disabled={route.length === 0}
+		class="flex h-8 items-center gap-1.5 rounded-md px-2 text-sm hover:bg-surface-2 disabled:opacity-40 pointer-coarse:h-11"
 		onclick={() => waystones.present()}
 		><Presentation class="size-4" aria-hidden="true" />Present</button
 	>

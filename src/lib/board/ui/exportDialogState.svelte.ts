@@ -1,6 +1,6 @@
-import type { ExportScope } from '../render/exportImage';
+import type { ExportScope, RasterFormat } from '../render/exportImage';
 
-export type ExportFormat = 'png' | 'svg';
+export type ExportFormat = RasterFormat | 'svg';
 
 /** Open state and preset of the export dialog (one board is open at a time). */
 class ExportDialogState {

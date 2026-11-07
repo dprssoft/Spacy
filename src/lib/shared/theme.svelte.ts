@@ -25,6 +25,7 @@ class ThemeState {
 		this.mode === 'system' ? (this.systemDark ? 'dark' : 'light') : this.mode
 	);
 	palette = $state<PaletteId>('default');
+	glass = $state(false);
 	/** Changes whenever the colors do: for code that reads CSS variables once per theme. */
 	readonly key = $derived(`${this.resolved}:${this.palette}`);
 
@@ -32,6 +33,7 @@ class ThemeState {
 	init(): () => void {
 		this.mode = readMode();
 		this.palette = readPalette();
+		this.glass = getPref<unknown>('glass', false) === true;
 		const media =
 			typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
 		const onChange = () => (this.systemDark = media?.matches ?? false);
@@ -44,6 +46,9 @@ class ThemeState {
 				root.dataset.theme = this.resolved;
 				if (this.palette === 'default') delete root.dataset.palette;
 				else root.dataset.palette = this.palette;
+				// Only Chromium draws SVG filters in backdrop-filter; others get the blur alone.
+				if (!this.glass) delete root.dataset.glass;
+				else root.dataset.glass = 'userAgentData' in navigator ? 'refract' : 'on';
 				const p = PALETTES.find((x) => x.id === this.palette) ?? PALETTES[0]!;
 				document
 					.querySelector('meta[name="theme-color"]')
@@ -65,6 +70,11 @@ class ThemeState {
 	setPalette(id: PaletteId): void {
 		this.palette = id;
 		setPref('palette', id);
+	}
+
+	setGlass(on: boolean): void {
+		this.glass = on;
+		setPref('glass', on);
 	}
 
 	cycle(): void {

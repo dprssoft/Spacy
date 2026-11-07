@@ -6,6 +6,9 @@ import { strokeBounds, strokeHit, type SketchStroke } from './brushes';
 
 type Frame = Pick<SketchElement, 'x' | 'y' | 'w' | 'h' | 'bx' | 'by' | 'nw' | 'nh'>;
 
+/** Board units of sheet kept around every stroke. */
+export const SHEET_MARGIN = 24;
+
 /** Board units per sketch unit, per axis (1 until the element is resized). */
 export function sketchScale(el: Frame): Point {
 	return { x: el.nw > 0 ? el.w / el.nw : 1, y: el.nh > 0 ? el.h / el.nh : 1 };
@@ -26,18 +29,20 @@ export function pointsToSketch(el: Frame, world: readonly number[]): number[] {
 }
 
 /**
- * The element's new frame after adding a stroke: the shown rectangle grows to include it, and the
- * box grows with it so that everything already drawn stays exactly where it is on the board.
- * Returns null when the stroke already fits.
+ * The element's new frame after adding a stroke: the shown rectangle grows to include it and its
+ * margin, and the box grows with it so that everything already drawn stays exactly where it is on
+ * the board. Returns null when the stroke already fits.
  */
 export function growFrame(el: Frame, stroke: SketchStroke): Frame | null {
 	const b = strokeBounds(stroke);
-	const x1 = Math.min(el.bx, b.x);
-	const y1 = Math.min(el.by, b.y);
-	const x2 = Math.max(el.bx + el.nw, b.x + b.w);
-	const y2 = Math.max(el.by + el.nh, b.y + b.h);
-	if (x1 === el.bx && y1 === el.by && x2 === el.bx + el.nw && y2 === el.by + el.nh) return null;
 	const s = sketchScale(el);
+	const mx = SHEET_MARGIN / s.x;
+	const my = SHEET_MARGIN / s.y;
+	const x1 = Math.min(el.bx, b.x - mx);
+	const y1 = Math.min(el.by, b.y - my);
+	const x2 = Math.max(el.bx + el.nw, b.x + b.w + mx);
+	const y2 = Math.max(el.by + el.nh, b.y + b.h + my);
+	if (x1 === el.bx && y1 === el.by && x2 === el.bx + el.nw && y2 === el.by + el.nh) return null;
 	return {
 		bx: x1,
 		by: y1,
@@ -53,9 +58,11 @@ export function growFrame(el: Frame, stroke: SketchStroke): Frame | null {
 /** The frame of a new sketch whose only stroke is `stroke` (sketch space = board space). */
 export function firstFrame(stroke: SketchStroke): Frame {
 	const b = strokeBounds(stroke);
-	const w = Math.max(1, b.w);
-	const h = Math.max(1, b.h);
-	return { x: b.x, y: b.y, w, h, bx: b.x, by: b.y, nw: w, nh: h };
+	const w = Math.max(1, b.w) + SHEET_MARGIN * 2;
+	const h = Math.max(1, b.h) + SHEET_MARGIN * 2;
+	const x = b.x - SHEET_MARGIN;
+	const y = b.y - SHEET_MARGIN;
+	return { x, y, w, h, bx: x, by: y, nw: w, nh: h };
 }
 
 /** Whether a board point is on any stroke of the sketch (`tol` in board units). */

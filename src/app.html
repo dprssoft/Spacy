@@ -33,6 +33,8 @@
 					mode === 'dark' ||
 					(mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
 				document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+				if (localStorage.getItem('spacy:glass') === 'true')
+					document.documentElement.dataset.glass = 'on';
 				var palette = JSON.parse(localStorage.getItem('spacy:palette') || '"default"');
 				if (/^(terracotta|graphite|petrol|plum|moss)$/.test(palette))
 					document.documentElement.dataset.palette = palette;

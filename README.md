@@ -17,8 +17,8 @@ There is no backend and no account.
 - **Doc cards:** headings, lists, checklists, quotes, code, links; fonts, sizes, colors, highlights and alignment from a Word-like ribbon; focus mode; `/` commands; `@` mentions of canvas objects; Markdown export.
 - **Writing:** word counts, an outline in manuscript order, compile to Markdown, Word or print, backlinks, find and replace, comments on objects and text.
 - **Media:** YouTube, Vimeo, audio and video links play in place, with clips, loop and speed.
-- **Presenting:** waystones (named checkpoints to fly between) and full screen.
-- **Sharing:** PNG and SVG export, `.spacy` board files, full backup and restore, a template gallery (start a board or insert into one).
+- **Tabs and presenting:** tabs (named spots on the board to jump between, from a dropdown list) and full screen.
+- **Sharing:** PNG, JPG, WebP and SVG export, copy as image, `.spacy` board files, full backup and restore, a template gallery (start a board or insert into one).
 - **Everywhere:** installable, works offline, phones and tablets, light and dark themes with six palettes, keyboard-only use, screen reader announcements. Press `?` on a board for the shortcut list.
 
 ## Data & privacy
@@ -86,6 +86,8 @@ pnpm dlx wrangler pages deploy build --project-name spacy
 ```
 
 **Netlify:** the same settings (build command `pnpm build`, publish directory `build`, Node 22).
+
+**GitHub Pages:** in the repository, Settings → Pages → Source: GitHub Actions. Every push to `main` then deploys through `.github/workflows/pages.yml`, which builds for `/<repo>/`. Pages can't send headers, so the build puts the CSP in each page as a meta tag (without `frame-ancestors`, so other sites can frame the app there) and uses `404.html` as the fallback. Pages can't send headers for caching either.
 
 **Any other static host** works if it serves `200.html` for unknown paths (the rewrite in `build/_redirects`; `index.html` is the prerendered start page, not the fallback) and sends the headers from `build/_headers`. The `script-src` hash in that file is written by the build (`scripts/postbuild-csp.mjs`), so always deploy the `_headers` from the same build as the pages.
 

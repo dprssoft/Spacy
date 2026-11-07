@@ -1,3 +1,4 @@
+import { copyImage } from '../render/exportImage';
 import { updateElements } from '$lib/model/ops';
 import { unionRects } from '../engine/geometry';
 import { fitRect } from '../engine/viewport';
@@ -38,6 +39,14 @@ export const selectShortcuts: Shortcut[] = [
 	nudge('right10', ['Shift+ArrowRight'], 10, 0),
 	nudge('up10', ['Shift+ArrowUp'], 0, -10),
 	nudge('down10', ['Shift+ArrowDown'], 0, 10),
+	{
+		id: 'edit.copyImage',
+		keys: ['Mod+Shift+C'],
+		label: 'Copy as image',
+		group: 'Edit',
+		when: (ctx) => ctx.selection.size > 0,
+		run: (ctx) => void copyImage(ctx, { kind: 'selection' }, 2, '#ffffff')
+	},
 	{
 		id: 'select.all',
 		keys: ['Mod+A'],

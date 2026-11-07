@@ -4,9 +4,12 @@
 	import { downloadBlob } from '$lib/shared/download';
 	import { slug } from '$lib/shared/slug';
 	import { getBoard } from '../context';
+	import { toast } from 'svelte-sonner';
 	import {
-		exportPng,
+		copyImage,
+		exportRaster,
 		exportSvg,
+		rasterExtension,
 		renderScope,
 		svgBlob,
 		type ExportScope
@@ -30,7 +33,9 @@
 	);
 	const hasSelection = $derived(ctx.selection.size > 0);
 	const hasWaystones = $derived(ctx.waystones.route.length > 0);
-	const bg = $derived(background === 'white' ? '#ffffff' : 'transparent');
+	// JPG has no transparency: the browser would turn it black.
+	const opaque = $derived(exportDialog.format === 'jpg');
+	const bg = $derived(opaque || background === 'white' ? '#ffffff' : 'transparent');
 
 	const scope = $derived.by((): ExportScope | null => {
 		if (exportDialog.scope === 'selection') return hasSelection ? { kind: 'selection' } : null;
@@ -60,7 +65,7 @@
 		};
 	});
 
-	function filename(format: ExportFormat, s: ExportScope): string {
+	function filename(extension: string, s: ExportScope): string {
 		const title = slug(String(getMeta(ctx.doc).get('title') ?? '')) || 'board';
 		const suffix =
 			s.kind === 'selection'
@@ -71,7 +76,7 @@
 						ctx.pages.list.length > 1
 						? `-${slug(ctx.pages.page.name) || 'page'}`
 						: '';
-		return `${title}${suffix}.${format}`;
+		return `${title}${suffix}.${extension}`;
 	}
 
 	async function download() {
@@ -80,12 +85,30 @@
 		busy = true;
 		try {
 			const format = exportDialog.format;
-			const blob =
-				format === 'png'
-					? await exportPng(ctx, s, scale, bg, withWaystones)
-					: await exportSvg(ctx, s, bg, withWaystones);
-			if (blob) downloadBlob(blob, filename(format, s));
+			if (format === 'svg') {
+				const blob = await exportSvg(ctx, s, bg, withWaystones);
+				if (blob) downloadBlob(blob, filename('svg', s));
+			} else {
+				const blob = await exportRaster(ctx, s, format, scale, bg, withWaystones);
+				if (blob) {
+					const extension = rasterExtension(blob);
+					if (extension !== format)
+						toast(`This browser can't write ${format.toUpperCase()}: saved as PNG instead.`);
+					downloadBlob(blob, filename(extension, s));
+				}
+			}
 			exportDialog.open = false;
+		} finally {
+			busy = false;
+		}
+	}
+
+	async function copy() {
+		const s = scope;
+		if (!s || busy) return;
+		busy = true;
+		try {
+			if (await copyImage(ctx, s, scale, bg, withWaystones)) exportDialog.open = false;
 		} finally {
 			busy = false;
 		}
@@ -142,6 +165,8 @@
 					'Format',
 					[
 						{ value: 'png', label: 'PNG' },
+						{ value: 'jpg', label: 'JPG' },
+						{ value: 'webp', label: 'WebP' },
 						{ value: 'svg', label: 'SVG' }
 					],
 					exportDialog.format,
@@ -178,13 +203,13 @@
 						'Background',
 						[
 							{ value: 'white', label: 'White' },
-							{ value: 'transparent', label: 'Transparent' }
+							{ value: 'transparent', label: 'Transparent', disabled: opaque }
 						],
-						background,
+						opaque ? 'white' : background,
 						(v) => (background = v)
 					)}
 				</div>
-				{#if exportDialog.format === 'png'}
+				{#if exportDialog.format !== 'svg'}
 					<div>
 						<p class={label}>Scale</p>
 						{@render choice<1 | 2 | 3>(
@@ -203,7 +228,7 @@
 			{#if hasWaystones}
 				<label class="flex items-center gap-2 text-sm">
 					<input type="checkbox" bind:checked={withWaystones} data-testid="export-waystones" />
-					Include waystones
+					Include tabs
 				</label>
 			{/if}
 			<div class="flex justify-end gap-2">
@@ -211,6 +236,15 @@
 					class="h-9 rounded-lg px-3 text-sm font-medium hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
 					>Cancel</Dialog.Close
 				>
+				<button
+					type="button"
+					class="h-9 rounded-lg border border-border px-3 text-sm font-medium hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:opacity-50"
+					title="Copies as a PNG"
+					disabled={!scope || busy}
+					onclick={copy}
+				>
+					Copy image
+				</button>
 				<button
 					type="button"
 					class="h-9 rounded-lg bg-accent px-3 text-sm font-medium text-accent-contrast focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none disabled:opacity-50"

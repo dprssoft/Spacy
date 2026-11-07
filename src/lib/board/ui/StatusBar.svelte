@@ -14,7 +14,7 @@
 	const words = $derived(ctx.words.words(selected > 0 ? ctx.selection.ids : undefined));
 </script>
 
-<!-- Phones: no room in the bar below, so the waystones get a strip of their own. -->
+<!-- Phones: tabs get a strip of their own once they exist; before that, a small button below. -->
 {#if layout.compact && ctx.waystones.route.length > 0}
 	<div class="flex shrink-0 justify-center border-t border-border bg-surface-2" data-interactive>
 		<WaystoneBar />
@@ -50,7 +50,7 @@
 				>{openComments}</span
 			>{/if}
 	</button>
-	{#if !layout.compact}<WaystoneBar />{/if}
+	{#if !layout.compact || ctx.waystones.route.length === 0}<WaystoneBar />{/if}
 	<p
 		class="ml-auto hidden shrink-0 items-center px-2 text-muted sm:flex"
 		data-testid="status-count"

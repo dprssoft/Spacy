@@ -191,6 +191,9 @@ export class SceneRenderer {
 				const strokes = src.strokes(el.id);
 				const key = `${el.nw}|${el.nh}|${el.bx}|${el.by}|${theme.ink}|${strokes.length}|${strokeIds(strokes)}`;
 				const bitmap = this.#sketches.get(el.id, key, () => sketchBitmap(el, strokes, theme.ink));
+				const sheet = new Path2D();
+				sheet.rect(0, 0, el.w, el.h);
+				fill(c, s, sheet);
 				if (bitmap) c.drawImage(bitmap, 0, 0, el.w, el.h);
 				return;
 			}

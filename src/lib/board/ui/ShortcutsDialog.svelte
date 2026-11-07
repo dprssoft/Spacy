@@ -17,7 +17,7 @@
 			keys: formatKeys('Enter')
 		},
 		{ group: 'Edit', label: 'Move the selection (Shift: 10 px)', keys: 'Arrows' },
-		{ group: 'View', label: 'Go to waystone 1–9', keys: formatKeys('Alt+1') + '–9' },
+		{ group: 'View', label: 'Go to tab 1–9', keys: formatKeys('Alt+1') + '–9' },
 		// Media keys apply to the selected media while it plays, or while using its player.
 		{ group: 'Media', label: 'Play / pause', keys: 'Space  /  K' },
 		{ group: 'Media', label: 'Back / forward 10 s', keys: 'J  /  L' },

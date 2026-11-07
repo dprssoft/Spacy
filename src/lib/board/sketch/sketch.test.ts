@@ -8,7 +8,14 @@ import {
 	strokeWidth,
 	type SketchStroke
 } from './brushes';
-import { firstFrame, growFrame, pointsToSketch, sketchHit, worldToSketch } from './geometry';
+import {
+	firstFrame,
+	growFrame,
+	pointsToSketch,
+	SHEET_MARGIN,
+	sketchHit,
+	worldToSketch
+} from './geometry';
 
 const line = (
 	b: SketchStroke['b'],
@@ -65,16 +72,18 @@ describe('brushes', () => {
 });
 
 describe('sketch frame', () => {
-	it('a new sketch frames its first stroke in board coordinates', () => {
+	const m = SHEET_MARGIN;
+
+	it('a new sketch frames its first stroke and margin in board coordinates', () => {
 		expect(firstFrame(line('marker'))).toEqual({
-			x: -5,
-			y: -5,
-			w: 110,
-			h: 10,
-			bx: -5,
-			by: -5,
-			nw: 110,
-			nh: 10
+			x: -5 - m,
+			y: -5 - m,
+			w: 110 + 2 * m,
+			h: 10 + 2 * m,
+			bx: -5 - m,
+			by: -5 - m,
+			nw: 110 + 2 * m,
+			nh: 10 + 2 * m
 		});
 	});
 
@@ -82,7 +91,8 @@ describe('sketch frame', () => {
 		const frame = firstFrame(line('marker'));
 		const below = line('marker', 10, [0, 100, 0.5, 100, 100, 0.5]);
 		const grown = growFrame(frame, below)!;
-		expect(grown).toEqual({ x: -5, y: -5, w: 110, h: 110, bx: -5, by: -5, nw: 110, nh: 110 });
+		const [x, y, w, h] = [-5 - m, -5 - m, 110 + 2 * m, 110 + 2 * m];
+		expect(grown).toEqual({ x, y, w, h, bx: x, by: y, nw: w, nh: h });
 		expect(growFrame(grown, line('marker'))).toBeNull(); // already inside
 		// A point of the first stroke is at the same board position before and after.
 		const before = worldToSketch(frame, { x: 50, y: 0 });
@@ -97,8 +107,10 @@ describe('sketch frame', () => {
 		expect(pointsToSketch(el, [1100, 550, 0.7])).toEqual([50, 25, 0.7]);
 		const left = line('marker', 10, [-45, 25, 0.5, 0, 25, 0.5]);
 		const grown = growFrame(el, left)!;
-		// 50 sketch units further left = 100 board units.
-		expect(grown).toMatchObject({ bx: -50, nw: 150, x: 900, w: 300, y: 500, h: 100 });
+		// 50 sketch units further left = 100 board units, plus the margin in board units.
+		expect(grown).toMatchObject({ bx: -50 - m / 2, nw: 150 + m / 2, x: 900 - m, w: 300 + m });
+		// Vertically the stroke and its margin already fit.
+		expect(grown).toMatchObject({ y: 500, h: 100 });
 		expect(
 			sketchHit(el, [line('marker', 10, [0, 25, 0.5, 100, 25, 0.5])], { x: 1100, y: 552 }, 0)
 		).toBe(true);

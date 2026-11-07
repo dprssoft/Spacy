@@ -1451,3 +1451,95 @@ Approved by the human: option (a), the manuscript order in `meta.outline`.
 **Follow-ups:** none
 **Verification:** pnpm verify ✅ (1083 unit tests; new `random.test.ts` 5, `wheel.test.ts` 9, `dice.test.ts` 9, `randomizer.test.ts` 3, `chance.test.ts` 4) · e2e ✅ `widgets.spec.ts` (wheel from three selected notes → Enter spins → winner matches its state and is announced; randomizer teams → Place → 5 notes → one undo removes them), `live.spec.ts` (both browsers show the same wheel winner) · full run (chromium, firefox, mobile): 440 passed, 27 skipped, 1 failed — the Firefox `home.spec.ts` lifecycle flake recorded in step 54 · screenshots of the widgets mid-animation, settled, the menu and the wheel settings.
 
+## Extra — Sketch sheet — 2026-10-31
+Requested by the human: "for complicated drawings i want something like sheet (when making stroke - apply offset background transparent by default, but user can enable color of it)".
+
+**Summary:**
+- A sketch's frame now keeps a 24-unit margin around every stroke (`SHEET_MARGIN`, in board units whatever the sketch's scale), so the object is a sheet that grows as you draw. Erasing still never grows it.
+- `style.fill` colors the sheet: Fill in the style bar for a selected sketch, and "Sheet color" in the sketch ribbon for the active sketch (the style bar is hidden while drawing). "Set as default" in the style bar gives new sketches that sheet. Picking a color also sets `fillStyle: 'solid'`, since sketches have no fill style control.
+- The sheet is drawn under the strokes in the live view (the canvas's CSS background), the scene canvas and SVG export, so erasing reveals the sheet.
+- A colored sheet is hit on its whole box; a transparent one still only on its strokes.
+
+**Deviations:** none (no data model change: the frame and `style.fill` already existed). Expected frames in `sketch.test.ts` and `ops.test.ts` now include the margin.
+
+**Dependencies added:** none
+**Follow-ups:** sketches drawn before this have tight frames: they gain the margin only on sides where new strokes reach. Connectors and snapping now use the box with its margin. The ribbon's "Sheet color" appears after the first stroke; a sheet for a sketch not started yet comes from "Set as default".
+**Verification:** pnpm verify ✅ · e2e `sketch.spec.ts` ✅ on chromium (new: sheet color from the ribbon, click on the empty middle selects) · new unit tests for the margin, whole-box hit and SVG order · screenshot reviewed · `visual.spec.ts` fails (3) with and without this change; its output is byte-identical with and without it.
+
+## Extra — Copy as image, JPG and WebP export — 2026-10-31
+Requested by the human: "allow user to copy image, or export it as png, jpg or webp".
+
+**Summary:**
+- The export dialog offers PNG, JPG, WebP and SVG (Export menu: one entry each) and a "Copy image" button; the context menu has "Copy as image" for the selection (2×, white background).
+- `exportPng` became `exportRaster` with a format; JPG and WebP use quality 0.92. JPG always gets a white background (Transparent is disabled), since a canvas turns transparency black there.
+- Copying always writes a PNG, the one image type browsers accept on the clipboard, whichever format is picked. The blob is passed to `ClipboardItem` as a promise so Safari keeps the user gesture.
+- A browser without a WebP encoder returns a PNG from `toBlob`: the file then gets a `.png` name and a toast says so.
+
+**Deviations:** none
+**Dependencies added:** none
+**Follow-ups:** none
+**Verification:** pnpm verify ✅ (1086 unit tests; new `rasterExtension` test) · e2e `export.spec.ts` ✅ on chromium and firefox (JPG and WebP file signatures, Transparent disabled for JPG); clipboard read-back on chromium only (2 skipped on firefox); WebKit not run on this machine.
+
+## Extra — Ctrl+C copies a picture too, export on the floating bar — 2026-10-31
+Requested by the human: "make ctrl c copy by default. export is quick floating button near background options".
+
+**Summary:**
+- Copy (Ctrl+C and the menu) now puts both the Spacy payload and a PNG of the selection (2×, white background) on the clipboard, so pasting in Spacy gives objects and pasting elsewhere gives a picture. The context menu's "Copy as image" is gone. Cut stays text only.
+- The floating style bar has an Export button next to Fill: it opens the export dialog on the selection, in the last used format.
+
+**Deviations:** none
+**Dependencies added:** none
+**Follow-ups:** the image write is silent when it fails (the plain copy stays). Because rendering is asynchronous, the rewrite lands a moment after Ctrl+C; something copied elsewhere in that moment would be replaced.
+
+## Extra — Baked copy and telling sketches from images — 2026-10-31
+Requested by the human: Ctrl+C stays raw (editable), Ctrl+Shift+C bakes; "make difference in how editable sketch looks and baked image".
+
+**Summary:**
+- Ctrl+Shift+C (also "Copy as image" in the context menu) writes only a PNG of the selection (2×, white background), so it pastes back as an image, in Spacy too. It works on any selection, not just sketches. Ctrl+C is unchanged: objects in Spacy, a picture elsewhere.
+- Menu "Paste" now also pastes a picture when the clipboard has no text.
+- Selected or hovered sketches get a dashed outline and an "Editable sketch" chip; images get a solid outline and an "Image" chip. Overlay only: nothing changes in exports.
+
+**Deviations:** none
+**Dependencies added:** none
+**Follow-ups:** a baked paste shows at the PNG's 2× size (limited to half the view), so it can look bigger than the original. The sketch and image cue shows on hover or selection only.
+**Test change:** `commands.spec.ts` selector `/^Copy/` tightened to `/^Copy(?! as)/`, since "Copy as image" now matches too; it still clicks plain Copy. The floating button is labelled "Save as image" so it doesn't clash with the top bar's "Export".
+
+## Extra — Liquid glass — 2026-10-31
+Requested by the human: "add liquid glass theme that user can enable. i want it glass-glass and liquid and crispy".
+
+**Summary:**
+- Settings → Liquid glass (`spacy:glass`, `html[data-glass]`), a toggle rather than a palette, so it works with every palette, light and dark.
+- UI surfaces become translucent with backdrop blur and saturation, a diagonal sheen and bright 1 px rims on floating panels. Behind the app, `GlassBackdrop` drifts slow blurred color blobs mixed from the accent. Buttons spring when pressed.
+- Chromium also refracts what's behind the glass through an SVG displacement filter (`data-glass="refract"`); other browsers get the blur only.
+- Objects on the board and exports are untouched. Reduced transparency or more contrast turns the effect off; reduced motion stops the drift.
+
+**Deviations:** none
+**Dependencies added:** none
+- Contrast raised on request ("make icons and text more contrast"): muted text and icons sit at 88 % of the text color, surfaces are denser, and text and icons on glass get a soft halo.
+
+## Extra — Tabs instead of waystones — 2026-10-31
+Requested by the human: "instead of waystones make something more handy like tabs that gonna work like waystones but more user friendly, having list of thats tabs to travel (maybe dropdown list)".
+
+**Summary:**
+- Everything the user sees now says Tab. The dropdown is always in the status bar, also on an empty page, with a short hint. "Add tab here" saves the view and goes straight to naming it. Choosing a tab travels there and closes the list. "Move to current view" replaces "Update zoom" and re-aims a tab at position and zoom.
+- No data change: tabs are stored as `waystone` elements, so existing boards keep theirs, and code names stay. Prev/next, Alt+1–9, PageUp/PageDown, Present and the W tool still work.
+
+**Deviations:** pins stay on the board: they mark where a tab points and can be clicked when zoomed out.
+**Dependencies added:** none
+- On phones the Tabs button sits in the bottom bar until a tab exists, then moves to its own strip (a permanent strip shrank the canvas). The settings menu shows palettes in two columns so the new row doesn't make it scroll.
+
+**Verification (glass, tabs, copy):** pnpm verify ✅ (1086 unit tests) · last full e2e run on chromium, firefox and mobile: 452 passed, 8 failed; the a11y and mobile-editing failures were fixed and those specs rerun · still failing: `visual.spec.ts` (3, also on clean HEAD), Firefox `home.spec.ts` (the known flake), Firefox `compile.spec.ts` (intermittent, not checked on clean HEAD).
+
+## Extra — Link page previews, GitHub Pages — 2026-10-31
+Requested by the human: "for links add page preview as toggle"; both a global and a per-link toggle, and "when im gonna host it on github page it would work".
+
+**Summary:**
+- Per link: an eye button in the text bubble toggles `preview` on the `link` mark; the page shows in a frame under the link (a ProseMirror widget, keyed so typing doesn't reload it). Data model change approved by the human; recorded in `00-architecture.md`.
+- Global: Settings → "Preview links on hover", off by default.
+- Frames: sandboxed, no referrer, https only, never our own origin. No backend means no title or image cards, and sites that refuse framing stay blank (undetectable), so each preview has a note and "Open in new tab".
+- CSP widened from YouTube and Vimeo to `frame-src https:`, approved by the human.
+- GitHub Pages: `BASE_PATH` build option, `PAGES=true` adds the CSP as a meta tag and `404.html` as the fallback, `.nojekyll`, `.github/workflows/pages.yml`.
+
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ (1089 unit tests) · e2e `link-preview.spec.ts` new, on chromium and firefox · `csp.spec.ts` updated to `frame-src https:` · a Pages build served under `/Spacy/` with no headers: home, new board, deep-link reload, service worker and offline reopening checked by hand-run scripts. Doc cards take the pointer only while edited, so hover previews work in edit and focus mode only.
+

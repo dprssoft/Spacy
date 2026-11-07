@@ -14,6 +14,7 @@ import type { BoardContext } from '../context';
 import { createMedia, mediaLinkIn } from '../media/createMedia';
 import { rectCenter, rectsIntersect, unionRects } from '../engine/geometry';
 import { visibleWorldRect } from '../engine/viewport';
+import { exportRaster } from '../render/exportImage';
 import { getDefaultStyle } from '../style/styleDefaults';
 import { syncFrameMembership, withFrameChildren } from '../frameMembership';
 import { createWithContent, deleteSelection, selectedElements } from './edit';
@@ -222,13 +223,36 @@ export async function pasteText(ctx: BoardContext, text: string): Promise<void> 
 
 // --- Browser clipboard plumbing ---------------------------------------------------------------
 
+/**
+ * Rewrites a copy as the payload plus a PNG of the selection: Spacy pastes the objects, any other
+ * app pastes the picture. Rendering takes a moment, so the plain text copy is already in place.
+ */
+async function writeWithImage(ctx: BoardContext, text: string): Promise<void> {
+	if (typeof ClipboardItem === 'undefined') throw new Error('No image clipboard');
+	const png = exportRaster(ctx, { kind: 'selection' }, 'png', 2, '#ffffff', false, true).then(
+		(blob) => {
+			if (!blob) throw new Error('Nothing to draw');
+			return blob;
+		}
+	);
+	await navigator.clipboard.write([
+		new ClipboardItem({
+			'text/plain': new Blob([text], { type: 'text/plain' }),
+			'image/png': png
+		})
+	]);
+}
+
 /** For the native `copy`/`cut` events: returns true if the board handled it. */
 export function onCopyEvent(ctx: BoardContext, e: ClipboardEvent, cut: boolean): boolean {
 	const text = copySelectionText(ctx);
 	if (!text || !e.clipboardData) return false;
 	e.clipboardData.setData('text/plain', text);
 	e.preventDefault();
+	// A cut deletes what the picture would show, and the image is only a bonus: without it the
+	// objects still paste here.
 	if (cut) deleteSelection(ctx);
+	else void writeWithImage(ctx, text).catch(() => {});
 	return true;
 }
 
@@ -251,7 +275,8 @@ export async function copyToClipboard(ctx: BoardContext, cut = false): Promise<v
 	const text = copySelectionText(ctx);
 	if (!text) return;
 	try {
-		await navigator.clipboard.writeText(text);
+		if (cut) await navigator.clipboard.writeText(text);
+		else await writeWithImage(ctx, text).catch(() => navigator.clipboard.writeText(text));
 	} catch {
 		// Permission denied or unsupported: `memory` still holds the copy for in-app paste.
 	}
@@ -267,6 +292,21 @@ export async function pasteFromClipboard(ctx: BoardContext): Promise<void> {
 		text = memory;
 	}
 	if (text) await pasteText(ctx, text);
+	else await pasteClipboardImage(ctx);
+}
+
+/** A picture with no text beside it, such as one from "Copy as image". */
+async function pasteClipboardImage(ctx: BoardContext): Promise<void> {
+	try {
+		const files: File[] = [];
+		for (const item of await navigator.clipboard.read()) {
+			const type = item.types.find((t) => t.startsWith('image/'));
+			if (type) files.push(new File([await item.getType(type)], 'pasted', { type }));
+		}
+		if (files.length > 0) await imagePaste.handler?.(ctx, files, pasteAnchor(ctx));
+	} catch {
+		// Reading images isn't allowed or supported here: Ctrl+V still works.
+	}
 }
 
 export const hasClipboardFallback = (): boolean => memory !== null;

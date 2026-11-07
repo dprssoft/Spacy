@@ -113,6 +113,12 @@
 					<DropdownMenu.Item class={item} onSelect={() => exportDialog.show('png')}
 						>PNG…</DropdownMenu.Item
 					>
+					<DropdownMenu.Item class={item} onSelect={() => exportDialog.show('jpg')}
+						>JPG…</DropdownMenu.Item
+					>
+					<DropdownMenu.Item class={item} onSelect={() => exportDialog.show('webp')}
+						>WebP…</DropdownMenu.Item
+					>
 					<DropdownMenu.Item class={item} onSelect={() => exportDialog.show('svg')}
 						>SVG…</DropdownMenu.Item
 					>

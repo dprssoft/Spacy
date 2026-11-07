@@ -10,7 +10,9 @@
 	import CommentNameDialog from './CommentNameDialog.svelte';
 	import { backupAll, importFiles } from './fileActions';
 	import { formatBytes } from './formatBytes';
+	import { LINK_PREVIEW_PREF } from '$lib/board/doccards/links';
 	import { readMediaPrefs, writeMediaPrefs } from '$lib/board/media/mediaPrefs';
+	import { getPref, setPref } from '$lib/shared/localPrefs';
 	import { fullscreen } from '$lib/shared/fullscreen.svelte';
 	import { driveSync } from '$lib/sync/driveSync.svelte';
 	import SyncDialog from '$lib/sync/SyncDialog.svelte';
@@ -19,6 +21,7 @@
 
 	let open = $state(false);
 	let oneAtATime = $state(readMediaPrefs().oneAtATime);
+	let linkPreview = $state(getPref<unknown>(LINK_PREVIEW_PREF, false) === true);
 	let about = $state(false);
 	let commentName = $state(false);
 	let sync = $state(false);
@@ -55,7 +58,7 @@
 		<DropdownMenu.Content
 			align="end"
 			sideOffset={4}
-			class="z-50 max-h-[var(--bits-dropdown-menu-content-available-height)] min-w-60 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg"
+			class="z-50 max-h-[var(--bits-dropdown-menu-content-available-height)] min-w-72 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg"
 		>
 			<DropdownMenu.RadioGroup value={theme.mode} onValueChange={(v) => theme.set(v as ThemeMode)}>
 				<DropdownMenu.GroupHeading class={heading}>Theme</DropdownMenu.GroupHeading>
@@ -71,8 +74,9 @@
 			<DropdownMenu.RadioGroup
 				value={theme.palette}
 				onValueChange={(v) => isPaletteId(v) && theme.setPalette(v)}
+				class="grid grid-cols-2"
 			>
-				<DropdownMenu.GroupHeading class={heading}>Palette</DropdownMenu.GroupHeading>
+				<DropdownMenu.GroupHeading class="col-span-2 {heading}">Palette</DropdownMenu.GroupHeading>
 				{#each PALETTES as p (p.id)}
 					<DropdownMenu.RadioItem
 						value={p.id}
@@ -92,6 +96,27 @@
 				{/each}
 			</DropdownMenu.RadioGroup>
 			<DropdownMenu.Separator class={sep} />
+			<DropdownMenu.CheckboxItem
+				class={item}
+				closeOnSelect={false}
+				checked={theme.glass}
+				onCheckedChange={(v) => theme.setGlass(v)}
+			>
+				{#snippet children({ checked })}
+					<span class="w-4 text-accent" aria-hidden="true">{checked ? '✓' : ''}</span>Liquid glass
+				{/snippet}
+			</DropdownMenu.CheckboxItem>
+			<DropdownMenu.CheckboxItem
+				class={item}
+				closeOnSelect={false}
+				bind:checked={linkPreview}
+				onCheckedChange={(v) => setPref(LINK_PREVIEW_PREF, v)}
+			>
+				{#snippet children({ checked })}
+					<span class="w-4 text-accent" aria-hidden="true">{checked ? '✓' : ''}</span>Preview links
+					on hover
+				{/snippet}
+			</DropdownMenu.CheckboxItem>
 			<DropdownMenu.CheckboxItem
 				class={item}
 				closeOnSelect={false}

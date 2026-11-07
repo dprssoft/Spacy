@@ -162,3 +162,35 @@ test('a sketch exports as vector paths', async ({ page }) => {
 	expect(svg.match(/<path /g)!.length).toBeGreaterThanOrEqual(2);
 	expect(svg).toContain('opacity="0.35"');
 });
+
+test('a sketch can get a colored sheet around its strokes', async ({ page }) => {
+	await wave(page, 200);
+	await wave(page, 400);
+
+	await page.getByRole('button', { name: 'Sheet color' }).click();
+	await page
+		.getByRole('radiogroup', { name: 'Sheet color' })
+		.locator('[data-color="#ffec99"]')
+		.click();
+	await page.keyboard.press('Escape');
+	const sheet = () =>
+		page.evaluate(() => {
+			const e = window.__spacy!.list().find((el) => el.type === 'sketch');
+			return e?.style.fillStyle === 'solid' ? e.style.fill : null;
+		});
+	await expect.poll(sheet).not.toBeNull();
+
+	// The empty middle of a colored sheet belongs to the sketch.
+	await page.keyboard.press('v');
+	await page.mouse.click(900, 600);
+	await expect.poll(() => page.evaluate(() => window.__spacy!.ctx.selection.ids.size)).toBe(0);
+	await page.mouse.click(460, 300);
+	await expect.poll(() => page.evaluate(() => window.__spacy!.ctx.selection.ids.size)).toBe(1);
+});
+
+test('a selected sketch says it is editable', async ({ page }) => {
+	await wave(page, 200);
+	await page.keyboard.press('v');
+	await expect(page.getByTestId('kind-badge')).toHaveAttribute('data-kind', 'sketch');
+	await expect(page.getByTestId('kind-badge')).toHaveText('Editable sketch');
+});

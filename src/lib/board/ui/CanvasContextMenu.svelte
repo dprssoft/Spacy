@@ -19,6 +19,7 @@
 	import { danglingConnectors } from '../diagram/ops';
 	import { connectedComponent } from '../diagram/quickCreate';
 	import { copyMarkdown, downloadMarkdown } from '../doccards/exportMarkdown';
+	import { copyImage } from '../render/exportImage';
 	import { exportDialog } from './exportDialogState.svelte';
 	import { backlinksDialog } from '../writing/backlinksDialogState.svelte';
 	import { formatKeys } from '../tools/formatKeys';
@@ -94,6 +95,11 @@
 			{#if hasSelection}
 				{@render entry('Cut', 'Mod+X', () => copyToClipboard(ctx, true))}
 				{@render entry('Copy', 'Mod+C', () => copyToClipboard(ctx))}
+				{@render entry(
+					'Copy as image',
+					'Mod+Shift+C',
+					() => void copyImage(ctx, { kind: 'selection' }, 2, '#ffffff')
+				)}
 				{@render entry('Paste', 'Mod+V', () => pasteFromClipboard(ctx))}
 				{@render entry('Duplicate', 'Mod+D', () => duplicateSelection(ctx))}
 				{@render entry('Delete', 'Delete', () => deleteSelection(ctx), allLocked)}

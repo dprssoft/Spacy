@@ -1,4 +1,5 @@
 <script lang="ts">
+	import GlassBackdrop from '$lib/shared/ui/GlassBackdrop.svelte';
 	import '../app.css';
 	import { Tooltip } from 'bits-ui';
 	import { Toaster } from 'svelte-sonner';
@@ -25,5 +26,9 @@
 		{@render children()}
 	</Tooltip.Provider>
 </div>
+
+{#if theme.glass}
+	<GlassBackdrop />
+{/if}
 
 <Toaster richColors closeButton position="bottom-center" theme={theme.resolved} />

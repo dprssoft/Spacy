@@ -16,12 +16,9 @@ test('the app runs under its Content-Security-Policy without violations', async 
 	const csp = res!.headers()['content-security-policy'] ?? '';
 	expect(csp).toContain("default-src 'self'");
 	expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
-	// Media elements: only these players may be embedded; media files over https; nothing else
-	// may be fetched from other sites.
-	// The e2e build has Google Drive sync on: Google's sign-in popup is the one extra frame.
-	expect(csp).toContain(
-		'frame-src https://accounts.google.com https://www.youtube-nocookie.com https://player.vimeo.com;'
-	);
+	// Link previews may frame any https page (sandboxed; never http); media files over https;
+	// nothing else may be fetched from other sites.
+	expect(csp).toContain('frame-src https://accounts.google.com https:;');
 	expect(csp).toContain("media-src 'self' blob: https:;");
 	// Besides the app itself, only the live sharing relay the build was configured with (the
 	// local one in e2e, see playwright.config.ts) and, with Drive sync on, Google's APIs.

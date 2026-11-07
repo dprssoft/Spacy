@@ -33,7 +33,14 @@ export function mergeStyle(style: Style, patch: StylePatch): Style {
 /** The element patch for one element (fields that don't apply to its type are ignored). */
 export function appearancePatch(el: Element, patch: AppearancePatch): ElementPatch {
 	const out: ElementPatch = {};
-	if (patch.style) out.style = mergeStyle(el.style, patch.style);
+	if (patch.style) {
+		// A sketch has no fill style control: picking a color is what turns its sheet on.
+		const sheetOn = el.type === 'sketch' && patch.style.fill && !patch.style.fillStyle;
+		out.style = mergeStyle(
+			el.style,
+			sheetOn ? { ...patch.style, fillStyle: 'solid' } : patch.style
+		);
+	}
 	if (patch.kind && el.type === 'shape') out.kind = patch.kind;
 	if (patch.color && el.type === 'sticky') out.color = patch.color;
 	if (el.type === 'connector') {
