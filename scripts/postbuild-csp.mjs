@@ -66,9 +66,11 @@ if (process.env.PAGES === 'true') {
 		if (!html.includes('<head>')) throw new Error(`${page}: <head> not found`);
 		writeFileSync(`build/${page}`, html.replace('<head>', `<head>${meta}`));
 	}
-	copyFileSync('build/200.html', 'build/404.html');
 	console.log('CSP: added to the pages as a meta tag; 404.html is the SPA fallback (GitHub Pages)');
 }
+// Unknown paths get a real 404 (Cloudflare Pages serves index.html with 200 for everything when a
+// build has no 404.html). It's the app shell, so the client router shows its "Not found" page.
+copyFileSync('build/200.html', 'build/404.html');
 if (google) console.log('CSP: Google sign-in and Drive API allowed');
 console.log(
 	`CSP: live sharing through ${relays.length ? relays.join(', ') : 'public Nostr relays (wss:)'}`
