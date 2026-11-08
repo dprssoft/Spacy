@@ -27,7 +27,7 @@ Everything is stored **in this browser** (IndexedDB). Nothing is sent to a serve
 
 **Google Drive sync** (Settings → "Sync with Google Drive…", when the app is built with a Google client id): boards, the board list and images are also kept in a hidden app folder of **your own** Google Drive, which only Spacy can see, so your other devices get them. See `/privacy`.
 
-**Live sharing** (Share on a board): edits go directly between the browsers that have the board open, encrypted. Public Nostr relays only introduce the browsers to each other (they see a scrambled room name, never the board or the link's key). Each person keeps their own copy. Some strict networks block direct connections; there's no fallback for those.
+**Live sharing** (Share on a board): edits go directly between the browsers that have the board open, encrypted. Public Nostr relays only introduce the browsers to each other (they see a scrambled room name, never the board or the link's key). Each person keeps their own copy. Some networks (mobile data, other cities, strict NATs) block direct connections; a TURN server relays those (see Deploy).
 
 That also means your boards are gone if the browser's site data is cleared, and they don't follow you to another device. **Back up regularly:** Settings → "Backup all boards" downloads one `.spacy` file that you can import anywhere.
 
@@ -95,7 +95,7 @@ To check a build locally exactly as it will be served: `pnpm build && pnpm serve
 
 **Google Drive sync** needs a Google OAuth client (the steps are in `plan/steps/50-google-drive.md`, "Human setup": a Google Cloud project with the Drive API, the consent screen with the `drive.appdata` scope and the privacy page `/privacy`, and a Web client whose JavaScript origins include your domain). Set `PUBLIC_GOOGLE_CLIENT_ID` for the build; the build adds Google's sign-in and API to the CSP. Without it, sync is hidden.
 
-**Live sharing** needs nothing to deploy: browsers find each other through public Nostr relays ([Trystero](https://github.com/dmotz/trystero)), so the CSP allows `wss:` connections. To use only your own relay instead (tests, a private network): `pnpm relay` and `PUBLIC_LIVE_RELAY_URLS=ws://localhost:4444`. The computer's clock must be right within a few minutes: Nostr relays reject messages from the future, and the Share popover warns when the clock is off (on a hosted site; on `localhost` the server shares the wrong clock).
+**Live sharing** needs nothing to deploy: browsers find each other through public Nostr relays ([Trystero](https://github.com/dmotz/trystero)), so the CSP allows `wss:` connections. To use only your own relay instead (tests, a private network): `pnpm relay` and `PUBLIC_LIVE_RELAY_URLS=ws://localhost:4444`. The computer's clock must be right within a few minutes: Nostr relays reject messages from the future, and the Share popover warns when the clock is off (on a hosted site; on `localhost` the server shares the wrong clock). For people on networks that can't connect directly, set a TURN server at build time: `PUBLIC_TURN_URLS` (comma-separated `turn:`/`turns:` URLs), `PUBLIC_TURN_USERNAME`, `PUBLIC_TURN_CREDENTIAL` (for example a free metered.ca account). These credentials end up in the built app, like any browser-side TURN setup.
 
 ## Fonts
 
