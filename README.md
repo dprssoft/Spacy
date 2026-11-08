@@ -89,7 +89,7 @@ pnpm dlx wrangler pages deploy build --project-name spacy
 
 **GitHub Pages:** `PAGES=true BASE_PATH=/<repo> pnpm build` builds for a project site under `/<repo>/` (leave `BASE_PATH` empty for a `<user>.github.io` repo); publish `build/` with any Pages deploy (there's no workflow in this repo). Pages can't send headers, so this build puts the CSP in each page as a meta tag (without `frame-ancestors`, so other sites can frame the app there) and uses `404.html` as the fallback. Pages can't send headers for caching either.
 
-**Any other static host** works if it serves `200.html` for unknown paths (the rewrite in `build/_redirects`; `index.html` is the prerendered start page, not the fallback) and sends the headers from `build/_headers`. The `script-src` hash in that file is written by the build (`scripts/postbuild-csp.mjs`), so always deploy the `_headers` from the same build as the pages.
+**Any other static host** works if it serves `200.html` for `/board/*` (the rewrite in `build/_redirects`; `index.html` is the prerendered start page, not the fallback) and sends the headers from `build/_headers`. The `script-src` hash in that file is written by the build (`scripts/postbuild-csp.mjs`), so always deploy the `_headers` from the same build as the pages.
 
 To check a build locally exactly as it will be served: `pnpm build && pnpm serve`.
 

@@ -41,13 +41,14 @@ const matches = (pattern, path) =>
 	pattern.endsWith('*') ? path.startsWith(pattern.slice(0, -1)) : path === pattern;
 
 const rules = parseHeaders(readFileSync(join(ROOT, '_headers'), 'utf8'));
-// `_redirects`: the catch-all rewrite (`/*  /200.html  200`) names the SPA fallback page.
+// `_redirects`: the 200 rewrite (`/board/*  /200  200`) names the SPA fallback page. Its target
+// has no extension (Cloudflare Pages serves 200.html at /200), so add `.html` back here.
 const rewrite = readFileSync(join(ROOT, '_redirects'), 'utf8')
 	.split('\n')
 	.map((line) => line.trim().split(/\s+/))
-	.find(([from, , status]) => from === '/*' && status === '200');
-if (!rewrite?.[1]) throw new Error('_redirects: no catch-all 200 rewrite');
-const FALLBACK = join(ROOT, rewrite[1]);
+	.find(([from, , status]) => !from?.startsWith('#') && status === '200');
+if (!rewrite?.[1]) throw new Error('_redirects: no 200 rewrite');
+const FALLBACK = join(ROOT, extname(rewrite[1]) ? rewrite[1] : `${rewrite[1]}.html`);
 
 createServer((req, res) => {
 	const path = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname);
