@@ -1,1 +1,3 @@
-/*  /200.html  200
+# Only /board/* is client-only; / and /privacy are prerendered. The target has no ".html":
+# Cloudflare Pages redirects /200.html to /200, which would loop through a "/*" rule.
+/board/*  /200  200
