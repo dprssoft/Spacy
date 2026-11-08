@@ -7,6 +7,8 @@ declare global {
 	const __LIVE_RELAY_URLS__: string;
 	/** Google OAuth client id for Drive sync, `PUBLIC_GOOGLE_CLIENT_ID` at build time. */
 	const __GOOGLE_CLIENT_ID__: string;
+	/** `PUBLIC_TURN_URLS` (comma-separated), `PUBLIC_TURN_USERNAME`, `PUBLIC_TURN_CREDENTIAL` at build time. */
+	const __LIVE_TURN__: { urls: string; username: string; credential: string };
 
 	/** File Handling API (installed PWA opened with `.spacy` files; Chromium). */
 	interface LaunchParams {
