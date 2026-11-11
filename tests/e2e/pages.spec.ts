@@ -69,6 +69,91 @@ test('rename, move and delete a page from its tab', async ({ page }) => {
 	await expect(page.getByRole('menuitem', { name: 'Delete' })).toHaveAttribute('data-disabled', '');
 });
 
+test('drag a tab or use Ctrl+Shift+Arrow to reorder pages', async ({ page }) => {
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await tab(page, 'Page 1').click();
+	await expect(page.getByRole('tab')).toHaveText(['Page 1', 'Page 2', 'Page 3']);
+
+	const drag = async (name: string, to: string, side: 'left' | 'right', escape = false) => {
+		const from = (await tab(page, name).boundingBox())!;
+		const target = (await tab(page, to).boundingBox())!;
+		await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+		await page.mouse.down();
+		const x = side === 'left' ? target.x + 4 : target.x + target.width - 4;
+		await page.mouse.move(x, target.y + target.height / 2, { steps: 8 });
+		await expect(page.getByTestId('page-drop-mark')).toBeVisible();
+		if (escape) await page.keyboard.press('Escape');
+		await page.mouse.up();
+	};
+
+	await drag('Page 1', 'Page 3', 'right');
+	await expect(page.getByRole('tab')).toHaveText(['Page 2', 'Page 3', 'Page 1']);
+	// Dropping doesn't switch pages.
+	await expect(tab(page, 'Page 1')).toHaveAttribute('aria-selected', 'true');
+
+	await drag('Page 3', 'Page 2', 'left');
+	await expect(page.getByRole('tab')).toHaveText(['Page 3', 'Page 2', 'Page 1']);
+	await expect(tab(page, 'Page 1')).toHaveAttribute('aria-selected', 'true');
+
+	await drag('Page 1', 'Page 3', 'left', true);
+	await expect(page.getByRole('tab')).toHaveText(['Page 3', 'Page 2', 'Page 1']);
+	await expect(page.getByTestId('page-drop-mark')).toHaveCount(0);
+
+	await tab(page, 'Page 1').focus();
+	await page.keyboard.press('Control+Shift+ArrowLeft');
+	await expect(page.getByRole('tab')).toHaveText(['Page 3', 'Page 1', 'Page 2']);
+	await expect(tab(page, 'Page 1')).toBeFocused();
+
+	await page.reload();
+	await expect(page.getByRole('tab')).toHaveText(['Page 3', 'Page 1', 'Page 2']);
+});
+
+test('reorder pages by dragging a tab or with Ctrl+Shift+Arrow', async ({ page }) => {
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await expect(page.getByRole('tab')).toHaveText(['Page 1', 'Page 2', 'Page 3']);
+
+	const drag = async (name: string, to: string, side: 'left' | 'right') => {
+		const from = (await tab(page, name).boundingBox())!;
+		const target = (await tab(page, to).boundingBox())!;
+		await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+		await page.mouse.down();
+		const x = side === 'left' ? target.x + 4 : target.x + target.width - 4;
+		await page.mouse.move(x, target.y + target.height / 2, { steps: 8 });
+		await expect(page.getByTestId('page-drop-mark')).toBeVisible();
+		return () => page.mouse.up();
+	};
+
+	// Dropping a tab must not switch to it.
+	await tab(page, 'Page 1').click();
+	await (
+		await drag('Page 3', 'Page 1', 'left')
+	)();
+	await expect(page.getByRole('tab')).toHaveText(['Page 3', 'Page 1', 'Page 2']);
+	await expect(tab(page, 'Page 1')).toHaveAttribute('aria-selected', 'true');
+
+	await (
+		await drag('Page 3', 'Page 2', 'right')
+	)();
+	await expect(page.getByRole('tab')).toHaveText(['Page 1', 'Page 2', 'Page 3']);
+
+	// Escape cancels a drag.
+	await drag('Page 1', 'Page 3', 'right');
+	await page.keyboard.press('Escape');
+	await page.mouse.up();
+	await expect(page.getByTestId('page-drop-mark')).toHaveCount(0);
+	await expect(page.getByRole('tab')).toHaveText(['Page 1', 'Page 2', 'Page 3']);
+
+	await tab(page, 'Page 1').focus();
+	await page.keyboard.press('ControlOrMeta+Shift+ArrowRight');
+	await expect(page.getByRole('tab')).toHaveText(['Page 2', 'Page 1', 'Page 3']);
+	await expect(tab(page, 'Page 1')).toBeFocused();
+
+	await page.reload();
+	await expect(page.getByRole('tab')).toHaveText(['Page 2', 'Page 1', 'Page 3']);
+});
+
 test('duplicate a page, then delete several pages at once', async ({ page }) => {
 	await add(page, 'one');
 	await tab(page, 'Page 1').click({ button: 'right' });

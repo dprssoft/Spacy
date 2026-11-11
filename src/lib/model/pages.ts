@@ -90,12 +90,17 @@ export function renamePage(doc: Y.Doc, pageId: string, name: string): void {
 
 /** Moves a page one position left (-1) or right (+1). */
 export function movePage(doc: Y.Doc, pageId: string, delta: -1 | 1): void {
+	const i = getPages(doc).findIndex((p) => p.id === pageId);
+	if (i >= 0) movePageTo(doc, pageId, i + delta);
+}
+
+/** Moves a page so it ends up at `index` in the list; out-of-range indexes do nothing. */
+export function movePageTo(doc: Y.Doc, pageId: string, index: number): void {
 	const pages = getPages(doc);
 	const i = pages.findIndex((p) => p.id === pageId);
-	const j = i + delta;
-	if (i < 0 || j < 0 || j >= pages.length) return;
-	const next = [...pages];
-	[next[i], next[j]] = [next[j]!, next[i]!];
+	if (i < 0 || i === index || index < 0 || index >= pages.length) return;
+	const next = pages.filter((p) => p.id !== pageId);
+	next.splice(index, 0, pages[i]!);
 	setPages(doc, next);
 }
 

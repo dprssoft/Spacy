@@ -6,6 +6,7 @@ import {
 	duplicatePage,
 	getPages,
 	movePage,
+	movePageTo,
 	pageOfElement,
 	renamePage,
 	setActivePage,
@@ -160,6 +161,11 @@ export class PagesState {
 
 	move(pageId: string, delta: -1 | 1): void {
 		movePage(this.#ctx.doc, pageId, delta);
+		this.#sync();
+	}
+
+	moveTo(pageId: string, index: number): void {
+		movePageTo(this.#ctx.doc, pageId, index);
 		this.#sync();
 	}
 

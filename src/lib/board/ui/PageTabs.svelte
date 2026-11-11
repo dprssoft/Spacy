@@ -4,9 +4,11 @@
 	import { MAX_PAGE_NAME } from '$lib/model/pages';
 	import ConfirmDialog from '$lib/shared/ui/ConfirmDialog.svelte';
 	import { getBoard } from '../context';
+	import { isNoopSlot, slotToIndex, trackTabDrag } from './tabDrag';
 
 	// Sheet tabs: click to switch, double-click to rename, right-click (or the menu key) for more.
 	// Ctrl/Cmd-click and Shift-click pick several tabs; the menu then acts on all of them.
+	// Drag a tab (or Ctrl/Cmd+Shift+Arrow) to reorder.
 	const { pages } = getBoard();
 
 	let renaming = $state<string | null>(null);
@@ -14,6 +16,10 @@
 	let menuFor = $state<string | null>(null);
 	let deleting = $state<string[]>([]);
 	let confirmOpen = $state(false);
+	let tablist = $state<HTMLElement>();
+	/** The tab being dragged and the gap it would drop into. */
+	let drag = $state<{ id: string; from: number; slot: number } | null>(null);
+	let swallowClick = false;
 
 	const deleteTitle = $derived(
 		deleting.length === 1
@@ -34,7 +40,28 @@
 		node.select();
 	}
 
+	function onTabPointerDown(e: PointerEvent, id: string, from: number) {
+		// Touch drags scroll the tab strip; touch users reorder from the menu.
+		if (e.button !== 0 || e.pointerType === 'touch' || e.ctrlKey || e.metaKey || e.shiftKey) return;
+		trackTabDrag(e, {
+			tabs: () => [...(tablist?.querySelectorAll('[data-page-tab]') ?? [])],
+			onMove: (slot) => (drag = { id, from, slot }),
+			onEnd: (slot) => {
+				drag = null;
+				// The click that ends a drag must not switch pages.
+				swallowClick = true;
+				setTimeout(() => (swallowClick = false));
+				if (slot !== null && !isNoopSlot(from, slot)) pages.moveTo(id, slotToIndex(from, slot));
+			}
+		});
+	}
+
+	function focusTab(id: string) {
+		queueMicrotask(() => document.querySelector<HTMLElement>(`[data-page-tab="${id}"]`)?.focus());
+	}
+
 	function onTabClick(e: MouseEvent, id: string) {
+		if (swallowClick) return;
 		if (e.ctrlKey || e.metaKey) pages.togglePick(id);
 		else if (e.shiftKey) pages.pickRange(id);
 		else pages.select(id);
@@ -48,14 +75,18 @@
 
 	function onTabKeydown(e: KeyboardEvent, index: number) {
 		const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-		if (step) {
+		if (step && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+			e.preventDefault();
+			e.stopPropagation();
+			const id = pages.list[index]!.id;
+			pages.move(id, step);
+			focusTab(id);
+		} else if (step) {
 			const next = pages.list[(index + step + pages.list.length) % pages.list.length];
 			if (!next) return;
 			e.preventDefault();
 			pages.select(next.id);
-			queueMicrotask(() =>
-				document.querySelector<HTMLElement>(`[data-page-tab="${next.id}"]`)?.focus()
-			);
+			focusTab(next.id);
 		} else if (e.key === 'F2') {
 			e.preventDefault();
 			startRename(pages.list[index]!.id);
@@ -67,8 +98,16 @@
 </script>
 
 <div class="flex min-w-0 items-stretch">
-	<div role="tablist" aria-label="Pages" class="flex min-w-0 items-stretch overflow-x-auto">
+	<div
+		bind:this={tablist}
+		role="tablist"
+		aria-label="Pages"
+		class="flex min-w-0 items-stretch overflow-x-auto"
+	>
 		{#each pages.list as page, i (page.id)}
+			{#if drag && drag.slot === i && !isNoopSlot(drag.from, i)}
+				{@render dropMark()}
+			{/if}
 			{@const active = page.id === pages.current}
 			{@const picked = pages.picked.includes(page.id)}
 			{@const targets = menuFor === page.id ? pages.targets(page.id) : [page.id]}
@@ -104,9 +143,10 @@
 								tabindex={active ? 0 : -1}
 								data-page-tab={page.id}
 								data-picked={picked || undefined}
-								title="{page.name} — double-click to rename, right-click for more, Ctrl-click to pick several"
-								class="max-w-40 shrink-0 truncate border-r border-border px-3 text-xs whitespace-nowrap text-muted hover:bg-surface hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-inset aria-selected:bg-surface aria-selected:font-medium aria-selected:text-text aria-selected:shadow-[inset_0_-2px_0_var(--accent)] data-[picked]:bg-surface data-[picked]:text-text data-[picked]:shadow-[inset_0_-2px_0_var(--muted)]"
-								onpointerdown={undefined}
+								data-dragging={drag?.id === page.id || undefined}
+								title="{page.name} — double-click to rename, drag to reorder, right-click for more, Ctrl-click to pick several"
+								class="max-w-40 shrink-0 truncate border-r border-border px-3 text-xs whitespace-nowrap text-muted hover:bg-surface hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-inset aria-selected:bg-surface aria-selected:font-medium aria-selected:text-text aria-selected:shadow-[inset_0_-2px_0_var(--accent)] data-[dragging]:opacity-50 data-[picked]:bg-surface data-[picked]:text-text data-[picked]:shadow-[inset_0_-2px_0_var(--muted)]"
+								onpointerdown={(e) => onTabPointerDown(e, page.id, i)}
 								onclick={(e) => onTabClick(e, page.id)}
 								ondblclick={() => startRename(page.id)}
 								oncontextmenu={(e) => {
@@ -172,6 +212,9 @@
 				</DropdownMenu.Root>
 			{/if}
 		{/each}
+		{#if drag && drag.slot === pages.list.length && !isNoopSlot(drag.from, drag.slot)}
+			{@render dropMark()}
+		{/if}
 	</div>
 	<button
 		type="button"
@@ -183,6 +226,15 @@
 		<Plus class="size-4" aria-hidden="true" />
 	</button>
 </div>
+
+{#snippet dropMark()}
+	<!-- Zero net width, so showing it doesn't shift the tabs under the pointer. -->
+	<span
+		aria-hidden="true"
+		data-testid="page-drop-mark"
+		class="z-10 -mx-px my-1 w-0.5 shrink-0 rounded bg-accent"
+	></span>
+{/snippet}
 
 <ConfirmDialog
 	bind:open={confirmOpen}

@@ -15,6 +15,7 @@ import {
 	getPages,
 	listAllElements,
 	movePage,
+	movePageTo,
 	nextPageName,
 	pageOfElement,
 	pruneOrphanThreads,
@@ -53,6 +54,23 @@ describe('pages', () => {
 		movePage(doc, MAIN_PAGE, -1); // already first
 		expect(getPages(doc).map((p) => p.id)).toEqual([MAIN_PAGE, mid.id, p3.id, p2.id]);
 		expect(nextPageName(getPages(doc))).toBe('Page 5');
+	});
+
+	it('moves a page to any position', () => {
+		const doc = new Y.Doc();
+		const b = addPage(doc);
+		const c = addPage(doc);
+		const order = () => getPages(doc).map((p) => p.id);
+		movePageTo(doc, MAIN_PAGE, 2);
+		expect(order()).toEqual([b.id, c.id, MAIN_PAGE]);
+		movePageTo(doc, MAIN_PAGE, 0);
+		expect(order()).toEqual([MAIN_PAGE, b.id, c.id]);
+		movePageTo(doc, c.id, 1);
+		expect(order()).toEqual([MAIN_PAGE, c.id, b.id]);
+		movePageTo(doc, c.id, 3); // out of range
+		movePageTo(doc, c.id, -1);
+		movePageTo(doc, 'nope', 0);
+		expect(order()).toEqual([MAIN_PAGE, c.id, b.id]);
 	});
 
 	it('elements belong to the active page', () => {
