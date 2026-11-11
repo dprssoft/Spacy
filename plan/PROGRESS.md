@@ -1578,3 +1578,14 @@ Requested by the human: "i want to add tables with basic text formating"; chose 
 **Dependencies added:** none
 **Follow-ups:** no size picker when inserting (always 3 × 3); peers with different fonts may show a table a few pixels taller or shorter until one of them selects it.
 **Verification:** pnpm verify ✅ (1124 unit tests) · e2e `table-element.spec.ts` (4) and `doccard-tables.spec.ts` (2) ✅ chromium and firefox, `mobile-waystones.spec.ts` ✅ · full run before the "+" and merge changes (chromium, firefox, mobile): 467 passed, 5 failed — `visual.spec.ts` (3, also failing on clean HEAD), the Firefox `home.spec.ts` flake, and `mobile-waystones` (fixed above) · screenshots of a table being edited and idle.
+
+## Extra — Reorder pages — 2026-11-11
+Requested by the human: "feature: Change order of pages".
+
+**Summary:**
+- Drag a page tab sideways to move it; an accent line shows where it lands. Escape cancels; the drop doesn't switch pages. Ctrl/Cmd+Shift+←/→ moves the focused tab and keeps focus on it. The menu's Move left/right stays (the way to reorder on touch, where a drag scrolls the tab strip).
+- `movePageTo(doc, id, index)` in `model/pages.ts` (`movePage` uses it), `PagesState.moveTo`; drag math and pointer tracking in `board/ui/tabDrag.ts`.
+
+**Deviations:** none. No data model change (same `meta.pages` list).
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ · new unit tests (`tabDrag.test.ts`, `movePageTo`, `PagesState.moveTo`) · e2e `pages.spec.ts` ✅ chromium and firefox (new drag/keyboard test), `a11y.spec.ts` ✅ chromium.

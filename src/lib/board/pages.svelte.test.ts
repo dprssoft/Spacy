@@ -139,6 +139,8 @@ describe('PagesState', () => {
 		ctx.pages.move(page.id, -1);
 		expect(ctx.pages.list.map((p) => p.name)).toEqual(['Budget', 'Page 1']);
 		expect(ctx.pages.list[1]!.id).toBe(first);
+		ctx.pages.moveTo(first, 0);
+		expect(ctx.pages.list.map((p) => p.name)).toEqual(['Page 1', 'Budget']);
 	});
 });
 
