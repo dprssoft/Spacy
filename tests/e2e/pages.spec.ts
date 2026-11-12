@@ -246,3 +246,53 @@ test('a mention jumps to an object on another page', async ({ page }) => {
 		.poll(() => page.evaluate(() => [...window.__spacy!.ctx.selection.ids]))
 		.toEqual(['st']);
 });
+
+test('group pages into a folder, close it, drag a page in, and ungroup', async ({ page }) => {
+	const addPage = page.getByRole('button', { name: 'Add page' });
+	await addPage.click();
+	await addPage.click();
+	await addPage.click();
+	await tab(page, 'Page 2').click();
+	await tab(page, 'Page 3').click({ modifiers: ['Shift'] });
+	await tab(page, 'Page 3').click({ button: 'right' });
+	await page.getByRole('menuitem', { name: 'Move to folder' }).click();
+	await page.getByRole('menuitem', { name: 'New folder' }).click();
+
+	const folder = page.locator('[data-folder-tab]');
+	await expect(folder).toHaveAccessibleName('Folder 1, folder, 2 pages');
+	await expect(folder).toHaveAttribute('aria-expanded', 'true');
+	const pageTabs = page.locator('[data-page-tab]');
+	await expect(pageTabs).toHaveText(['Page 1', 'Page 2', 'Page 3', 'Page 4']);
+
+	// Rename the folder, then drag Page 4 in before Page 3.
+	await folder.dblclick();
+	const input = page.getByRole('textbox', { name: 'Folder name' });
+	await input.fill('Design');
+	await input.press('Enter');
+	await expect(folder).toHaveAccessibleName('Design, folder, 2 pages');
+	const from = (await tab(page, 'Page 4').boundingBox())!;
+	const target = (await tab(page, 'Page 3').boundingBox())!;
+	await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+	await page.mouse.down();
+	await page.mouse.move(target.x + 4, target.y + target.height / 2, { steps: 8 });
+	await expect(page.getByTestId('page-drop-mark')).toBeVisible();
+	await page.mouse.up();
+	await expect(folder).toHaveAccessibleName('Design, folder, 3 pages');
+	await expect(pageTabs).toHaveText(['Page 1', 'Page 2', 'Page 4', 'Page 3']);
+
+	// Closing the folder hides its pages except the one on screen.
+	await tab(page, 'Page 1').click();
+	await folder.click();
+	await expect(folder).toHaveAttribute('aria-expanded', 'false');
+	await expect(pageTabs).toHaveText(['Page 1']);
+	await expect(page.getByText('Saved locally')).toBeVisible();
+	await page.reload();
+	await expect(folder).toHaveAttribute('aria-expanded', 'false');
+	await folder.click();
+	await expect(pageTabs).toHaveText(['Page 1', 'Page 2', 'Page 4', 'Page 3']);
+
+	await folder.click({ button: 'right' });
+	await page.getByRole('menuitem', { name: 'Ungroup' }).click();
+	await expect(folder).toHaveCount(0);
+	await expect(pageTabs).toHaveText(['Page 1', 'Page 2', 'Page 4', 'Page 3']);
+});

@@ -2,15 +2,26 @@ import { getMeta, pageElementsMap } from '$lib/model/doc';
 import {
 	activePage,
 	addPage,
+	createFolder,
 	deletePages,
 	duplicatePage,
+	getPageFolders,
 	getPages,
+	moveFolder,
 	movePage,
 	movePageTo,
+	moveToFolder,
 	pageOfElement,
+	pageUnits,
+	placePages,
+	renameFolder,
 	renamePage,
 	setActivePage,
-	type Page
+	setFolderCollapsed,
+	ungroupFolder,
+	type Page,
+	type PageFolder,
+	type PageUnit
 } from '$lib/model/pages';
 import { getPref, setPref } from '$lib/shared/localPrefs';
 import type { BoardContext } from './context';
@@ -30,6 +41,9 @@ const lastPageKey = (boardId: string) => `page:${boardId}`;
  */
 export class PagesState {
 	list = $state<Page[]>([]);
+	folders = $state<PageFolder[]>([]);
+	/** Tab strip entries: top-level pages and folders with their pages. */
+	readonly units: PageUnit[] = $derived(pageUnits(this.list, this.folders));
 	current = $state('');
 	/** Tabs picked with Ctrl/Cmd- or Shift-click, besides the current one (empty: just it). */
 	picked = $state<string[]>([]);
@@ -56,6 +70,7 @@ export class PagesState {
 		this.#ctx = ctx;
 		const { doc, undo, id } = ctx;
 		this.list = getPages(doc);
+		this.folders = getPageFolders(doc);
 		// Reopen on the page that was last shown in this browser.
 		const last = getPref<string>(lastPageKey(id), '');
 		if (this.list.some((p) => p.id === last)) setActivePage(doc, last);
@@ -74,10 +89,17 @@ export class PagesState {
 	/** Page list changed (here or in another tab): follow it, and leave a page that was deleted. */
 	#sync(): void {
 		const { doc, undo } = this.#ctx;
+		const folders = getPageFolders(doc);
+		if (JSON.stringify(folders) !== JSON.stringify(this.folders)) this.folders = folders;
 		const next = getPages(doc);
 		const same =
 			next.length === this.list.length &&
-			next.every((p, i) => p.id === this.list[i]?.id && p.name === this.list[i]?.name);
+			next.every(
+				(p, i) =>
+					p.id === this.list[i]?.id &&
+					p.name === this.list[i]?.name &&
+					p.folder === this.list[i]?.folder
+			);
 		if (same) return;
 		this.list = next;
 		this.picked = this.picked.filter((id) => next.some((p) => p.id === id));
@@ -147,8 +169,9 @@ export class PagesState {
 		);
 	}
 
-	add(): Page {
-		const page = addPage(this.#ctx.doc, { afterId: this.current });
+	/** Adds a page after `afterId` (default: the current page, so into its folder) and shows it. */
+	add(afterId: string = this.current): Page {
+		const page = addPage(this.#ctx.doc, { afterId });
 		this.#sync();
 		this.select(page.id);
 		return page;
@@ -166,6 +189,46 @@ export class PagesState {
 
 	moveTo(pageId: string, index: number): void {
 		movePageTo(this.#ctx.doc, pageId, index);
+		this.#sync();
+	}
+
+	/** Drops pages into a folder (null: the top level) before a page (null: at the end). */
+	place(pageIds: readonly string[], before: string | null, folder: string | null): void {
+		placePages(this.#ctx.doc, pageIds, { before, folder });
+		this.#sync();
+	}
+
+	/** Puts pages into a new folder and returns its id. */
+	group(pageIds: readonly string[]): string | null {
+		const folder = createFolder(this.#ctx.doc, pageIds);
+		this.#sync();
+		return folder?.id ?? null;
+	}
+
+	/** Moves pages into a folder, or out of their folders with null. */
+	moveToFolder(pageIds: readonly string[], folderId: string | null): void {
+		moveToFolder(this.#ctx.doc, pageIds, folderId);
+		this.#sync();
+	}
+
+	moveFolder(folderId: string, before: string | null): void {
+		moveFolder(this.#ctx.doc, folderId, before);
+		this.#sync();
+	}
+
+	renameFolder(folderId: string, name: string): void {
+		renameFolder(this.#ctx.doc, folderId, name);
+		this.#sync();
+	}
+
+	toggleFolder(folderId: string): void {
+		const folder = this.folders.find((f) => f.id === folderId);
+		if (folder) setFolderCollapsed(this.#ctx.doc, folderId, !folder.collapsed);
+		this.#sync();
+	}
+
+	ungroup(folderId: string): void {
+		ungroupFolder(this.#ctx.doc, folderId);
 		this.#sync();
 	}
 
@@ -193,6 +256,7 @@ export class PagesState {
 		undo.clear();
 		for (const id of ids) this.#views.delete(id);
 		this.list = getPages(doc);
+		this.folders = getPageFolders(doc);
 		this.picked = [];
 		if (wasCurrent) this.#show((before.at(-1) ?? this.list[0]!).id);
 	}

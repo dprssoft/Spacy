@@ -6,13 +6,6 @@ export function dropSlot(tabs: readonly { left: number; right: number }[], x: nu
 	return i < 0 ? tabs.length : i;
 }
 
-/** The index a tab at `from` ends up at when dropped into gap `slot`. */
-export const slotToIndex = (from: number, slot: number): number => (slot > from ? slot - 1 : slot);
-
-/** Dropping into the gap right before or after the tab itself changes nothing. */
-export const isNoopSlot = (from: number, slot: number): boolean =>
-	slot === from || slot === from + 1;
-
 /**
  * Follows a tab drag from its pointerdown. Nothing happens until the pointer moves 5 px; then
  * `onMove` gets the gap under the pointer. `onEnd` gets the gap to drop into, or null when the

@@ -1589,3 +1589,18 @@ Requested by the human: "feature: Change order of pages".
 **Deviations:** none. No data model change (same `meta.pages` list).
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ · new unit tests (`tabDrag.test.ts`, `movePageTo`, `PagesState.moveTo`) · e2e `pages.spec.ts` ✅ chromium and firefox (new drag/keyboard test), `a11y.spec.ts` ✅ chromium.
+
+## Extra — Page folders — 2026-11-12
+Requested by the human: "feature: Folders for pages". Chosen with the human: collapsible groups in the tab strip, one level, open/closed state stored on the board (data model change approved; `00-architecture.md` updated).
+
+**Summary:**
+- Schema 11: page entries get an optional `folder`; `meta.pageFolders` holds `{ id, name, collapsed }`. `getPages` keeps each folder's pages together; empty folders are dropped on write.
+- Model (`model/pages.ts`): `createFolder`, `renameFolder`, `setFolderCollapsed`, `ungroupFolder`, `moveToFolder`, `placePages`, `moveFolder`, `pageUnits`. `movePage` (Ctrl/Cmd+Shift+Arrow, Move left/right) moves inside a folder, out past its ends, and over whole folders. New pages and duplicates next to a folder page join the folder.
+- Tab strip: a folder chip (chevron, folder icon, name, page count) opens/closes it on click, renames on double-click, and has a menu (Rename folder, New page in folder, Ungroup, Delete folder and its pages). Folder pages are tinted. The page tab menu gets "Move to folder" (New folder, other folders, Remove from folder) and works on picked tabs. Drag a page between pages of an open folder to put it in; drag a chip to move the whole folder. Arrow keys skip the pages of closed folders.
+- `PageTabs.svelte` split into `PageTab`, `FolderTab`, `TabNameInput` and `tabMenu.ts`; drop rules in `pageStrip.ts`.
+
+**Deviations:** none.
+**Test changes:** `isNoopSlot` / `slotToIndex` (and their test case in `tabDrag.test.ts`) were removed; `pageStrip.ts` replaces them.
+**Dependencies added:** none
+**Follow-ups:** you can't drag a page into a closed folder or onto the end of an open one (use "Move to folder"); there's no nesting.
+**Verification:** pnpm verify ✅ · new unit tests `pageFolders.test.ts`, `pageStrip.test.ts` · e2e `pages.spec.ts` (new folder test) and `a11y.spec.ts` ✅ chromium · screenshots of the strip, light and dark.
