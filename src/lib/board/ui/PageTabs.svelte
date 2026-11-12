@@ -5,6 +5,7 @@
 	import ConfirmDialog from '$lib/shared/ui/ConfirmDialog.svelte';
 	import { getBoard } from '../context';
 	import { isNoopSlot, slotToIndex, trackTabDrag } from './tabDrag';
+	import { scrollFade } from './scrollFade';
 
 	// Sheet tabs: click to switch, double-click to rename, right-click (or the menu key) for more.
 	// Ctrl/Cmd-click and Shift-click pick several tabs; the menu then acts on all of them.
@@ -60,6 +61,14 @@
 		queueMicrotask(() => document.querySelector<HTMLElement>(`[data-page-tab="${id}"]`)?.focus());
 	}
 
+	// With no scrollbar, the current tab must never hide behind the fade.
+	$effect(() => {
+		const id = pages.current;
+		tablist
+			?.querySelector(`[data-page-tab="${id}"]`)
+			?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+	});
+
 	function onTabClick(e: MouseEvent, id: string) {
 		if (swallowClick) return;
 		if (e.ctrlKey || e.metaKey) pages.togglePick(id);
@@ -100,6 +109,7 @@
 <div class="flex min-w-0 items-stretch">
 	<div
 		bind:this={tablist}
+		{@attach scrollFade}
 		role="tablist"
 		aria-label="Pages"
 		class="flex min-w-0 items-stretch overflow-x-auto"
