@@ -27,7 +27,7 @@
 		setDefaultStyle
 	} from './styleDefaults';
 	import ColorSwatches from './controls/ColorSwatches.svelte';
-	import FontList from './controls/FontList.svelte';
+	import FontMenu from './controls/FontMenu.svelte';
 	import PanelButton from './controls/PanelButton.svelte';
 	import MediaPlayButton from './MediaPlayButton.svelte';
 	import { layout } from '$lib/shared/layout.svelte';
@@ -363,9 +363,10 @@
 					/>
 				{/if}
 				{#if opts.has('fontFamily')}
-					<FontList
+					<FontMenu
 						value={font('family')}
 						onchange={(id) => apply({ style: { font: { family: id } } })}
+						triggerClass="inline-flex h-8 w-full items-center justify-between gap-1 rounded-md border border-border px-2 text-sm text-text hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
 					/>
 				{/if}
 				{#if opts.has('textColor')}

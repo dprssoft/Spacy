@@ -18,13 +18,15 @@ test('canvas text takes a bundled font, which loads and survives a reload', asyn
 	await add(page, [el.shape('a', -80, -50, { text: 'Привіт, world' })]);
 	await clickElement(page, 'a');
 	await page.getByTestId('style-text').click();
-	const fonts = page.getByRole('radiogroup', { name: 'Font' });
-	await expect(fonts.getByRole('radio', { name: 'Default' })).toHaveAttribute(
+	await page.getByRole('button', { name: 'Font: Default' }).click();
+	const fonts = page.getByTestId('font-menu');
+	await expect(fonts.getByRole('menuitem', { name: 'Default' })).toHaveAttribute(
 		'aria-checked',
 		'true'
 	);
-	await fonts.getByRole('radio', { name: 'Caveat' }).click();
+	await fonts.getByRole('menuitem', { name: 'Caveat' }).click();
 	expect((await byId(page, 'a')).style.font.family).toBe('caveat');
+	await expect(page.getByRole('button', { name: 'Font: Caveat' })).toBeVisible();
 
 	const label = page.locator('[data-element-id="a"]').getByText('Привіт, world');
 	await expect(label).toHaveCSS('font-family', /"Spacy Caveat"/);
@@ -40,24 +42,55 @@ test('canvas text takes a bundled font, which loads and survives a reload', asyn
 	);
 });
 
-test('the font list offers each font once and keeps its height in a short window', async ({
-	page
-}) => {
-	await page.setViewportSize({ width: 1280, height: 640 });
-	await add(page, [el.shape('a', -80, -50, { text: 'Hello' })]);
-	await clickElement(page, 'a');
+test('one font list: every font once, each reachable in a short window', async ({ page }) => {
+	// The selection near the top leaves little room above it, where the text panel opens.
+	await page.setViewportSize({ width: 900, height: 600 });
+	const sticky = (id: string, y: number) => ({
+		...el.shape(id, -120, y, { w: 240, h: 90, text: id }),
+		type: 'sticky',
+		kind: undefined,
+		color: '#ffe066'
+	});
+	await add(page, [sticky('a', -260), sticky('b', -150), sticky('c', -40)]);
+	await clickElement(page, 'b');
 	await page.getByTestId('style-text').click();
-	const fonts = page.getByRole('radiogroup', { name: 'Font', exact: true });
-	await expect(fonts.getByRole('radio', { name: 'Default' })).toBeVisible();
-	await expect(fonts.getByRole('radio', { name: 'Inter' })).toHaveCount(0);
-	// Squeezed by the panel, the list used to show about two fonts.
-	expect((await fonts.boundingBox())!.height).toBeGreaterThan(200);
-	await fonts.getByRole('radio', { name: 'Pacifico' }).click();
-	expect((await byId(page, 'a')).style.font.family).toBe('pacifico');
-	await expect(fonts.getByRole('radio', { name: 'Pacifico' })).toHaveAttribute(
-		'aria-checked',
-		'true'
-	);
+	const menu = page.getByTestId('font-menu');
+	const labels = [
+		'Default',
+		'Montserrat',
+		'Oswald',
+		'Comfortaa',
+		'Lora',
+		'Roboto Slab',
+		'Playfair Display',
+		'JetBrains Mono',
+		'Caveat',
+		'Pacifico'
+	];
+	await page.getByRole('button', { name: /^Font: / }).click();
+	await expect(menu.getByRole('menuitem')).toHaveText(labels);
+
+	// The bottom fonts used to sit below the panel's edge, out of reach of the wheel and the mouse.
+	for (const name of ['Playfair Display', 'JetBrains Mono', 'Caveat', 'Pacifico']) {
+		if (!(await menu.isVisible())) await page.getByRole('button', { name: /^Font: / }).click();
+		const box = (await menu.boundingBox())!;
+		await page.mouse.move(box.x + box.width / 2, box.y + 40);
+		for (let i = 0; i < 6; i++) await page.mouse.wheel(0, 120);
+		const item = menu.getByRole('menuitem', { name, exact: true });
+		const r = (await item.boundingBox())!;
+		const [x, y] = [r.x + r.width / 2, r.y + r.height / 2];
+		// Really under the pointer: not clipped by anything around it.
+		expect(
+			await page.evaluate(
+				([x, y]) =>
+					document.elementFromPoint(x!, y!)?.closest('[role=menuitem]')?.textContent?.trim(),
+				[x, y]
+			)
+		).toBe(name);
+		await page.mouse.click(x, y);
+		await expect(page.getByRole('button', { name: `Font: ${name}` })).toBeVisible();
+	}
+	expect((await byId(page, 'b')).style.font.family).toBe('pacifico');
 });
 
 test('any color: typed hex, remembered under Recent, also for sticky notes', async ({ page }) => {
