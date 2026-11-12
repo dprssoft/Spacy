@@ -1604,3 +1604,15 @@ Requested by the human: "feature: Folders for pages". Chosen with the human: col
 **Dependencies added:** none
 **Follow-ups:** you can't drag a page into a closed folder or onto the end of an open one (use "Move to folder"); there's no nesting.
 **Verification:** pnpm verify ✅ · new unit tests `pageFolders.test.ts`, `pageStrip.test.ts` · e2e `pages.spec.ts` (new folder test) and `a11y.spec.ts` ✅ chromium · screenshots of the strip, light and dark.
+
+## Extra — Equal spacing snapping — 2026-11-12
+Requested by the human: "rework: Equal distances between objects (new snapping)".
+
+**Summary:**
+- Moving a selection now also snaps to equal gaps (`board/engine/gapSnapping.ts`, `snapMoveEqual`): midway between the nearest neighbours of its row (or column), or so that its gap to a neighbour repeats a gap already in that row. "Row" = boxes overlapping the mover across the axis that also overlap each other; a gap with another row box inside it doesn't count. Per axis, the smaller correction wins between edge/center guides and gaps; grid snapping still applies only when neither matched. Ctrl/Cmd still turns all snapping off.
+- While dragging, every gap of the row as wide as one of the mover's gaps is marked (red line with end caps and its width in board units) in the preview overlay (`preview.gaps`).
+- Resizing and drawing still snap to edges and centers only.
+
+**Deviations:** none. No data model change.
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ · unit tests `gapSnapping.test.ts` · e2e `arrange.spec.ts` ✅ chromium (new gap test) · screenshot of the marks mid-drag.

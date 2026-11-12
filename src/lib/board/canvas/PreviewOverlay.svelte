@@ -28,6 +28,27 @@
 					};
 		})
 	);
+	// Equal gaps in screen space: the gap's line, a cap at each end and its width in board units.
+	const gaps = $derived(
+		preview.gaps.map((g) => {
+			const z = viewport.zoom;
+			const [a, b, at] = [g.from * z, g.to * z, g.at * z];
+			const label = String(Math.round(g.to - g.from));
+			return g.axis === 'x'
+				? {
+						d: `M${a + viewport.x} ${at + viewport.y - 5} v10 M${b + viewport.x} ${at + viewport.y - 5} v10 M${a + viewport.x} ${at + viewport.y} H${b + viewport.x}`,
+						cx: (a + b) / 2 + viewport.x,
+						cy: at + viewport.y + 12,
+						label
+					}
+				: {
+						d: `M${at + viewport.x - 5} ${a + viewport.y} h10 M${at + viewport.x - 5} ${b + viewport.y} h10 M${at + viewport.x} ${a + viewport.y} V${b + viewport.y}`,
+						cx: at + viewport.x + 8 + label.length * 3.5,
+						cy: (a + b) / 2 + viewport.y,
+						label
+					};
+		})
+	);
 	// The brush stroke in progress. An eraser can't erase in this overlay, so it shows as a grey
 	// band; the real erasing happens when the stroke is committed.
 	const sketchPaint = $derived(preview.sketch ? strokePaint(preview.sketch) : null);
@@ -67,6 +88,27 @@
 			stroke="#e03131"
 			stroke-width="1"
 		/>
+	{/each}
+	{#each gaps as g, i (i)}
+		<g data-testid="snap-gap">
+			<path d={g.d} stroke="#e03131" stroke-width="1.5" fill="none" />
+			<rect
+				x={g.cx - 4 - g.label.length * 3.5}
+				y={g.cy - 8}
+				width={8 + g.label.length * 7}
+				height="16"
+				rx="4"
+				fill="#e03131"
+			/>
+			<text
+				x={g.cx}
+				y={g.cy}
+				fill="#fff"
+				font-size="11"
+				text-anchor="middle"
+				dominant-baseline="central">{g.label}</text
+			>
+		</g>
 	{/each}
 	{#if preview.eraserTrail.length > 1}
 		<polyline

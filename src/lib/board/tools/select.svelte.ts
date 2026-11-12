@@ -250,6 +250,7 @@ export function createSelectTool(ctx: BoardContext): Tool {
 
 	function clearGuides() {
 		ctx.preview.guides = [];
+		ctx.preview.gaps = [];
 	}
 
 	function cancel() {

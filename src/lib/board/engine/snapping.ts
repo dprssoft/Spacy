@@ -31,7 +31,7 @@ function bestOffset(mine: number[], theirs: number[], threshold: number): number
 }
 
 /** Guides through every candidate (and the subject) that shares a line with the snapped subject. */
-function guidesFor(subject: Rect, candidates: readonly Rect[], axis: 'x' | 'y'): Guide[] {
+export function guidesFor(subject: Rect, candidates: readonly Rect[], axis: 'x' | 'y'): Guide[] {
 	const lines = axis === 'x' ? xLines : yLines;
 	const span = (r: Rect): [number, number] => (axis === 'x' ? [r.y, r.y + r.h] : [r.x, r.x + r.w]);
 	const out: Guide[] = [];
