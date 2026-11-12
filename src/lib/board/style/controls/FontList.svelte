@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DEFAULT_FONT, FONT_CATEGORIES, FONTS } from '$lib/fonts/catalog';
+	import { DEFAULT_FONT, FONT_CATEGORIES, pickableFonts } from '$lib/fonts/catalog';
 	import type { Mixed } from '../options';
 
 	let {
@@ -12,13 +12,19 @@
 	} = $props();
 
 	const current = $derived(value === undefined ? DEFAULT_FONT : value);
+	const fonts = $derived(pickableFonts(typeof current === 'string' ? current : null));
 </script>
 
-<!-- Each name is shown in its own font. -->
-<div role="radiogroup" aria-label="Font" class="flex max-h-56 w-56 flex-col overflow-y-auto pr-1">
+<!-- Each name is shown in its own font. It keeps its height in a short panel, which scrolls
+     instead: squeezed, it showed two fonts and hid the rest. -->
+<div
+	role="radiogroup"
+	aria-label="Font"
+	class="flex max-h-56 w-56 shrink-0 flex-col overflow-y-auto pr-1"
+>
 	{#each FONT_CATEGORIES as category (category)}
 		<span class="px-2 pt-1.5 pb-0.5 text-[11px] text-muted">{category}</span>
-		{#each FONTS.filter((f) => f.category === category) as f (f.id)}
+		{#each fonts.filter((f) => f.category === category) as f (f.id)}
 			<button
 				type="button"
 				role="radio"

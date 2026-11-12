@@ -12,6 +12,8 @@ export interface FontDef {
 	stack: string;
 	/** The family name of the bundled files, if any (prefixed: never the user's installed copy). */
 	bundled?: { family: string; weight: string };
+	/** Still valid and drawn, but not offered in font pickers (shown only while it is in use). */
+	hidden?: boolean;
 }
 
 const bundled = (name: string, weight: string, fallback: string) => {
@@ -27,6 +29,8 @@ export const FONTS: readonly FontDef[] = [
 		id: 'inter',
 		label: 'Inter',
 		category: 'Sans serif',
+		// Default is Inter too, so offering both showed the same font twice.
+		hidden: true,
 		...bundled('Inter', '100 900', FONT_FAMILY)
 	},
 	{
@@ -98,6 +102,10 @@ export const FONT_CATEGORIES: readonly FontCategory[] = [
 	'Monospace',
 	'Handwriting'
 ];
+
+/** The fonts a picker offers: every font that isn't hidden, plus `current` if it is. */
+export const pickableFonts = (current?: string | null): FontDef[] =>
+	FONTS.filter((f) => !f.hidden || f.id === current);
 
 const byId = new Map(FONTS.map((f) => [f.id, f]));
 

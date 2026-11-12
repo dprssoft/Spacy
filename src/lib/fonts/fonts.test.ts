@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { FONT_FAMILY } from '$lib/model/defaults';
-import { DEFAULT_FONT, docFontCss, fontDef, FONTS, fontStack, isFontId } from './catalog';
+import {
+	DEFAULT_FONT,
+	docFontCss,
+	fontDef,
+	FONTS,
+	fontStack,
+	isFontId,
+	pickableFonts
+} from './catalog';
 import { FONT_FILES, UNICODE_RANGES } from './files';
 
 describe('font catalog', () => {
@@ -31,5 +39,14 @@ describe('font catalog', () => {
 		for (const f of FONTS)
 			if (f.id === DEFAULT_FONT) expect(css).not.toContain(`'${f.id}'`);
 			else expect(css).toContain(`[data-font='${f.id}'] { font-family: ${f.stack}; }`);
+	});
+
+	it('pickers offer no font twice: Inter stays valid but only shows while in use', () => {
+		const ids = pickableFonts().map((f) => f.id);
+		expect(ids).not.toContain('inter');
+		expect(new Set(pickableFonts().map((f) => f.label)).size).toBe(ids.length);
+		expect(pickableFonts('inter').map((f) => f.id)).toContain('inter');
+		expect(isFontId('inter')).toBe(true);
+		expect(fontStack('inter')).toContain('"Spacy Inter"');
 	});
 });
