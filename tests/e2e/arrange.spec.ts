@@ -56,6 +56,32 @@ test('dragging next to a row repeats its gap and shows the equal gaps', async ({
 	await expect(page.getByTestId('snap-gap')).toHaveCount(0);
 });
 
+test('cards in a frame keep their own spacing, not the spacing of things outside it', async ({
+	page
+}) => {
+	// A titled column like a kanban board: a label 40 above the frame, cards 20 apart inside it.
+	const card = (id: string, y: number) => el.shape(id, -300, y, { w: 160, h: 60, parentId: 'col' });
+	await add(page, [
+		el.shape('label', -320, -290, { w: 200, h: 30 }),
+		{
+			...el.shape('col', -320, -220, { w: 200, h: 500 }),
+			type: 'frame',
+			kind: undefined,
+			text: undefined,
+			title: 'To do'
+		},
+		card('c1', -200),
+		card('c2', -120),
+		card('c3', 100)
+	]);
+	// Drag c3 up to 3px below the spot that repeats the cards' gap of 20 (y = −40).
+	const release = await dragBy(page, 'c3', 0, -137);
+	await expect(page.getByTestId('snap-gap')).toHaveCount(2);
+	await expect(page.getByTestId('snap-gap').first()).toContainText('20');
+	await release();
+	expect((await byId(page, 'c3')).y).toBe(-40);
+});
+
 test('dragging near another element snaps to its edge and shows a guide', async ({ page }) => {
 	await add(page, [el.shape('a', -300, -200), el.shape('b', 0, 100)]);
 	// Move b left by 297px: its left edge lands 3px from a's left edge (x = -300) → snaps.

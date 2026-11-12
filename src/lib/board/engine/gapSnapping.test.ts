@@ -65,3 +65,27 @@ describe('equal spacing snapping', () => {
 		expect(r.gaps).toHaveLength(3);
 	});
 });
+
+describe('equal spacing inside a frame', () => {
+	// A column frame with cards 10 apart.
+	const frame = { x: 0, y: 100, w: 200, h: 700 };
+	const cards = [box(20, 120, 160, 60), box(20, 190, 160, 60), box(20, 260, 160, 60)];
+
+	it('a frame around the cards does not break the gaps between them', () => {
+		const r = snapMoveEqual(box(20, 333, 160, 60), [frame, ...cards], 6);
+		expect(r.dy).toBe(-3); // y 330: the cards' gap of 10
+		expect(r.gaps).toHaveLength(3);
+	});
+
+	it('only siblings set the spacing', () => {
+		// A board title and a column label 20 apart, above the frame (like a kanban board).
+		const title = box(0, 0, 100, 40);
+		const label = box(0, 60, 100, 30);
+		const all = [frame, title, label, ...cards];
+		const near = box(20, 342, 160, 60); // 2 from the title→label gap after the last card
+		expect(snapMoveEqual(near, all, 6).dy).toBe(-2);
+		const r = snapMoveEqual(near, all, 6, cards);
+		expect(r.gaps).toEqual([]);
+		expect(r.snappedY).toBe(false);
+	});
+});
