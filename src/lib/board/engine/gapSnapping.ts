@@ -33,6 +33,8 @@ const MAX_ROW = 40;
 const flip = (r: Rect): Rect => ({ x: r.y, y: r.x, w: r.h, h: r.w });
 const right = (r: Rect) => r.x + r.w;
 const bottom = (r: Rect) => r.y + r.h;
+const encloses = (o: Rect, i: Rect) =>
+	o.x <= i.x && o.y <= i.y && right(o) >= right(i) && bottom(o) >= bottom(i);
 
 /** Boxes overlapping `m` across the axis (same row), nearest first. */
 function rowOf(m: Rect, candidates: readonly Rect[]): Rect[] {
@@ -58,6 +60,7 @@ function gapsIn(row: readonly Rect[]): Gap[] {
 			if (a === b || size <= EPS) continue;
 			// Two boxes "in a row" must overlap across the axis themselves, not just with the mover.
 			if (!(a.y < bottom(b) && b.y < bottom(a))) continue;
+			// Something in between breaks the gap, but a box around both (a frame) doesn't.
 			const blocked = row.some(
 				(c) =>
 					c !== a &&
@@ -65,7 +68,9 @@ function gapsIn(row: readonly Rect[]): Gap[] {
 					c.x < b.x &&
 					right(c) > right(a) &&
 					c.y < bottom(a) &&
-					bottom(c) > a.y
+					bottom(c) > a.y &&
+					!encloses(c, a) &&
+					!encloses(c, b)
 			);
 			if (!blocked) out.push({ a, b, size });
 		}
@@ -123,21 +128,23 @@ function equalGaps(m: Rect, candidates: readonly Rect[]): GapMark[] {
 export function snapMoveEqual(
 	moving: Rect,
 	candidates: readonly Rect[],
-	threshold: number
+	threshold: number,
+	/** The boxes equal gaps are measured between (default: all candidates). */
+	gapCandidates: readonly Rect[] = candidates
 ): EqualSnapResult {
 	const edges = snapMove(moving, candidates, threshold);
 	const edgeX = edges.guides.some((g) => g.axis === 'x') ? edges.dx : null;
 	const edgeY = edges.guides.some((g) => g.axis === 'y') ? edges.dy : null;
-	const gapX = gapOffset(moving, candidates, threshold);
-	const gapY = gapOffset(flip(moving), candidates.map(flip), threshold);
+	const flipped = gapCandidates.map(flip);
+	const gapX = gapOffset(moving, gapCandidates, threshold);
+	const gapY = gapOffset(flip(moving), flipped, threshold);
 	const pick = (edge: number | null, gap: number | null) =>
 		gap !== null && (edge === null || Math.abs(gap) < Math.abs(edge) - EPS) ? gap : edge;
 	const dx = pick(edgeX, gapX);
 	const dy = pick(edgeY, gapY);
 	const snapped = { ...moving, x: moving.x + (dx ?? 0), y: moving.y + (dy ?? 0) };
-	const flipped = candidates.map(flip);
 	const gaps = [
-		...equalGaps(snapped, candidates),
+		...equalGaps(snapped, gapCandidates),
 		...equalGaps(flip(snapped), flipped).map((g): GapMark => ({ ...g, axis: 'y' }))
 	];
 	return {

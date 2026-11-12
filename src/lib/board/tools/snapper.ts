@@ -1,6 +1,7 @@
 import { GRID_SIZE } from '$lib/model/defaults';
-import type { Point, Rect } from '$lib/model/types';
+import type { FrameElement, Point, Rect } from '$lib/model/types';
 import type { BoardContext } from '../context';
+import { frameFor } from '../engine/frames';
 import { expandRectRatio, rectCenter } from '../engine/geometry';
 import { snapMoveEqual, type GapMark } from '../engine/gapSnapping';
 import { snapPoint, snapToGrid, type Guide } from '../engine/snapping';
@@ -18,12 +19,31 @@ export function createSnapper(ctx: BoardContext, excludeIds: Iterable<string> = 
 	const exclude = new Set(excludeIds);
 	const view = expandRectRatio(visibleWorldRect(ctx.viewport.vp, ctx.viewport.size), 0.25);
 	const c = rectCenter(view);
-	const candidates: Rect[] = ctx.store.index
+	const items = ctx.store.index
 		.search(view)
-		.filter((id) => !exclude.has(id) && ctx.store.get(id)?.type !== 'connector')
-		.flatMap((id) => ctx.store.index.get(id) ?? [])
-		.sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))
+		.flatMap((id) => {
+			const el = ctx.store.get(id);
+			const rect = ctx.store.index.get(id);
+			return !exclude.has(id) && el && rect && el.type !== 'connector' ? [{ el, rect }] : [];
+		})
+		.sort(
+			(a, b) =>
+				Math.hypot(a.rect.x - c.x, a.rect.y - c.y) - Math.hypot(b.rect.x - c.x, b.rect.y - c.y)
+		)
 		.slice(0, MAX_CANDIDATES);
+	const candidates: Rect[] = items.map((i) => i.rect);
+	const frames = items.map((i) => i.el).filter((el): el is FrameElement => el.type === 'frame');
+	/**
+	 * Equal gaps only count between siblings: the elements of the frame the box is over (or the
+	 * top-level ones), like the frame it would join when dropped. Otherwise a frame's title or its
+	 * neighbours would set the spacing of the cards inside it.
+	 */
+	const siblingsAt = (rect: Rect): Rect[] => {
+		const parent = frameFor(rect, frames);
+		return items
+			.filter((i) => (i.el.parentId ?? null) === parent && i.el.id !== parent)
+			.map((i) => i.rect);
+	};
 	const threshold = () => THRESHOLD_PX / ctx.viewport.zoom;
 	const grid = () => ctx.prefs.snapToGrid;
 
@@ -39,7 +59,7 @@ export function createSnapper(ctx: BoardContext, excludeIds: Iterable<string> = 
 				show([]);
 				return { dx: 0, dy: 0 };
 			}
-			const r = snapMoveEqual(rect, candidates, threshold());
+			const r = snapMoveEqual(rect, candidates, threshold(), siblingsAt(rect));
 			let { dx, dy } = r;
 			if (grid()) {
 				if (!r.snappedX) dx = snapToGrid(rect.x, GRID_SIZE) - rect.x;

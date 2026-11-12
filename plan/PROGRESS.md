@@ -1612,6 +1612,7 @@ Requested by the human: "rework: Equal distances between objects (new snapping)"
 - Moving a selection now also snaps to equal gaps (`board/engine/gapSnapping.ts`, `snapMoveEqual`): midway between the nearest neighbours of its row (or column), or so that its gap to a neighbour repeats a gap already in that row. "Row" = boxes overlapping the mover across the axis that also overlap each other; a gap with another row box inside it doesn't count. Per axis, the smaller correction wins between edge/center guides and gaps; grid snapping still applies only when neither matched. Ctrl/Cmd still turns all snapping off.
 - While dragging, every gap of the row as wide as one of the mover's gaps is marked (red line with end caps and its width in board units) in the preview overlay (`preview.gaps`).
 - Resizing and drawing still snap to edges and centers only.
+- Fix (reported with a kanban board screenshot: "its snapping wrong, distance too big"): a frame around the cards counted as "something in between", so every gap between cards was ignored and the card snapped to the gap between the board title and a column label. Now a box enclosing both sides doesn't break a gap, and gaps only count between siblings: the elements of the frame the moving box is over (or the top-level ones), like the frame it would join on drop.
 
 **Deviations:** none. No data model change.
 **Dependencies added:** none
