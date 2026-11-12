@@ -7,7 +7,13 @@ test.beforeEach(async ({ page }) => {
 	await waitForHooks(page);
 });
 
-type Snap = { id: string; x: number; y: number; style: { fill: string; strokeWidth: number } };
+type Snap = {
+	id: string;
+	x: number;
+	y: number;
+	w: number;
+	style: { fill: string; strokeWidth: number };
+};
 const byId = async (page: Page, id: string) =>
 	((await page.evaluate(() => window.__spacy!.list())) as Snap[]).find((e) => e.id === id)!;
 const add = (page: Page, els: unknown[]) =>
@@ -35,6 +41,20 @@ async function dragBy(page: Page, id: string, dx: number, dy: number, mods: stri
 		for (const m of mods) await page.keyboard.up(m);
 	};
 }
+
+test('dragging next to a row repeats its gap and shows the equal gaps', async ({ page }) => {
+	// a and b are 200 wide with a 60 gap; c starts 250 below, out of reach of any edge.
+	await add(page, [el.shape('a', -400, -100), el.shape('b', -140, -100), el.shape('c', 0, 150)]);
+	const { w } = await byId(page, 'a');
+	const gap = -140 - (-400 + w);
+	// Drag c up into the row, 3px past the spot that repeats the gap.
+	const release = await dragBy(page, 'c', -140 + w + gap + 3, -250);
+	await expect(page.getByTestId('snap-gap')).toHaveCount(2);
+	await expect(page.getByTestId('snap-gap').first()).toContainText(String(gap));
+	await release();
+	expect((await byId(page, 'c')).x).toBe(-140 + w + gap);
+	await expect(page.getByTestId('snap-gap')).toHaveCount(0);
+});
 
 test('dragging near another element snaps to its edge and shows a guide', async ({ page }) => {
 	await add(page, [el.shape('a', -300, -200), el.shape('b', 0, 100)]);

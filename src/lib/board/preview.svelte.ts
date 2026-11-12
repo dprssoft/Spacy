@@ -1,5 +1,6 @@
 import { SvelteSet } from 'svelte/reactivity';
 import type { ConnectorElement, Point, StrokeWidth } from '$lib/model/types';
+import type { GapMark } from './engine/gapSnapping';
 import type { Guide } from './engine/snapping';
 import type { SketchStroke } from './sketch/brushes';
 
@@ -13,6 +14,8 @@ export class PreviewState {
 	eraserTrail = $state<Point[]>([]);
 	/** Snap guides (world coordinates) shown while dragging. */
 	guides = $state<Guide[]>([]);
+	/** Equal gaps (world coordinates) shown while moving. */
+	gaps = $state<GapMark[]>([]);
 	/** The brush stroke being drawn with the sketch tool (board coordinates). */
 	sketch = $state<SketchStroke | null>(null);
 	/** A connector being drawn (not yet in the document). */

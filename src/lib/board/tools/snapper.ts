@@ -2,15 +2,16 @@ import { GRID_SIZE } from '$lib/model/defaults';
 import type { Point, Rect } from '$lib/model/types';
 import type { BoardContext } from '../context';
 import { expandRectRatio, rectCenter } from '../engine/geometry';
-import { snapMove, snapPoint, snapToGrid, type Guide } from '../engine/snapping';
+import { snapMoveEqual, type GapMark } from '../engine/gapSnapping';
+import { snapPoint, snapToGrid, type Guide } from '../engine/snapping';
 import { visibleWorldRect } from '../engine/viewport';
 
 const THRESHOLD_PX = 6;
 const MAX_CANDIDATES = 300;
 
 /**
- * Snapping for one gesture: smart guides to nearby elements' edges and centers, then (per axis,
- * if no guide matched) the grid when "Snap to grid" is on. Holding Ctrl/Cmd disables snapping.
+ * Snapping for one gesture: smart guides to nearby elements' edges and centers, equal gaps when
+ * moving, then (per axis, if nothing matched) the grid when "Snap to grid" is on. Holding Ctrl/Cmd disables snapping.
  * Candidates are collected once, when the gesture starts.
  */
 export function createSnapper(ctx: BoardContext, excludeIds: Iterable<string> = []) {
@@ -26,8 +27,9 @@ export function createSnapper(ctx: BoardContext, excludeIds: Iterable<string> = 
 	const threshold = () => THRESHOLD_PX / ctx.viewport.zoom;
 	const grid = () => ctx.prefs.snapToGrid;
 
-	const show = (guides: Guide[]) => {
+	const show = (guides: Guide[], gaps: GapMark[] = []) => {
 		ctx.preview.guides = guides;
+		ctx.preview.gaps = gaps;
 	};
 
 	return {
@@ -37,13 +39,13 @@ export function createSnapper(ctx: BoardContext, excludeIds: Iterable<string> = 
 				show([]);
 				return { dx: 0, dy: 0 };
 			}
-			const r = snapMove(rect, candidates, threshold());
+			const r = snapMoveEqual(rect, candidates, threshold());
 			let { dx, dy } = r;
 			if (grid()) {
-				if (!r.guides.some((g) => g.axis === 'x')) dx = snapToGrid(rect.x, GRID_SIZE) - rect.x;
-				if (!r.guides.some((g) => g.axis === 'y')) dy = snapToGrid(rect.y, GRID_SIZE) - rect.y;
+				if (!r.snappedX) dx = snapToGrid(rect.x, GRID_SIZE) - rect.x;
+				if (!r.snappedY) dy = snapToGrid(rect.y, GRID_SIZE) - rect.y;
 			}
-			show(r.guides);
+			show(r.guides, r.gaps);
 			return { dx, dy };
 		},
 		/** A dragged point (resize handle, drawing corner) snapped to guides/grid. */
