@@ -1628,6 +1628,7 @@ Reported by the human: "in font list some fonts have doubles and cannot be chose
 
 **Deviations:** none. No data model change.
 **Dependencies added:** none
+- Follow-up ("there's still 4 fonts that cannot be picked" → "i need 1 list for all fonts"): the inline font list was a scroll box inside the text panel, which scrolls too when it opens with little room; the wheel scrolled only the list, so its last four rows (Playfair Display, JetBrains Mono, Caveat, Pacifico) stayed below the panel's edge. Replaced by one font picker for the whole app, `style/controls/FontMenu.svelte`: a button showing the current font that opens a single menu of every font (grouped, each in its own face), the only thing that scrolls, sized to the room on screen. The text panel and the doc card ribbon both use it; `FontList.svelte` and the ribbon's font-specific menu code are gone.
+
 **Test changes:** `doc-format.spec.ts` picked "Serif" from the doc card font menu, which no longer offers it; it picks Lora and checks for "Spacy Lora" instead.
-**Follow-ups:** with Liquid glass on, the text panel isn't blurred (the board shows through crisp) and can open upward with little room; not fixed yet.
-**Verification:** pnpm verify ✅ · unit test in `fonts.test.ts` · e2e `fonts-colors.spec.ts` ✅ chromium (new test: no Inter twice, list taller than 200 px in a 640 px window, Pacifico picked and checked), `doc-format.spec.ts` ✅ chromium.
+**Verification:** pnpm verify ✅ · unit test in `fonts.test.ts` · e2e `fonts-colors.spec.ts` ✅ chromium (new test: no Inter twice, list taller than 200 px in a 640 px window, Pacifico picked and checked), `doc-format.spec.ts` ✅ chromium · after the font menu: `fonts-colors.spec.ts` (font tests now use the menu; new test picks the four bottom fonts with the wheel and real clicks in a 600 px window, checking each is under the pointer) and `doc-format.spec.ts` ✅ chromium and firefox.

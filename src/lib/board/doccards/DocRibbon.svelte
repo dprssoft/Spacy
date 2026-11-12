@@ -21,10 +21,11 @@
 	import DocColorPicker from './DocColorPicker.svelte';
 	import type { Editor } from './editorFactory';
 	import TableMenu from './TableMenu.svelte';
+	import FontMenu from '../style/controls/FontMenu.svelte';
+	import { DEFAULT_FONT } from '$lib/fonts/catalog';
 	import * as fmt from './formatCommands';
 	import {
 		BLOCK_STYLES,
-		pickableFontChoices,
 		SIZES,
 		type Align,
 		type FormatChoice,
@@ -158,9 +159,7 @@
 			title={name}
 			data-doc-format={mark}
 		>
-			<span class="truncate" data-font={mark === 'fontFamily' ? current : undefined}
-				>{labelOf(choices, current, fallback)}</span
-			>
+			<span class="truncate">{labelOf(choices, current, fallback)}</span>
 			<ChevronDown class="size-3 shrink-0 opacity-60" aria-hidden="true" />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Portal>
@@ -177,7 +176,7 @@
 						<span class="w-4 shrink-0">
 							{#if c.id === current}<Check class="size-4" aria-hidden="true" />{/if}
 						</span>
-						<span data-font={mark === 'fontFamily' ? c.id : undefined}>{c.label}</span>
+						<span>{c.label}</span>
 					</DropdownMenu.Item>
 				{/each}
 			</DropdownMenu.Content>
@@ -226,14 +225,14 @@
 	</div>{/if}
 <div role="group" aria-label="Font" class={groupBox} data-doc-popup>
 	<div class="flex items-center gap-0.5">
-		{@render choiceMenu(
-			'Font',
-			'fontFamily',
-			pickableFontChoices(at.font),
-			at.font,
-			'Default',
-			'w-36'
-		)}
+		<FontMenu
+			value={at.font}
+			onchange={(id) => fmt.setChoice(editor, 'fontFamily', id === DEFAULT_FONT ? null : id)}
+			triggerClass="{select} w-36"
+			triggerAttrs={{ 'data-doc-format': 'fontFamily' }}
+			contentAttrs={{ 'data-interactive': '', 'data-doc-popup': '' }}
+			onCloseAutoFocus={refocus}
+		/>
 		{@render choiceMenu('Size', 'fontSize', SIZES, at.size, 'Normal', 'w-20')}
 		{#each marks as t (t.label)}{@render toggle(t)}{/each}
 		<DocColorPicker
