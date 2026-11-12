@@ -2,7 +2,7 @@ import type * as Y from 'yjs';
 import { getMeta } from './doc';
 import { MIGRATION } from './origins';
 
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 
 /** migrations[n] upgrades a doc from version n-1 to n. Version 1 is the initial schema. */
 export const migrations: Record<number, (doc: Y.Doc) => void> = {
@@ -34,7 +34,10 @@ export const migrations: Record<number, (doc: Y.Doc) => void> = {
 	9: () => {},
 	// 10: table elements (cells in `docs`). Nothing to convert; older versions would drop the
 	// unknown element type from their view, so they must not open the board.
-	10: () => {}
+	10: () => {},
+	// 11: page folders (`meta.pageFolders`, a `folder` on page entries). Nothing to convert; older
+	// versions would drop the folders when they next write the page list, so they must not open it.
+	11: () => {}
 };
 
 export class NewerSchemaError extends Error {

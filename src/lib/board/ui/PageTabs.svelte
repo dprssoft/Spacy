@@ -1,26 +1,38 @@
 <script lang="ts">
-	import { DropdownMenu } from 'bits-ui';
 	import Plus from '@lucide/svelte/icons/plus';
-	import { MAX_PAGE_NAME } from '$lib/model/pages';
 	import ConfirmDialog from '$lib/shared/ui/ConfirmDialog.svelte';
 	import { getBoard } from '../context';
-	import { isNoopSlot, slotToIndex, trackTabDrag } from './tabDrag';
+	import FolderTab from './FolderTab.svelte';
+	import PageTab from './PageTab.svelte';
+	import TabNameInput from './TabNameInput.svelte';
+	import { folderDrop, isNoopPageDrop, itemKey, pageDrop, stripItems } from './pageStrip';
 	import { scrollFade } from './scrollFade';
+	import { trackTabDrag } from './tabDrag';
 
 	// Sheet tabs: click to switch, double-click to rename, right-click (or the menu key) for more.
 	// Ctrl/Cmd-click and Shift-click pick several tabs; the menu then acts on all of them.
-	// Drag a tab (or Ctrl/Cmd+Shift+Arrow) to reorder.
+	// Drag a tab (or Ctrl/Cmd+Shift+Arrow) to reorder. Folder chips open and close their pages.
 	const { pages } = getBoard();
 
+	/** The page (id) or folder (`folder:<id>`) being renamed. */
 	let renaming = $state<string | null>(null);
-	let draft = $state('');
-	let menuFor = $state<string | null>(null);
 	let deleting = $state<string[]>([]);
 	let confirmOpen = $state(false);
 	let tablist = $state<HTMLElement>();
-	/** The tab being dragged and the gap it would drop into. */
-	let drag = $state<{ id: string; from: number; slot: number } | null>(null);
+	/** The tab being dragged (its strip key) and the gap it would drop into. */
+	let drag = $state<{ key: string; slot: number } | null>(null);
 	let swallowClick = false;
+
+	const items = $derived(stripItems(pages.units, pages.current));
+	const visiblePages = $derived(items.flatMap((it) => (it.kind === 'page' ? [it.page] : [])));
+	const mark = $derived.by(() => {
+		if (!drag) return null;
+		const { key, slot } = drag;
+		if (key.startsWith('folder:'))
+			return folderDrop(items, slot, key.slice(7)) === undefined ? null : slot;
+		const page = pages.list.find((p) => p.id === key);
+		return page && !isNoopPageDrop(items, slot, page) ? slot : null;
+	});
 
 	const deleteTitle = $derived(
 		deleting.length === 1
@@ -28,31 +40,36 @@
 			: `Delete ${deleting.length} pages?`
 	);
 
-	function startRename(id: string) {
-		draft = pages.list.find((p) => p.id === id)?.name ?? '';
-		renaming = id;
-	}
-	function commitRename() {
-		if (renaming) pages.rename(renaming, draft);
-		renaming = null;
-	}
-	function focusAndSelect(node: HTMLInputElement) {
-		node.focus();
-		node.select();
+	function askDelete(ids: string[]) {
+		deleting = ids;
+		confirmOpen = true;
 	}
 
-	function onTabPointerDown(e: PointerEvent, id: string, from: number) {
+	function drop(key: string, slot: number) {
+		if (key.startsWith('folder:')) {
+			const id = key.slice(7);
+			const before = folderDrop(items, slot, id);
+			if (before !== undefined) pages.moveFolder(id, before);
+			return;
+		}
+		const page = pages.list.find((p) => p.id === key);
+		if (!page || isNoopPageDrop(items, slot, page)) return;
+		const to = pageDrop(items, slot, key);
+		pages.place([key], to.before, to.folder);
+	}
+
+	function onDragStart(e: PointerEvent, key: string) {
 		// Touch drags scroll the tab strip; touch users reorder from the menu.
 		if (e.button !== 0 || e.pointerType === 'touch' || e.ctrlKey || e.metaKey || e.shiftKey) return;
 		trackTabDrag(e, {
-			tabs: () => [...(tablist?.querySelectorAll('[data-page-tab]') ?? [])],
-			onMove: (slot) => (drag = { id, from, slot }),
+			tabs: () => [...(tablist?.querySelectorAll('[data-strip-item]') ?? [])],
+			onMove: (slot) => (drag = { key, slot }),
 			onEnd: (slot) => {
 				drag = null;
-				// The click that ends a drag must not switch pages.
+				// The click that ends a drag must not switch pages or open a folder.
 				swallowClick = true;
 				setTimeout(() => (swallowClick = false));
-				if (slot !== null && !isNoopSlot(from, slot)) pages.moveTo(id, slotToIndex(from, slot));
+				if (slot !== null) drop(key, slot);
 			}
 		});
 	}
@@ -76,34 +93,26 @@
 		else pages.select(id);
 	}
 
-	function openMenu(id: string) {
-		// Opening the menu on a picked tab keeps the others picked.
-		if (!pages.selectedIds.includes(id)) pages.select(id);
-		menuFor = id;
-	}
-
-	function onTabKeydown(e: KeyboardEvent, index: number) {
+	function onTabKeydown(e: KeyboardEvent, id: string) {
 		const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
 		if (step && (e.ctrlKey || e.metaKey) && e.shiftKey) {
 			e.preventDefault();
 			e.stopPropagation();
-			const id = pages.list[index]!.id;
 			pages.move(id, step);
 			focusTab(id);
 		} else if (step) {
-			const next = pages.list[(index + step + pages.list.length) % pages.list.length];
+			// Arrows go through the tabs on show: closed folders' pages are skipped.
+			const i = visiblePages.findIndex((p) => p.id === id);
+			const next = visiblePages[(i + step + visiblePages.length) % visiblePages.length];
 			if (!next) return;
 			e.preventDefault();
 			pages.select(next.id);
 			focusTab(next.id);
 		} else if (e.key === 'F2') {
 			e.preventDefault();
-			startRename(pages.list[index]!.id);
+			renaming = id;
 		}
 	}
-
-	const item =
-		'flex h-8 cursor-default items-center rounded-md px-2 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-surface-2';
 </script>
 
 <div class="flex min-w-0 items-stretch">
@@ -114,115 +123,45 @@
 		aria-label="Pages"
 		class="flex min-w-0 items-stretch overflow-x-auto"
 	>
-		{#each pages.list as page, i (page.id)}
-			{#if drag && drag.slot === i && !isNoopSlot(drag.from, i)}
+		{#each items as item, i (itemKey(item))}
+			{#if mark === i}
 				{@render dropMark()}
 			{/if}
-			{@const active = page.id === pages.current}
-			{@const picked = pages.picked.includes(page.id)}
-			{@const targets = menuFor === page.id ? pages.targets(page.id) : [page.id]}
-			{@const many = targets.length > 1}
-			{#if renaming === page.id}
-				<input
-					{@attach focusAndSelect}
-					bind:value={draft}
-					maxlength={MAX_PAGE_NAME}
-					aria-label="Page name"
-					class="my-0.5 w-28 rounded-sm border border-accent bg-surface px-2 text-xs outline-none"
-					onblur={commitRename}
-					onkeydown={(e) => {
-						e.stopPropagation();
-						if (e.key === 'Enter') commitRename();
-						else if (e.key === 'Escape') renaming = null;
+			{@const key = itemKey(item)}
+			{#if renaming === key}
+				<TabNameInput
+					value={item.kind === 'page' ? item.page.name : item.folder.name}
+					label={item.kind === 'page' ? 'Page name' : 'Folder name'}
+					oncommit={(name) => {
+						if (item.kind === 'page') pages.rename(item.page.id, name);
+						else pages.renameFolder(item.folder.id, name);
+						renaming = null;
 					}}
+					oncancel={() => (renaming = null)}
+				/>
+			{:else if item.kind === 'folder'}
+				<FolderTab
+					folder={item.folder}
+					folderPages={item.pages}
+					dragging={drag?.key === key}
+					onrename={() => (renaming = key)}
+					ondelete={askDelete}
+					onpointerdown={(e) => onDragStart(e, key)}
+					swallow={() => swallowClick}
 				/>
 			{:else}
-				<DropdownMenu.Root
-					open={menuFor === page.id}
-					onOpenChange={(o) => (menuFor = o ? page.id : null)}
-				>
-					<DropdownMenu.Trigger>
-						{#snippet child({ props })}
-							<!-- The menu opens on right-click, not on click: a click switches pages. -->
-							<button
-								{...props}
-								type="button"
-								role="tab"
-								aria-selected={active}
-								aria-haspopup="menu"
-								tabindex={active ? 0 : -1}
-								data-page-tab={page.id}
-								data-picked={picked || undefined}
-								data-dragging={drag?.id === page.id || undefined}
-								title="{page.name} — double-click to rename, drag to reorder, right-click for more, Ctrl-click to pick several"
-								class="max-w-40 shrink-0 truncate border-r border-border px-3 text-xs whitespace-nowrap text-muted hover:bg-surface hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-inset aria-selected:bg-surface aria-selected:font-medium aria-selected:text-text aria-selected:shadow-[inset_0_-2px_0_var(--accent)] data-[dragging]:opacity-50 data-[picked]:bg-surface data-[picked]:text-text data-[picked]:shadow-[inset_0_-2px_0_var(--muted)]"
-								onpointerdown={(e) => onTabPointerDown(e, page.id, i)}
-								onclick={(e) => onTabClick(e, page.id)}
-								ondblclick={() => startRename(page.id)}
-								oncontextmenu={(e) => {
-									e.preventDefault();
-									openMenu(page.id);
-								}}
-								onkeydown={(e) => {
-									if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
-										e.preventDefault();
-										openMenu(page.id);
-									} else onTabKeydown(e, i);
-								}}
-							>
-								{page.name}
-							</button>
-						{/snippet}
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Portal>
-						<DropdownMenu.Content
-							side="top"
-							align="start"
-							sideOffset={4}
-							class="z-50 min-w-44 rounded-lg border border-border bg-surface p-1 shadow-lg"
-						>
-							<DropdownMenu.Item class={item} disabled={many} onSelect={() => startRename(page.id)}>
-								Rename
-							</DropdownMenu.Item>
-							<DropdownMenu.Item
-								class={item}
-								onSelect={() => {
-									for (const id of targets) pages.duplicate(id);
-								}}
-							>
-								{many ? `Duplicate ${targets.length} pages` : 'Duplicate'}
-							</DropdownMenu.Item>
-							<DropdownMenu.Item
-								class={item}
-								disabled={many || i === 0}
-								onSelect={() => pages.move(page.id, -1)}
-							>
-								Move left
-							</DropdownMenu.Item>
-							<DropdownMenu.Item
-								class={item}
-								disabled={many || i === pages.list.length - 1}
-								onSelect={() => pages.move(page.id, 1)}
-							>
-								Move right
-							</DropdownMenu.Item>
-							<DropdownMenu.Separator class="my-1 h-px bg-border" />
-							<DropdownMenu.Item
-								class="{item} text-danger"
-								disabled={targets.length >= pages.list.length}
-								onSelect={() => {
-									deleting = targets;
-									confirmOpen = true;
-								}}
-							>
-								{many ? `Delete ${targets.length} pages` : 'Delete'}
-							</DropdownMenu.Item>
-						</DropdownMenu.Content>
-					</DropdownMenu.Portal>
-				</DropdownMenu.Root>
+				<PageTab
+					page={item.page}
+					dragging={drag?.key === key}
+					onrename={() => (renaming = key)}
+					ondelete={askDelete}
+					onpointerdown={(e) => onDragStart(e, key)}
+					onclick={(e) => onTabClick(e, item.page.id)}
+					onkeydown={(e) => onTabKeydown(e, item.page.id)}
+				/>
 			{/if}
 		{/each}
-		{#if drag && drag.slot === pages.list.length && !isNoopSlot(drag.from, drag.slot)}
+		{#if mark === items.length}
 			{@render dropMark()}
 		{/if}
 	</div>
