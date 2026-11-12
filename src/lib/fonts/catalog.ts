@@ -55,6 +55,9 @@ export const FONTS: readonly FontDef[] = [
 		id: 'serif',
 		label: 'Serif',
 		category: 'Serif',
+		// System fonts look different on every computer (and like a browser default where Georgia
+		// isn't installed); Lora is the bundled serif.
+		hidden: true,
 		stack: "Georgia, Cambria, 'Times New Roman', Times, serif"
 	},
 	{ id: 'lora', label: 'Lora', category: 'Serif', ...bundled('Lora', '400 700', 'Georgia, serif') },
@@ -74,6 +77,8 @@ export const FONTS: readonly FontDef[] = [
 		id: 'mono',
 		label: 'Monospace',
 		category: 'Monospace',
+		// Same as Serif: JetBrains Mono is the bundled monospace.
+		hidden: true,
 		stack: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
 	},
 	{

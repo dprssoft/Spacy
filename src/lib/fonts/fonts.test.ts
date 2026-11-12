@@ -41,9 +41,12 @@ describe('font catalog', () => {
 			else expect(css).toContain(`[data-font='${f.id}'] { font-family: ${f.stack}; }`);
 	});
 
-	it('pickers offer no font twice: Inter stays valid but only shows while in use', () => {
+	it('pickers offer only fonts that look the same everywhere, each once', () => {
 		const ids = pickableFonts().map((f) => f.id);
-		expect(ids).not.toContain('inter');
+		// Inter duplicates Default; Serif and Monospace are system fonts that vary by computer.
+		for (const hidden of ['inter', 'serif', 'mono']) expect(ids).not.toContain(hidden);
+		expect(pickableFonts().every((f) => f.id === DEFAULT_FONT || f.bundled)).toBe(true);
+		expect(pickableFonts('serif').map((f) => f.id)).toContain('serif');
 		expect(new Set(pickableFonts().map((f) => f.label)).size).toBe(ids.length);
 		expect(pickableFonts('inter').map((f) => f.id)).toContain('inter');
 		expect(isFontId('inter')).toBe(true);

@@ -54,7 +54,7 @@ test('the ribbon formats the card being edited, and only while it is edited', as
 	);
 	await pick(page, 'textColor', 'Red');
 	await pick(page, 'highlight', 'Yellow');
-	await pick(page, 'fontFamily', 'Serif');
+	await pick(page, 'fontFamily', 'Lora');
 	await pick(page, 'fontSize', 'Large');
 	await tools.getByRole('button', { name: 'Align center' }).click();
 	await pick(page, 'style', 'Heading 2');
@@ -67,10 +67,10 @@ test('the ribbon formats the card being edited, and only while it is edited', as
 	const span = text.locator('[data-size="large"]');
 	await expect(span).toHaveText('Plan');
 	await expect(span).toHaveCSS('color', 'rgb(224, 49, 49)');
-	await expect(span).toHaveCSS('font-family', /Georgia/);
+	await expect(span).toHaveCSS('font-family', /Spacy Lora/);
 	await expect(text.locator('[data-highlight="custom"]')).toHaveText('Plan');
 	await expect(page.locator('[data-doc-format="style"]')).toHaveText('Heading 2');
-	await expect(page.locator('[data-doc-format="fontFamily"]')).toHaveText('Serif');
+	await expect(page.locator('[data-doc-format="fontFamily"]')).toHaveText('Lora');
 
 	await page.keyboard.press('Escape');
 	await expect(editor).not.toBeFocused();

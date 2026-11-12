@@ -1623,8 +1623,11 @@ Reported by the human: "in font list some fonts have doubles and cannot be chose
 
 **Summary:**
 - Doubles: "Default" is Inter (the system copy where installed) and "Inter" is the bundled Inter, so they looked the same. `FontDef.hidden` keeps Inter a valid, rendered font (existing text keeps it) but leaves it out of the pickers (`pickableFonts`, `pickableFontChoices`) unless the selection uses it.
+- Follow-up ("theres still dead fonts (serif for example)"): Serif and Monospace are system font stacks (Georgia…, ui-monospace…) that look different on every computer and like a browser default where those fonts are missing. Hidden like Inter; Lora and JetBrains Mono are the bundled serif and monospace. Pickers now offer only Default and bundled fonts.
 - Cannot be chosen: in a short window the style panel shrank the font list to about two rows (a flex child with its own scroll box), hiding the rest. The list now keeps its height (`shrink-0`) and the panel scrolls instead.
 
 **Deviations:** none. No data model change.
 **Dependencies added:** none
-**Verification:** pnpm verify ✅ · unit test in `fonts.test.ts` · e2e `fonts-colors.spec.ts` ✅ chromium (new test: no Inter twice, list taller than 200 px in a 640 px window, Pacifico picked and checked).
+**Test changes:** `doc-format.spec.ts` picked "Serif" from the doc card font menu, which no longer offers it; it picks Lora and checks for "Spacy Lora" instead.
+**Follow-ups:** with Liquid glass on, the text panel isn't blurred (the board shows through crisp) and can open upward with little room; not fixed yet.
+**Verification:** pnpm verify ✅ · unit test in `fonts.test.ts` · e2e `fonts-colors.spec.ts` ✅ chromium (new test: no Inter twice, list taller than 200 px in a 640 px window, Pacifico picked and checked), `doc-format.spec.ts` ✅ chromium.
