@@ -1,7 +1,7 @@
 // Text formatting choices of doc cards. Content stores these ids (as `data-*` attributes, styled in
 // prose.css, so they can follow the theme) or, for colors, a `#rrggbb` value. Nothing else reaches
 // CSS.
-import { DEFAULT_FONT, FONTS as ALL_FONTS } from '$lib/fonts/catalog';
+import { DEFAULT_FONT, FONTS as ALL_FONTS, pickableFonts } from '$lib/fonts/catalog';
 
 export interface FormatChoice {
 	id: string;
@@ -33,6 +33,12 @@ export const HIGHLIGHTS: readonly FormatChoice[] = [
 export const FONTS: readonly FormatChoice[] = ALL_FONTS.filter((f) => f.id !== DEFAULT_FONT).map(
 	({ id, label }) => ({ id, label })
 );
+
+/** The fonts the font menu offers (hidden ones only while the selection uses them). */
+export const pickableFontChoices = (current: string | null): FormatChoice[] =>
+	pickableFonts(current)
+		.filter((f) => f.id !== DEFAULT_FONT)
+		.map(({ id, label }) => ({ id, label }));
 
 /** Besides the default size. Relative to the card's own font size. */
 export const SIZES: readonly FormatChoice[] = [

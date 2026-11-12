@@ -1617,3 +1617,14 @@ Requested by the human: "rework: Equal distances between objects (new snapping)"
 **Deviations:** none. No data model change.
 **Dependencies added:** none
 **Verification:** pnpm verify ✅ · unit tests `gapSnapping.test.ts` · e2e `arrange.spec.ts` ✅ chromium (new gap test) · screenshot of the marks mid-drag.
+
+## Extra — Font list fixes — 2026-11-12
+Reported by the human: "in font list some fonts have doubles and cannot be chosed".
+
+**Summary:**
+- Doubles: "Default" is Inter (the system copy where installed) and "Inter" is the bundled Inter, so they looked the same. `FontDef.hidden` keeps Inter a valid, rendered font (existing text keeps it) but leaves it out of the pickers (`pickableFonts`, `pickableFontChoices`) unless the selection uses it.
+- Cannot be chosen: in a short window the style panel shrank the font list to about two rows (a flex child with its own scroll box), hiding the rest. The list now keeps its height (`shrink-0`) and the panel scrolls instead.
+
+**Deviations:** none. No data model change.
+**Dependencies added:** none
+**Verification:** pnpm verify ✅ · unit test in `fonts.test.ts` · e2e `fonts-colors.spec.ts` ✅ chromium (new test: no Inter twice, list taller than 200 px in a 640 px window, Pacifico picked and checked).

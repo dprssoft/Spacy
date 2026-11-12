@@ -24,7 +24,7 @@
 	import * as fmt from './formatCommands';
 	import {
 		BLOCK_STYLES,
-		FONTS,
+		pickableFontChoices,
 		SIZES,
 		type Align,
 		type FormatChoice,
@@ -226,7 +226,14 @@
 	</div>{/if}
 <div role="group" aria-label="Font" class={groupBox} data-doc-popup>
 	<div class="flex items-center gap-0.5">
-		{@render choiceMenu('Font', 'fontFamily', FONTS, at.font, 'Default', 'w-36')}
+		{@render choiceMenu(
+			'Font',
+			'fontFamily',
+			pickableFontChoices(at.font),
+			at.font,
+			'Default',
+			'w-36'
+		)}
 		{@render choiceMenu('Size', 'fontSize', SIZES, at.size, 'Normal', 'w-20')}
 		{#each marks as t (t.label)}{@render toggle(t)}{/each}
 		<DocColorPicker

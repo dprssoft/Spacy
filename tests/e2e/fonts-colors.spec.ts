@@ -40,6 +40,26 @@ test('canvas text takes a bundled font, which loads and survives a reload', asyn
 	);
 });
 
+test('the font list offers each font once and keeps its height in a short window', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 1280, height: 640 });
+	await add(page, [el.shape('a', -80, -50, { text: 'Hello' })]);
+	await clickElement(page, 'a');
+	await page.getByTestId('style-text').click();
+	const fonts = page.getByRole('radiogroup', { name: 'Font', exact: true });
+	await expect(fonts.getByRole('radio', { name: 'Default' })).toBeVisible();
+	await expect(fonts.getByRole('radio', { name: 'Inter' })).toHaveCount(0);
+	// Squeezed by the panel, the list used to show about two fonts.
+	expect((await fonts.boundingBox())!.height).toBeGreaterThan(200);
+	await fonts.getByRole('radio', { name: 'Pacifico' }).click();
+	expect((await byId(page, 'a')).style.font.family).toBe('pacifico');
+	await expect(fonts.getByRole('radio', { name: 'Pacifico' })).toHaveAttribute(
+		'aria-checked',
+		'true'
+	);
+});
+
 test('any color: typed hex, remembered under Recent, also for sticky notes', async ({ page }) => {
 	await add(page, [
 		el.shape('a', -300, -50),
