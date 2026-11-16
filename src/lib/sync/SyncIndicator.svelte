@@ -9,7 +9,9 @@
 
 	let open = $state(false);
 	const sync = $derived(driveSync.state);
-	const label = $derived(describeState(sync));
+	const label = $derived(describeState(sync, driveSync.renewFailed));
+	// While a click can still renew the sign-in by itself, waiting for one isn't an alarm.
+	const needsSignIn = $derived(sync.kind === 'signin' && driveSync.renewFailed);
 
 	function onclick() {
 		if (sync.kind === 'signin') void driveSync.resume();
@@ -21,7 +23,7 @@
 	<button
 		type="button"
 		class="inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none data-[attention]:text-danger pointer-coarse:size-11"
-		data-attention={sync.kind === 'signin' || sync.kind === 'error' || undefined}
+		data-attention={needsSignIn || sync.kind === 'error' || undefined}
 		aria-label="Google Drive sync: {label}"
 		title={label}
 		data-testid="sync-indicator"
@@ -32,7 +34,7 @@
 			<RefreshCw class="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
 		{:else if sync.kind === 'offline'}
 			<CloudOff class="size-4" aria-hidden="true" />
-		{:else if sync.kind === 'signin' || sync.kind === 'error'}
+		{:else if needsSignIn || sync.kind === 'error'}
 			<CloudAlert class="size-4" aria-hidden="true" />
 		{:else}
 			<Cloud class="size-4" aria-hidden="true" />

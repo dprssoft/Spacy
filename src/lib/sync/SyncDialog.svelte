@@ -79,7 +79,7 @@
 					Syncing with {driveSync.email ?? 'your Google Drive'}.
 				</Dialog.Description>
 				<p class="mt-1 text-sm text-muted" data-testid="sync-state">
-					{describeState(sync)}{#if sync.kind === 'synced'}
+					{describeState(sync, driveSync.renewFailed)}{#if sync.kind === 'synced'}
 						· {relativeTime(sync.at)}{/if}
 				</p>
 				<div class="mt-5 flex flex-wrap justify-end gap-2">
