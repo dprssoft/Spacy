@@ -124,3 +124,41 @@ describe('edit commands', () => {
 		expect(listThreads(ctx.doc)).toHaveLength(1);
 	});
 });
+
+describe('copying a frame keeps the original frame’s children', () => {
+	const frameWithChild = (): Element[] => [
+		{ ...samples.frame('f', 'a0'), x: 0, y: 0, w: 400, h: 300 },
+		{ ...samples.shape('s', 'a1'), x: 50, y: 50, w: 100, h: 100, parentId: 'f' }
+	];
+
+	it('duplicate: the copy owns only its own copies', () => {
+		const ctx = setup(...frameWithChild());
+		ctx.selection.set(['f']);
+		duplicateSelection(ctx);
+		const copyFrame = [...ctx.selection.ids]
+			.map((id) => ctx.store.get(id)!)
+			.find((e) => e.type === 'frame')!;
+		expect(ctx.store.get('s')?.parentId).toBe('f');
+		const copyChildren = [...ctx.store.elements.values()].filter(
+			(e) => e.parentId === copyFrame.id
+		);
+		expect(copyChildren).toHaveLength(1);
+		expect(copyChildren[0]!.id).not.toBe('s');
+	});
+
+	it('paste on the same board: the original child stays in the original frame', async () => {
+		const { copySelectionText, pasteText } = await import('./clipboard');
+		const ctx = setup(...frameWithChild());
+		ctx.selection.set(['f']);
+		await pasteText(ctx, copySelectionText(ctx)!);
+		expect(ctx.store.get('s')?.parentId).toBe('f');
+		const copyFrame = [...ctx.selection.ids]
+			.map((id) => ctx.store.get(id)!)
+			.find((e) => e.type === 'frame')!;
+		const copyChildren = [...ctx.store.elements.values()].filter(
+			(e) => e.parentId === copyFrame.id
+		);
+		expect(copyChildren.map((e) => e.id)).not.toContain('s');
+		expect(copyChildren).toHaveLength(1);
+	});
+});
