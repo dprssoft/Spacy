@@ -37,7 +37,9 @@
 <DropdownMenu.Root bind:open>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
-			<!-- The menu opens on right-click, not on click: a click switches pages. -->
+			<!-- The menu opens on right-click, not on click: a click switches pages. The invisible
+			     ::after copy of the name in the active tab's weight keeps every tab as wide as when it's
+			     active, so switching pages doesn't nudge the strip or the buttons after it. -->
 			<button
 				{...props}
 				type="button"
@@ -50,8 +52,9 @@
 				data-in-folder={page.folder ? '' : undefined}
 				data-picked={picked || undefined}
 				data-dragging={dragging || undefined}
+				data-name={page.name}
 				title="{page.name} — double-click to rename, drag to reorder, right-click for more, Ctrl-click to pick several"
-				class="max-w-40 shrink-0 truncate border-r border-border px-3 text-xs whitespace-nowrap text-muted hover:bg-surface hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-inset aria-selected:bg-surface aria-selected:font-medium aria-selected:text-text aria-selected:shadow-[inset_0_-2px_0_var(--accent)] data-[dragging]:opacity-50 data-[in-folder]:bg-text/6 data-[in-folder]:shadow-[inset_0_2px_0_color-mix(in_srgb,var(--muted)_50%,transparent)] data-[in-folder]:aria-selected:shadow-[inset_0_-2px_0_var(--accent)] data-[picked]:bg-surface data-[picked]:text-text data-[picked]:shadow-[inset_0_-2px_0_var(--muted)]"
+				class="max-w-40 shrink-0 truncate border-r border-border px-3 text-xs whitespace-nowrap text-muted after:invisible after:block after:h-0 after:overflow-hidden after:font-medium after:content-[attr(data-name)] hover:bg-surface hover:text-text focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none focus-visible:ring-inset aria-selected:bg-surface aria-selected:font-medium aria-selected:text-text aria-selected:shadow-[inset_0_-2px_0_var(--accent)] data-[dragging]:opacity-50 data-[in-folder]:bg-text/6 data-[in-folder]:shadow-[inset_0_2px_0_color-mix(in_srgb,var(--muted)_50%,transparent)] data-[in-folder]:aria-selected:shadow-[inset_0_-2px_0_var(--accent)] data-[picked]:bg-surface data-[picked]:text-text data-[picked]:shadow-[inset_0_-2px_0_var(--muted)]"
 				{onpointerdown}
 				{onclick}
 				ondblclick={onrename}
