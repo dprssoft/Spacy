@@ -46,9 +46,12 @@
 		onclick={() => ctx.comments.togglePanel()}
 	>
 		<MessageSquare class="size-4" aria-hidden="true" /><span class="max-sm:sr-only">Comments</span>
-		{#if openComments > 0}<span class="tabular-nums" data-testid="comments-count"
-				>{openComments}</span
-			>{/if}
+		<!-- A fixed slot, so the count coming and going between pages doesn't move what follows
+		     (phones have no room to spare for an empty one). -->
+		<span
+			class={['min-w-[2ch] text-left tabular-nums', openComments === 0 && 'max-sm:hidden']}
+			data-testid="comments-count">{openComments > 0 ? openComments : ''}</span
+		>
 	</button>
 	{#if !layout.compact || ctx.waystones.route.length === 0}<WaystoneBar />{/if}
 	<p

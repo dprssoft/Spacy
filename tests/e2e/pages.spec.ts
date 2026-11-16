@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createBoard, el, enableTestHooks, waitForHooks } from './helpers';
+import {
+	clickElement,
+	createBoard,
+	el,
+	enableTestHooks,
+	waitForHooks,
+	waitForInitialView
+} from './helpers';
 
 const ids = (page: Page) =>
 	page.evaluate(() =>
@@ -295,4 +302,39 @@ test('group pages into a folder, close it, drag a page in, and ungroup', async (
 	await page.getByRole('menuitem', { name: 'Ungroup' }).click();
 	await expect(folder).toHaveCount(0);
 	await expect(pageTabs).toHaveText(['Page 1', 'Page 2', 'Page 4', 'Page 3']);
+});
+
+test('switching pages leaves the status bar buttons where they are', async ({ page }) => {
+	// A long name shows the most width difference between the active and the other tabs.
+	await page.getByRole('button', { name: 'Add page' }).click();
+	await tab(page, 'Page 2').dblclick();
+	await page.keyboard.type('A rather long page name');
+	await page.keyboard.press('Enter');
+	// An open comment on page 1 only, so the comments count comes and goes.
+	await tab(page, 'Page 1').click();
+	await waitForInitialView(page);
+	await add(page, 'c');
+	await clickElement(page, 'c');
+	await page.keyboard.press('ControlOrMeta+Alt+m');
+	const p = page.getByRole('dialog', { name: 'Comments' });
+	const name = p.locator('[data-comment-name]');
+	if (await name.isVisible()) await name.fill('Ann');
+	await p.getByRole('textbox', { name: /Add a comment/ }).fill('Check this');
+	await p.getByRole('button', { name: 'Comment', exact: true }).click();
+	await page.keyboard.press('Escape');
+	await expect(page.getByTestId('comments-toggle')).toHaveText(/Comments\s*1/);
+
+	const xs = () =>
+		Promise.all(
+			['outline-toggle', 'comments-toggle', 'waystone-bar'].map(
+				async (id) => (await page.getByTestId(id).boundingBox())!.x
+			)
+		);
+	const onPage1 = await xs();
+	await tab(page, 'A rather long page name').click();
+	await expect(page.getByTestId('comments-toggle')).toHaveText(/^\s*Comments\s*$/);
+	expect(await xs()).toEqual(onPage1);
+	await tab(page, 'Page 1').click();
+	await expect(page.getByTestId('comments-toggle')).toHaveText(/Comments\s*1/);
+	expect(await xs()).toEqual(onPage1);
 });
