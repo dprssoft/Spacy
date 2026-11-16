@@ -53,9 +53,12 @@ export function createWithContent(
 		afterCreate?.();
 	}, LOCAL);
 	// After the transaction: the store only sees the new elements once it has committed.
+	// Only the new non-frame elements are placed: a pasted or duplicated frame lands just offset
+	// from its original, so letting it adopt whatever it now covers would steal the original's
+	// children (and drag them along with the copy).
 	syncFrameMembership(
 		ctx,
-		created.map((e) => e.id)
+		created.filter((e) => e.type !== 'frame').map((e) => e.id)
 	);
 	return created;
 }
