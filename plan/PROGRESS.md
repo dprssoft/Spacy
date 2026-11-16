@@ -1632,3 +1632,17 @@ Reported by the human: "in font list some fonts have doubles and cannot be chose
 
 **Test changes:** `doc-format.spec.ts` picked "Serif" from the doc card font menu, which no longer offers it; it picks Lora and checks for "Spacy Lora" instead.
 **Verification:** pnpm verify ✅ · unit test in `fonts.test.ts` · e2e `fonts-colors.spec.ts` ✅ chromium (new test: no Inter twice, list taller than 200 px in a 640 px window, Pacifico picked and checked), `doc-format.spec.ts` ✅ chromium · after the font menu: `fonts-colors.spec.ts` (font tests now use the menu; new test picks the four bottom fonts with the wheel and real clicks in a 600 px window, checking each is under the pointer) and `doc-format.spec.ts` ✅ chromium and firefox.
+
+## Extra — Smart kanban cards — 2026-11-16
+Requested by the human: "automatized kanban cards … smart cards that status can be changed? and fast adding tasks button". Decided with them: the column is the status, several kanban boards on a page stay separate, cards stack by themselves, plus "+ Add task", Enter for the next card and duplicate as an empty card.
+
+**Summary:**
+- Data model (approved by the human): `FrameElement.kanban?: string`, a board id shared by its columns (ordered left to right). Missing = an ordinary frame, so existing boards and files are unchanged. `cloneElements` gives copied boards a new id (`keepKanban` keeps it for a column copied on its own board: one more column of that board). The kanban template's frames get one.
+- `model/kanban.ts`: cards (everything in a column but connectors) stack top to bottom in the order of their top edges, the column's width, with "Stack contents" spacing; a column grows when its cards and the "Add task" button don't fit (never shrinks by itself). Restacks after `syncFrameMembership` (moves, resizes, creation, paste) and on delete (a `beforeDeleteHooks` entry, same transaction). A card joins the column its center is over; moved to another column of its board, a sticky takes that column's card color.
+- `board/kanban/`: a status chip on each card in a column (menu of its board's columns, `moveCardTo`, one undo step), an "Add task" button under each column's last card (`addTask`, typing starts, an untouched card goes away again). Enter on a kanban card finishes it and starts the next one under it (Shift+Enter: new line, Ctrl/Cmd+Enter: just finish). Duplicating or copy-pasting a card without its column gives an empty card right under it, ready to type on (comments stay on the original).
+
+**Deviations:** step 57 leaves "status of stickies themselves" out of scope; this is a separate, column-based status, not the status widget.
+**Dependencies added:** none
+**Test changes:** `templates.spec.ts` (kanban) measured the cards while the insert's zoom-out was still animating and passed only when inserting was fast; it now waits for the view to settle.
+**Follow-ups:** no UI yet to turn an ordinary frame into a column or to add/rename columns besides duplicating a column and editing its title; cards don't make room live while a card is dragged over a column.
+**Verification:** pnpm verify ✅ · unit tests `board/kanban/ops.test.ts` · e2e `kanban.spec.ts` (new), `templates.spec.ts`, `frames.spec.ts`, `arrange.spec.ts` ✅ chromium (Firefox/WebKit not installable here) · screenshots of the template: chips, menu, Add task, a moved card, Enter adding cards.
