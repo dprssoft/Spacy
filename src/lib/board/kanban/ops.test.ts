@@ -166,4 +166,41 @@ describe('smart kanban', () => {
 		expect(new Set(columns.map((c) => c.kanban)).size).toBe(2);
 		for (const c of columns) expect(c.kanban).toBeTruthy();
 	});
+
+	it('a card moved into an emptied column still takes that column’s color', () => {
+		const ctx = setup();
+		// Done's only card leaves (by status), then To do's cards leave by status and by drag.
+		moveCardTo(ctx, 'd1', 'todo');
+		expect(get(ctx, 'd1')).toMatchObject({ color: '#ffe066' });
+		expect(get(ctx, 'done')).toMatchObject({ cardColor: '#b2f2bb' });
+		moveCardTo(ctx, 't1', 'done');
+		expect(get(ctx, 't1')).toMatchObject({ color: '#b2f2bb' });
+
+		// A card recolored by hand: its column takes the new color when it's the last one to go.
+		updateElements(ctx.doc, [{ id: 't1', patch: { color: '#ffc9c9' } }]);
+		updateElements(ctx.doc, [{ id: 't1', patch: { x: 60, y: 300 } }]);
+		syncFrameMembership(ctx, ['t1']);
+		expect(get(ctx, 't1')).toMatchObject({ parentId: 'todo', color: '#ffe066' });
+		expect(get(ctx, 'done')).toMatchObject({ cardColor: '#ffc9c9' });
+		moveCardTo(ctx, 't2', 'done');
+		expect(get(ctx, 't2')).toMatchObject({ color: '#ffc9c9' });
+		const id = addTask(ctx, 'done')!;
+		expect(get(ctx, id)).toMatchObject({ color: '#ffc9c9' });
+	});
+
+	it('the kanban template’s columns know their card colors before any card moves', async () => {
+		const ctx = testCtx();
+		await insertTemplate(
+			ctx,
+			templates.find((t) => t.id === 'kanban')!
+		);
+		const els = [...ctx.store.elements.values()];
+		for (const c of els.filter((e): e is FrameElement => e.type === 'frame')) {
+			const cards = els.filter(
+				(e): e is StickyElement => e.parentId === c.id && e.type === 'sticky'
+			);
+			expect(cards.length).toBeGreaterThan(0);
+			for (const card of cards) expect(card.color).toBe(c.cardColor);
+		}
+	});
 });
