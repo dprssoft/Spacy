@@ -26,6 +26,8 @@ class DriveSync {
 	email = $state<string | null>(null);
 	state = $state<SyncState>({ kind: 'off' });
 	busy = $state(false);
+	/** Signing in again on a click didn't work, so it takes "Sign in again". */
+	renewFailed = $state(false);
 	#modules: Promise<Modules> | null = null;
 	#auth: import('./gisAuth').GisAuth | null = null;
 	#started: Started | null = null;
@@ -62,11 +64,7 @@ class DriveSync {
 	/** Loads the sync code and Google's script, so a click can open the sign-in popup at once. */
 	async prepare(): Promise<void> {
 		const m = await this.#load();
-		this.#auth ??= new m.gis.GisAuth(
-			GOOGLE_CLIENT_ID,
-			() => void this.syncNow(),
-			() => this.email
-		);
+		this.#auth ??= this.#newAuth(m);
 		await this.#auth.prepare();
 	}
 
@@ -94,6 +92,7 @@ class DriveSync {
 		try {
 			await this.prepare();
 			await this.#auth!.signIn('');
+			this.renewFailed = false;
 			await this.syncNow();
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Couldn’t sign in');
@@ -121,9 +120,22 @@ class DriveSync {
 		this.#stop();
 		this.connected = false;
 		this.email = null;
+		this.renewFailed = false;
 		removePref(CONNECTED);
 		removePref(EMAIL);
 		this.#channel?.postMessage({ type: 'disconnected' } satisfies ConnMessage);
+	}
+
+	#newAuth(m: Modules): import('./gisAuth').GisAuth {
+		return new m.gis.GisAuth(
+			GOOGLE_CLIENT_ID,
+			() => {
+				this.renewFailed = false;
+				void this.syncNow();
+			},
+			() => this.email,
+			() => (this.renewFailed = true)
+		);
 	}
 
 	#load(): Promise<Modules> {
@@ -140,11 +152,7 @@ class DriveSync {
 		if (this.#started) return this.#started;
 		const m = await this.#load();
 		if (this.#started || !this.connected) return this.#started;
-		this.#auth ??= new m.gis.GisAuth(
-			GOOGLE_CLIENT_ID,
-			() => void this.syncNow(),
-			() => this.email
-		);
+		this.#auth ??= this.#newAuth(m);
 		// Google's script loads now, so a later click can renew the sign-in.
 		void this.#auth.prepare().catch(() => {});
 		const store = new m.drive.GoogleDriveStore(this.#auth);
