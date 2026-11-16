@@ -6,6 +6,7 @@ import {
 	isColumn,
 	nextCardY,
 	relayoutColumns,
+	rememberCardColors,
 	stacksIn,
 	KANBAN,
 	type KanbanColumn
@@ -38,6 +39,8 @@ export function moveCardTo(ctx: BoardContext, cardId: string, columnId: string):
 	const color = card.type === 'sticky' ? cardColorIn(ctx.store.elements.values(), columnId) : null;
 	ctx.undo.stopCapturing();
 	ctx.doc.transact(() => {
+		// Before the card leaves: if it's the last one there, its old column keeps its color.
+		if (from) rememberCardColors(ctx.doc, [from]);
 		updateElements(ctx.doc, [
 			{
 				id: cardId,

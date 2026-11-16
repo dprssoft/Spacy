@@ -69,3 +69,25 @@ test('kanban cards: change status, add tasks with Enter, duplicate as an empty c
 	await page.keyboard.press('Escape');
 	await expect.poll(() => texts(page, 'todo')).toEqual(['Plan', 'Review', 'Write tests', 'Ship']);
 });
+
+test('a card whose status changes to an emptied column turns that column’s color', async ({
+	page
+}) => {
+	await add(page, [
+		column('todo', -400, 'To do'),
+		column('done', 0, 'Done'),
+		card('t1', 'todo', -400, 'Plan'),
+		{ ...card('d1', 'done', 0, 'Ship'), color: '#b2f2bb' }
+	]);
+	const setStatus = async (id: string, to: string) => {
+		await page.locator(`[data-element-id="${id}"] [data-testid="kanban-status"]`).click();
+		await page.getByRole('menuitem', { name: to }).click();
+	};
+	await setStatus('d1', 'To do');
+	await expect.poll(() => texts(page, 'done')).toEqual([]);
+	await setStatus('t1', 'Done');
+	await expect.poll(() => texts(page, 'done')).toEqual(['Plan']);
+	const color = async () =>
+		((await list(page)).find((e) => e.id === 't1') as Snap & { color?: string }).color;
+	await expect.poll(color).toBe('#b2f2bb');
+});

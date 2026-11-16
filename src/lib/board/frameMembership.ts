@@ -1,4 +1,10 @@
-import { cardColorIn, columnAt, isColumn, relayoutColumns } from '$lib/model/kanban';
+import {
+	cardColorIn,
+	columnAt,
+	isColumn,
+	relayoutColumns,
+	rememberCardColors
+} from '$lib/model/kanban';
 import { deleteElements, updateElements } from '$lib/model/ops';
 import { LOCAL } from '$lib/model/origins';
 import type { Element, ElementPatch, FrameElement, Rect } from '$lib/model/types';
@@ -71,6 +77,8 @@ export function syncFrameMembership(
 		}
 		patches.push({ id, patch });
 	}
+	// Before cards leave: a column whose last card goes keeps that card's color.
+	rememberCardColors(ctx.doc, restack);
 	if (patches.length) updateElements(ctx.doc, patches, LOCAL);
 	relayoutColumns(ctx.doc, restack);
 }

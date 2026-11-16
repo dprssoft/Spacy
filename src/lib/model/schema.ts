@@ -131,7 +131,8 @@ export const frameSchema = z.object({
 	...base,
 	type: z.literal('frame'),
 	title: z.string(),
-	kanban: z.string().min(1).max(64).optional()
+	kanban: z.string().min(1).max(64).optional(),
+	cardColor: z.string().optional()
 });
 export const docCardSchema = z.object({
 	...base,
