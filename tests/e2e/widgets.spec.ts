@@ -177,3 +177,53 @@ test('randomizer makes teams and places them as notes; one undo removes them', a
 	await expect.poll(notes).toBe(0);
 	expect(((await widgetState(page, 'r')) as { draw: unknown }).draw).not.toBeNull();
 });
+
+test('coin flip from the Widgets menu: flips, counts, takes custom sides, resets', async ({
+	page
+}) => {
+	await page.getByRole('button', { name: 'Widgets' }).click();
+	await page.getByTestId('widgets-menu').getByRole('menuitem', { name: 'Coin flip' }).click();
+	const c = (await page.getByTestId('canvas').boundingBox())!;
+	await page.mouse.click(c.x + c.width / 2, c.y + c.height / 2);
+	const coin = page.locator('[data-widget="coin"]');
+	await expect(coin).toHaveCount(1);
+	const id = await page.evaluate(() => [...window.__spacy!.ctx.selection.ids][0]!);
+	const state = async () =>
+		(await widgetState(page, id)) as {
+			flip: { side: string } | null;
+			heads: number;
+			tails: number;
+		};
+
+	// Yes / No sides from its settings.
+	await page.getByTestId('canvas').focus();
+	await page.keyboard.press('Shift+Enter');
+	const settings = page.getByTestId('widget-settings');
+	await settings.getByRole('button', { name: 'Yes / No' }).click();
+	await page.keyboard.press('Escape');
+
+	// A click on Flip, without selecting it; it lands on the stored side.
+	await page.evaluate(() => window.__spacy!.ctx.selection.clear());
+	const b = (await coin.boundingBox())!;
+	const flip = { x: b.x + (110 / 240) * b.width, y: b.y + (213 / 240) * b.height };
+	await page.mouse.click(flip.x, flip.y);
+	await expect(coin.getByText('Flipping…')).toHaveCount(1);
+	const result = coin.locator('text[font-weight="700"][font-size="16"]');
+	await expect(result).toHaveText(/^(Yes|No)$/, { timeout: 4000 });
+	const s = await state();
+	expect(await result.textContent()).toBe(s.flip!.side === 'heads' ? 'Yes' : 'No');
+	await expect(page.getByTestId('announcer')).toHaveText(
+		`Coin flip: ${await result.textContent()}`
+	);
+
+	await page.mouse.click(flip.x, flip.y);
+	await expect.poll(async () => (await state()).heads + (await state()).tails).toBe(2);
+	await expect(coin.getByText('Flipping…')).toHaveCount(0, { timeout: 4000 });
+	const { heads, tails } = await state();
+	await expect(coin.getByText(`Yes ${heads} · No ${tails}`)).toHaveCount(1);
+
+	const reset = { x: b.x + (188 / 240) * b.width, y: b.y + (213 / 240) * b.height };
+	await page.mouse.click(reset.x, reset.y);
+	await expect.poll(async () => (await state()).flip).toBeNull();
+	expect((await state()).heads + (await state()).tails).toBe(0);
+});
