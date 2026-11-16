@@ -116,6 +116,11 @@ export interface FrameElement extends BaseElement {
 	 * card sits in is its status. Missing: an ordinary frame.
 	 */
 	kanban?: string;
+	/**
+	 * Kanban columns: the color their cards take, kept in step with the top card so an emptied
+	 * column still has it. Missing: the top card's color, if any.
+	 */
+	cardColor?: string;
 }
 export interface DocCardElement extends BaseElement {
 	type: 'doccard';

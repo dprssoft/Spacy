@@ -44,18 +44,47 @@ export function columnAt(p: Point, columns: readonly KanbanColumn[]): KanbanColu
 	return best;
 }
 
-/** The color of a column's top sticky (other than `except`): the color its cards take. */
-export function cardColorIn(
-	els: Iterable<Element>,
-	columnId: string,
-	except?: string
-): string | null {
+/** The color of a column's top sticky (other than `except`), if it has one. */
+function topCardColor(els: Iterable<Element>, columnId: string, except?: string): string | null {
 	let top: Extract<Element, { type: 'sticky' }> | null = null;
 	for (const el of els) {
 		if (el.type !== 'sticky' || el.parentId !== columnId || el.id === except) continue;
 		if (!top || el.y < top.y) top = el;
 	}
 	return top?.color ?? null;
+}
+
+/**
+ * The color a column's cards take: its top sticky's (other than `except`), or, in a column with
+ * no stickies, the one it remembers.
+ */
+export function cardColorIn(
+	els: Iterable<Element>,
+	columnId: string,
+	except?: string
+): string | null {
+	const all = [...els];
+	const column = all.find((el) => el.id === columnId);
+	return (
+		topCardColor(all, columnId, except) ?? (isColumn(column) ? column.cardColor : null) ?? null
+	);
+}
+
+/**
+ * Columns remember their top sticky's color, so a column that empties still knows the color of
+ * its cards. Joins the current transaction when there is one.
+ */
+export function rememberCardColors(doc: Y.Doc, columnIds: Iterable<string>): void {
+	const wanted = new Set(columnIds);
+	if (wanted.size === 0) return;
+	const els = [...getElementsMap(doc).values()].map((m) => m.toJSON() as Element);
+	const patches: { id: string; patch: ElementPatch }[] = [];
+	for (const col of els) {
+		if (!wanted.has(col.id) || !isColumn(col)) continue;
+		const color = topCardColor(els, col.id);
+		if (color && color !== col.cardColor) patches.push({ id: col.id, patch: { cardColor: color } });
+	}
+	if (patches.length) updateElements(doc, patches);
 }
 
 const byOrder = (a: Card, b: Card) => a.y - b.y || compareZ(a.z, b.z);
@@ -118,6 +147,10 @@ export function relayoutColumns(
 		if (stacked.height > col.h + 0.01) patches.push({ id: col.id, patch: { h: stacked.height } });
 	}
 	if (patches.length) updateElements(doc, patches);
+	rememberCardColors(
+		doc,
+		[...wanted].filter((id) => !gone.has(id))
+	);
 }
 
 // Deleting a card closes the gap it leaves, in the same transaction (so in the same undo step).
