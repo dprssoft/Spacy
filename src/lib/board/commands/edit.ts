@@ -10,6 +10,7 @@ import type { Element, NewElement, Point } from '$lib/model/types';
 import { compareZ } from '$lib/model/zorder';
 import type { BoardContext } from '../context';
 import { deleteWithChildren, syncFrameMembership, withFrameChildren } from '../frameMembership';
+import { blankCopies, looseCards, partlyCopiedBoards, withoutLoose } from '../kanban/ops';
 import { reorder, type ReorderOp } from './reorder';
 
 // Board editing commands. Each is one undo step.
@@ -63,12 +64,18 @@ export function createWithContent(
 	return created;
 }
 
-/** Copies the selection with an offset; the copies become the selection. */
+/**
+ * Copies the selection with an offset; the copies become the selection. Kanban cards copied
+ * without their column become empty cards under the originals, ready to type on.
+ */
 export function duplicateSelection(ctx: BoardContext, offset: Point = { x: 16, y: 16 }): void {
 	// A frame is copied with its contents.
 	const els = withFrameChildren(ctx, selectedElements(ctx));
 	if (els.length === 0) return;
-	const { elements, idMap } = cloneElements(els, { offset });
+	const loose = looseCards(ctx, els);
+	const cloned = cloneElements(els, { offset, keepKanban: partlyCopiedBoards(ctx, els) });
+	const elements = blankCopies(els, cloned.elements, loose);
+	const idMap = cloned.idMap;
 	const docs = getDocsMap(ctx.doc);
 	const fragments = new Map<string, Y.XmlFragment>();
 	for (const [oldId, newIdValue] of idMap) {
@@ -83,10 +90,12 @@ export function duplicateSelection(ctx: BoardContext, offset: Point = { x: 16, y
 	const threads = threadsOn(ctx.doc, new Set(els.map((e) => e.id)));
 	ctx.undo.stopCapturing();
 	const created = createWithContent(ctx, elements, fragments, sketches, () =>
-		copyThreadsTo(ctx.doc, threads, idMap, ctx.pages.current)
+		copyThreadsTo(ctx.doc, threads, withoutLoose(idMap, loose), ctx.pages.current)
 	);
 	ctx.undo.stopCapturing();
 	ctx.selection.set(created.map((e) => e.id));
+	const [only] = created;
+	if (only && created.length === 1 && loose.size === 1) ctx.editing.start(only.id);
 }
 
 /** Changes stacking order. Frames only reorder among frames (they render in their own layer). */

@@ -38,6 +38,7 @@ import { undoGesture } from './gesture';
 import { now } from '../widgets/clock';
 import { actionAt, primaryAction } from '../widgets/layout';
 import { createRafWriter } from './rafBatch';
+import { partlyCopiedBoards } from '../kanban/ops';
 import type { CanvasPointerEvent, Tool } from './types';
 
 const DRAG_THRESHOLD_PX = 3;
@@ -124,7 +125,10 @@ export function createSelectTool(ctx: BoardContext): Tool {
 	/** Alt-drag: copies the targets (keeping their stacking order) and selects the copies. */
 	function duplicateForDrag(targets: Element[]): Element[] {
 		const sorted = [...targets].sort((a, b) => compareZ(a.z, b.z));
-		const { elements } = cloneElements(sorted, { offset: { x: 0, y: 0 } });
+		const { elements } = cloneElements(sorted, {
+			offset: { x: 0, y: 0 },
+			keepKanban: partlyCopiedBoards(ctx, sorted)
+		});
 		const created = createElements(doc, elements);
 		selection.set(
 			created.filter((e) => !e.parentId || !idsIn(created, e.parentId)).map((e) => e.id)

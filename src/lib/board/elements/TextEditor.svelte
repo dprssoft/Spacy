@@ -2,8 +2,10 @@
 	import { STICKY_TEXT_COLOR } from '$lib/model/defaults';
 	import { updateElement } from '$lib/model/ops';
 	import type { ShapeElement, StickyElement, TextElement } from '$lib/model/types';
+	import { isColumn } from '$lib/model/kanban';
 	import { debounce } from '$lib/shared/debounce';
 	import { getBoard } from '../context';
+	import { addTask } from '../kanban/ops';
 	import { fontToCss, inkFont, seeThrough, valignToJustify } from './common';
 	import { isLineArt } from './shape/paths';
 
@@ -60,7 +62,22 @@
 		write();
 	}
 
+	/** On a kanban card, Enter finishes it and starts the next card under it (Shift+Enter: new line). */
+	function nextKanbanCard(e: KeyboardEvent): boolean {
+		if (e.key !== 'Enter' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey || e.isComposing)
+			return false;
+		if (el.type !== 'sticky') return false;
+		const column = el.parentId ? ctx.store.get(el.parentId) : undefined;
+		if (!isColumn(column)) return false;
+		e.preventDefault();
+		e.stopPropagation();
+		close();
+		if (value.trim()) addTask(ctx, column.id, id);
+		return true;
+	}
+
 	function onkeydown(e: KeyboardEvent) {
+		if (nextKanbanCard(e)) return;
 		if (e.key === 'Escape' || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) {
 			e.preventDefault();
 			e.stopPropagation();
