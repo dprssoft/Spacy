@@ -1,6 +1,7 @@
 import type { SyncState } from '$lib/storage/sync/status';
 
-export function describeState(s: SyncState): string {
+/** `renewFailed`: a click can no longer renew the sign-in by itself. */
+export function describeState(s: SyncState, renewFailed = true): string {
 	switch (s.kind) {
 		case 'off':
 			return 'Starting…';
@@ -11,7 +12,7 @@ export function describeState(s: SyncState): string {
 		case 'offline':
 			return 'Offline — changes sync when you’re back online';
 		case 'signin':
-			return 'Sign in again to keep syncing';
+			return renewFailed ? 'Sign in again to keep syncing' : 'Reconnecting on your next click';
 		case 'error':
 			return `Sync failed: ${s.reason}`;
 	}

@@ -7,6 +7,7 @@ type Req = { prompt?: string; login_hint?: string };
 const gis = {
 	requests: [] as Req[],
 	callback: (() => {}) as (r: { access_token?: string; expires_in?: number }) => void,
+	error: (() => {}) as (e: { type?: string }) => void,
 	grant() {
 		this.callback({ access_token: 'tok', expires_in: 3600 });
 	}
@@ -14,8 +15,9 @@ const gis = {
 (globalThis as { google?: unknown }).google = {
 	accounts: {
 		oauth2: {
-			initTokenClient(c: { callback: typeof gis.callback }) {
+			initTokenClient(c: { callback: typeof gis.callback; error_callback: typeof gis.error }) {
 				gis.callback = c.callback;
+				gis.error = c.error_callback;
 				return { callback: c.callback, requestAccessToken: (o: Req) => gis.requests.push(o) };
 			},
 			revoke() {}
@@ -23,7 +25,14 @@ const gis = {
 	}
 };
 
-const click = () => document.dispatchEvent(new Event('pointerdown'));
+const click = () => document.dispatchEvent(new Event('click'));
+
+async function signedIn(auth: GisAuth): Promise<void> {
+	await auth.prepare();
+	const first = auth.signIn('consent');
+	gis.grant();
+	await first;
+}
 
 describe('GisAuth', () => {
 	let auth: GisAuth | null = null;
@@ -55,11 +64,11 @@ describe('GisAuth', () => {
 		gis.grant();
 		await first;
 
-		vi.advanceTimersByTime(30 * 60_000);
+		vi.advanceTimersByTime(50 * 60_000);
 		click();
 		expect(gis.requests).toHaveLength(1);
 
-		vi.advanceTimersByTime(16 * 60_000);
+		vi.advanceTimersByTime(6 * 60_000);
 		await expect(auth.getToken()).resolves.toBe('tok');
 		click();
 		expect(gis.requests).toEqual([{ prompt: 'consent' }, { prompt: '' }]);
@@ -73,9 +82,59 @@ describe('GisAuth', () => {
 		const first = auth.signIn('consent');
 		gis.grant();
 		await first;
-		vi.advanceTimersByTime(46 * 60_000);
+		vi.advanceTimersByTime(56 * 60_000);
 		await auth.signOut();
 		click();
 		expect(gis.requests).toHaveLength(1);
+	});
+
+	it('never opens the popup on pointerdown or a key press, only once a click is done', async () => {
+		auth = new GisAuth('id');
+		await signedIn(auth);
+		vi.advanceTimersByTime(56 * 60_000);
+		document.dispatchEvent(new Event('pointerdown'));
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }));
+		expect(gis.requests).toHaveLength(1);
+		click();
+		expect(gis.requests).toHaveLength(2);
+	});
+
+	it('after a failed renewal, stops reopening the popup and asks to sign in again', async () => {
+		const failed = vi.fn();
+		auth = new GisAuth(
+			'id',
+			() => {},
+			() => null,
+			failed
+		);
+		await signedIn(auth);
+		vi.advanceTimersByTime(59 * 60_000);
+		click();
+		gis.error({ type: 'popup_closed' });
+		await vi.waitFor(() => expect(failed).toHaveBeenCalledOnce());
+
+		await expect(auth.getToken()).rejects.toThrow();
+		click();
+		expect(gis.requests).toHaveLength(2);
+
+		// "Sign in again" works, and clicks renew by themselves again after it.
+		const again = auth.signIn('');
+		gis.grant();
+		await again;
+		vi.advanceTimersByTime(56 * 60_000);
+		click();
+		expect(gis.requests).toHaveLength(4);
+	});
+
+	it('one popup when a renewing click is also the click on "Sign in again"', async () => {
+		auth = new GisAuth('id');
+		await signedIn(auth);
+		vi.advanceTimersByTime(59 * 60_000);
+		await expect(auth.getToken()).rejects.toThrow();
+		click();
+		const manual = auth.signIn('');
+		expect(gis.requests).toHaveLength(2);
+		gis.grant();
+		await manual;
 	});
 });
