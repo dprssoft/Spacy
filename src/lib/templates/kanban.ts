@@ -25,7 +25,10 @@ export function buildKanban(doc: Y.Doc): void {
 	);
 	// Smart columns: a card's status is its column.
 	const board = newId();
-	for (const f of frames) f.kanban = board;
+	for (const [i, f] of frames.entries()) {
+		f.kanban = board;
+		f.cardColor = COLUMNS[i]![2];
+	}
 	COLUMNS.forEach(([, count, color], i) => {
 		const f = frames[i]!;
 		for (let k = 0; k < count; k++)

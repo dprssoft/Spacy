@@ -149,7 +149,7 @@ export interface StickyElement  extends BaseElement { type: 'sticky';  text: str
 export interface TextElement    extends BaseElement { type: 'text';    text: string; autoWidth: boolean }
 export interface ImageElement   extends BaseElement { type: 'image';   assetId: string; naturalW: number; naturalH: number }
 export interface StrokeElement  extends BaseElement { type: 'stroke';  points: number[] } // flat [x,y,p,...] relative to (x,y), unscaled
-export interface FrameElement   extends BaseElement { type: 'frame';   title: string; kanban?: string } // kanban: board id shared by its columns (smart kanban)
+export interface FrameElement   extends BaseElement { type: 'frame';   title: string; kanban?: string; cardColor?: string } // kanban: board id shared by its columns (smart kanban); cardColor: the color its cards take, kept when the column empties
 export interface DocCardElement extends BaseElement { type: 'doccard'; title: string; collapsed: boolean; expandedH: number }
 
 export type MediaProvider = 'youtube' | 'vimeo' | 'video' | 'audio';
