@@ -17,6 +17,7 @@ import { visibleWorldRect } from '../engine/viewport';
 import { exportRaster } from '../render/exportImage';
 import { getDefaultStyle } from '../style/styleDefaults';
 import { syncFrameMembership, withFrameChildren } from '../frameMembership';
+import { blankCopies, looseCards, partlyCopiedBoards, withoutLoose } from '../kanban/ops';
 import { createWithContent, deleteSelection, selectedElements } from './edit';
 
 export const CLIPBOARD_PREFIX = 'SPACY-CLIPBOARD:';
@@ -146,7 +147,15 @@ export async function pastePayload(
 	}
 
 	const assets = await importAssets(ctx, payload);
-	const { elements, idMap } = cloneElements(els, { offset });
+	// Kanban cards pasted on their own board without their column: empty cards in that column.
+	const sameBoard = payload.sourceBoardId === ctx.id;
+	const loose = sameBoard ? looseCards(ctx, els) : new Set<string>();
+	const cloned = cloneElements(els, {
+		offset,
+		keepKanban: sameBoard ? partlyCopiedBoards(ctx, els) : undefined
+	});
+	const elements = blankCopies(els, cloned.elements, loose);
+	const idMap = cloned.idMap;
 	const remapped = elements.map((e) =>
 		e.type === 'image' && assets.has(e.assetId) ? { ...e, assetId: assets.get(e.assetId)! } : e
 	);
@@ -169,11 +178,13 @@ export async function pastePayload(
 
 	ctx.undo.stopCapturing();
 	const created = createWithContent(ctx, remapped, fragments, sketches, () =>
-		copyThreadsTo(ctx.doc, payload.comments ?? [], idMap, ctx.pages.current)
+		copyThreadsTo(ctx.doc, payload.comments ?? [], withoutLoose(idMap, loose), ctx.pages.current)
 	);
 	ctx.undo.stopCapturing();
 	ctx.tools.setTool('select');
 	ctx.selection.set(created.map((e) => e.id));
+	const [only] = created;
+	if (only && created.length === 1 && loose.size === 1) ctx.editing.start(only.id);
 	return created.map((e) => e.id);
 }
 

@@ -72,6 +72,16 @@ test('kanban: cards move between columns and "Stack contents" tidies a column', 
 	await page.keyboard.press('Shift+T');
 	await page.getByRole('button', { name: 'Kanban template' }).click();
 	await expect(page.locator('[data-type=frame]')).toHaveCount(3);
+	// Inserting zooms out to show the template: measure once the view has settled.
+	let lastBox = '';
+	await expect
+		.poll(async () => {
+			const box = JSON.stringify(await page.locator('[data-type=frame]').first().boundingBox());
+			const settled = box === lastBox;
+			lastBox = box;
+			return settled;
+		})
+		.toBe(true);
 
 	type El = {
 		id: string;

@@ -13,15 +13,20 @@ export const cloneHooks: ((
 
 /**
  * Copies elements with new ids, shifted by `offset`. Groups get new group ids; parents are
- * remapped when cloned too, otherwise kept. Clones have no `z`, so callers assign fresh keys.
+ * remapped when cloned too, otherwise kept. Kanban columns join a new board unless their board is
+ * in `keepKanban` (a column copied on its own board becomes one more column of it). Clones have
+ * no `z`, so callers assign fresh keys.
  */
 export function cloneElements(
 	els: readonly Element[],
-	opts: { offset: Point; idMap?: Map<string, string> }
+	opts: { offset: Point; idMap?: Map<string, string>; keepKanban?: ReadonlySet<string> }
 ): { elements: NewElement[]; idMap: Map<string, string> } {
 	const idMap = opts.idMap ?? new Map<string, string>();
 	for (const el of els) if (!idMap.has(el.id)) idMap.set(el.id, newId());
 	const groupMap = new Map<string, string>();
+	const kanbanMap = new Map<string, string>();
+	const kanbanOf = (board: string) =>
+		opts.keepKanban?.has(board) ? board : remapGroup(board, kanbanMap);
 
 	const elements = els.map((el) => {
 		const { z: _z, ...rest } = structuredClone(el);
@@ -31,7 +36,8 @@ export function cloneElements(
 			x: el.x + opts.offset.x,
 			y: el.y + opts.offset.y,
 			parentId: el.parentId === null ? null : (idMap.get(el.parentId) ?? el.parentId),
-			groupId: el.groupId === null ? null : remapGroup(el.groupId, groupMap)
+			groupId: el.groupId === null ? null : remapGroup(el.groupId, groupMap),
+			...(el.type === 'frame' && el.kanban ? { kanban: kanbanOf(el.kanban) } : {})
 		};
 		for (const hook of cloneHooks) clone = hook(clone, idMap, opts.offset);
 		return clone;

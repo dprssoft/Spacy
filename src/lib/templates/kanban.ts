@@ -1,9 +1,11 @@
 import type * as Y from 'yjs';
 import { STICKY_COLORS } from '$lib/model/defaults';
+import { newId } from '$lib/model/ids';
+import { KANBAN } from '$lib/model/kanban';
 import { TemplateBuilder } from './builder';
 
 const COL = { w: 320, h: 720 };
-const CARD = { w: 280, h: 110 };
+const CARD = { w: COL.w - 2 * KANBAN.pad, h: 110 };
 const COLUMNS: [string, number, string][] = [
 	['To do', 3, STICKY_COLORS.yellow],
 	['In progress', 2, STICKY_COLORS.blue],
@@ -21,11 +23,14 @@ export function buildKanban(doc: Y.Doc): void {
 		COL,
 		{ tints: ['gray', 'blue', 'green'] }
 	);
+	// Smart columns: a card's status is its column.
+	const board = newId();
+	for (const f of frames) f.kanban = board;
 	COLUMNS.forEach(([, count, color], i) => {
 		const f = frames[i]!;
 		for (let k = 0; k < count; k++)
 			b.sticky(
-				{ x: f.x + 20, y: f.y + 20 + k * (CARD.h + 12), ...CARD },
+				{ x: f.x + KANBAN.pad, y: f.y + KANBAN.pad + k * (CARD.h + KANBAN.gap), ...CARD },
 				count > 1 ? `Task ${k + 1}` : 'Task',
 				color,
 				f

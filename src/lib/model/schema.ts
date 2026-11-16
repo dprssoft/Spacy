@@ -127,7 +127,12 @@ export const sketchSchema = z.object({
 	nw: nonNeg,
 	nh: nonNeg
 });
-export const frameSchema = z.object({ ...base, type: z.literal('frame'), title: z.string() });
+export const frameSchema = z.object({
+	...base,
+	type: z.literal('frame'),
+	title: z.string(),
+	kanban: z.string().min(1).max(64).optional()
+});
 export const docCardSchema = z.object({
 	...base,
 	type: z.literal('doccard'),

@@ -111,6 +111,11 @@ export interface SketchElement extends BaseElement {
 export interface FrameElement extends BaseElement {
 	type: 'frame';
 	title: string;
+	/**
+	 * Kanban board id: frames sharing it are the columns of one board, left to right. The column a
+	 * card sits in is its status. Missing: an ordinary frame.
+	 */
+	kanban?: string;
 }
 export interface DocCardElement extends BaseElement {
 	type: 'doccard';

@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { isColumn } from '$lib/model/kanban';
 	import { updateElement } from '$lib/model/ops';
 	import type { FrameElement } from '$lib/model/types';
 	import { getBoard } from '../../context';
+	import AddTaskButton from '../../kanban/AddTaskButton.svelte';
 	import { dashArray, fillColor, radiusPx } from '../common';
 	import type { ElementViewProps } from '../registry';
 	import { FRAME_TITLE_FONT, FRAME_TITLE_H } from './geometry';
@@ -38,6 +40,9 @@
 		stroke-dasharray={dashArray(el.style.dash, el.style.strokeWidth)}
 	/>
 </svg>
+{#if isColumn(el)}
+	<AddTaskButton column={el} />
+{/if}
 <div
 	class="absolute left-0 flex items-end pb-1"
 	style:top="{-FRAME_TITLE_H}px"
