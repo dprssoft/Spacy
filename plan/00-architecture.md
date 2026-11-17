@@ -281,6 +281,7 @@ export interface AssetRecord {
 ```
 - Store `boards` (keyPath `id`; indexes `openedAt`, `updatedAt`, `deletedAt`)
 - Store `assets` (keyPath `id`; index `boardId`)
+- Blobs (`AssetRecord.blob`, `BoardMeta.thumbnail`) are stored as Blobs. A browser that refuses Blobs in IndexedDB (Safari private windows, some iOS Safari versions: "Error preparing Blob/File data to be stored in object store") gets `{ bytes: ArrayBuffer; type: string }` instead, from then on for the session (`src/lib/storage/storedBlob.ts`). The repos always return Blobs; only `assetsRepo` and `boardsRepo` read these stores, so nothing else sees the stored form. Existing records are never converted.
 - Store `sync` (version 2; out-of-line string keys): the sync engine's bookkeeping, §14
 
 ### Library doc (step 48)

@@ -8,7 +8,6 @@ import { base64ToBytes, bytesToBase64 } from '$lib/shared/base64';
 import { setPref } from '$lib/shared/localPrefs';
 import * as assetsRepo from './assetsRepo';
 import { LAST_BACKUP_PREF } from './backupPrefs';
-import { getDB } from './db';
 import * as boardsRepo from './boardsRepo';
 import { loadSnapshot, writeSnapshot } from './boardDoc';
 import { destroyBoard } from './boardLifecycle';
@@ -72,7 +71,7 @@ export class InvalidFileError extends Error {
 export async function exportBoardPayload(id: string): Promise<BoardPayload> {
 	const meta = await boardsRepo.get(id);
 	if (!meta) throw new Error(`Board ${id} not found`);
-	const records = await (await getDB()).getAllFromIndex('assets', 'boardId', id);
+	const records = await assetsRepo.listByBoard(id);
 	const assets = await Promise.all(
 		records.map(async (r) => ({
 			id: r.id,

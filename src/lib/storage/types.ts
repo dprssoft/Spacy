@@ -1,3 +1,5 @@
+import type { StoredBlob } from './storedBlob';
+
 export interface BoardMeta {
 	id: string;
 	title: string;
@@ -19,6 +21,10 @@ export interface AssetRecord {
 	height: number;
 	createdAt: number;
 }
+
+/** How the records sit in IndexedDB: a Blob the browser refused is kept as bytes (`storedBlob.ts`). */
+export type StoredBoardMeta = Omit<BoardMeta, 'thumbnail'> & { thumbnail: StoredBlob | null };
+export type StoredAssetRecord = Omit<AssetRecord, 'blob'> & { blob: StoredBlob };
 
 export type BoardFilter = 'recent' | 'starred' | 'all' | 'trash';
 export type BoardSort = 'opened' | 'updated' | 'created' | 'title';

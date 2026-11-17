@@ -1676,3 +1676,14 @@ Requested by the human after a repo health check: e2e had failed on every CI run
 
 **Dependencies:** zod 4.6.5 → 4.6.7 (security fix: memory exhaustion while validating oversized collections; zod validates imported board files and live-sharing data).
 **Verification:** pnpm verify ✅ · the touched specs in Chromium 3× each with no retries: 108/108 ✅ · Firefox/WebKit can't be installed here: checked on CI.
+
+## Extra — Images and thumbnails in Safari private windows — 2026-11-17
+Approved by the human (storage format change, option "fallback only").
+
+**Problem:** Safari's private windows (and some iOS Safari versions) refuse Blobs in IndexedDB ("Error preparing Blob/File data to be stored in object store"; WebKit bugs 268037, 198278). Images couldn't be added there and the start page had no thumbnails; board contents were fine (stored as bytes). Playwright's WebKit contexts behave the same, which is what kept 7 WebKit e2e tests red.
+
+**Change (`storage/storedBlob.ts`, §5 updated):** writes still store Blobs. When the browser refuses one, the write is retried with `{ bytes, type }`, and the rest of the session writes bytes straight away. `assetsRepo` and `boardsRepo` turn either form back into a Blob, so callers are unchanged; the DB schema types (`StoredAssetRecord`, `StoredBoardMeta`) make any direct read of the stores handle both. `fileFormat` export and the sync engine's board list now read through the repos (`boardsRepo.listAll`). `patch` no longer leaves an unobserved `tx.done` rejection when a put fails.
+
+**Not changed:** existing records (never converted), the `.spacy` format, Drive files, live sharing, the DB version.
+**Tests:** `storedBlob.test.ts` (error detection, retry and the session switch, images/thumbnails/synced images/copy/export through a fake IndexedDB that refuses Blobs, both forms readable). The WebKit e2e image, thumbnail and CSP tests now exercise the fallback.
+**Verification:** pnpm verify ✅ (1189 tests) · image/export/template/live/sync specs in Chromium ✅ · WebKit: on CI.
