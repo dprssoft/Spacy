@@ -21,7 +21,7 @@ export const idbSyncState: SyncStateStore = {
 };
 
 export const idbLocalList: LocalList = {
-	all: async () => (await getDB()).getAll('boards'),
+	all: () => boardsRepo.listAll(),
 	create: (id, fields, title) => boardsRepo.insert(id, { ...fields, title }),
 	update: (id, fields) => boardsRepo.setSynced(id, fields),
 	destroy: destroyBoard,
