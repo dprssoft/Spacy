@@ -29,7 +29,7 @@ test('canvas text takes a bundled font, which loads and survives a reload', asyn
 	await expect(page.getByRole('button', { name: 'Font: Caveat' })).toBeVisible();
 
 	const label = page.locator('[data-element-id="a"]').getByText('Привіт, world');
-	await expect(label).toHaveCSS('font-family', /"Spacy Caveat"/);
+	await expect(label).toHaveCSS('font-family', /"?Spacy Caveat"?/);
 	// The Cyrillic subset too.
 	await expect
 		.poll(() => page.evaluate(() => document.fonts.check('18px "Spacy Caveat"', 'Привіт')))
@@ -38,7 +38,7 @@ test('canvas text takes a bundled font, which loads and survives a reload', asyn
 	await page.reload();
 	await expect(page.locator('[data-element-id="a"]').getByText('Привіт, world')).toHaveCSS(
 		'font-family',
-		/"Spacy Caveat"/
+		/"?Spacy Caveat"?/
 	);
 });
 
@@ -89,6 +89,8 @@ test('one font list: every font once, each reachable in a short window', async (
 		).toBe(name);
 		await page.mouse.click(x, y);
 		await expect(page.getByRole('button', { name: `Font: ${name}` })).toBeVisible();
+		// Picking closes the menu; it may still be fading out, so let it go before reopening.
+		await expect(menu).toBeHidden();
 	}
 	expect((await byId(page, 'b')).style.font.family).toBe('pacifico');
 });
@@ -149,7 +151,7 @@ test('doc cards: a bundled font and any color from the ribbon', async ({ page })
 
 	const span = editor.locator('[data-font="playfair"]');
 	await expect(span).toHaveText('Styled');
-	await expect(span).toHaveCSS('font-family', /"Spacy Playfair Display"/);
+	await expect(span).toHaveCSS('font-family', /"?Spacy Playfair Display"?/);
 	await expect(editor.locator('[data-color="custom"]')).toHaveCSS('color', 'rgb(122, 31, 162)');
 });
 

@@ -142,7 +142,9 @@ test('SVG export downloads valid SVG with escaped text', async ({ page }) => {
 	const file = await download(page, 'SVG');
 	const svg = await readFile((await file.path())!, 'utf8');
 	expect(svg.startsWith('<svg')).toBe(true);
-	expect(svg).toContain('Sticky &#60;&#38;&#62; note');
+	// The sticky may wrap its text onto two lines, depending on the fonts the machine has.
+	const lines = [...svg.matchAll(/<text[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]).join(' ');
+	expect(lines).toContain('Sticky &#60;&#38;&#62; note');
 	expect(svg).not.toContain('foreignObject');
 });
 

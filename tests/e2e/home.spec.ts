@@ -6,7 +6,8 @@ const card = (page: Page, title: string) =>
 
 async function openMenu(page: Page, title: string) {
 	const c = card(page, title).first();
-	await c.hover();
+	// Near the top: toasts stacked at the bottom of the screen can cover the card's center.
+	await c.hover({ position: { x: 24, y: 16 } });
 	await c.getByRole('button', { name: 'Board actions' }).click();
 }
 
