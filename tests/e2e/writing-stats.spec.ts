@@ -52,8 +52,9 @@ test('focus mode: counter with details, and the optional aids persist', async ({
 	};
 	await option('Focus paragraph');
 	await expect(focus.locator('.focus-paragraph')).toHaveCount(1);
-	await page.locator('[data-focus-body] .ProseMirror').click();
-	await page.keyboard.press('ControlOrMeta+End');
+	// Put the caret in the last paragraph, so the first one is the dimmed one.
+	await page.locator('[data-focus-body] .ProseMirror > p').last().click();
+	await page.keyboard.press('End');
 	const firstP = page.locator('[data-focus-body] .ProseMirror > p').first();
 	await expect.poll(() => firstP.evaluate((el) => getComputedStyle(el).opacity)).toBe('0.35');
 
