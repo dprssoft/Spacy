@@ -1,6 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import { migrateLegacyDatabases } from './legacyMigration';
-import type { AssetRecord, BoardMeta } from './types';
+import type { StoredAssetRecord, StoredBoardMeta } from './types';
 
 export const DB_NAME = 'spacy';
 /** Each board's content lives in its own database (y-indexeddb's layout, see `boardSaver.ts`). */
@@ -9,12 +9,12 @@ export const boardDbName = (id: string): string => `spacy-board-${id}`;
 export interface SpacyDB extends DBSchema {
 	boards: {
 		key: string;
-		value: BoardMeta;
+		value: StoredBoardMeta;
 		indexes: { openedAt: number; updatedAt: number; deletedAt: number };
 	};
 	assets: {
 		key: string;
-		value: AssetRecord;
+		value: StoredAssetRecord;
 		indexes: { boardId: string };
 	};
 	/** The sync engine's bookkeeping (`storage/sync`), keyed by name. */

@@ -1,7 +1,13 @@
 import { newId } from '$lib/model/ids';
 import { notifyBoardsChanged, notifyBoardsChangedSoon } from './channels';
 import { getDB } from './db';
-import type { BoardFilter, BoardMeta, BoardSort } from './types';
+import { fromStored, toBytes, writeWithFallback, type StoredBlob } from './storedBlob';
+import type { BoardFilter, BoardMeta, BoardSort, StoredBoardMeta } from './types';
+
+const fromRecord = (b: StoredBoardMeta): BoardMeta => ({
+	...b,
+	thumbnail: b.thumbnail && fromStored(b.thumbnail)
+});
 
 export const DEFAULT_TITLE = 'Untitled board';
 /** Title of a board from another device whose content hasn't arrived yet. */
@@ -9,7 +15,8 @@ export const SYNCING_TITLE = 'Syncing…';
 const DAY = 24 * 60 * 60 * 1000;
 
 export async function get(id: string): Promise<BoardMeta | undefined> {
-	return (await getDB()).get('boards', id);
+	const b = await (await getDB()).get('boards', id);
+	return b && fromRecord(b);
 }
 
 const sorters: Record<BoardSort, (a: BoardMeta, b: BoardMeta) => number> = {
@@ -34,6 +41,7 @@ export async function list(opts: {
 	const q = opts.query?.trim().toLowerCase() ?? '';
 	const sort = opts.filter === 'recent' ? 'opened' : opts.sort;
 	return (await (await getDB()).getAll('boards'))
+		.map(fromRecord)
 		.filter(filters[opts.filter])
 		.filter((b) => !q || b.title.toLowerCase().includes(q))
 		.sort(sorters[sort]);
@@ -62,13 +70,20 @@ export async function create(
 /** Read-modify-write of one board in a single transaction. Missing ids are a silent no-op. */
 async function patch(
 	id: string,
-	change: Partial<Omit<BoardMeta, 'id'>>,
+	change: Partial<Omit<StoredBoardMeta, 'id'>>,
 	notify: () => void = notifyBoardsChanged
 ): Promise<void> {
 	const tx = (await getDB()).transaction('boards', 'readwrite');
-	const current = await tx.store.get(id);
-	if (current) await tx.store.put({ ...current, ...change });
-	await tx.done;
+	let current: StoredBoardMeta | undefined;
+	try {
+		current = await tx.store.get(id);
+		if (current) await tx.store.put({ ...current, ...change });
+		await tx.done;
+	} catch (err) {
+		// A failed put aborts the transaction; its `done` rejects too, and is already reported.
+		tx.done.catch(() => {});
+		throw err;
+	}
 	if (current) notify();
 }
 
@@ -85,7 +100,11 @@ export const restore = (id: string) => patch(id, { deletedAt: null });
 export const touchUpdated = (id: string) =>
 	patch(id, { updatedAt: Date.now() }, notifyBoardsChangedSoon);
 export const setThumbnail = (id: string, thumbnail: Blob | null) =>
-	patch(id, { thumbnail }, notifyBoardsChangedSoon);
+	writeWithFallback<StoredBlob | null, void>(
+		thumbnail,
+		async (t) => (t instanceof Blob ? toBytes(t) : t),
+		(t) => patch(id, { thumbnail: t }, notifyBoardsChangedSoon)
+	);
 export const setViewport = (id: string, viewport: BoardMeta['viewport']) =>
 	patch(id, { viewport }, notifyBoardsChangedSoon);
 
@@ -122,6 +141,10 @@ export async function destroy(id: string): Promise<void> {
 	await tx.done;
 	notifyBoardsChanged();
 }
+
+/** Every board, in trash or not. */
+export const listAll = async (): Promise<BoardMeta[]> =>
+	(await (await getDB()).getAll('boards')).map(fromRecord);
 
 /** Ids of trashed boards deleted more than `days` ago. */
 export async function expiredTrash(now = Date.now(), days = 30): Promise<string[]> {
