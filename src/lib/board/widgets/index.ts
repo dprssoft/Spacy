@@ -3,6 +3,7 @@ import './timer/timer';
 import './wheel/wheel';
 import './randomizer/randomizer';
 import './dice/dice';
+import './coin/coin';
 
 export { allWidgetKinds, readWidget, widgetKind, widgetView, WIDGET_GROUPS } from './kinds';
 export type { WidgetGroup, WidgetKind } from './kinds';

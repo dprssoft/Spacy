@@ -1646,3 +1646,16 @@ Requested by the human: "automatized kanban cards … smart cards that status ca
 **Test changes:** `templates.spec.ts` (kanban) measured the cards while the insert's zoom-out was still animating and passed only when inserting was fast; it now waits for the view to settle.
 **Follow-ups:** no UI yet to turn an ordinary frame into a column or to add/rename columns besides duplicating a column and editing its title; cards don't make room live while a card is dragged over a column.
 **Verification:** pnpm verify ✅ · unit tests `board/kanban/ops.test.ts` · e2e `kanban.spec.ts` (new), `templates.spec.ts`, `frames.spec.ts`, `arrange.spec.ts` ✅ chromium (Firefox/WebKit not installable here) · screenshots of the template: chips, menu, Add task, a moved card, Enter adding cards.
+
+## Extra — Coin flip widget — 2026-11-16
+Requested by the human: "add new randomizer - coin flip".
+
+**Summary:**
+- New widget kind `coin` ("Coin flip", Facilitation group, `board/widgets/coin/`), next to the dice. One big coin that flips over in place with a hop (1.2 s); like the other chance widgets the flip stores a seed and the side it lands on, and the turns are derived from the seed and time, so every tab and peer sees the same flip. With reduced motion it shows the result straight away.
+- Config `{ heads, tails }`: the two side labels (default Heads / Tails; a Yes / No preset; up to 24 characters each), set in its settings. State `{ flip, heads, tails }`: the last flip and a tally since the last reset; the flip still in the air isn't counted on the face until it lands. Buttons: Flip (primary, Enter) and Reset tally. The announcer says "Coin flip: <side>" when it lands (plus the tally after more than one flip).
+- The dice's 2-sided "Coin" option stays as it was (several coins at once).
+
+**Deviations:** none. No data model change (a new widget kind with its own config/state, as the widget framework intends).
+**Dependencies added:** none (icon: lucide `coins`)
+**Follow-ups:** none
+**Verification:** pnpm verify ✅ · unit tests `coin/coin.test.ts` · e2e `widgets.spec.ts` ✅ chromium (new coin test; Firefox/WebKit not installable here) · screenshots of the menu and the coin idle, mid-flip and landed.
