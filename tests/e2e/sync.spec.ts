@@ -6,6 +6,11 @@ import { createBoard, el, enableTestHooks, waitForHooks, waitForInitialView } fr
 // Two browsers syncing through one fake Google Drive (the Drive API and Google's sign-in script
 // are served by Playwright routes; the build has PUBLIC_GOOGLE_CLIENT_ID set, see the config).
 
+test.skip(
+	({ browserName }) => browserName === 'webkit',
+	"Playwright's WebKit gives route handlers no body for Blob uploads, so the fake Drive can't read them"
+);
+
 const SAMPLE = 'tests/e2e/fixtures/sample.png';
 const CORS = {
 	'Access-Control-Allow-Origin': '*',

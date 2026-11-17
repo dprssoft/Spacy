@@ -1659,3 +1659,20 @@ Requested by the human: "add new randomizer - coin flip".
 **Dependencies added:** none (icon: lucide `coins`)
 **Follow-ups:** none
 **Verification:** pnpm verify ✅ · unit tests `coin/coin.test.ts` · e2e `widgets.spec.ts` ✅ chromium (new coin test; Firefox/WebKit not installable here) · screenshots of the menu and the coin idle, mid-flip and landed.
+
+## Extra — CI: brittle e2e tests and zod — 2026-11-17
+Requested by the human after a repo health check: e2e had failed on every CI run of main since CI was added, in all three browsers, while `pnpm verify` always passed and Chromium e2e passed locally.
+
+**Fixed tests (the app was right in each case):**
+- `export.spec.ts` SVG export: the sticky's text wraps onto two lines on CI's fonts; the test now joins the `<text>` lines before checking the escaping. Was failing in all three browsers.
+- `fonts-colors.spec.ts`: WebKit reports `font-family` without quotes, so the checks accept both; the font-list test waits for the menu to finish closing before it reopens it (it read the menu's box while it faded out).
+- `pen-images.spec.ts` pen/eraser: draws after the initial view is set and, after the reload, erases where the stroke actually is (the reloaded board can frame it differently). Flaky in Chromium and WebKit.
+- `home.spec.ts` board menu: hovers near the card's top, since the toasts stacked at the bottom covered its center (Firefox timeout).
+- `writing-stats.spec.ts` focus paragraph: clicks into the last paragraph instead of the body's center + Ctrl+End (Firefox flake).
+
+**Skipped with a reason:** `sync.spec.ts` on WebKit — Playwright's WebKit gives route handlers no body for Blob uploads, so the fake Drive can't read the multipart upload. Still covered in Chromium and Firefox.
+
+**Not fixed yet (needs a decision):** most remaining WebKit failures share one error, "Error preparing Blob/File data to be stored in object store": Playwright's Linux WebKit won't store Blobs in IndexedDB (images, thumbnails, the template thumbnail in `csp.spec.ts`). Real Safari hasn't been checked. Storing assets in another form would change the storage format, so it's left for the human.
+
+**Dependencies:** zod 4.6.5 → 4.6.7 (security fix: memory exhaustion while validating oversized collections; zod validates imported board files and live-sharing data).
+**Verification:** pnpm verify ✅ · the touched specs in Chromium 3× each with no retries: 108/108 ✅ · Firefox/WebKit can't be installed here: checked on CI.

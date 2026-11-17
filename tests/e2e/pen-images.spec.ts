@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
-import { createBoard, enableTestHooks, waitForHooks } from './helpers';
+import { createBoard, enableTestHooks, waitForHooks, waitForInitialView } from './helpers';
 
 const SAMPLE = 'tests/e2e/fixtures/sample.png';
 
@@ -34,6 +34,7 @@ async function scribble(page: Page, x: number, y: number) {
 }
 
 test('the pen draws a stroke that persists; the eraser deletes it', async ({ page }) => {
+	await waitForInitialView(page);
 	const c = await canvas(page);
 	await press(page, 'p');
 	await scribble(page, c.x + 300, c.y + 300);
@@ -52,10 +53,14 @@ test('the pen draws a stroke that persists; the eraser deletes it', async ({ pag
 	await page.reload();
 	await expect(page.locator('[data-type="stroke"] path')).toHaveCount(1);
 
+	// The reloaded board may frame its content differently, so erase where the stroke is now.
+	await waitForHooks(page);
 	await press(page, 'e');
-	await page.mouse.move(c.x + 380, c.y + 200);
+	const sb = (await page.locator('[data-type="stroke"] path').boundingBox())!;
+	const mid = sb.x + sb.width / 2;
+	await page.mouse.move(mid, sb.y - 40);
 	await page.mouse.down();
-	await page.mouse.move(c.x + 380, c.y + 420, { steps: 10 });
+	await page.mouse.move(mid, sb.y + sb.height + 40, { steps: 10 });
 	await expect(page.locator('[data-type="stroke"]')).toHaveClass(/opacity-30/);
 	await page.mouse.up();
 	await expect.poll(async () => (await list(page)).length).toBe(0);
