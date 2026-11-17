@@ -38,7 +38,7 @@ test('canvas text takes a bundled font, which loads and survives a reload', asyn
 	await page.reload();
 	await expect(page.locator('[data-element-id="a"]').getByText('Привіт, world')).toHaveCSS(
 		'font-family',
-		/"Spacy Caveat"/
+		/"?Spacy Caveat"?/
 	);
 });
 
