@@ -19,7 +19,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | M9: Mobile | 38 | Use and edit boards on phones and tablets: fitted layout, finger gestures, long-press menu, style sheet, keyboard-aware editing |
 | M10: Writers | 46 | Word counts, focus aids, writing templates, outline + compile to one manuscript, backlinks, find & replace, comments on anything, waystones |
 | M11: Sync | 50 (51 for the mobile apps) | Connect Google Drive in Settings; boards, the board list and images sync between your own devices; offline edits catch up |
-| M12: Widgets | 60 | A Widgets dropdown (Facilitation / Team): timer, wheel, randomizer, dice, dot voting, counter, progress, status, deadline — shared live; manager, writer and workshop templates using them |
+| M12: Widgets | 60 | A Widgets dropdown (Facilitation / Team): timer, wheel, randomizer, dice, counter, progress, status, deadline — shared live; manager, writer and workshop templates using them (dot voting archived) |
 
 ## Steps
 
@@ -80,10 +80,10 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [ ] | 51 | [Capacitor app and native Google sign-in](./steps/51-capacitor-sign-in.md) (**blocked**: bundle id) | L | 50 | 2d |
 | [x] | 54 | [Widget framework and timer](./steps/54-widget-framework-timer.md) (approved 2026-10-11: `widget` type, schema 8, `widgets` map) | M. Widgets | 53 | 2.5d |
 | [x] | 55 | [Wheel of fortune, randomizer, dice](./steps/55-wheel-randomizer-dice.md) | M. Widgets | 54 | 2d |
-| [ ] | 56 | [Dot voting and counter](./steps/56-voting-counter.md) | M. Widgets | 54 | 2d |
+| [ ] | 56 | [Counter](./steps/56-counter.md) (dot voting archived: [`archive/dot-voting.md`](./archive/dot-voting.md)) | M. Widgets | 54 | 1d |
 | [ ] | 57 | [Progress, status and deadline](./steps/57-progress-status-deadline.md) | M. Widgets | 54 | 1.5d |
 | [ ] | 59 | [Templates for managers](./steps/59-manager-templates.md) | M. Widgets | 56, 57 | 1.5d |
-| [ ] | 60 | [Templates for writers and facilitators](./steps/60-writer-facilitation-templates.md) | M. Widgets | 55, 56, 57 | 1.5d |
+| [ ] | 60 | [Templates for writers and facilitators](./steps/60-writer-facilitation-templates.md) | M. Widgets | 55, 57 | 1.5d |
 | [x] | 61 | [Tables in doc cards](./steps/61-doc-card-tables.md) (approved 2026-11-07: lifts the non-goal, schema 9) | N. Tables | 45 | 1.5d |
 | [x] | 62 | [Table element](./steps/62-table-element.md) (approved 2026-11-07: `table` type, schema 10) | N. Tables | 61 | 2.5d |
 

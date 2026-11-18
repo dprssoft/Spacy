@@ -1,9 +1,11 @@
-# Step 56 — Dot voting and counter
+# Archived — Dot voting
 
-Phase: M. Widgets · Depends on: 54 · Estimate: 2 days
+Archived 2026-11-18 by the human ("archive voting plans for now"). Not scheduled. It was part of step 56 (which keeps the counter) and step 60 (the "Lean coffee" template). To bring it back, make it a new step after 56, and restore Lean coffee in step 60.
+
+Depends on: 54 (widget framework), 56 (counter: creates `spacy:participantId` and uses the `widgets` entries map) · Estimate: 1.5 days
 
 ## Goal
-Team decision tools. **Dot voting**: each person gets a number of dots to put on stickies and other objects; the totals stay hidden until revealed. **Counter**: a tally that several people can click at once without losing counts.
+Each person gets a number of dots to put on stickies and other objects; the totals stay hidden until revealed.
 
 ## Read first
 - Step 54 and its `PROGRESS.md` entry; `src/lib/model/widgets.ts` (entries map), `src/lib/board/live/presence.svelte.ts`
@@ -18,29 +20,27 @@ Team decision tools. **Dot voting**: each person gets a number of dots to put on
    - Widget view: the phase, how many people voted, and how many dots are used. After reveal it shows the top 5 elements by total (each element's text or kind, ellipsized); clicking a row flies to that element.
    - Actions: Start voting / Vote (primary), Reveal, Reset (clears entries, back to setup; confirms first).
    - Without live sharing it still works on one device (one participant), for example to rank your own ideas.
-2. **Counter** (Team):
-   - Config: `{ step: number /* default 1 */, min: number | null, max: number | null, target: number | null }`.
-   - Value = `base + Σ entries[participantId].delta`, where `base` is in state (`{ base: number }`). Each click adds to the clicker's own delta (no lost increments). Reset sets `base = 0` and clears the entries in one transaction.
-   - View: a big number with − / + buttons and an optional target bar ("7 / 10").
-   - Actions: + (primary), −, Reset. A click outside min/max is ignored.
-3. Add both to the Widgets dropdown under **Team**.
+2. Add it to the Widgets dropdown under **Team**.
 
 ## Files
-- create: `src/lib/board/widgets/{vote,counter}/*` (view, settings, pure logic + test each), `src/lib/board/widgets/vote/{VotingBanner.svelte, VoteDots.svelte, votingMode.svelte.ts}`
+- create: `src/lib/board/widgets/vote/*` (view, settings, pure logic + test), `src/lib/board/widgets/vote/{VotingBanner.svelte, VoteDots.svelte, votingMode.svelte.ts}`
 - modify: `widgets/catalog.ts`, `tools/select.svelte.ts` (hands clicks to voting mode), `canvas/SelectionOverlay.svelte` or the board workspace (mounts the dots layer), `00-architecture.md` (voting rule)
 
 ## Tests
 - `vote.test.ts`: dots left; `maxPerItem`; out-of-scope elements rejected; totals and ranking with ties (by id); deleted elements are dropped from totals.
-- `counter.test.ts`: two participants incrementing concurrently on two Y.Docs synced afterwards → the sum of both; min/max; reset.
 - e2e: start voting → put 3 dots on two stickies → "2 of 5 left" → reveal → the top list shows them in order; undo doesn't remove votes. Live: A and B each vote, and both see the totals after reveal.
 
 ## Acceptance criteria
 - [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] Concurrent votes and counter clicks from two peers are never lost
+- [ ] Concurrent votes from two peers are never lost
 - [ ] Votes stay hidden from others until reveal
 
 ## Out of scope
 Anonymous voting guarantees (entries are readable in the Y.Doc), planning-poker cards, vote export, timed voting (put a timer next to it).
 
+## Also archived from step 60
+- **Lean coffee** (Workshops template): To discuss / Discussing / Done frames, dot voting scoped to "To discuss", and a 5-minute timer.
+- Its e2e: new board from "Lean coffee" → Start voting → vote on a sticky in "To discuss" works, and one outside it doesn't.
+
 ## Commit
-`feat(widgets): dot voting and a shared counter`
+`feat(widgets): dot voting`

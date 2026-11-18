@@ -20,7 +20,7 @@ Small interactive objects ("widgets") can be placed on the board: they have thei
 export type WidgetKind =
   | 'timer'                                   // step 54
   | 'wheel' | 'randomizer' | 'dice'           // step 55
-  | 'vote' | 'counter'                        // step 56
+  | 'counter'                                // step 56 ('vote' archived: plan/archive/dot-voting.md)
   | 'progress' | 'status' | 'deadline';       // step 57 (step 58, writer widgets, was removed from the plan)
 
 export interface WidgetElement extends BaseElement {   // schema version 8

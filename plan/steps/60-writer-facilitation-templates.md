@@ -1,9 +1,9 @@
 # Step 60 — Templates for writers and facilitators
 
-Phase: M. Widgets · Depends on: 55, 56, 57 · Estimate: 1.5 days
+Phase: M. Widgets · Depends on: 55, 57 · Estimate: 1.5 days
 
 ## Goal
-More writing templates, plus ready-made facilitation boards with timers, wheels and voting already placed.
+More writing templates, plus ready-made facilitation boards with timers and wheels already placed.
 
 ## Read first
 - Step 59; `src/lib/templates/{threeAct.ts, sceneCards.ts, brainstorm.ts}`
@@ -18,17 +18,16 @@ More writing templates, plus ready-made facilitation boards with timers, wheels 
 2. **Workshops** (facilitation):
    - **Icebreaker**: a wheel with team-member placeholders, a 2-minute timer and question stickies.
    - **Workshop agenda**: sections as frames, each with its own timer set to the section length.
-   - **Lean coffee**: To discuss / Discussing / Done frames, dot voting scoped to "To discuss", and a 5-minute timer.
    - **Daily stand-up**: a randomizer for speaking order (shuffle mode) and a 15-minute timer.
 3. Featured templates on the start page stay unchanged; these are in "More templates".
 
 ## Files
-- create: `src/lib/templates/{snowflake,chapterTracker,plotGrid,revisionChecklist,seriesBible,icebreaker,workshopAgenda,leanCoffee,standup}.ts`
+- create: `src/lib/templates/{snowflake,chapterTracker,plotGrid,revisionChecklist,seriesBible,icebreaker,workshopAgenda,standup}.ts`
 - modify: `templates/index.ts`
 
 ## Tests
 - `templates.test.ts` covers the new templates (build, valid elements and widget configs, outline ids exist).
-- e2e: new board from "Lean coffee" → Start voting → vote on a sticky in "To discuss" works, and one outside it doesn't.
+- e2e: new board from "Icebreaker" → Spin the wheel → a winner shows; the timer starts. (The Lean coffee test is archived with dot voting.)
 
 ## Acceptance criteria
 - [ ] `pnpm verify` and `pnpm test:e2e` pass

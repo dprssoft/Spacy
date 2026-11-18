@@ -1694,3 +1694,6 @@ The human confirmed that step 50 is done: the Google Cloud OAuth client is set u
 
 ## Plan change — step 58 removed — 2026-11-18
 The human removed step 58 (writer widgets: word goal, writing sprint, generator) from the plan. The step file is deleted. Step 60 no longer uses those widgets: "Chapter tracker" drops its word goal, "Daily writing desk" is gone, and it now depends on 55, 56, 57 (its templates use the wheel, dot voting and the progress widget). The `Writing` widget group stays in code; the Widgets menu hides groups with no widgets.
+
+## Plan change — dot voting archived — 2026-11-18
+The human archived the voting plans ("for now"). Dot voting moved out of step 56 into `plan/archive/dot-voting.md`, together with step 60's "Lean coffee" template and its e2e test. Step 56 is now just the counter (`steps/56-counter.md`, 1 day); step 60 depends on 55 and 57, and its e2e uses the Icebreaker template instead. `00-architecture.md` keeps the `widgets` entries map (the counter uses it) and the "votes" examples, which are only examples.
