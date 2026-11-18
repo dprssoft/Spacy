@@ -1687,3 +1687,7 @@ Approved by the human (storage format change, option "fallback only").
 **Not changed:** existing records (never converted), the `.spacy` format, Drive files, live sharing, the DB version.
 **Tests:** `storedBlob.test.ts` (error detection, retry and the session switch, images/thumbnails/synced images/copy/export through a fake IndexedDB that refuses Blobs, both forms readable). The WebKit e2e image, thumbnail and CSP tests now exercise the fallback.
 **Verification:** pnpm verify ✅ (1189 tests) · image/export/template/live/sync specs in Chromium ✅ · WebKit: on CI.
+
+## Step 50 — completed — 2026-11-18
+The human confirmed that step 50 is done: the Google Cloud OAuth client is set up (`PUBLIC_GOOGLE_CLIENT_ID` in `.env.local`) and the real-account check passed. Sign-in renewal was improved later (`01198fc`, `e90fbcd`). This entry only updates the plan files, which had not been updated at the time.
+**Follow-ups:** step 51 (Capacitor) is still blocked on the bundle id.

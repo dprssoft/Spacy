@@ -50,7 +50,7 @@ Phase: L. Sync · Depends on: 49 · Estimate: 2 days
 
 ## Acceptance criteria
 - [x] `pnpm verify` and `pnpm test:e2e` pass (against the fake Drive)
-- [ ] The manual two-browser check with a real account passes
+- [x] The manual two-browser check with a real account passes
 - [x] `00-architecture.md` §14: Drive layout, auth, CSP
 
 ## Out of scope
