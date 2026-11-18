@@ -1697,3 +1697,6 @@ The human removed step 58 (writer widgets: word goal, writing sprint, generator)
 
 ## Plan change — dot voting archived — 2026-11-18
 The human archived the voting plans ("for now"). Dot voting moved out of step 56 into `plan/archive/dot-voting.md`, together with step 60's "Lean coffee" template and its e2e test. Step 56 is now just the counter (`steps/56-counter.md`, 1 day); step 60 depends on 55 and 57, and its e2e uses the Icebreaker template instead. `00-architecture.md` keeps the `widgets` entries map (the counter uses it) and the "votes" examples, which are only examples.
+
+## Plan change — counter archived — 2026-11-18
+The human archived the counter too. Step 56 is gone from the plan; its file moved to `plan/archive/counter.md`. Step 59's "Sprint planning" drops its story-points counter and step 59 now depends on 57 only. The `widgets` entries map (in code since step 54) and `spacy:participantId` stay, unused, for when voting or the counter come back; `00-architecture.md` marks the pref as reserved.

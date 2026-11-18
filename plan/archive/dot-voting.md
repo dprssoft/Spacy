@@ -1,8 +1,8 @@
 # Archived — Dot voting
 
-Archived 2026-11-18 by the human ("archive voting plans for now"). Not scheduled. It was part of step 56 (which keeps the counter) and step 60 (the "Lean coffee" template). To bring it back, make it a new step after 56, and restore Lean coffee in step 60.
+Archived 2026-11-18 by the human ("archive voting plans for now"). Not scheduled. It was part of step 56 (with the counter, also archived: `counter.md`) and step 60 (the "Lean coffee" template). To bring it back, make it a new step, and restore Lean coffee in step 60.
 
-Depends on: 54 (widget framework), 56 (counter: creates `spacy:participantId` and uses the `widgets` entries map) · Estimate: 1.5 days
+Depends on: 54 (widget framework). If the counter isn't back first, this step creates `spacy:participantId` and is the first user of the `widgets` entries map · Estimate: 1.5 days
 
 ## Goal
 Each person gets a number of dots to put on stickies and other objects; the totals stay hidden until revealed.

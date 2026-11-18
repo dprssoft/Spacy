@@ -1,8 +1,8 @@
-# Step 56 — Counter
+# Archived — Counter
 
-Phase: M. Widgets · Depends on: 54 · Estimate: 1 day
+Archived 2026-11-18 by the human ("archive counter as well"). Not scheduled. It was step 56 (dot voting and counter; voting is in `dot-voting.md`) and the counter in step 59's "Sprint planning" template. To bring it back, make it a new step and restore the story-points counter in Sprint planning. It would be the first user of `spacy:participantId` and the `widgets` entries map.
 
-(Dot voting, originally part of this step, is archived: `plan/archive/dot-voting.md`.)
+Depends on: 54 · Estimate: 1 day
 
 ## Goal
 **Counter**: a team tally that several people can click at once without losing counts.

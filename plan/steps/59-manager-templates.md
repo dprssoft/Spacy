@@ -1,6 +1,6 @@
 # Step 59 — Templates for managers
 
-Phase: M. Widgets · Depends on: 56, 57 · Estimate: 1.5 days
+Phase: M. Widgets · Depends on: 57 · Estimate: 1.5 days
 
 ## Goal
 Templates for team leads and project managers, some with widgets already placed, in a new **Management** category of the template gallery.
@@ -18,7 +18,7 @@ Templates for team leads and project managers, some with widgets already placed,
    - **1:1 meeting**: a doc card with an agenda, notes and action items (a checklist), next to a progress widget linked to it.
    - **Risk register**: rows of risk stickies with a status chip each (Open / Mitigating / Closed / Accepted), plus likelihood × impact as a 3 × 3 grid.
    - **Stakeholder map**: a power × interest 2 × 2 (Manage closely, Keep satisfied, Keep informed, Monitor).
-   - **Sprint planning**: a goal text, frames Backlog / Sprint / Capacity, a deadline (sprint end) and a counter (story points).
+   - **Sprint planning**: a goal text, frames Backlog / Sprint / Capacity, and a deadline (sprint end).
    - **Decision log**: a doc card table-like list (date, decision, owner, why), with a status chip per open decision.
    - **Lean canvas**: the 9 blocks in the standard layout.
 3. Featured stays as it is; these are in "More templates".
