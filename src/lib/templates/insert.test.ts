@@ -10,6 +10,7 @@ import '$lib/board/elements';
 import { testCtx } from '$lib/board/testCtx';
 import { searchTemplates, templates } from './index';
 import { insertTemplate } from './insert';
+import { widgetKind } from '$lib/board/widgets';
 
 const byId = (id: string) => templates.find((t) => t.id === id)!;
 
@@ -32,6 +33,8 @@ describe.each(templates.map((t) => t.id))('insertTemplate(%s)', (id) => {
 					const target = endpointElementId(end);
 					if (target) expect(has.has(target)).toBe(true);
 				}
+			const card = el.type === 'widget' && widgetKind(el.kind)?.linkedCard?.(el.config);
+			if (card) expect(has.has(card)).toBe(true);
 		}
 
 		ctx.undo.undo();

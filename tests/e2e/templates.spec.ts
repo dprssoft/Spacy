@@ -157,3 +157,45 @@ test("the Writing category inserts the Hero's Journey", async ({ page }) => {
 		await page.evaluate(() => window.__spacy!.list().filter((e) => e.type === 'connector').length)
 	).toBe(12);
 });
+
+test('the Management category inserts OKRs with nine progress widgets', async ({ page }) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	await waitForInitialView(page);
+	await page.keyboard.press('Shift+T');
+	const dialog = page.getByRole('dialog', { name: 'Insert template' });
+	await dialog.getByRole('button', { name: 'Management' }).click();
+	await expect(dialog.locator('[data-template-card]')).toHaveCount(9);
+	// Previews draw their widgets (the SVG text of each face).
+	const preview = (id: string) =>
+		dialog
+			.locator(`[data-template-card="${id}"] img`)
+			.getAttribute('src')
+			.then((src) => decodeURIComponent(src ?? ''));
+	for (const [id, face] of [
+		['okrs', '>0%<'],
+		['roadmap', 'Now: target'],
+		['one-on-one', '0 of 3 tasks done'],
+		['risk-register', '>Open<'],
+		['sprint-planning', 'Sprint end'],
+		['decision-log', '>Proposed<']
+	] as const) {
+		await expect(dialog.locator(`[data-template-card="${id}"] img`)).toBeVisible();
+		expect(await preview(id), id).toContain(face);
+	}
+	await dialog.getByRole('button', { name: 'OKRs template' }).click();
+	await expect(page.locator('[data-widget="progress"]')).toHaveCount(9);
+});
+
+test('the 1:1 template’s progress widget counts its card’s action items', async ({ page }) => {
+	await enableTestHooks(page);
+	await createBoard(page);
+	await waitForHooks(page);
+	await waitForInitialView(page);
+	await page.keyboard.press('Shift+T');
+	const dialog = page.getByRole('dialog', { name: 'Insert template' });
+	await dialog.getByRole('searchbox', { name: 'Search templates' }).fill('1:1');
+	await dialog.getByRole('button', { name: '1:1 meeting template' }).click();
+	await expect(page.locator('[data-widget="progress"]')).toContainText('0 of 3 tasks done');
+});

@@ -1717,3 +1717,26 @@ The human archived the counter too. Step 56 is gone from the plan; its file move
 **Dependencies added:** none (icons: lucide `chart-no-axes-gantt`, `circle-dot`, `calendar-clock`)
 **Follow-ups:** the scene-canvas headline of a linked progress widget (above). The three `visual.spec.ts` baselines are out of date: they fail with the same pixel counts on the previous commit (not caused by this step), so they need regenerating (`--update-snapshots`) after a look at the diff.
 **Verification:** pnpm verify ✅ (1206 unit tests; new `checklist.test.ts` 3, `progress.test.ts` 3, `progressTool.test.ts` 2 (bar drag is one undo step; drop on a card links it in the move's undo step), `status.test.ts` 3, `deadline.test.ts` 6 (DST, midnight, thresholds, bad data, long headlines)) · e2e new `team-widgets.spec.ts` 4 (linked progress 0 % → 50 %, bar drag + undo, status cycle + Ctrl+Z, past deadline overdue) and in `live.spec.ts` a progress widget following a task checked on the other browser ✅ · full run chromium + mobile + firefox: 501 passed, 31 skipped, 4 failed: the 3 visual baselines (above) and Firefox `sync.spec.ts`, which passed 3/3 alone (flake; sync untouched) · WebKit: CI only · screenshots of all three widgets and the menu reviewed.
+
+## Step 59 — Templates for managers — 2026-11-18
+**Summary:**
+- A **Management** category (after Planning) with nine templates, each its own module in `src/lib/templates/`, all in "More templates" (featured unchanged):
+  - **OKRs**: three objective frames, each with three key-result texts and a manual progress bar (blue, green, violet).
+  - **RACI matrix**: a 5 tasks × 4 roles grid of rectangles with an R/A/C/I sticky per cell, and a legend frame.
+  - **Roadmap (Now / Next / Later)**: three frames with starter stickies and a deadline each (in 14, 60 and 120 days).
+  - **1:1 meeting**: a doc card (check-in, agenda, notes, action items as a checklist), a progress widget linked to it ("0 of 3 tasks done"), a "Next 1:1" deadline in a week, and a "Next time" frame of topic stickies.
+  - **Risk register**: four risk stickies with an Open / Mitigating / Closed / Accepted chip each, and a 3 × 3 likelihood × impact heat grid with axis labels.
+  - **Stakeholder map**: the power × interest 2 × 2 (Keep satisfied, Manage closely, Monitor, Keep informed) with axis labels.
+  - **Sprint planning**: a title, the sprint goal text, Backlog / Sprint / Capacity frames, and a "Sprint end" deadline in 14 days.
+  - **Decision log**: a doc card with a real table (Date, Decision, Owner, Why), and an "Open decisions" frame with a Proposed / Discussing / Decided / Dropped chip per question.
+  - **Lean canvas**: the nine blocks in the standard layout, sharing the business model canvas layout (`buildCanvas` exported from `businessModelCanvas.ts`).
+- `TemplateBuilder.widget(kind, at, config, opts)` adds a widget at its design size with its default state; `widgetConfigs.ts` has the config helpers (`deadlineIn`, `manualProgress`, `checklistProgress`, `statusChip`). Deadline dates are counted from the day the template is built.
+- Fix found on the way: cloning (template insert, copy/paste, duplicate) gave elements new ids but left a progress widget's `cardId` pointing at the old card. A clone hook in `progress.ts` now remaps it when the card is copied too; copied alone, the widget keeps counting the original card.
+
+**Deviations:**
+- The 1:1 template also has a deadline and a "Next time" frame (the template tests require more than three elements, and they're useful there).
+- The decision log uses a doc card table (doc cards support tables) rather than a list. Gallery previews and exports draw a doc card's table as `|`-separated lines (the existing `docLines` rendering); on the board it's a real table.
+
+**Dependencies added:** none
+**Follow-ups:** the two `visual.spec.ts` board baselines from step 57 still need regenerating after review.
+**Verification:** pnpm verify ✅ (1250 unit tests; `templates.test.ts` and `insert.test.ts` run over the new templates, now also checking that widget configs parse to themselves, that widgets have their default state and that linked cards exist (also after insert); new content tests for OKRs, 1:1, risk register / decision log, roadmap / sprint deadlines and lean canvas; `progress.test.ts` +2 for the clone hook, and the insert test fails without it) · e2e `templates.spec.ts` +2 (Management shows 9 templates whose previews draw their widgets; OKRs inserts 9 progress widgets; the inserted 1:1 widget reads "0 of 3 tasks done") ✅ · full run chromium + mobile + firefox: 506 passed, 31 skipped, 3 failed: the 2 stale board baselines and the gallery baseline, which this step changed (count 20 → 29). The gallery baseline was reviewed and regenerated, and the test now pins the clock (deadline previews show dates) · WebKit: CI only · screenshots of all previews reviewed.

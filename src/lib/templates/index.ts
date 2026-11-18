@@ -5,9 +5,10 @@ import type { BoardMeta } from '$lib/storage/types';
 // the diagram, rendering and rich-text code).
 
 export type TemplateCategory =
-	'Planning' | 'Diagrams' | 'Workshops' | 'Strategy' | 'Notes' | 'Writing';
+	'Planning' | 'Management' | 'Diagrams' | 'Workshops' | 'Strategy' | 'Notes' | 'Writing';
 export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
 	'Planning',
+	'Management',
 	'Diagrams',
 	'Workshops',
 	'Strategy',
@@ -36,6 +37,87 @@ export const templates: Template[] = [
 		keywords: ['board', 'tasks', 'agile', 'scrum', 'todo', 'sprint'],
 		featured: true,
 		build: async (doc) => (await import('./kanban')).buildKanban(doc)
+	},
+	{
+		id: 'okrs',
+		name: 'OKRs',
+		description: 'Objectives with key results and a progress bar each',
+		category: 'Management',
+		keywords: ['objectives', 'key results', 'goals', 'quarter', 'okr', 'progress'],
+		featured: false,
+		build: async (doc) => (await import('./okrs')).buildOkrs(doc)
+	},
+	{
+		id: 'raci',
+		name: 'RACI matrix',
+		description: 'Who is responsible, accountable, consulted and informed',
+		category: 'Management',
+		keywords: ['responsibility', 'roles', 'matrix', 'ownership', 'raci'],
+		featured: false,
+		build: async (doc) => (await import('./raci')).buildRaci(doc)
+	},
+	{
+		id: 'roadmap',
+		name: 'Roadmap (Now / Next / Later)',
+		description: 'Three horizons with starter cards and a target date each',
+		category: 'Management',
+		keywords: ['now next later', 'plan', 'priorities', 'product', 'deadline'],
+		featured: false,
+		build: async (doc) => (await import('./roadmap')).buildRoadmap(doc)
+	},
+	{
+		id: 'one-on-one',
+		name: '1:1 meeting',
+		description: 'Agenda, notes and action items, with their progress',
+		category: 'Management',
+		keywords: ['one on one', '1on1', 'manager', 'check-in', 'feedback', 'actions'],
+		featured: false,
+		build: async (doc) => (await import('./oneOnOne')).buildOneOnOne(doc)
+	},
+	{
+		id: 'risk-register',
+		name: 'Risk register',
+		description: 'Risks with a status each, and likelihood × impact',
+		category: 'Management',
+		keywords: ['risks', 'mitigation', 'status', 'likelihood', 'impact', 'heat map'],
+		featured: false,
+		build: async (doc) => (await import('./riskRegister')).buildRiskRegister(doc)
+	},
+	{
+		id: 'stakeholder-map',
+		name: 'Stakeholder map',
+		description: 'Power against interest: who to manage, satisfy, inform or monitor',
+		category: 'Management',
+		keywords: ['stakeholders', 'power', 'interest', '2x2', 'matrix'],
+		featured: false,
+		build: async (doc) => (await import('./stakeholderMap')).buildStakeholderMap(doc)
+	},
+	{
+		id: 'sprint-planning',
+		name: 'Sprint planning',
+		description: 'Sprint goal, backlog, sprint and capacity, with the end date',
+		category: 'Management',
+		keywords: ['sprint', 'scrum', 'agile', 'backlog', 'capacity', 'deadline'],
+		featured: false,
+		build: async (doc) => (await import('./sprintPlanning')).buildSprintPlanning(doc)
+	},
+	{
+		id: 'decision-log',
+		name: 'Decision log',
+		description: 'A table of decisions and why, plus open questions with a status',
+		category: 'Management',
+		keywords: ['decisions', 'adr', 'record', 'log', 'status'],
+		featured: false,
+		build: async (doc) => (await import('./decisionLog')).buildDecisionLog(doc)
+	},
+	{
+		id: 'lean-canvas',
+		name: 'Lean canvas',
+		description: 'Problem, solution, metrics and the rest of the nine blocks',
+		category: 'Management',
+		keywords: ['startup', 'lean', 'business', 'model', 'canvas'],
+		featured: false,
+		build: async (doc) => (await import('./leanCanvas')).buildLeanCanvas(doc)
 	},
 	{
 		id: 'retrospective',

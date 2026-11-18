@@ -16,9 +16,11 @@ import type {
 	ShapeKind,
 	StickyElement,
 	Style,
-	TextElement
+	TextElement,
+	WidgetElement
 } from '$lib/model/types';
 import { connectableFor } from '$lib/board/elements/connectables';
+import { widgetKind } from '$lib/board/widgets';
 import type * as Y from 'yjs';
 
 type StylePatch = Partial<Omit<Style, 'font'>> & { font?: Partial<Style['font']> };
@@ -136,6 +138,26 @@ export class TemplateBuilder {
 			title,
 			collapsed: false,
 			expandedH: r.h
+		});
+	}
+
+	/** A widget of `kind` at its design size (or `size`), with its default state. */
+	widget(
+		kind: string,
+		at: { x: number; y: number },
+		config: unknown,
+		opts: { parent?: { id: string }; size?: { w: number; h: number }; title?: string } = {}
+	): New<WidgetElement> {
+		const def = widgetKind(kind);
+		if (!def) throw new Error(`unknown widget kind ${kind}`);
+		const r = { ...at, ...(opts.size ?? def.design) };
+		return this.#add({
+			...this.#base('widget', r, styled('widget'), opts.parent),
+			type: 'widget',
+			kind,
+			title: opts.title ?? '',
+			config,
+			state: def.defaultState()
 		});
 	}
 

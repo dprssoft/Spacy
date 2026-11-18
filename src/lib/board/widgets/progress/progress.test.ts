@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { cloneElements } from '$lib/model/clone';
 import { samples } from '$lib/model/testFixtures';
+import type { Element, WidgetElement } from '$lib/model/types';
 import { NO_ENV, widgetView } from '../kinds';
 import { DEFAULT_PROGRESS, progressKind, readProgress, valueAt } from './progress';
 import '../index';
@@ -47,5 +49,27 @@ describe('progress', () => {
 		expect(linked.actions).toEqual([]);
 		expect(linked.face.headline).toBe('25%');
 		expect(linked.art).toContain('1 of 4 tasks done');
+	});
+});
+
+describe('copying a linked progress widget', () => {
+	const card = { ...samples.doccard('card'), z: 'a' } as Element;
+	const widget = {
+		...samples.widget('p'),
+		kind: 'progress',
+		config: { ...DEFAULT_PROGRESS, source: 'checklist', cardId: 'card' },
+		z: 'b'
+	} as Element;
+	const cardIdOf = (els: readonly unknown[], i: number) =>
+		((els[i] as WidgetElement).config as { cardId: string }).cardId;
+
+	it('follows the copy of its card', () => {
+		const { elements, idMap } = cloneElements([card, widget], { offset: { x: 10, y: 10 } });
+		expect(cardIdOf(elements, 1)).toBe(idMap.get('card'));
+	});
+
+	it('copied alone, keeps the original card', () => {
+		const { elements } = cloneElements([widget], { offset: { x: 10, y: 10 } });
+		expect(cardIdOf(elements, 0)).toBe('card');
 	});
 });

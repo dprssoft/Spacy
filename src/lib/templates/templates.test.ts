@@ -5,7 +5,8 @@ import { parseElement } from '$lib/model/schema';
 import { TEMPLATE } from '$lib/model/origins';
 import { docToMarkdown } from '$lib/board/doccards/markdown';
 import { fragmentToJSON } from '$lib/board/doccards/fragmentJson';
-import type { Element } from '$lib/model/types';
+import type { Element, WidgetElement } from '$lib/model/types';
+import { widgetKind } from '$lib/board/widgets';
 import { templates } from './index';
 
 async function built(id: string) {
@@ -30,6 +31,14 @@ describe.each(templates.map((t) => t.id))('template %s', (id) => {
 			if (el.type === 'connector')
 				for (const end of [el.from, el.to])
 					if (end.kind !== 'free') expect(byId.has(end.elementId)).toBe(true);
+			if (el.type === 'widget') {
+				const def = widgetKind(el.kind)!;
+				expect(def, el.kind).toBeDefined();
+				expect(def.parseConfig(el.config), el.kind).toEqual(el.config);
+				expect(def.parseState(el.state)).toEqual(def.defaultState());
+				const card = def.linkedCard?.(el.config);
+				if (card) expect(byId.get(card)?.type).toBe('doccard');
+			}
 			if (el.parentId) {
 				const f = byId.get(el.parentId)!;
 				expect(f.type).toBe('frame');
@@ -140,5 +149,62 @@ describe('template content', () => {
 		const md = docToMarkdown(fragmentToJSON(frag));
 		expect(md).toContain('## Action items\n\n- [ ] Owner: task');
 		expect(md).toContain('1. Topic one');
+	});
+
+	it('OKRs: three objectives with three key results and a progress widget each', async () => {
+		const els = listElements((await built('okrs')).doc);
+		const frames = els.filter((e) => e.type === 'frame');
+		expect(frames).toHaveLength(3);
+		for (const f of frames)
+			expect(
+				els.filter((e) => e.type === 'widget' && e.kind === 'progress' && e.parentId === f.id)
+			).toHaveLength(3);
+	});
+
+	it('1:1 meeting: the progress widget counts the card’s action items', async () => {
+		const { doc } = await built('one-on-one');
+		const els = listElements(doc);
+		const card = els.find((e) => e.type === 'doccard')!;
+		const progress = els.find((e) => e.type === 'widget' && e.kind === 'progress')!;
+		expect(widgetKind('progress')!.linkedCard!((progress as WidgetElement).config)).toBe(card.id);
+		const md = docToMarkdown(fragmentToJSON(getDocsMap(doc).get(card.id)!));
+		expect(md).toContain('## Action items\n\n- [ ] Owner: task');
+	});
+
+	it('risk register and decision log: a status chip per row', async () => {
+		for (const [id, rows] of [
+			['risk-register', 4],
+			['decision-log', 3]
+		] as const) {
+			const els = listElements((await built(id)).doc);
+			expect(els.filter((e) => e.type === 'widget' && e.kind === 'status')).toHaveLength(rows);
+		}
+	});
+
+	it('decision log: the doc card holds a table of date, decision, owner and why', async () => {
+		const { doc } = await built('decision-log');
+		const card = listElements(doc).find((e) => e.type === 'doccard')!;
+		const md = docToMarkdown(fragmentToJSON(getDocsMap(doc).get(card.id)!));
+		expect(md).toContain('| Date | Decision | Owner | Why |');
+	});
+
+	it('roadmap and sprint planning: deadlines in the future', async () => {
+		const today = new Date().toISOString().slice(0, 10);
+		for (const [id, count] of [
+			['roadmap', 3],
+			['sprint-planning', 1]
+		] as const) {
+			const els = listElements((await built(id)).doc);
+			const deadlines = els.filter((e) => e.type === 'widget' && e.kind === 'deadline');
+			expect(deadlines).toHaveLength(count);
+			for (const d of deadlines)
+				expect((d as { config: { date: string } }).config.date > today).toBe(true);
+		}
+	});
+
+	it('lean canvas: the nine blocks', async () => {
+		const frames = listElements((await built('lean-canvas')).doc).filter((e) => e.type === 'frame');
+		expect(frames.map((f) => (f as { title: string }).title)).toContain('Unfair advantage');
+		expect(frames).toHaveLength(9);
 	});
 });

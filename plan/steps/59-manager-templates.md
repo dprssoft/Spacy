@@ -32,8 +32,8 @@ Templates for team leads and project managers, some with widgets already placed,
 - e2e: insert "OKRs" into a board → 9 progress widgets are present.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] All new templates have gallery previews rendering their widgets
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] All new templates have gallery previews rendering their widgets
 
 ## Out of scope
 Gantt charts, resource planning, data import from Jira or other tools.

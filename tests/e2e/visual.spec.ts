@@ -38,12 +38,14 @@ for (const theme of ['light', 'dark'] as const) {
 }
 
 test('the template gallery', async ({ page }) => {
+	// Deadline previews show dates counted from today.
+	await page.clock.install({ time: new Date('2026-11-18T10:00:00') });
 	await page.addInitScript(() => localStorage.setItem('spacy:onboarded', 'true'));
 	await page.goto('/');
 	await page.getByRole('button', { name: 'More templates' }).click();
 	const dialog = page.getByRole('dialog', { name: 'New board from a template' });
 	// Every visible preview has rendered.
-	await expect(dialog.locator('[data-template-card] img')).toHaveCount(20);
+	await expect(dialog.locator('[data-template-card] img')).toHaveCount(29);
 	await page.mouse.move(2, 2);
 	await expect(dialog).toHaveScreenshot('template-gallery.png', {
 		animations: 'disabled',

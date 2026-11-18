@@ -1,3 +1,4 @@
+import { cloneHooks } from '$lib/model/clone';
 import { z } from '$lib/shared/zod';
 import { NO_ENV, registerWidgetKind, type WidgetEnv, type WidgetKind } from '../kinds';
 import { escapeXml, fitText, n, text } from '../svg';
@@ -150,3 +151,12 @@ export const progressKind: WidgetKind<ProgressConfig, null> = {
 };
 
 registerWidgetKind(progressKind);
+
+// A widget copied together with its card (or inserted from a template) follows the copy; copied
+// alone, it keeps counting the original card.
+cloneHooks.push((el, idMap) => {
+	if (el.type !== 'widget' || el.kind !== 'progress') return el;
+	const c = progressKind.parseConfig(el.config);
+	const cardId = c.cardId && idMap.get(c.cardId);
+	return cardId ? { ...el, config: { ...c, cardId } } : el;
+});

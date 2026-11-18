@@ -6,7 +6,8 @@ const U = 280; // column width
 const H = 640; // top area height
 const LOW = 300; // bottom row height
 const G = 16;
-const BLOCKS: [string, number, number, number, number, Tint][] = [
+export type CanvasBlock = [string, number, number, number, number, Tint];
+const BLOCKS: CanvasBlock[] = [
 	// title, x, y, w, h (in columns / rows), tint
 	['Key partners', 0, 0, 1, 1, 'violet'],
 	['Key activities', 1, 0, 1, 0.5, 'blue'],
@@ -19,12 +20,16 @@ const BLOCKS: [string, number, number, number, number, Tint][] = [
 	['Revenue streams', 2.5, 1, 2.5, 0, 'teal']
 ];
 
-export function buildBusinessModelCanvas(doc: Y.Doc): void {
+export const buildBusinessModelCanvas = (doc: Y.Doc): void =>
+	buildCanvas(doc, 'Business model canvas', BLOCKS);
+
+/** A titled canvas of blocks in the five-column layout (also the lean canvas). */
+export function buildCanvas(doc: Y.Doc, name: string, blocks: readonly CanvasBlock[]): void {
 	const b = new TemplateBuilder();
-	b.text({ x: 0, y: -90, w: 700, h: 34 }, 'Business model canvas', {
+	b.text({ x: 0, y: -90, w: 700, h: 34 }, name, {
 		font: { size: 'l', bold: true, align: 'l' }
 	});
-	for (const [title, cx, cy, cw, ch, tint] of BLOCKS) {
+	for (const [title, cx, cy, cw, ch, tint] of blocks) {
 		const bottom = cy >= 1;
 		const x = cx * (U + G);
 		const y = bottom ? H + G * 2 : cy * (H + G);
