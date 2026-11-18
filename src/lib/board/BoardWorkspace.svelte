@@ -63,6 +63,7 @@
 	import CommentBadges from './comments/CommentBadges.svelte';
 	import CommentPopover from './comments/CommentPopover.svelte';
 	import WidgetSettings from './widgets/WidgetSettings.svelte';
+	import WidgetLinkHint from './widgets/WidgetLinkHint.svelte';
 	import CommentsPanel from './comments/CommentsPanel.svelte';
 	import { compileDialog } from './writing/compileDialogState.svelte';
 	import OutlinePanel from './writing/OutlinePanel.svelte';
@@ -332,6 +333,7 @@
 						<PreviewOverlay />
 						<ConnectOverlay />
 						<SelectionOverlay />
+						<WidgetLinkHint />
 						<QuickCreateButtons />
 						<PulseHighlight />
 						<LiveCursors live={ctx.live} />

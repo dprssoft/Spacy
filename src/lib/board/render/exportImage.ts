@@ -12,6 +12,7 @@ import { readStrokes } from '../sketch/data';
 import { DEFAULT_FONT } from '$lib/fonts/catalog';
 import { embeddedFontCss } from '$lib/fonts/embed';
 import { loadFonts } from '$lib/fonts/register';
+import { linkedCard } from '../widgets/kinds';
 import { renderStaticSvg, type StaticSvg } from './staticSvg';
 import { createCanvasMeasurer } from './wrapText';
 
@@ -75,8 +76,13 @@ export async function renderScope(
 	const lines = new Map<string, DocLine[]>();
 	for (const el of elements)
 		if (el.type === 'doccard') lines.set(el.id, docLines(getDocJSON(ctx, el.id)));
+	// Tables' content, and the doc cards widgets read from (a progress widget's checklist).
 	const tables = new Map<string, DocNode>();
-	for (const el of elements) if (el.type === 'table') tables.set(el.id, getDocJSON(ctx, el.id));
+	for (const el of elements) {
+		if (el.type === 'table') tables.set(el.id, getDocJSON(ctx, el.id));
+		const card = el.type === 'widget' ? linkedCard(el) : null;
+		if (card && !tables.has(card)) tables.set(card, getDocJSON(ctx, card));
+	}
 	// Read now, like the doc lines: the document may be closing.
 	const strokes = new Map<string, SketchStroke[]>();
 	for (const el of elements)

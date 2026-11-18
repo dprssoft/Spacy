@@ -36,7 +36,8 @@ import { connectorGeometry } from '../diagram/geometry';
 import { nearestT } from '../diagram/routing';
 import { undoGesture } from './gesture';
 import { now } from '../widgets/clock';
-import { actionAt, primaryAction } from '../widgets/layout';
+import { actionAt, dragConfig, primaryAction } from '../widgets/layout';
+import { linkOnDrop } from '../widgets/progress/dropLink';
 import { createRafWriter } from './rafBatch';
 import { partlyCopiedBoards } from '../kanban/ops';
 import type { CanvasPointerEvent, Tool } from './types';
@@ -86,7 +87,9 @@ type State =
 			snapshot: Element[];
 			snapper: Snapper;
 	  }
-	| { kind: 'rotating'; center: Point; startAngle: number; snapshot: Element[] };
+	| { kind: 'rotating'; center: Point; startAngle: number; snapshot: Element[] }
+	/** Dragging inside a widget's drag zone (a progress bar): edits its config, one undo step. */
+	| { kind: 'widgetDrag'; id: string; action: string };
 
 /** Click/Shift/marquee selection, move (Alt duplicates, Shift locks axis), resize, rotate. */
 export function createSelectTool(ctx: BoardContext): Tool {
@@ -191,6 +194,12 @@ export function createSelectTool(ctx: BoardContext): Tool {
 		]);
 	}
 
+	function dragWidget(e: CanvasPointerEvent, s: Extract<State, { kind: 'widgetDrag' }>) {
+		const el = store.get(s.id);
+		const config = el?.type === 'widget' ? dragConfig(el, s.action, e.world, e.shift) : null;
+		if (config !== null) writer.push([{ id: s.id, patch: { config } }]);
+	}
+
 	function marquee(e: CanvasPointerEvent, s: Extract<State, { kind: 'marquee' }>) {
 		const rect = rectFromPoints(s.start, e.world);
 		selection.marquee = rect;
@@ -267,7 +276,8 @@ export function createSelectTool(ctx: BoardContext): Tool {
 			'rotating',
 			'label',
 			'segment',
-			'waypoint'
+			'waypoint',
+			'widgetDrag'
 		].includes(state.kind);
 		writer.cancel();
 		if (transforming) {
@@ -369,6 +379,13 @@ export function createSelectTool(ctx: BoardContext): Tool {
 			const id = e.hit.elementId;
 			const el = id ? store.get(id) : undefined;
 			const action = el?.type === 'widget' && !e.shift ? actionAt(el, e.world, now()) : null;
+			if (el && action?.drag && !el.locked) {
+				beginTransform();
+				state = { kind: 'widgetDrag', id: el.id, action: action.id };
+				dragWidget(e, state);
+				ui.cursor = 'ew-resize';
+				return;
+			}
 			if (el && action) {
 				// A widget's button: runs on release; the selection stays as it is unless it drags.
 				state = {
@@ -416,7 +433,7 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				const hover = action && hovered ? { id: hovered.id, action: action.id } : null;
 				if (ctx.widgets.hover?.id !== hover?.id || ctx.widgets.hover?.action !== hover?.action)
 					ctx.widgets.hover = hover;
-				if (action) ui.cursor = 'pointer';
+				if (action) ui.cursor = action.drag ? 'ew-resize' : 'pointer';
 				else if (h === 'rotate') ui.cursor = 'grab';
 				else if (h && isResizeHandle(h)) {
 					const single = transformTargets(ctx);
@@ -441,6 +458,8 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				}
 				case 'moving':
 					return move(e, s);
+				case 'widgetDrag':
+					return dragWidget(e, s);
 				case 'marquee':
 					return marquee(e, s);
 				case 'resizing':
@@ -487,9 +506,22 @@ export function createSelectTool(ctx: BoardContext): Tool {
 				if (id) selection.set([id]);
 			} else if (s.kind === 'endpoint') {
 				s.drag.finish();
-			} else if (s.kind === 'label' || s.kind === 'segment' || s.kind === 'waypoint') {
+			} else if (
+				s.kind === 'label' ||
+				s.kind === 'segment' ||
+				s.kind === 'waypoint' ||
+				s.kind === 'widgetDrag'
+			) {
 				endTransform([]);
-			} else if (s.kind === 'moving' || s.kind === 'resizing' || s.kind === 'rotating') {
+			} else if (s.kind === 'moving') {
+				writer.flush();
+				// A progress widget dropped on a doc card counts its checklist (same undo step).
+				const single = s.snapshot.length === 1 ? s.snapshot[0]! : null;
+				const config = single?.type === 'widget' ? linkOnDrop(store, single.id) : null;
+				if (single && config) updateElements(doc, [{ id: single.id, patch: { config } }]);
+				endTransform(s.snapshot);
+				clearGuides();
+			} else if (s.kind === 'resizing' || s.kind === 'rotating') {
 				endTransform(s.snapshot); // the last move already pushed the final position
 				clearGuides();
 			} else if (s.kind === 'pointing' && s.action) {

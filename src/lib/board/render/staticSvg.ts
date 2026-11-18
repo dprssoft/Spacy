@@ -25,6 +25,7 @@ import { posterSubtitle } from '../media/poster';
 import { PIN_HEAD, PIN_PATH, PIN_W } from '../waystones/pin';
 import { now } from '../widgets/clock';
 import { widgetSvg } from '../widgets/face';
+import { countTasks } from '../widgets/progress/checklist';
 import '../widgets';
 import { unionBounds } from './bounds';
 import type { DocNode } from '../doccards/markdown';
@@ -44,7 +45,7 @@ export interface StaticRenderOptions {
 	measure: (text: string, font: FontSpec) => number;
 	assetDataUrl: (assetId: string) => Promise<string | null>;
 	docLines: (doccardId: string) => Promise<DocLine[]>;
-	/** The content of a table element (its `docs` fragment as editor JSON). */
+	/** A table's or doc card's `docs` fragment as editor JSON (tables; widgets' linked checklists). */
 	docJson?: (id: string) => DocNode | null;
 	/** Brush strokes of a sketch element. */
 	sketchStrokes?: (sketchId: string) => readonly SketchStroke[];
@@ -188,7 +189,9 @@ class Renderer {
 				);
 			case 'widget':
 				// As it shows at the moment of export (a running timer: the time left now).
-				return widgetSvg(el, now());
+				return widgetSvg(el, now(), null, true, {
+					tasks: (id) => countTasks(this.o.docJson?.(id))
+				});
 			case 'table':
 				return this.table(el);
 		}

@@ -1,6 +1,7 @@
 import { FONT_FAMILY, RADIUS_PX } from '$lib/model/defaults';
 import type { WidgetElement } from '$lib/model/types';
-import type { Glyph, WidgetAction, WidgetFace } from './kinds';
+import type { Glyph, WidgetAction, WidgetEnv, WidgetFace } from './kinds';
+import { NO_ENV } from './kinds';
 import { widgetView } from './kinds';
 import { fitDesign } from './layout';
 import { escapeXml, fitText, n } from './svg';
@@ -45,7 +46,10 @@ function design(
 	ink: string,
 	hover: string | null
 ): string {
-	const buttons = actions.map((a) => button(a, face, ink, hover === a.id)).join('');
+	const buttons = actions
+		.filter((a) => !a.bare)
+		.map((a) => button(a, face, ink, hover === a.id))
+		.join('');
 	if (art !== null) return art + buttons;
 	const contentH = actions.length > 0 ? d.h - 56 : d.h;
 	const cx = d.w / 2;
@@ -71,10 +75,11 @@ export function widgetSvg(
 	el: WidgetElement,
 	now: number,
 	hover: string | null = null,
-	motion = true
+	motion = true,
+	env: WidgetEnv = NO_ENV
 ): string {
 	const s = el.style;
-	const { face, art, actions, design: d } = widgetView(el, now, motion);
+	const { face, art, actions, design: d } = widgetView(el, now, motion, env);
 	const inset = s.stroke === 'transparent' ? 0 : s.strokeWidth / 2;
 	const card = `<rect x="${n(inset)}" y="${n(inset)}" width="${n(Math.max(0, el.w - 2 * inset))}" height="${n(Math.max(0, el.h - 2 * inset))}" rx="${RADIUS_PX[s.radius]}" fill="${escapeXml(s.fill === 'transparent' ? 'none' : s.fill)}"${s.stroke === 'transparent' ? '' : ` stroke="${escapeXml(s.stroke)}" stroke-width="${s.strokeWidth}"`}/>`;
 	const { scale, dx, dy } = fitDesign(d, el);
@@ -89,7 +94,8 @@ export function widgetSvgDocument(
 	el: WidgetElement,
 	now: number,
 	hover: string | null,
-	motion: boolean
+	motion: boolean,
+	env: WidgetEnv = NO_ENV
 ): string {
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${n(el.w)}" height="${n(el.h)}" viewBox="0 0 ${n(el.w)} ${n(el.h)}" font-family="${escapeXml(FONT_FAMILY)}" style="display:block;overflow:visible">${widgetSvg(el, now, hover, motion)}</svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${n(el.w)}" height="${n(el.h)}" viewBox="0 0 ${n(el.w)} ${n(el.h)}" font-family="${escapeXml(FONT_FAMILY)}" style="display:block;overflow:visible">${widgetSvg(el, now, hover, motion, env)}</svg>`;
 }

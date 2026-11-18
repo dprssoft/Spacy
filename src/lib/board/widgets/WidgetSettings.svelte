@@ -23,7 +23,10 @@
 	});
 	const def = $derived(el ? widgetKind(el.kind) : undefined);
 	const Settings = $derived(el ? WIDGET_SETTINGS[el.kind] : undefined);
-	const actions = $derived(el ? widgetView(el, (void ticker.now, now())).actions : []);
+	// Drag zones (a progress bar) have their own control in the kind's settings.
+	const actions = $derived(
+		el ? widgetView(el, (void ticker.now, now())).actions.filter((a) => !a.drag) : []
+	);
 
 	// Gone (deleted, undone, another page): close.
 	$effect(() => {

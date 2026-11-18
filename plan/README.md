@@ -80,7 +80,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [ ] | 51 | [Capacitor app and native Google sign-in](./steps/51-capacitor-sign-in.md) (**blocked**: bundle id) | L | 50 | 2d |
 | [x] | 54 | [Widget framework and timer](./steps/54-widget-framework-timer.md) (approved 2026-10-11: `widget` type, schema 8, `widgets` map) | M. Widgets | 53 | 2.5d |
 | [x] | 55 | [Wheel of fortune, randomizer, dice](./steps/55-wheel-randomizer-dice.md) | M. Widgets | 54 | 2d |
-| [ ] | 57 | [Progress, status and deadline](./steps/57-progress-status-deadline.md) | M. Widgets | 54 | 1.5d |
+| [x] | 57 | [Progress, status and deadline](./steps/57-progress-status-deadline.md) | M. Widgets | 54 | 1.5d |
 | [ ] | 59 | [Templates for managers](./steps/59-manager-templates.md) | M. Widgets | 57 | 1.5d |
 | [ ] | 60 | [Templates for writers and facilitators](./steps/60-writer-facilitation-templates.md) | M. Widgets | 55, 57 | 1.5d |
 | [x] | 61 | [Tables in doc cards](./steps/61-doc-card-tables.md) (approved 2026-11-07: lifts the non-goal, schema 9) | N. Tables | 45 | 1.5d |

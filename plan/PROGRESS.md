@@ -1700,3 +1700,20 @@ The human archived the voting plans ("for now"). Dot voting moved out of step 56
 
 ## Plan change — counter archived — 2026-11-18
 The human archived the counter too. Step 56 is gone from the plan; its file moved to `plan/archive/counter.md`. Step 59's "Sprint planning" drops its story-points counter and step 59 now depends on 57 only. The `widgets` entries map (in code since step 54) and `spacy:participantId` stay, unused, for when voting or the counter come back; `00-architecture.md` marks the pref as reserved.
+
+## Step 57 — Progress, status and deadline — 2026-11-18
+**Summary:**
+- Three Team widgets, all board content (config only, LOCAL and undoable; no state).
+- **Progress** (`widgets/progress/`): a bar or a ring, in a color you pick (six options). It's set by hand (drag along the bar in 5 % steps, 1 % with Shift, as one undo step, or the settings slider) or counts a doc card's checklist (`checklist.ts`: done / total `taskItem`s anywhere in the card, read from its `docs` fragment as editor JSON). Link it with "Use selected doc card" in the settings, or by dropping the widget on a card (`dropLink.ts`; linking is in the same undo step as the move). A missing card or one without tasks shows "No checklist". While it's selected, a dashed line (`WidgetLinkHint.svelte`) points to the card. The view recounts when that card's content changes, here or on a peer.
+- **Status** (`widgets/status/`): a 120 × 32 pill. A click moves it to the next option (wrapping). The settings edit 2–8 options (label and color), pick the shown one, add and remove; the value is clamped when options are removed.
+- **Deadline** (`widgets/deadline/`): a label, "In 3 days" / "Tomorrow" / "Today" / "2 days overdue" / "Overdue" (past its time today), and the date ("Fri 20 Nov 2026 · 17:00"). Days are counted between calendar dates in local time (DST-safe). Neutral, then amber within 2 days, red when overdue. Without a time it's due at the end of the day. A new deadline defaults to a week from today. Long texts shrink instead of being cut.
+- Framework additions (all optional, no change for existing kinds): `WidgetAction.drag` and `bare`, `WidgetKind.dragTo`, `linkedCard`, `refreshMs`, and a `WidgetEnv` passed to `face`/`art` (`tasks(cardId)`). Exports and template previews count linked checklists too (`staticSvg` reads `docJson`; `exportImage` also reads linked cards). The settings popover doesn't list drag zones as buttons.
+
+**Deviations:**
+- The deadline refreshes once a minute with its own interval while mounted (= visible), not through the shared ticker: the ticker runs at 10 Hz, which would redraw it 600 times a minute for nothing.
+- `checklist.ts` counts over the card's editor JSON (`fragmentToJSON`) rather than walking `Y.XmlElement`s itself, so it shares the conversion the exports already use.
+- Zoomed far out (scene canvas), a progress widget linked to a checklist shows "—" as its headline: the scene canvas has no access to card contents.
+
+**Dependencies added:** none (icons: lucide `chart-no-axes-gantt`, `circle-dot`, `calendar-clock`)
+**Follow-ups:** the scene-canvas headline of a linked progress widget (above). The three `visual.spec.ts` baselines are out of date: they fail with the same pixel counts on the previous commit (not caused by this step), so they need regenerating (`--update-snapshots`) after a look at the diff.
+**Verification:** pnpm verify ✅ (1206 unit tests; new `checklist.test.ts` 3, `progress.test.ts` 3, `progressTool.test.ts` 2 (bar drag is one undo step; drop on a card links it in the move's undo step), `status.test.ts` 3, `deadline.test.ts` 6 (DST, midnight, thresholds, bad data, long headlines)) · e2e new `team-widgets.spec.ts` 4 (linked progress 0 % → 50 %, bar drag + undo, status cycle + Ctrl+Z, past deadline overdue) and in `live.spec.ts` a progress widget following a task checked on the other browser ✅ · full run chromium + mobile + firefox: 501 passed, 31 skipped, 4 failed: the 3 visual baselines (above) and Firefox `sync.spec.ts`, which passed 3/3 alone (flake; sync untouched) · WebKit: CI only · screenshots of all three widgets and the menu reviewed.

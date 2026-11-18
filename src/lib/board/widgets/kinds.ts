@@ -18,7 +18,25 @@ export interface WidgetAction {
 	primary?: boolean;
 	/** Shown dimmed; clicking it does nothing (e.g. Spin while the wheel turns). */
 	disabled?: boolean;
+	/** Pressing it starts a drag that edits the config (`dragTo`) instead of a click. */
+	drag?: boolean;
+	/** Drawn by the kind's art (a status chip, a progress bar), not as a button. */
+	bare?: boolean;
 }
+
+/** Done and total task items of a doc card's checklist. */
+export interface TaskCount {
+	done: number;
+	total: number;
+}
+
+/** What a widget can read from the rest of the board (a linked card's checklist). */
+export interface WidgetEnv {
+	/** Null when the card is missing or has no tasks. */
+	tasks(cardId: string): TaskCount | null;
+}
+
+export const NO_ENV: WidgetEnv = { tasks: () => null };
 
 /** What the generic face draws: a ring (0..1, or none), a big headline and a caption. */
 export interface WidgetFace {
@@ -58,15 +76,27 @@ export interface WidgetKind<C = unknown, S = unknown> {
 	parseState(raw: unknown): S;
 	defaultConfig(): C;
 	defaultState(): S;
-	face(config: C, state: S, now: number, title: string): WidgetFace;
+	face(config: C, state: S, now: number, title: string, env?: WidgetEnv): WidgetFace;
 	actions(config: C, state: S, now: number): WidgetAction[];
+	/**
+	 * A drag on a `drag` action at `p` (design space): the config it sets, or null. `fine`: Shift
+	 * held (finer steps).
+	 */
+	dragTo?(action: string, config: C, p: { x: number; y: number }, fine: boolean): C | null;
+	/** The doc card it reads from, if any (the hint line while selected). */
+	linkedCard?(config: C): string | null;
+	/**
+	 * How often the face changes by itself when that's slow (a deadline's "in 3 days"), in ms;
+	 * null when it doesn't. Fast changes use `ticking`.
+	 */
+	refreshMs?(config: C): number | null;
 	/** `seed`: 32 random bits for kinds that draw lots (results are derived from it). */
 	perform(action: string, config: C, state: S, now: number, seed: number): WidgetWrite<C, S> | null;
 	/**
 	 * Its own drawing in the design space, above the buttons, instead of the generic ring,
 	 * headline and caption (which still name it in the zoomed-out view).
 	 */
-	art?(config: C, state: S, now: number, opts: ArtOptions): string;
+	art?(config: C, state: S, now: number, opts: ArtOptions, env?: WidgetEnv): string;
 	/** True while the face changes with time (the view subscribes to the ticker). */
 	ticking(config: C, state: S, now: number): boolean;
 	/**
@@ -107,7 +137,8 @@ export const UNKNOWN_FACE: WidgetFace = {
 export function widgetView(
 	el: WidgetElement,
 	now: number,
-	motion = true
+	motion = true,
+	env: WidgetEnv = NO_ENV
 ): {
 	face: WidgetFace;
 	actions: WidgetAction[];
@@ -126,11 +157,18 @@ export function widgetView(
 		};
 	const { def, config, state } = w;
 	return {
-		face: def.face(config, state, now, el.title),
+		face: def.face(config, state, now, el.title, env),
 		actions: def.actions(config, state, now),
 		ticking: def.ticking(config, state, now),
 		design: def.design,
 		art:
-			def.art?.(config, state, now, { motion, ink: el.style.font.color, title: el.title }) ?? null
+			def.art?.(config, state, now, { motion, ink: el.style.font.color, title: el.title }, env) ??
+			null
 	};
+}
+
+/** The doc card a widget reads from, if any. */
+export function linkedCard(el: WidgetElement): string | null {
+	const w = readWidget(el);
+	return w?.def.linkedCard?.(w.config) ?? null;
 }

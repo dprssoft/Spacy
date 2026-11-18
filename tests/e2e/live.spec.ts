@@ -171,3 +171,55 @@ test('both browsers see the same wheel spin and winner', async ({
 	await expect(winner(b)).toHaveText((await winner(a).textContent())!, { timeout: 8000 });
 	await b.context().close();
 });
+
+test('a progress widget follows a task checked on the other browser', async ({
+	page: a,
+	browser,
+	browserName
+}) => {
+	test.skip(browserName === 'firefox', 'WebRTC ICE fails between headless Firefox contexts');
+	test.setTimeout(60_000);
+	await enableTestHooks(a);
+	await createBoard(a);
+	await waitForHooks(a);
+	await waitForInitialView(a);
+	// A doc card with two tasks, typed on A.
+	const c = (await a.getByTestId('canvas').boundingBox())!;
+	await a.getByTestId('canvas').focus();
+	await a.keyboard.press('n');
+	await a.mouse.click(c.x + c.width / 2, c.y + c.height / 2);
+	await expect(a.locator('[data-doccard-body] .ProseMirror')).toBeFocused();
+	await a.keyboard.type('[ ] one');
+	await a.keyboard.press('Enter');
+	await a.keyboard.type('two');
+	await a.keyboard.press('Escape');
+	const card = await a.evaluate(() => window.__spacy!.list().find((e) => e.type === 'doccard')!);
+	await add(a, {
+		...el.shape('progress', card.x + card.w + 80, card.y),
+		type: 'widget',
+		kind: 'progress',
+		text: undefined,
+		w: 260,
+		h: 110,
+		title: '',
+		config: { source: 'checklist', value: 0, cardId: card.id, look: 'bar', color: '#1971c2' },
+		state: null
+	});
+	const progress = (p: Page) => p.locator('[data-widget="progress"]');
+	await expect(progress(a)).toContainText('0 of 2 tasks done');
+
+	const link = await share(a);
+	const b = await join(browser, link);
+	await expect(progress(b)).toContainText('0 of 2 tasks done', { timeout: 10_000 });
+
+	// B checks a task in the card; A's widget follows.
+	const box = (await b.locator(`[data-element-id="${card.id}"]`).boundingBox())!;
+	await b.mouse.click(box.x + 10, box.y + box.height / 2);
+	await b.getByTestId('canvas').focus();
+	await b.keyboard.press('Enter');
+	await b.locator('[data-doccard-body] input[type=checkbox]').first().check();
+	await expect(progress(b)).toContainText('50%');
+	await expect(progress(a)).toContainText('50%', { timeout: 10_000 });
+	await expect(progress(a)).toContainText('1 of 2 tasks done');
+	await b.context().close();
+});

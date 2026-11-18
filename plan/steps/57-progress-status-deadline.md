@@ -35,8 +35,8 @@ These are edits to the board, so they write `config` (LOCAL, undoable). None of 
 - e2e: a doc card with 4 tasks → a progress widget linked to it shows 0 % → check 2 → 50 %; a status click cycles and Ctrl+Z goes back; a deadline in the past shows "overdue".
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
-- [ ] A linked progress widget updates when a peer checks a task
+- [x] `pnpm verify` and `pnpm test:e2e` pass
+- [x] A linked progress widget updates when a peer checks a task
 
 ## Out of scope
 Rolling progress up across many cards or frames, reminders/notifications, calendar views, status of stickies themselves (status lives in its own chip).
