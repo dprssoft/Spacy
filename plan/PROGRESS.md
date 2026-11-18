@@ -1691,3 +1691,6 @@ Approved by the human (storage format change, option "fallback only").
 ## Step 50 — completed — 2026-11-18
 The human confirmed that step 50 is done: the Google Cloud OAuth client is set up (`PUBLIC_GOOGLE_CLIENT_ID` in `.env.local`) and the real-account check passed. Sign-in renewal was improved later (`01198fc`, `e90fbcd`). This entry only updates the plan files, which had not been updated at the time.
 **Follow-ups:** step 51 (Capacitor) is still blocked on the bundle id.
+
+## Plan change — step 58 removed — 2026-11-18
+The human removed step 58 (writer widgets: word goal, writing sprint, generator) from the plan. The step file is deleted. Step 60 no longer uses those widgets: "Chapter tracker" drops its word goal, "Daily writing desk" is gone, and it now depends on 55, 56, 57 (its templates use the wheel, dot voting and the progress widget). The `Writing` widget group stays in code; the Widgets menu hides groups with no widgets.

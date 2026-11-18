@@ -1,9 +1,9 @@
 # Step 60 — Templates for writers and facilitators
 
-Phase: M. Widgets · Depends on: 55, 58 · Estimate: 1.5 days
+Phase: M. Widgets · Depends on: 55, 56, 57 · Estimate: 1.5 days
 
 ## Goal
-More writing templates that use the writer widgets, plus ready-made facilitation boards with timers, wheels and voting already placed.
+More writing templates, plus ready-made facilitation boards with timers, wheels and voting already placed.
 
 ## Read first
 - Step 59; `src/lib/templates/{threeAct.ts, sceneCards.ts, brainstorm.ts}`
@@ -11,11 +11,10 @@ More writing templates that use the writer widgets, plus ready-made facilitation
 ## Tasks
 1. **Writing**:
    - **Snowflake method**: the 10 steps as frames, from a one-sentence summary to scene lists, with doc cards.
-   - **Chapter tracker**: a row of chapter doc cards in the outline, each with a status chip (Draft / Revising / Done), and a word goal for the manuscript.
+   - **Chapter tracker**: a row of chapter doc cards in the outline, each with a status chip (Draft / Revising / Done).
    - **Plot grid**: a subplots × chapters grid (rows A/B/C plot, 8 columns) of stickies.
    - **Revision checklist**: a doc card with structural, line and copy edit passes as checklists, and a progress widget linked to it.
    - **Series bible**: frames for characters, places, timeline and rules, with linked doc cards.
-   - **Daily writing desk**: a daily word goal, a 25-minute sprint and a prompt generator next to a blank doc card.
 2. **Workshops** (facilitation):
    - **Icebreaker**: a wheel with team-member placeholders, a 2-minute timer and question stickies.
    - **Workshop agenda**: sections as frames, each with its own timer set to the section length.
@@ -24,7 +23,7 @@ More writing templates that use the writer widgets, plus ready-made facilitation
 3. Featured templates on the start page stay unchanged; these are in "More templates".
 
 ## Files
-- create: `src/lib/templates/{snowflake,chapterTracker,plotGrid,revisionChecklist,seriesBible,writingDesk,icebreaker,workshopAgenda,leanCoffee,standup}.ts`
+- create: `src/lib/templates/{snowflake,chapterTracker,plotGrid,revisionChecklist,seriesBible,icebreaker,workshopAgenda,leanCoffee,standup}.ts`
 - modify: `templates/index.ts`
 
 ## Tests

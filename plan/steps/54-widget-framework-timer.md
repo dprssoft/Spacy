@@ -21,8 +21,7 @@ export type WidgetKind =
   | 'timer'                                   // step 54
   | 'wheel' | 'randomizer' | 'dice'           // step 55
   | 'vote' | 'counter'                        // step 56
-  | 'progress' | 'status' | 'deadline'        // step 57
-  | 'wordgoal' | 'sprint' | 'generator';      // step 58
+  | 'progress' | 'status' | 'deadline';       // step 57 (step 58, writer widgets, was removed from the plan)
 
 export interface WidgetElement extends BaseElement {   // schema version 8
   type: 'widget';
@@ -41,7 +40,7 @@ export interface WidgetElement extends BaseElement {   // schema version 8
 
 ## Tasks
 1. **Model:** the type, the zod schema (`kind` is any string ≤ 32 chars, `title` ≤ 100), defaults, migration to version 8, the `WIDGET` origin. `src/lib/model/widgets.ts` with the only write helpers: `createWidget`, `setWidgetConfig` (LOCAL), `setWidgetState` (WIDGET), `setWidgetEntry` / `clearWidgetEntries` (WIDGET), and the delete hook. The `widgets` map is copied by clipboard and duplicate as empty, and it is part of `.spacy` files like the rest of the Y.Doc.
-2. **Widget catalog** (`src/lib/board/widgets/catalog.ts`): one entry per kind: `{ kind, label, group: 'Facilitation' | 'Team' | 'Writing', icon, size, keepAspect, configSchema, stateSchema, defaultConfig, component, settings (popover component), actions, staticSvg }`. `actions(el, size)` returns the clickable zones in local coordinates: `{ id, rect, label, primary? }[]`. Steps 55–58 only add entries; the framework doesn't change.
+2. **Widget catalog** (`src/lib/board/widgets/catalog.ts`): one entry per kind: `{ kind, label, group: 'Facilitation' | 'Team' | 'Writing', icon, size, keepAspect, configSchema, stateSchema, defaultConfig, component, settings (popover component), actions, staticSvg }`. `actions(el, size)` returns the clickable zones in local coordinates: `{ id, rect, label, primary? }[]`. Steps 55–57 only add entries; the framework doesn't change.
 3. **Registry entry** for `widget`: the box is used for hit-testing and connections. It is resizable, and its content scales with the box (each view draws in an SVG `viewBox` or with container units). Rotatable is false. `editableText` is false. A double-click opens the settings. Unknown kinds render a gray box saying "This widget needs a newer version of Spacy", and the element is kept as is.
 4. **Interaction** (registry gains an optional `actionAt(el, p): string | null`, §9):
    - Select tool: a press on an action zone that ends without dragging (≤ 4 px) runs the action instead of changing the selection. A drag still moves the widget. Hover over a zone shows the pointer cursor and the zone's label as a tooltip.
@@ -78,7 +77,7 @@ export interface WidgetElement extends BaseElement {   // schema version 8
 - [x] `00-architecture.md` updated (type, schema 8, `widgets` map, `WIDGET` origin, `spacy:participantId`, ToolId `widget`, keys; zones are handled by the select tool instead of a registry `actionAt`)
 
 ## Out of scope
-The other kinds (steps 55–58), templates using widgets (59–60), alarms when the board isn't open, notifications, a timer in the status bar, timer sounds to choose from.
+The other kinds (steps 55–57), templates using widgets (59–60), alarms when the board isn't open, notifications, a timer in the status bar, timer sounds to choose from.
 
 ## Commit
 `feat(widgets): widget framework and a shared timer`
