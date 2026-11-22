@@ -79,7 +79,9 @@ export function readDeadline(c: DeadlineConfig, now: number): { text: string; to
 	return { text, tone: days <= SOON_DAYS ? 'soon' : 'neutral' };
 }
 
+// A calendar date has no time zone: format it as UTC midnight, so the viewer's zone can't shift it.
 const dateFormat = new Intl.DateTimeFormat('en-GB', {
+	timeZone: 'UTC',
 	weekday: 'short',
 	day: 'numeric',
 	month: 'short',
@@ -89,7 +91,7 @@ const dateFormat = new Intl.DateTimeFormat('en-GB', {
 /** "Fri 20 Nov 2026" or "Fri 20 Nov 2026 · 17:00". */
 export function formatDeadline(c: DeadlineConfig): string {
 	const [y, m, d] = parts(c.date);
-	const day = dateFormat.format(new Date(y, m - 1, d)).replace(',', '');
+	const day = dateFormat.format(Date.UTC(y, m - 1, d)).replace(',', '');
 	return c.time ? `${day} · ${c.time}` : day;
 }
 
