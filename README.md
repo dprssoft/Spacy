@@ -16,9 +16,12 @@ There is no backend and no account.
 - **Diagrams:** straight, elbow and curved connectors, seven end markers, labels, manual bends, a flowchart shape library, quick-create of connected shapes.
 - **Doc cards:** headings, lists, checklists, quotes, code, links; fonts, sizes, colors, highlights and alignment from a Word-like ribbon; focus mode; `/` commands; `@` mentions of canvas objects; Markdown export.
 - **Writing:** word counts, an outline in manuscript order, compile to Markdown, Word or print, backlinks, find and replace, comments on objects and text.
+- **Tables:** in doc cards and as objects on the board.
+- **Widgets:** timer, wheel of fortune, randomizer, dice and coin for workshops; progress bars (by hand or from a doc card's checklist), status chips and deadlines for teams. They're shared live.
+- **Sync and live sharing (optional):** Google Drive sync between your own devices; a share link to edit a board together in real time, browser to browser (see Data & privacy).
 - **Media:** YouTube, Vimeo, audio and video links play in place, with clips, loop and speed.
 - **Tabs and presenting:** tabs (named spots on the board to jump between, from a dropdown list) and full screen.
-- **Sharing:** PNG, JPG, WebP and SVG export, copy as image, `.spacy` board files, full backup and restore, a template gallery (start a board or insert into one).
+- **Sharing:** PNG, JPG, WebP and SVG export, copy as image, `.spacy` board files, full backup and restore, a gallery of 37 templates for planning, management, workshops, strategy and writing (start a board or insert into one).
 - **Everywhere:** installable, works offline, phones and tablets, light and dark themes with six palettes, keyboard-only use, screen reader announcements. Press `?` on a board for the shortcut list.
 
 ## Data & privacy
@@ -103,5 +106,6 @@ The bundled fonts come from [Fontsource](https://fontsource.org): Inter, Montser
 
 ## Roadmap
 
-- Real-time collaboration: a sync server provider added where the board is opened (`openBoard`); the data model is already a Yjs document.
+- Native apps for iOS and Android (Capacitor) with native Google sign-in.
+- Dot voting and a counter widget (planned, set aside for now: `plan/archive/`).
 - Version history.

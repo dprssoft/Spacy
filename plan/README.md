@@ -56,7 +56,7 @@ A browser-only whiteboard (with diagram and doc-card add-ons) and a Figma-like s
 | [x] | 29 | [PWA, settings, backup reminder](./steps/29-pwa.md) | H. Release | 28 | 1d |
 | [x] | 30 | [Performance pass](./steps/30-performance.md) | H | 29 | 1d |
 | [x] | 31 | [Accessibility, help, onboarding](./steps/31-accessibility-help-onboarding.md) | H | 30 | 1.5d |
-| [ ] | 32 | [Full E2E and deployment](./steps/32-e2e-deploy.md) | H | 31 | 1.5d |
+| [x] | 32 | [Full E2E and deployment](./steps/32-e2e-deploy.md) | H | 31 | 1.5d |
 | [x] | 33 | [Insertable templates](./steps/33-insertable-templates.md) | I. Extensions | 28 | 1d |
 | [x] | 34 | [Template pack (kanban and friends)](./steps/34-template-pack.md) | I | 33 | 2d |
 | [x] | 35 | [Media element](./steps/35-media-element.md) | I | 31 | 2.5d |

@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 — 2026-10-04
+## 1.0.0 — 2026-11-22
 
 The first release: a whiteboard that lives in your browser, with diagrams and doc cards.
 
@@ -106,6 +106,30 @@ The first release: a whiteboard that lives in your browser, with diagrams and do
 - A save that doesn't reach browser storage (for example when it's full) shows "Not saved" with a Retry, and leaving the page asks first.
 - Deleting a page also deletes the comments on it.
 - The app was called SMTHNG: boards and settings saved under that name carry over, and `.smthng` files still import.
+
+### Tables
+
+- Tables inside doc cards, and tables as objects on the board: add and remove rows and columns, header rows, merged cells.
+
+### Boards
+
+- Reorder pages and group them into folders.
+- Equal-spacing snapping between objects.
+- Smart kanban columns: a card's status follows the column it's in.
+- Copy as image (Ctrl/⌘+C also puts a picture on the clipboard), JPG and WebP export.
+- Liquid glass look, as an option over any theme and palette.
+- Link page previews in doc cards (per link, or on hover).
+
+### M11 — Sync and live sharing
+
+- Google Drive sync (optional): boards, the board list and images in a hidden app folder of your own Drive, so your other devices get them; offline edits catch up.
+- Live sharing: a link lets other browsers edit the board with you at the same time, directly and encrypted, with names, avatars and live cursors. No server of ours is involved.
+
+### M12 — Widgets
+
+- A Widgets menu with interactive objects, shared live: timer, wheel of fortune, randomizer (pick, shuffle, teams), dice and coin flip for facilitation; progress (set by hand or counted from a doc card's checklist), status chips and deadlines for teams.
+- Management templates: OKRs, RACI matrix, Now / Next / Later roadmap, 1:1 meeting, risk register, stakeholder map, sprint planning, decision log, lean canvas.
+- More writing templates (snowflake method, chapter tracker, plot grid, revision checklist, series bible) and workshop templates with widgets placed (icebreaker, workshop agenda, daily stand-up).
 
 ### M7 — Release quality
 

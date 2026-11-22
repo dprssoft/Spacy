@@ -51,12 +51,12 @@ Cross-browser E2E coverage of all major flows, visual regression baselines, secu
 All the suites above; the full matrix is green locally for Chromium, and in CI for all browsers.
 
 ## Acceptance criteria
-- [ ] `pnpm verify` passes; `pnpm test:e2e` passes in Chromium, Firefox and WebKit
-- [ ] The built app runs under the CSP with no console errors
-- [ ] Lighthouse (home, production build): Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95 (record it in PROGRESS)
-- [ ] Deployed URL works, or the manual deploy steps are documented
-- [ ] `v1.0.0` tagged
-- [ ] **M7:** release
+- [x] `pnpm verify` passes; `pnpm test:e2e` passes in Chromium, Firefox and WebKit
+- [x] The built app runs under the CSP with no console errors
+- [x] Lighthouse (home, production build): Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95 (record it in PROGRESS)
+- [x] Deployed URL works, or the manual deploy steps are documented
+- [x] `v1.0.0` tagged
+- [x] **M7:** release
 
 ## Out of scope
 Real-time collaboration, accounts (future roadmap).
