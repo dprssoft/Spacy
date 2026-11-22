@@ -289,6 +289,78 @@ export const templates: Template[] = [
 		keywords: ['script', 'tv', 'episode', 'film', 'screenwriting'],
 		featured: false,
 		build: async (doc) => (await import('./screenplay')).buildScreenplay(doc)
+	},
+	{
+		id: 'snowflake',
+		name: 'Snowflake method',
+		description: 'Ten steps from a one-sentence summary to the first draft',
+		category: 'Writing',
+		keywords: ['novel', 'plot', 'synopsis', 'ingermanson', 'outline'],
+		featured: false,
+		build: async (doc) => (await import('./snowflake')).buildSnowflake(doc)
+	},
+	{
+		id: 'chapter-tracker',
+		name: 'Chapter tracker',
+		description: 'Chapter cards in order, each with a draft / revising / done status',
+		category: 'Writing',
+		keywords: ['chapters', 'novel', 'manuscript', 'status', 'progress'],
+		featured: false,
+		build: async (doc) => (await import('./chapterTracker')).buildChapterTracker(doc)
+	},
+	{
+		id: 'plot-grid',
+		name: 'Plot grid',
+		description: 'A, B and C plots across eight chapters',
+		category: 'Writing',
+		keywords: ['subplots', 'novel', 'chapters', 'structure', 'threads'],
+		featured: false,
+		build: async (doc) => (await import('./plotGrid')).buildPlotGrid(doc)
+	},
+	{
+		id: 'revision-checklist',
+		name: 'Revision checklist',
+		description: 'Structural, line and copy edit passes, with their progress',
+		category: 'Writing',
+		keywords: ['editing', 'revision', 'draft', 'checklist', 'proofreading'],
+		featured: false,
+		build: async (doc) => (await import('./revisionChecklist')).buildRevisionChecklist(doc)
+	},
+	{
+		id: 'series-bible',
+		name: 'Series bible',
+		description: 'Characters, places, timeline and rules, connected',
+		category: 'Writing',
+		keywords: ['series', 'reference', 'world', 'continuity', 'novel'],
+		featured: false,
+		build: async (doc) => (await import('./seriesBible')).buildSeriesBible(doc)
+	},
+	{
+		id: 'icebreaker',
+		name: 'Icebreaker',
+		description: 'A wheel to pick who answers, a 2-minute timer and questions',
+		category: 'Workshops',
+		keywords: ['warm-up', 'team', 'wheel', 'questions', 'meeting'],
+		featured: false,
+		build: async (doc) => (await import('./icebreaker')).buildIcebreaker(doc)
+	},
+	{
+		id: 'workshop-agenda',
+		name: 'Workshop agenda',
+		description: 'Five sections, each with a timer set to its length',
+		category: 'Workshops',
+		keywords: ['agenda', 'facilitation', 'timebox', 'timer', 'meeting'],
+		featured: false,
+		build: async (doc) => (await import('./workshopAgenda')).buildWorkshopAgenda(doc)
+	},
+	{
+		id: 'standup',
+		name: 'Daily stand-up',
+		description: 'A shuffled speaking order and a 15-minute timer',
+		category: 'Workshops',
+		keywords: ['standup', 'daily', 'scrum', 'agile', 'timer', 'meeting'],
+		featured: false,
+		build: async (doc) => (await import('./standup')).buildStandup(doc)
 	}
 ];
 

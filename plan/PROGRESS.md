@@ -1740,3 +1740,26 @@ The human archived the counter too. Step 56 is gone from the plan; its file move
 **Dependencies added:** none
 **Follow-ups:** the two `visual.spec.ts` board baselines from step 57 still need regenerating after review.
 **Verification:** pnpm verify ✅ (1250 unit tests; `templates.test.ts` and `insert.test.ts` run over the new templates, now also checking that widget configs parse to themselves, that widgets have their default state and that linked cards exist (also after insert); new content tests for OKRs, 1:1, risk register / decision log, roadmap / sprint deadlines and lean canvas; `progress.test.ts` +2 for the clone hook, and the insert test fails without it) · e2e `templates.spec.ts` +2 (Management shows 9 templates whose previews draw their widgets; OKRs inserts 9 progress widgets; the inserted 1:1 widget reads "0 of 3 tasks done") ✅ · full run chromium + mobile + firefox: 506 passed, 31 skipped, 3 failed: the 2 stale board baselines and the gallery baseline, which this step changed (count 20 → 29). The gallery baseline was reviewed and regenerated, and the test now pins the clock (deadline previews show dates) · WebKit: CI only · screenshots of all previews reviewed.
+
+## Step 60 — Templates for writers and facilitators — 2026-11-22
+**Summary:**
+- **Writing** (5 new, 13 in all):
+  - **Snowflake method**: ten numbered step frames (one-sentence summary to first draft) in two rows of five, each with a doc card that has a prompt.
+  - **Chapter tracker**: six chapter doc cards left to right (so the outline lists them in order), each with a Draft / Revising / Done status chip below.
+  - **Plot grid**: A / B / C plot rows (frames) of eight stickies under chapter headings.
+  - **Revision checklist**: a doc card with structural, line and copy edit passes (10 tasks), a progress widget linked to it, a "Revision due" deadline in 30 days and a notes frame.
+  - **Series bible**: Characters, Places, Timeline and Rules frames with two doc cards each, joined by labelled connectors ("lives in", "shapes", "applies in").
+- **Workshops** (3 new):
+  - **Icebreaker**: a wheel of six team-member placeholders, a 2-minute timer and four question stickies.
+  - **Workshop agenda**: five section frames (5 / 10 / 20 / 15 / 10 min), each with a countdown set to its length and a prompt sticky.
+  - **Daily stand-up**: a randomizer in shuffle mode ("Speaking order"), a 15-minute timer and a blockers frame.
+- All in "More templates"; featured unchanged.
+
+**Deviations:**
+- Series bible: "linked doc cards" are connectors between the cards, not mentions inside their text. Template insertion gives elements new ids but doesn't rewrite ids inside doc content, so mentions would point at missing cards; connectors are remapped.
+- Chapter tracker: the outline order comes from the cards' reading order (left to right), not a stored `meta.outline`. Inserting a template copies elements only, so a stored order wouldn't carry over.
+- Revision checklist and stand-up have a few extra elements (deadline, notes or blockers frame), because the template tests require more than three elements.
+
+**Dependencies added:** none
+**Follow-ups:** the two `visual.spec.ts` board baselines from step 57 still need regenerating after review.
+**Verification:** pnpm verify ✅ (1288 unit tests; the template suites run over the 8 new templates (valid elements, widget configs and linked cards, also after insert), plus content tests: snowflake frames, the chapter tracker's outline order and chips, plot grid rows, the revision checklist's 10 tasks counted by its linked widget, series bible connectors, facilitation widget settings) · e2e `templates.spec.ts` +1 (new board from Icebreaker: the wheel spins to a team member, the timer counts down from 2:00), Writing count 8 → 13 and the gallery count 29 → 37 (its screenshot is unchanged: the new cards are below the fold) ✅ · full run chromium + mobile + firefox: 504 passed, 31 skipped, 7 failed: the 2 stale board baselines, and 5 Firefox tests (a11y dark mode, comments export, compile, doc-format ribbon, sync) that passed 2/2 each when rerun alone (load flakes; none touch templates) · WebKit: CI only · gallery previews of all new templates reviewed.

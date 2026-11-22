@@ -88,7 +88,10 @@ describe('searchTemplates', () => {
 		expect(searchTemplates('agenda minutes').map((t) => t.id)).toEqual(['meeting-notes']);
 		expect(searchTemplates('', 'Workshops').map((t) => t.id)).toEqual([
 			'retrospective',
-			'brainstorm'
+			'brainstorm',
+			'icebreaker',
+			'workshop-agenda',
+			'standup'
 		]);
 		expect(searchTemplates('KANBAN todo').map((t) => t.id)).toEqual(['kanban']);
 		expect(searchTemplates('nothing-like-this')).toEqual([]);

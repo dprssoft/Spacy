@@ -30,7 +30,7 @@ More writing templates, plus ready-made facilitation boards with timers and whee
 - e2e: new board from "Icebreaker" → Spin the wheel → a winner shows; the timer starts. (The Lean coffee test is archived with dot voting.)
 
 ## Acceptance criteria
-- [ ] `pnpm verify` and `pnpm test:e2e` pass
+- [x] `pnpm verify` and `pnpm test:e2e` pass
 
 ## Out of scope
 User-made templates, localization of template text.

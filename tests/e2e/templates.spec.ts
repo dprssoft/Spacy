@@ -146,7 +146,7 @@ test("the Writing category inserts the Hero's Journey", async ({ page }) => {
 	await page.keyboard.press('Shift+T');
 	const dialog = page.getByRole('dialog', { name: 'Insert template' });
 	await dialog.getByRole('button', { name: 'Writing' }).click();
-	await expect(dialog.locator('[data-template-card]')).toHaveCount(8);
+	await expect(dialog.locator('[data-template-card]')).toHaveCount(13);
 	await dialog.getByRole('button', { name: "Hero's Journey template" }).click();
 	await expect
 		.poll(() =>
@@ -198,4 +198,39 @@ test('the 1:1 template’s progress widget counts its card’s action items', as
 	await dialog.getByRole('searchbox', { name: 'Search templates' }).fill('1:1');
 	await dialog.getByRole('button', { name: '1:1 meeting template' }).click();
 	await expect(page.locator('[data-widget="progress"]')).toContainText('0 of 3 tasks done');
+});
+
+test('a new board from "Icebreaker": spin the wheel, start the timer', async ({ page }) => {
+	await enableTestHooks(page);
+	await page.addInitScript(() => localStorage.setItem('spacy:onboarded', 'true'));
+	await page.goto('/');
+	await page.getByRole('button', { name: 'More templates' }).click();
+	const dialog = page.getByRole('dialog', { name: 'New board from a template' });
+	await dialog.getByRole('searchbox', { name: 'Search templates' }).fill('icebreaker');
+	await dialog.getByRole('button', { name: 'Icebreaker template' }).click();
+	await page.waitForURL(/\/board\//);
+	await waitForHooks(page);
+	await expect(page.getByRole('button', { name: /Rename board: Icebreaker/ })).toBeVisible();
+
+	const widget = (kind: string) =>
+		page.evaluate(
+			(kind) => window.__spacy!.list().find((e) => e.type === 'widget' && e.kind === kind)!.id,
+			kind
+		);
+	const press = async (id: string) => {
+		await page.evaluate((id) => window.__spacy!.ctx.selection.set([id]), id);
+		await page.getByTestId('canvas').focus();
+		await page.keyboard.press('Enter'); // the widget's main button
+	};
+
+	await press(await widget('wheel'));
+	await expect(page.locator('[data-widget="wheel"] text[font-weight="700"]')).toHaveText(
+		/^Team member [1-6]$/,
+		{ timeout: 8000 }
+	);
+
+	const time = page.locator('[data-widget="timer"] text').first();
+	await expect(time).toHaveText('2:00');
+	await press(await widget('timer'));
+	await expect(time).toHaveText(/^1:5\d$/, { timeout: 5000 });
 });

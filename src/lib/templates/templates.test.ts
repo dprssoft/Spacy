@@ -5,7 +5,9 @@ import { parseElement } from '$lib/model/schema';
 import { TEMPLATE } from '$lib/model/origins';
 import { docToMarkdown } from '$lib/board/doccards/markdown';
 import { fragmentToJSON } from '$lib/board/doccards/fragmentJson';
-import type { Element, WidgetElement } from '$lib/model/types';
+import type { DocCardElement, Element, WidgetElement } from '$lib/model/types';
+import { outlineChapters, outlineIds } from '$lib/board/writing/outline';
+import { countTasks } from '$lib/board/widgets/progress/checklist';
 import { widgetKind } from '$lib/board/widgets';
 import { templates } from './index';
 
@@ -206,5 +208,78 @@ describe('template content', () => {
 		const frames = listElements((await built('lean-canvas')).doc).filter((e) => e.type === 'frame');
 		expect(frames.map((f) => (f as { title: string }).title)).toContain('Unfair advantage');
 		expect(frames).toHaveLength(9);
+	});
+
+	it('snowflake: ten step frames with a doc card each', async () => {
+		const els = listElements((await built('snowflake')).doc);
+		const frames = els.filter((e) => e.type === 'frame');
+		expect(frames).toHaveLength(10);
+		for (const f of frames)
+			expect(els.filter((e) => e.type === 'doccard' && e.parentId === f.id)).toHaveLength(1);
+	});
+
+	it('chapter tracker: the outline lists chapters 1–6 in order, each with a status chip', async () => {
+		const { doc } = await built('chapter-tracker');
+		const els = listElements(doc);
+		const cards = els.filter((e): e is DocCardElement => e.type === 'doccard');
+		const ids = outlineIds(outlineChapters(cards, [], []));
+		expect(ids.map((id) => cards.find((c) => c.id === id)!.title)).toEqual(
+			[1, 2, 3, 4, 5, 6].map((n) => `Chapter ${n}`)
+		);
+		const chips = els.filter((e) => e.type === 'widget' && e.kind === 'status');
+		expect(chips).toHaveLength(6);
+		expect((chips[0] as WidgetElement).config).toMatchObject({
+			options: [{ label: 'Draft' }, { label: 'Revising' }, { label: 'Done' }]
+		});
+	});
+
+	it('plot grid: three plot rows of eight stickies', async () => {
+		const els = listElements((await built('plot-grid')).doc);
+		const frames = els.filter((e) => e.type === 'frame');
+		expect(frames).toHaveLength(3);
+		for (const f of frames)
+			expect(els.filter((e) => e.type === 'sticky' && e.parentId === f.id)).toHaveLength(8);
+	});
+
+	it('revision checklist: three passes, counted by a linked progress widget', async () => {
+		const { doc } = await built('revision-checklist');
+		const els = listElements(doc);
+		const card = els.find((e) => e.type === 'doccard')!;
+		const progress = els.find((e) => e.type === 'widget' && e.kind === 'progress')!;
+		expect(widgetKind('progress')!.linkedCard!((progress as WidgetElement).config)).toBe(card.id);
+		const json = fragmentToJSON(getDocsMap(doc).get(card.id)!);
+		expect(countTasks(json)).toEqual({ done: 0, total: 10 });
+		const md = docToMarkdown(json);
+		for (const pass of ['Structural edit', 'Line edit', 'Copy edit'])
+			expect(md).toContain(`## ${pass}`);
+	});
+
+	it('series bible: four sections of cards, connected', async () => {
+		const els = listElements((await built('series-bible')).doc);
+		expect(
+			els.filter((e) => e.type === 'frame').map((f) => (f as { title: string }).title)
+		).toEqual(['Characters', 'Places', 'Timeline', 'Rules']);
+		expect(els.filter((e) => e.type === 'doccard')).toHaveLength(8);
+		const conns = els.filter((e) => e.type === 'connector');
+		expect(conns).toHaveLength(3);
+		const cardIds = new Set(els.filter((e) => e.type === 'doccard').map((e) => e.id));
+		for (const c of conns)
+			for (const end of [c.from, c.to])
+				expect(end.kind !== 'free' && cardIds.has(end.elementId)).toBe(true);
+	});
+
+	it('facilitation: the widgets are set up for the session', async () => {
+		const widgets = async (id: string) =>
+			listElements((await built(id)).doc).filter((e): e is WidgetElement => e.type === 'widget');
+		const ice = await widgets('icebreaker');
+		expect(ice.map((w) => w.kind).sort()).toEqual(['timer', 'wheel']);
+		expect(ice.find((w) => w.kind === 'timer')!.config).toMatchObject({ duration: 120 });
+		const agenda = await widgets('workshop-agenda');
+		expect(agenda.map((w) => (w.config as { duration: number }).duration)).toEqual(
+			[5, 10, 20, 15, 10].map((m) => m * 60)
+		);
+		const standup = await widgets('standup');
+		expect(standup.find((w) => w.kind === 'randomizer')!.config).toMatchObject({ mode: 'shuffle' });
+		expect(standup.find((w) => w.kind === 'timer')!.config).toMatchObject({ duration: 900 });
 	});
 });
